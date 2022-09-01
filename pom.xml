@@ -19,10 +19,19 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>3.0.0</version>
+                <version>3.1.0</version>
+                <configuration>
+                    <configLocation>${project.basedir}/checkstyle.xml</configLocation>
+                    <encoding>UTF-8</encoding>
+                    <failOnViolation>true</failOnViolation>
+                    <linkXRef>false</linkXRef>
+                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                    <maxAllowedViolations>0</maxAllowedViolations>
+                    <violationSeverity>warning</violationSeverity>
+                </configuration>
                 <executions>
                     <execution>
-                        <id>validate</id>
+                        <id>checkstyle</id>
                         <phase>validate</phase>
                         <configuration>
                             <encoding>UTF-8</encoding>
@@ -34,6 +43,13 @@
                         </goals>
                     </execution>
                 </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>8.29</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
     </build>
