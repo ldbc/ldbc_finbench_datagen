@@ -1,6 +1,6 @@
 # FinBench DataGen
 
-![Build status](https://github.com/ldbc/ldbc_finbench_datagen/actions/workflows/ci.yml/badge.svg)
+![Build status](https://github.com/ldbc/ldbc_finbench_datagen/actions/workflows/ci.yml/badge.svg?branch=main)
 
 The LDBC FinBench Data Generator (Datagen) produces the datasets for the LDBC FinBench's workloads.
 
