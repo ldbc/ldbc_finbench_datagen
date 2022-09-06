@@ -15,6 +15,7 @@
         <spark.version>2.4.4</spark.version>
         <scopt.version>3.7.1</scopt.version>
         <scalatest.version>3.2.3</scalatest.version>
+        <shapeless.version>2.3.3</shapeless.version>
     </properties>
 
     <build>
@@ -124,8 +125,9 @@
         <dependency>
             <groupId>com.chuusai</groupId>
             <artifactId>shapeless_2.11</artifactId>
-            <version>2.3.3</version>
+            <version>${shapeless.version}</version>
         </dependency>
+
         <!-- scalatest -->
         <dependency>
             <groupId>org.scalatest</groupId>

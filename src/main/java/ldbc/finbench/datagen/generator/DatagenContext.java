@@ -1,5 +1,3 @@
-
-
 package ldbc.finbench.datagen.generator;
 
 import ldbc.finbench.datagen.util.GeneratorConfiguration;
