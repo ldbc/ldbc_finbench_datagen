@@ -10,7 +10,7 @@ public class DatagenParams {
 
     public static final String personNameFile = DICTIONARY_DIRECTORY + "personName.txt";
 
-    private enum ParameterNames{
+    private enum ParameterNames {
         BLOCK_SIZE("generator.blockSize");
 
         private final String name;
@@ -24,10 +24,10 @@ public class DatagenParams {
         }
     }
 
-    public static void readConf(GeneratorConfiguration conf, ParameterNames param){
-        try{
+    public static void readConf(GeneratorConfiguration conf, ParameterNames param) {
+        try {
             ParameterNames[] values = ParameterNames.values();
-            for (ParameterNames value : values){
+            for (ParameterNames value : values) {
                 if (conf.get(value.toString()) == null) {
                     throw new IllegalStateException("Missing " + value.toString() + " parameter");
                 }
@@ -35,7 +35,7 @@ public class DatagenParams {
 
             //TODO assign value to constant
 
-        }catch (Exception e) {
+        } catch (Exception e) {
             System.out.println("Error reading scale factors or conf");
             System.err.println(e.getMessage());
             throw new RuntimeException(e);
