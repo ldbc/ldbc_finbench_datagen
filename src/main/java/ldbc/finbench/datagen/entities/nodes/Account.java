@@ -1,4 +1,4 @@
-package ldbc.finbench.datagen.entities.vertex;
+package ldbc.finbench.datagen.entities.nodes;
 
 public class Account {
     private long accountId;

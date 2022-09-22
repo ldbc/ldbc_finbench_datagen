@@ -1,25 +1,15 @@
-package ldbc.finbench.datagen.entities.edge;
+package ldbc.finbench.datagen.entities.edges;
 
 import ldbc.finbench.datagen.entities.DynamicActivity;
 
-public class Own implements DynamicActivity {
-    private long personId;
+public class CompanyGuaraentee implements DynamicActivity {
     private long companyId;
-    private long accountId;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public Own() {
+    public CompanyGuaraentee() {
         //TODO
-    }
-
-    public long getPersonId() {
-        return personId;
-    }
-
-    public void setPersonId(long personId) {
-        this.personId = personId;
     }
 
     public long getCompanyId() {
@@ -28,14 +18,6 @@ public class Own implements DynamicActivity {
 
     public void setCompanyId(long companyId) {
         this.companyId = companyId;
-    }
-
-    public long getAccountId() {
-        return accountId;
-    }
-
-    public void setAccountId(long accountId) {
-        this.accountId = accountId;
     }
 
     @Override

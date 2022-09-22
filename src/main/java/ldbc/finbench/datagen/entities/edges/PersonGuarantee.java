@@ -1,32 +1,23 @@
-package ldbc.finbench.datagen.entities.edge;
+package ldbc.finbench.datagen.entities.edges;
 
 import ldbc.finbench.datagen.entities.DynamicActivity;
 
-public class SignIn implements DynamicActivity {
-    private long mediumId;
-    private long accountId;
+public class PersonGuarantee implements DynamicActivity {
+    private long personId;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public SignIn() {
+    public PersonGuarantee() {
         //TODO
     }
 
-    public long getMediumId() {
-        return mediumId;
+    public long getPersonId() {
+        return personId;
     }
 
-    public void setMediumId(long mediumId) {
-        this.mediumId = mediumId;
-    }
-
-    public long getAccountId() {
-        return accountId;
-    }
-
-    public void setAccountId(long accountId) {
-        this.accountId = accountId;
+    public void setPersonId(long personId) {
+        this.personId = personId;
     }
 
     @Override

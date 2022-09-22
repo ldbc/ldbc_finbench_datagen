@@ -1,24 +1,24 @@
-package ldbc.finbench.datagen.entities.edge;
+package ldbc.finbench.datagen.entities.edges;
 
 import ldbc.finbench.datagen.entities.DynamicActivity;
 
-public class Deposit implements DynamicActivity {
-    private long loanId;
+public class SignIn implements DynamicActivity {
+    private long mediumId;
     private long accountId;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public Deposit() {
+    public SignIn() {
         //TODO
     }
 
-    public long getLoanId() {
-        return loanId;
+    public long getMediumId() {
+        return mediumId;
     }
 
-    public void setLoanId(long loanId) {
-        this.loanId = loanId;
+    public void setMediumId(long mediumId) {
+        this.mediumId = mediumId;
     }
 
     public long getAccountId() {

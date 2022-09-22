@@ -1,15 +1,15 @@
-package ldbc.finbench.datagen.entities.edge;
+package ldbc.finbench.datagen.entities.edges;
 
 import ldbc.finbench.datagen.entities.DynamicActivity;
 
-public class Guarantee implements DynamicActivity {
+public class PersonOwn implements DynamicActivity {
     private long personId;
-    private long companyId;
+    private long accountId;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public Guarantee() {
+    public PersonOwn() {
         //TODO
     }
 
@@ -21,12 +21,12 @@ public class Guarantee implements DynamicActivity {
         this.personId = personId;
     }
 
-    public long getCompanyId() {
-        return companyId;
+    public long getAccountId() {
+        return accountId;
     }
 
-    public void setCompanyId(long companyId) {
-        this.companyId = companyId;
+    public void setAccountId(long accountId) {
+        this.accountId = accountId;
     }
 
     @Override
