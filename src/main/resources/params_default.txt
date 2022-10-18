@@ -9,4 +9,3 @@ generator.numPersons:10000
 generator.numYears:3
 generator.outputDir:out
 generator.startYear:2010
-generator.tagCountryCorrProb:0.5
