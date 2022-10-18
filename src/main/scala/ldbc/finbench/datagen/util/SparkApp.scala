@@ -32,7 +32,11 @@ trait SparkApp {
     sparkConf.foldLeft(builder) { case (b, (k, v)) => b.config(k, v) }
 
   def setConf(sparkConf: SparkConf, conf: Map[String, String]): SparkConf = {
-    conf.map(entry => { sparkConf.set(entry._1, conf.getOrElse(entry._2, null)) })
+    conf.map(entry => {
+      if (!sparkConf.contains(entry._1)) {
+        sparkConf.set(entry._1, entry._2)
+      }
+    })
     sparkConf
   }
 
