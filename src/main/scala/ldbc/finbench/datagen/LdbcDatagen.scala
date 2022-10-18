@@ -1,5 +1,6 @@
 package ldbc.finbench.datagen
 
+import ldbc.finbench.datagen.factors.FactorGenerationStage
 import ldbc.finbench.datagen.generator.GenerationStage
 import ldbc.finbench.datagen.util.SparkApp
 import shapeless.lens
@@ -144,6 +145,13 @@ object LdbcDatagen extends SparkApp {
 
     GenerationStage.run(generatorArgs)
 
+    if (args.generateFactors) {
+      val factorArgs = FactorGenerationStage.Args(
+        outputDir = args.outputDir,
+        format = args.factorFormat
+      )
+      FactorGenerationStage.run(factorArgs)
+    }
     //val transformArgs = null
     //TransformationStage.run(transformArgs)
   }

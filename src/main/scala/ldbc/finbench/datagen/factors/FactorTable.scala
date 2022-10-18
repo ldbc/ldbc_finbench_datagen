@@ -1,8 +1,15 @@
-/* Copyright (c) 2021 vesoft inc. All rights reserved.
- *
- * This source code is licensed under Apache 2.0 License.
- */
-
 package ldbc.finbench.datagen.factors
 
-class FactorTable {}
+import ldbc.finbench.datagen.model.{Graph, GraphDef, Mode}
+import org.apache.spark.sql.DataFrame
+
+case class FactorTable[M <: Mode](
+    name: String,
+    data: DataFrame,
+    source: Graph[M]
+)
+
+case class FactorTableDef[M <: Mode](
+    name: String,
+    sourceDef: GraphDef[M]
+)
