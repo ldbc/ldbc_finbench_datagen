@@ -49,7 +49,8 @@ object GenerationStage extends DatagenStage with Logging {
     */
   private def buildConfig(args: Args): GeneratorConfiguration = {
     val conf = new java.util.HashMap[String, String]
-    conf.putAll(ConfigParser.readConfig(getClass.getResourceAsStream("/params_default.ini")))
+    conf.putAll(
+      ConfigParser.readConfig(getClass.getResourceAsStream("/resources/params_default.txt")))
 
     for { paramsFile <- args.paramFile } conf.putAll(
       ConfigParser.readConfig(openPropFileStream(URI.create(paramsFile))))
