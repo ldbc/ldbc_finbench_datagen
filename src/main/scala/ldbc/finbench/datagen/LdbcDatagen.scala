@@ -2,11 +2,15 @@ package ldbc.finbench.datagen
 
 import ldbc.finbench.datagen.factors.FactorGenerationStage
 import ldbc.finbench.datagen.generator.GenerationStage
+import ldbc.finbench.datagen.generator.dictionary.Dictionaries
+import ldbc.finbench.datagen.model.Mode
+import ldbc.finbench.datagen.transformation.TransformationStage
 import ldbc.finbench.datagen.util.SparkApp
 import shapeless.lens
 
 object LdbcDatagen extends SparkApp {
   val appName = "LDBC FinBench Datagen for Spark"
+
   case class Args(
       scaleFactor: String = "1",
       params: Map[String, String] = Map.empty,
@@ -132,6 +136,7 @@ object LdbcDatagen extends SparkApp {
   }
 
   override def run(args: ArgsType): Unit = {
+    val irFormat = env.irFormat
 
     val generatorArgs = GenerationStage.Args(
       scaleFactor = args.scaleFactor,
@@ -145,6 +150,7 @@ object LdbcDatagen extends SparkApp {
 
     GenerationStage.run(generatorArgs)
 
+    // TODO  by siwei-gu
     if (args.generateFactors) {
       val factorArgs = FactorGenerationStage.Args(
         outputDir = args.outputDir,
@@ -152,7 +158,24 @@ object LdbcDatagen extends SparkApp {
       )
       FactorGenerationStage.run(factorArgs)
     }
-    //val transformArgs = null
-    //TransformationStage.run(transformArgs)
+
+    val transformArgs = TransformationStage.Args(
+      outputDir = args.outputDir,
+      explodeEdges = args.explodeEdges,
+      explodeAttrs = args.explodeAttrs,
+      keepImplicitDeletes = args.keepImplicitDeletes,
+      simulationStart = Dictionaries.dates.getSimulationStart,
+      simulationEnd = Dictionaries.dates.getSimulationEnd,
+      mode = args.mode match {
+        case "raw"         => Mode.Raw
+        case "bi"          => Mode.BI
+        case "interactive" => Mode.Interactive
+      },
+      irFormat,
+      format = args.format,
+      formatOptions = args.formatOptions,
+      epochMillis = args.epochMillis
+    )
+    TransformationStage.run(transformArgs)
   }
 }

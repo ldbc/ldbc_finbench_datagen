@@ -1,6 +1,6 @@
 package ldbc.finbench.datagen.util
 
-import org.apache.spark.SparkConf
+import org.apache.spark.{SparkConf, SparkEnv}
 import org.apache.spark.sql.SparkSession
 
 trait SparkApp {
@@ -43,6 +43,8 @@ trait SparkApp {
   def defaultSparkConf: Map[String, String] = Map(
     "spark.sql.session.timeZone" -> "GMT"
   )
+
+  protected lazy val env: SparkEnv = new SparkEnv
 
 }
 
