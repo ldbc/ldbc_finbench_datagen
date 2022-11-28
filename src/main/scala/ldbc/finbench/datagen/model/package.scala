@@ -121,6 +121,16 @@ package object model {
       def dateTimePattern = "yyyy-MM-dd'T'HH:mm:ss.SSS+00:00"
       def datePattern     = "yyyy-MM-dd"
     }
+
+    final case object Interactive extends Mode {
+      type Layout = DataFrame
+      override val modePath: String = "interactive"
+    }
+
+    final case object BI extends Mode {
+      type Layout = DataFrame
+      override val modePath: String = "bi"
+    }
   }
 
   trait GraphLike[+M <: Mode] {
