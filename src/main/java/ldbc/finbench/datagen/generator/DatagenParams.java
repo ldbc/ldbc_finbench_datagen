@@ -109,7 +109,8 @@ public class DatagenParams {
                 output = new ZipfDistribution();
                 break;
             default:
-                throw new IllegalStateException("Unexpected degree distribution: " + degreeDistribution);
+                throw new IllegalStateException("Unexpected degree distribution: "
+                        + degreeDistribution);
         }
 
         return output;

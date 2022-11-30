@@ -50,7 +50,8 @@ public class GeneratorConfiguration implements Iterable<Map.Entry<String,String>
             return defaultValue;
         } else {
             String hexString = this.getHexDigits(valueString);
-            return hexString != null ? Integer.parseInt(hexString, 16) : Integer.parseInt(valueString);
+            return hexString
+                    != null ? Integer.parseInt(hexString, 16) : Integer.parseInt(valueString);
         }
     }
 

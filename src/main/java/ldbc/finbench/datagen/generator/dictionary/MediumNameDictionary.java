@@ -1,11 +1,10 @@
 package ldbc.finbench.datagen.generator.dictionary;
 
-import ldbc.finbench.datagen.generator.DatagenParams;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.TreeMap;
+import ldbc.finbench.datagen.generator.DatagenParams;
 
 public class MediumNameDictionary {
 
@@ -15,13 +14,14 @@ public class MediumNameDictionary {
 
     //TODO add other params
 
-    private void load(String filePath){
-        try{
-            InputStreamReader inputStreamReader = new InputStreamReader(getClass().getResourceAsStream(filePath), "UTF-8");
+    private void load(String filePath) {
+        try {
+            InputStreamReader inputStreamReader = new InputStreamReader(
+                    getClass().getResourceAsStream(filePath), "UTF-8");
             BufferedReader dictionary = new BufferedReader(inputStreamReader);
             String line;
             long totalMediumNames = 0;
-            while ((line = dictionary.readLine()) != null){
+            while ((line = dictionary.readLine()) != null) {
                 String[] data = line.split(SEPARATOR);
                 String surname = data[0].trim();
                 this.mediumNames.put(totalMediumNames,surname);
@@ -33,12 +33,12 @@ public class MediumNameDictionary {
         }
     }
 
-    public MediumNameDictionary(){
+    public MediumNameDictionary() {
         this.mediumNames = new TreeMap<>();
         load(DatagenParams.mediumNameFile);
     }
 
-    public String getMediumName(long k){
+    public String getMediumName(long k) {
         return mediumNames.get(k);
     }
 

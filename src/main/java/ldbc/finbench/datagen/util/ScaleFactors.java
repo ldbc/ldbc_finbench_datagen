@@ -1,16 +1,15 @@
 package ldbc.finbench.datagen.util;
 
+import java.io.IOException;
+import java.util.TreeMap;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
-import java.util.TreeMap;
 
 public class ScaleFactors {
     public final TreeMap<String, ScaleFactor> value;
@@ -22,8 +21,9 @@ public class ScaleFactors {
         try {
             value = new TreeMap<>();
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-            Document doc = dBuilder.parse(ScaleFactors.class.getResourceAsStream("/" + SCALE_FACTORS_FILE));
+            DocumentBuilder dbuilder = dbFactory.newDocumentBuilder();
+            Document doc = dbuilder.parse(ScaleFactors.class
+                                    .getResourceAsStream("/" + SCALE_FACTORS_FILE));
             doc.getDocumentElement().normalize();
 
             System.out.println("Reading scale factors..");
@@ -37,11 +37,14 @@ public class ScaleFactors {
                     NodeList properties = ((Element) node).getElementsByTagName("property");
                     for (int j = 0; j < properties.getLength(); ++j) {
                         Element property = (Element) properties.item(j);
-                        String name = property.getElementsByTagName("name").item(0).getTextContent();
-                        String value = property.getElementsByTagName("value").item(0).getTextContent();
+                        String name = property.getElementsByTagName("name")
+                                                .item(0).getTextContent();
+                        String value = property.getElementsByTagName("value")
+                                                .item(0).getTextContent();
                         scaleFactor.properties.put(name, value);
                     }
-                    System.out.println("Available scale factor configuration set " + scaleFactorName);
+                    System.out.println("Available scale factor configuration set "
+                                        + scaleFactorName);
                     value.put(scaleFactorName, scaleFactor);
                 }
             }
