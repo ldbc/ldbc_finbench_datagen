@@ -1,5 +1,6 @@
 package ldbc.finbench.datagen.generator;
 
+import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 import ldbc.finbench.datagen.util.GeneratorConfiguration;
 
 public class DatagenContext {
@@ -8,8 +9,8 @@ public class DatagenContext {
 
     public static synchronized void initialize(GeneratorConfiguration conf) {
         if (!initialized) {
-            // todo initialize config
-
+            DatagenParams.readConf(conf);
+            Dictionaries.loadDictionaries();
             initialized = true;
         }
     }
