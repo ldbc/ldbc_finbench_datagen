@@ -11,6 +11,7 @@ public class DatagenParams {
     public static final String companyNameFile = DICTIONARY_DIRECTORY + "companies.txt";
     public static final String personSurnameFile = DICTIONARY_DIRECTORY + "surnames.txt";
     public static final String mediumNameFile = DICTIONARY_DIRECTORY + "mediumSample.txt";
+    public static final String accountFile = DICTIONARY_DIRECTORY + "accountSample.txt";
 
     private enum ParameterNames {
         BASE_CORRELATED("generator.baseProbCorrelated"),
