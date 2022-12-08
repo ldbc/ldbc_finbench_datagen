@@ -1,0 +1,3 @@
+formula: y = alpha * (x^beta)
+alpha: 78379700.03758368
+beta: -2.318714660323696
