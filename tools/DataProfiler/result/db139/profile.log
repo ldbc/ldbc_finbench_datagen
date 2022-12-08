@@ -1,0 +1,4 @@
+Run degree profiling.
+load_cost = 547.45(s)
+exec_cost = 897.82(s)
+total_cost = 1445.27(s)
