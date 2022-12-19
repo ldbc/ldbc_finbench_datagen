@@ -3,11 +3,15 @@ package ldbc.finbench.datagen.entities.nodes;
 public class Medium {
     private long mediumId;
     private String mediumName;
+    private long creationDate;
+    private long maxDegree;
     private boolean isBlocked;
 
-    public Medium(long mediumId, String mediumName, boolean isBlocked) {
+    public Medium(long mediumId, String mediumName, long creationDate, long maxDegree, boolean isBlocked) {
         this.mediumId = mediumId;
         this.mediumName = mediumName;
+        this.creationDate = creationDate;
+        this.maxDegree = maxDegree;
         this.isBlocked = isBlocked;
     }
 
@@ -25,6 +29,22 @@ public class Medium {
 
     public void setMediumName(String mediumName) {
         this.mediumName = mediumName;
+    }
+
+    public long getCreationDate() {
+        return creationDate;
+    }
+
+    public void setCreationDate(long creationDate) {
+        this.creationDate = creationDate;
+    }
+
+    public long getMaxDegree() {
+        return maxDegree;
+    }
+
+    public void setMaxDegree(long maxDegree) {
+        this.maxDegree = maxDegree;
     }
 
     public boolean isBlocked() {

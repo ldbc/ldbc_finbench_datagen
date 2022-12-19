@@ -2,6 +2,7 @@ generator.baseProbCorrelated:0.95
 generator.blockSize:10000
 generator.degreeDistribution:Facebook
 generator.delta:10000
+generator.maxNumDegree:3000
 generator.minTextSize:85
 generator.missingRatio:0.2
 generator.mode.interactive.numUpdateStreams:1

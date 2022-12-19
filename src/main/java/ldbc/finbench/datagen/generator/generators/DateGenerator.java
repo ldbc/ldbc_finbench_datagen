@@ -1,5 +1,10 @@
 package ldbc.finbench.datagen.generator.generators;
 
+import java.time.LocalDate;
+import java.util.Random;
+import ldbc.finbench.datagen.generator.distribution.PowerLawDistribution;
+import ldbc.finbench.datagen.util.DateUtils;
+
 public class DateGenerator {
     public static final long ONE_DAY = 24L * 60L * 60L * 1000L;
     public static final long SEVEN_DAYS = 7L * ONE_DAY;
@@ -10,8 +15,33 @@ public class DateGenerator {
 
     private long simulationStart;
     private long simulationEnd;
+    private PowerLawDistribution powerLawDistribution;
 
-    // TODO generate other data value
+    public DateGenerator(LocalDate simulationStartYear, LocalDate simulationEndYear) {
+        simulationStart = DateUtils.toEpochMilli(simulationStartYear);
+        simulationEnd = DateUtils.toEpochMilli(simulationEndYear);
+        powerLawDistribution = new PowerLawDistribution(0.5,0.5);
+    }
+
+    public Long randomPersonCreationDate(Random random) {
+        return (long) (simulationStart + random.nextDouble() * (simulationEnd - simulationStart));
+    }
+
+    public Long randomCompanyCreationDate(Random random) {
+        return (long) (simulationStart + random.nextDouble() * (simulationEnd - simulationStart));
+    }
+
+    public Long randomAccountCreationDate(Random random) {
+        return (long) (simulationStart + random.nextDouble() * (simulationEnd - simulationStart));
+    }
+
+    public Long randomMediumCreationDate(Random random) {
+        return (long) (simulationStart + random.nextDouble() * (simulationEnd - simulationStart));
+    }
+
+    public Long randomLoanCreationDate(Random random) {
+        return (long) (simulationStart + random.nextDouble() * (simulationEnd - simulationStart));
+    }
 
     public long getSimulationStart() {
         return simulationStart;

@@ -12,12 +12,14 @@ public class DatagenParams {
     public static final String personSurnameFile = DICTIONARY_DIRECTORY + "surnames.txt";
     public static final String mediumNameFile = DICTIONARY_DIRECTORY + "mediumSample.txt";
     public static final String accountFile = DICTIONARY_DIRECTORY + "accountSample.txt";
+    public static final String facebookDegreeFile = DICTIONARY_DIRECTORY + "facebookDegreeSample.txt";
 
     private enum ParameterNames {
         BASE_CORRELATED("generator.baseProbCorrelated"),
         BLOCK_SIZE("generator.blockSize"),
         DEGREE_DISTRIBUTION("generator.degreeDistribution"),
         DELTA("generator.delta"),
+        MAX_NUM_DEGREE("generator.maxNumDegree"),
         MIN_TEXT_SIZE("generator.minTextSize"),
         MISSING_RATIO("generator.missingRatio"),
         NUM_UPDATE_STREAMS("generator.mode.interactive.numUpdateStreams"),
@@ -41,6 +43,7 @@ public class DatagenParams {
     public static int blockSize = 0;
     public static String degreeDistribution;
     public static int delta = 0;
+    public static long maxNumDegree = 0;
     public static int minTextSize = 0;
     public static double missingRatio = 0.0;
     public static int numUpdateStreams = 0;
@@ -62,6 +65,7 @@ public class DatagenParams {
             blockSize = intConf(conf,ParameterNames.BLOCK_SIZE);
             degreeDistribution = stringConf(conf,ParameterNames.DEGREE_DISTRIBUTION);
             delta = intConf(conf,ParameterNames.DELTA);
+            maxNumDegree = longConf(conf,ParameterNames.MAX_NUM_DEGREE);
             minTextSize = intConf(conf,ParameterNames.MIN_TEXT_SIZE);
             missingRatio = doubleConf(conf,ParameterNames.MISSING_RATIO);
             numUpdateStreams = intConf(conf,ParameterNames.NUM_UPDATE_STREAMS);
