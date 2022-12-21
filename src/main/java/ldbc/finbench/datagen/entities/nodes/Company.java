@@ -3,11 +3,15 @@ package ldbc.finbench.datagen.entities.nodes;
 public class Company {
     private long companyId;
     private String companyName;
+    private long creationDate;
+    private long maxDegree;
     private boolean isBlocked;
 
-    public Company(long companyId, String companyName, boolean isBlocked) {
+    public Company(long companyId, String companyName, long creationDate, long maxDegree, boolean isBlocked) {
         this.companyId = companyId;
         this.companyName = companyName;
+        this.creationDate =  creationDate;
+        this.maxDegree = maxDegree;
         this.isBlocked = isBlocked;
     }
 
@@ -25,6 +29,22 @@ public class Company {
 
     public void setCompanyName(String companyName) {
         this.companyName = companyName;
+    }
+
+    public long getCreationDate() {
+        return creationDate;
+    }
+
+    public void setCreationDate(long creationDate) {
+        this.creationDate = creationDate;
+    }
+
+    public long getMaxDegree() {
+        return maxDegree;
+    }
+
+    public void setMaxDegree(long maxDegree) {
+        this.maxDegree = maxDegree;
     }
 
     public boolean isBlocked() {
