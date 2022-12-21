@@ -1,8 +1,9 @@
 package ldbc.finbench.datagen.entities.edges;
 
+import java.io.Serializable;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 
-public class CompanyGuaraentee implements DynamicActivity {
+public class CompanyGuaraentee implements DynamicActivity, Serializable {
     private long companyId;
     private long creationDate;
     private long deletionDate;

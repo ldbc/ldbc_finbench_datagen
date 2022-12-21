@@ -1,6 +1,8 @@
 package ldbc.finbench.datagen.entities.nodes;
 
-public class Medium {
+import java.io.Serializable;
+
+public class Medium implements Serializable {
     private long mediumId;
     private String mediumName;
     private long creationDate;

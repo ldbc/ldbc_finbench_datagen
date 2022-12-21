@@ -1,6 +1,8 @@
 package ldbc.finbench.datagen.entities.nodes;
 
-public class Loan {
+import java.io.Serializable;
+
+public class Loan implements Serializable {
     private long loanId;
     private long loanAmount;
     private long balance;
