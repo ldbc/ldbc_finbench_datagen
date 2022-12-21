@@ -1,6 +1,8 @@
 package ldbc.finbench.datagen.generator
 
 import java.net.URI
+import java.util.Properties
+import ldbc.finbench.datagen.generator.generators.SparkPersonGenerator
 import ldbc.finbench.datagen.generator.serializers.RawSerializer
 import ldbc.finbench.datagen.util.{
   ConfigParser,
@@ -31,8 +33,14 @@ object GenerationStage extends DatagenStage with Logging {
     DatagenContext.initialize(config)
 
     // todo compute parallelism
+    val personNum = 100000 // TODO use DatagenParams.numPerson
+    val blockSize = 5000   // TODO use DatagenParams.blockSize
+    val partitions = Math
+      .min(Math.ceil(personNum.toDouble / blockSize).toLong, spark.sparkContext.defaultParallelism)
+      .toInt
 
     // todo generate entities
+    val persons = SparkPersonGenerator(config, Some(partitions))
 
     SparkUI.job(implicitly[ClassTag[RawSerializer]].runtimeClass.getSimpleName,
                 "serialize Finbench data") {
@@ -48,9 +56,11 @@ object GenerationStage extends DatagenStage with Logging {
     * @return {@link GeneratorConfiguration}
     */
   private def buildConfig(args: Args): GeneratorConfiguration = {
-    val conf = new java.util.HashMap[String, String]
-    conf.putAll(
-      ConfigParser.readConfig(getClass.getResourceAsStream("/resources/params_default.txt")))
+    val conf        = new java.util.HashMap[String, String]
+    val props       = new Properties()
+    val inputStream = getClass.getClassLoader.getResourceAsStream("params_default.ini")
+    props.load(inputStream)
+    conf.putAll(props.asScala.asJava)
 
     for { paramsFile <- args.paramFile } conf.putAll(
       ConfigParser.readConfig(openPropFileStream(URI.create(paramsFile))))

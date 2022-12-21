@@ -1,9 +1,10 @@
 package ldbc.finbench.datagen.util;
 
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Map;
 
-public class GeneratorConfiguration implements Iterable<Map.Entry<String,String>> {
+public class GeneratorConfiguration implements Iterable<Map.Entry<String,String>>, Serializable {
     public final Map<String, String> map;
 
     public GeneratorConfiguration(Map<String, String> map) {

@@ -24,6 +24,7 @@ trait SparkApp {
   implicit def spark: SparkSession =
     SparkSession
       .builder()
+      .master("local")
       .appName(appName)
       .config(sparkConf)
       .getOrCreate()

@@ -18,4 +18,5 @@ object graphs {
 
     override def exists(self: GraphSource[M]): Boolean = ???
   }
+
 }
