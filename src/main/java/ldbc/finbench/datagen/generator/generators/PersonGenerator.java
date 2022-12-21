@@ -16,7 +16,7 @@ public class PersonGenerator {
     private RandomGeneratorFarm randomFarm;
     private int nextId = 0;
 
-    public PersonGenerator(GeneratorConfiguration conf, String degreeDistribution){
+    public PersonGenerator(GeneratorConfiguration conf, String degreeDistribution) {
         this.randomFarm = new RandomGeneratorFarm();
         this.degreeDistribution.initialize(conf);
         this.personNameDictionary = new PersonNameDictionary();
@@ -26,7 +26,7 @@ public class PersonGenerator {
         long idMask = ~(0xFFFFFFFFFFFFFFFFL << 41);
         long bucket =
                 (long) (256 * (date - Dictionaries.dates.getSimulationStart()) / (double) Dictionaries.dates
-                .getSimulationEnd());
+                        .getSimulationEnd());
         return (bucket << 41) | ((id & idMask));
     }
 
@@ -38,8 +38,8 @@ public class PersonGenerator {
         String personSurname = Dictionaries.personNames.getGeoDistRandomName(
                 randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_NAME),
                 personNameDictionary.getNumNames());
-        byte gender = (randomFarm.get(RandomGeneratorFarm.Aspect.GENDER)).nextDouble() > 0.5 ?
-                (byte) 1 : (byte) 0;
+        byte gender = (randomFarm.get(RandomGeneratorFarm.Aspect.GENDER)).nextDouble() > 0.5
+                ? (byte) 1 : (byte) 0;
         long maxDegree = Math.min(degreeDistribution.nextDegree(), DatagenParams.maxNumDegree);
         boolean isBlocked = false;
 
@@ -49,16 +49,16 @@ public class PersonGenerator {
     public Iterator<Person> generatePersonBlock(int blockId, int blockSize) {
         nextId = blockId * blockSize;
         return new Iterator<Person>() {
-            private int i = 0;
+            private int personNum = 0;
 
             @Override
             public boolean hasNext() {
-                return i < blockSize;
+                return personNum < blockSize;
             }
 
             @Override
             public Person next() {
-                ++i;
+                ++personNum;
                 return generatePerson();
             }
         };

@@ -4,6 +4,7 @@ import ldbc.finbench.datagen.factors.FactorGenerationStage
 import ldbc.finbench.datagen.generator.GenerationStage
 import ldbc.finbench.datagen.generator.dictionary.Dictionaries
 import ldbc.finbench.datagen.model.Mode
+import ldbc.finbench.datagen.transformation.TransformationStage
 import ldbc.finbench.datagen.util.SparkApp
 import shapeless.lens
 
@@ -149,7 +150,7 @@ object LdbcDatagen extends SparkApp {
 
     GenerationStage.run(generatorArgs)
 
-    /*// TODO  by siwei-gu
+    // TODO  by siwei-gu
     if (args.generateFactors) {
       val factorArgs = FactorGenerationStage.Args(
         outputDir = args.outputDir,
@@ -158,6 +159,9 @@ object LdbcDatagen extends SparkApp {
       FactorGenerationStage.run(factorArgs)
     }
 
+    // TODO release the transform stage
+    /*
+    Dictionaries.loadDictionaries()
     val transformArgs = TransformationStage.Args(
       outputDir = args.outputDir,
       explodeEdges = args.explodeEdges,
@@ -175,6 +179,7 @@ object LdbcDatagen extends SparkApp {
       formatOptions = args.formatOptions,
       epochMillis = args.epochMillis
     )
-    TransformationStage.run(transformArgs)*/
+    TransformationStage.run(transformArgs)
+   */
   }
 }

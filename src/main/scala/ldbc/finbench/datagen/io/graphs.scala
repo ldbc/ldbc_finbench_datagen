@@ -1,12 +1,19 @@
 package ldbc.finbench.datagen.io
 
 import ldbc.finbench.datagen.model.Mode.Raw.Layout
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.reflect.internal.Mode
 
 object graphs {
+
+  case class GraphSink(
+      path: String,
+      format: String,
+      formatOptions: Map[String, String] = Map.empty,
+      saveMode: SaveMode = SaveMode.ErrorIfExists
+  )
 
   case class GraphSource[M <: Mode](implicit spark: SparkSession, en: DataFrame =:= Layout)
       extends Reader[GraphSource[M]] {
