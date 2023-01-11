@@ -1,8 +1,9 @@
 package ldbc.finbench.datagen.entities.edges;
 
+import java.io.Serializable;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 
-public class SignIn implements DynamicActivity {
+public class SignIn implements DynamicActivity, Serializable {
     private long mediumId;
     private long accountId;
     private long creationDate;

@@ -159,6 +159,9 @@ object LdbcDatagen extends SparkApp {
       FactorGenerationStage.run(factorArgs)
     }
 
+    // TODO release the transform stage
+    /*
+    Dictionaries.loadDictionaries()
     val transformArgs = TransformationStage.Args(
       outputDir = args.outputDir,
       explodeEdges = args.explodeEdges,
@@ -177,5 +180,6 @@ object LdbcDatagen extends SparkApp {
       epochMillis = args.epochMillis
     )
     TransformationStage.run(transformArgs)
+   */
   }
 }

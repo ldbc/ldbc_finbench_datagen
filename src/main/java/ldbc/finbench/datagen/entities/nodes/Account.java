@@ -1,6 +1,8 @@
 package ldbc.finbench.datagen.entities.nodes;
 
-public class Account {
+import java.io.Serializable;
+
+public class Account implements Serializable {
     private long accountId;
     private long createTime;
     private long maxDegree;

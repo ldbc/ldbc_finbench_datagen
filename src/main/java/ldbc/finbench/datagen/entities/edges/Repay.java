@@ -1,8 +1,9 @@
 package ldbc.finbench.datagen.entities.edges;
 
+import java.io.Serializable;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 
-public class Repay implements DynamicActivity {
+public class Repay implements DynamicActivity, Serializable {
     private long loanId;
     private long accountId;
     private long creationDate;

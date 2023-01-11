@@ -1,8 +1,9 @@
 package ldbc.finbench.datagen.entities.edges;
 
+import java.io.Serializable;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 
-public class Withdraw implements DynamicActivity {
+public class Withdraw implements DynamicActivity, Serializable {
     private long accountId;
     private long creationDate;
     private long deletionDate;

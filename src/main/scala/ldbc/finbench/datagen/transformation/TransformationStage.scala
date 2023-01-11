@@ -1,9 +1,14 @@
 package ldbc.finbench.datagen.transformation
 
-import ldbc.finbench.datagen.model.Mode
+import ldbc.finbench.datagen.io.graphs.{GraphSink, GraphSource}
+import ldbc.finbench.datagen.model
+import ldbc.finbench.datagen.model.{BatchedEntity, Graph, Mode}
 import ldbc.finbench.datagen.util.DatagenStage
+import org.apache.spark.sql.DataFrame
+import shapeless.Poly1
 
 object TransformationStage extends DatagenStage {
+
   case class Args(
       outputDir: String = "out",
       explodeEdges: Boolean = false,
@@ -23,5 +28,5 @@ object TransformationStage extends DatagenStage {
   /**
     * execute the transform process
     */
-  override def run(args: Args): Unit = ???
+  override def run(args: Args): Unit = {}
 }

@@ -1,5 +1,6 @@
 package ldbc.finbench.datagen
 
+import ldbc.finbench.datagen.io.graphs
 import ldbc.finbench.datagen.util.pascalToCamel
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.{Column, DataFrame, Encoder}
@@ -93,6 +94,14 @@ package object model {
       override def toString: String = s"${parent.name} ♢-[${`type`}] -> $attribute"
     }
   }
+
+  case class Batched(entity: DataFrame, batchId: Seq[String], ordering: Seq[Column])
+
+  case class BatchedEntity(
+      snapshot: DataFrame,
+      insertBatches: Option[Batched],
+      deleteBatches: Option[Batched]
+  )
 
   sealed trait Mode {
     type Layout

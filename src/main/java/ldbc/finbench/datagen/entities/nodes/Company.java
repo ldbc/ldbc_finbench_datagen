@@ -1,6 +1,8 @@
 package ldbc.finbench.datagen.entities.nodes;
 
-public class Company {
+import java.io.Serializable;
+
+public class Company implements Serializable {
     private long companyId;
     private String companyName;
     private long creationDate;

@@ -1,6 +1,8 @@
 package ldbc.finbench.datagen.entities.nodes;
 
-public class Person {
+import java.io.Serializable;
+
+public class Person implements Serializable {
     private long personId;
     private String personName;
     private byte gender;
