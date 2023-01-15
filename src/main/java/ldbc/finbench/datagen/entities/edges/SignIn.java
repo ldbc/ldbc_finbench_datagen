@@ -1,7 +1,11 @@
 package ldbc.finbench.datagen.entities.edges;
 
 import java.io.Serializable;
+import java.util.Random;
 import ldbc.finbench.datagen.entities.DynamicActivity;
+import ldbc.finbench.datagen.entities.nodes.Account;
+import ldbc.finbench.datagen.entities.nodes.Medium;
+import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 
 public class SignIn implements DynamicActivity, Serializable {
     private long mediumId;
@@ -10,8 +14,19 @@ public class SignIn implements DynamicActivity, Serializable {
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public SignIn() {
-        //TODO
+    public SignIn(long mediumId, long accountId, long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
+        this.mediumId = mediumId;
+        this.accountId = accountId;
+        this.creationDate = creationDate;
+        this.deletionDate = deletionDate;
+        this.isExplicitlyDeleted = isExplicitlyDeleted;
+    }
+
+    public static void createSignIn(Random random, Medium medium, Account account) {
+        long creationDate = Dictionaries.dates.randomMediumToAccountDate(random, medium, account);
+
+        medium.getSignIns().add(new SignIn(medium.getMediumId(), account.getAccountId(),
+                creationDate, 0, false));
     }
 
     public long getMediumId() {

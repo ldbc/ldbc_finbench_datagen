@@ -1,7 +1,11 @@
 package ldbc.finbench.datagen.entities.edges;
 
 import java.io.Serializable;
+import java.util.Random;
 import ldbc.finbench.datagen.entities.DynamicActivity;
+import ldbc.finbench.datagen.entities.nodes.Account;
+import ldbc.finbench.datagen.entities.nodes.Loan;
+import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 
 public class Deposit implements DynamicActivity, Serializable {
     private long loanId;
@@ -10,8 +14,19 @@ public class Deposit implements DynamicActivity, Serializable {
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public Deposit() {
-        //TODO
+    public Deposit(long loanId, long accountId, long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
+        this.loanId = loanId;
+        this.accountId = accountId;
+        this.creationDate = creationDate;
+        this.deletionDate = deletionDate;
+        this.isExplicitlyDeleted = isExplicitlyDeleted;
+    }
+
+    public static void createDeposit(Random random, Loan loan, Account account) {
+        long creationDate = Dictionaries.dates.randomLoanToAccountDate(random, loan, account);
+
+        loan.getDeposits().add(new Deposit(loan.getLoanId(), account.getAccountId(),
+                creationDate, 0, false));
     }
 
     public long getLoanId() {

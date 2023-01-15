@@ -1,10 +1,14 @@
 package ldbc.finbench.datagen.entities.nodes;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import ldbc.finbench.datagen.entities.edges.SignIn;
 
 public class Medium implements Serializable {
     private long mediumId;
     private String mediumName;
+    private List<SignIn> signIns;
     private long creationDate;
     private long maxDegree;
     private boolean isBlocked;
@@ -12,6 +16,7 @@ public class Medium implements Serializable {
     public Medium(long mediumId, String mediumName, long creationDate, long maxDegree, boolean isBlocked) {
         this.mediumId = mediumId;
         this.mediumName = mediumName;
+        signIns = new ArrayList<>();
         this.creationDate = creationDate;
         this.maxDegree = maxDegree;
         this.isBlocked = isBlocked;
@@ -31,6 +36,14 @@ public class Medium implements Serializable {
 
     public void setMediumName(String mediumName) {
         this.mediumName = mediumName;
+    }
+
+    public List<SignIn> getSignIns() {
+        return signIns;
+    }
+
+    public void setSignIns(List<SignIn> signIns) {
+        this.signIns = signIns;
     }
 
     public long getCreationDate() {

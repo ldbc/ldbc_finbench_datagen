@@ -5,6 +5,7 @@ import ldbc.finbench.datagen.generator.DatagenParams;
 import ldbc.finbench.datagen.generator.dictionary.CompanyNameDictionary;
 import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 import ldbc.finbench.datagen.generator.distribution.DegreeDistribution;
+import ldbc.finbench.datagen.util.GeneratorConfiguration;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class CompanyGenerator {
@@ -13,6 +14,12 @@ public class CompanyGenerator {
     private CompanyNameDictionary companyNameDictionary;
     private RandomGeneratorFarm randomFarm;
     private int nextId = 0;
+
+    public CompanyGenerator(GeneratorConfiguration conf) {
+        this.randomFarm = new RandomGeneratorFarm();
+        this.degreeDistribution.initialize(conf);
+        this.companyNameDictionary = new CompanyNameDictionary();
+    }
 
     private long composeCompanyId(long id, long date) {
         long idMask = ~(0xFFFFFFFFFFFFFFFFL << 40);

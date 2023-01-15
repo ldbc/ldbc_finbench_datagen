@@ -1,11 +1,15 @@
 package ldbc.finbench.datagen.entities.nodes;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import ldbc.finbench.datagen.entities.edges.Deposit;
 
 public class Loan implements Serializable {
     private long loanId;
     private long loanAmount;
     private long balance;
+    private List<Deposit> deposits;
     private long creationDate;
     private long maxDegree;
 
@@ -13,6 +17,7 @@ public class Loan implements Serializable {
         this.loanId = loanId;
         this.loanAmount = loanAmount;
         this.balance = balance;
+        deposits = new ArrayList<>();
         this.creationDate = creationDate;
         this.maxDegree = maxDegree;
     }
@@ -39,6 +44,14 @@ public class Loan implements Serializable {
 
     public void setBalance(long balance) {
         this.balance = balance;
+    }
+
+    public List<Deposit> getDeposits() {
+        return deposits;
+    }
+
+    public void setDeposits(List<Deposit> deposits) {
+        this.deposits = deposits;
     }
 
     public long getCreationDate() {

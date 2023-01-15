@@ -102,6 +102,14 @@
     </build>
 
     <dependencies>
+        <!-- https://mvnrepository.com/artifact/junit/junit -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- spark -->
         <dependency>
             <groupId>org.apache.spark</groupId>
@@ -134,5 +142,6 @@
             <artifactId>scalatest-funsuite_2.11</artifactId>
             <version>${scalatest.version}</version>
         </dependency>
+
     </dependencies>
 </project>

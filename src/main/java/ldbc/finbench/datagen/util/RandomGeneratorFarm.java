@@ -9,6 +9,7 @@ public class RandomGeneratorFarm {
     public enum Aspect {
         DATE,
         GENDER,
+        INT,
         PERSON_NAME,
         COMPANY_NAME,
         MEDIUM_NAME,

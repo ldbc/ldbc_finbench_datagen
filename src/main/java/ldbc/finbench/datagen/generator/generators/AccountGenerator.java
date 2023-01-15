@@ -1,6 +1,5 @@
 package ldbc.finbench.datagen.generator.generators;
 
-import java.util.Random;
 import ldbc.finbench.datagen.entities.nodes.Account;
 import ldbc.finbench.datagen.generator.DatagenParams;
 import ldbc.finbench.datagen.generator.dictionary.AccountDictionary;
@@ -22,7 +21,7 @@ public class AccountGenerator {
         return (bucket << 43) | ((id & idMask));
     }
 
-    private Account generateAccount() {
+    public Account generateAccount() {
 
         long creationDate = Dictionaries.dates.randomAccountCreationDate(
                 randomFarm.get(RandomGeneratorFarm.Aspect.DATE));
@@ -32,6 +31,6 @@ public class AccountGenerator {
                 randomFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_TYPE),accountDictionary.getNumNames());
         boolean isBlocked = false;
 
-        return new Account(accountId,creationDate,maxDegree,type,isBlocked);
+        return new Account(accountId,type,creationDate,maxDegree,isBlocked);
     }
 }
