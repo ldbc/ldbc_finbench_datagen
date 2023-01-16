@@ -1,24 +1,48 @@
 package ldbc.finbench.datagen.entities.edges;
 
 import java.io.Serializable;
+import java.util.Random;
 import ldbc.finbench.datagen.entities.DynamicActivity;
+import ldbc.finbench.datagen.entities.nodes.Account;
+import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 
 public class Transfer implements DynamicActivity, Serializable {
-    private long accountId;
+    private long fromAccountId;
+    private long toAccountId;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public Transfer() {
-        //TODO
+    public Transfer(long fromAccountId, long toAccountId,
+                    long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
+        this.fromAccountId = fromAccountId;
+        this.toAccountId = toAccountId;
+        this.creationDate = creationDate;
+        this.deletionDate = deletionDate;
+        this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public long getAccountId() {
-        return accountId;
+    public static void createTransfer(Random random, Account fromAccount, Account toAccount) {
+        long creationDate = Dictionaries.dates.randomAccountToAccountDate(random, fromAccount, toAccount);
+
+        fromAccount.getTransfers().add(new Transfer(fromAccount.getAccountId(), toAccount.getAccountId(),
+                creationDate, 0, false));
     }
 
-    public void setAccountId(long accountId) {
-        this.accountId = accountId;
+    public long getFromAccountId() {
+        return fromAccountId;
+    }
+
+    public void setFromAccountId(long fromAccountId) {
+        this.fromAccountId = fromAccountId;
+    }
+
+    public long getToAccountId() {
+        return toAccountId;
+    }
+
+    public void setToAccountId(long toAccountId) {
+        this.toAccountId = toAccountId;
     }
 
     @Override

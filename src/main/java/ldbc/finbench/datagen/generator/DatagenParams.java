@@ -6,13 +6,13 @@ import ldbc.finbench.datagen.generator.distribution.ZipfDistribution;
 import ldbc.finbench.datagen.util.GeneratorConfiguration;
 
 public class DatagenParams {
-    public static final String DICTIONARY_DIRECTORY = "./resources/datasource/";
+    public static final String DICTIONARY_DIRECTORY = "src/main/resources/datasource/";
 
     public static final String companyNameFile = DICTIONARY_DIRECTORY + "companies.txt";
     public static final String personSurnameFile = DICTIONARY_DIRECTORY + "surnames.txt";
-    public static final String mediumNameFile = DICTIONARY_DIRECTORY + "mediumSample.txt";
-    public static final String accountFile = DICTIONARY_DIRECTORY + "accountSample.txt";
-    public static final String facebookDegreeFile = DICTIONARY_DIRECTORY + "facebookDegreeSample.txt";
+    public static final String mediumNameFile = DICTIONARY_DIRECTORY + "medium.txt";
+    public static final String accountFile = DICTIONARY_DIRECTORY + "account.txt";
+    public static final String facebookDegreeFile = DICTIONARY_DIRECTORY + "degreeFile.dat";
 
     private enum ParameterNames {
         BASE_CORRELATED("generator.baseProbCorrelated"),

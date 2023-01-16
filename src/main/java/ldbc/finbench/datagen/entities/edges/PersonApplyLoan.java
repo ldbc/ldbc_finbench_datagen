@@ -1,17 +1,33 @@
 package ldbc.finbench.datagen.entities.edges;
 
 import java.io.Serializable;
+import java.util.Random;
 import ldbc.finbench.datagen.entities.DynamicActivity;
+import ldbc.finbench.datagen.entities.nodes.Loan;
+import ldbc.finbench.datagen.entities.nodes.Person;
+import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 
-public class PersonApply implements DynamicActivity, Serializable {
+public class PersonApplyLoan implements DynamicActivity, Serializable {
     private long personId;
     private long loanId;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public PersonApply() {
-        //TODO
+    public PersonApplyLoan(long personId, long loanId,
+                           long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
+        this.personId = personId;
+        this.loanId = loanId;
+        this.creationDate = creationDate;
+        this.deletionDate = deletionDate;
+        this.isExplicitlyDeleted = isExplicitlyDeleted;
+    }
+
+    public static void createPersonApplyLoan(Random random, Person person, Loan loan) {
+        long creationDate = Dictionaries.dates.randomPersonToLoanDate(random, person, loan);
+
+        person.getPersonApplyLoans().add(new PersonApplyLoan(person.getPersonId(), loan.getLoanId(),
+                creationDate, 0, false));
     }
 
     public long getPersonId() {

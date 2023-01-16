@@ -1,17 +1,33 @@
 package ldbc.finbench.datagen.entities.edges;
 
 import java.io.Serializable;
+import java.util.Random;
 import ldbc.finbench.datagen.entities.DynamicActivity;
+import ldbc.finbench.datagen.entities.nodes.Account;
+import ldbc.finbench.datagen.entities.nodes.Company;
+import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 
-public class CompanyOwn implements DynamicActivity, Serializable {
+public class CompanyOwnAccount implements DynamicActivity, Serializable {
     private long companyId;
     private long accountId;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public CompanyOwn() {
-        //TODO
+    public CompanyOwnAccount(long companyId, long accountId,
+                             long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
+        this.companyId = companyId;
+        this.accountId = accountId;
+        this.creationDate = creationDate;
+        this.deletionDate = deletionDate;
+        this.isExplicitlyDeleted = isExplicitlyDeleted;
+    }
+
+    public static void createCompanyOwnAccount(Random random, Company company, Account account) {
+        long creationDate = Dictionaries.dates.randomCompanyToAccountDate(random, company, account);
+
+        company.getCompanyOwnAccounts().add(new CompanyOwnAccount(company.getCompanyId(), account.getAccountId(),
+                creationDate, 0, false));
     }
 
     public long getCompanyId() {

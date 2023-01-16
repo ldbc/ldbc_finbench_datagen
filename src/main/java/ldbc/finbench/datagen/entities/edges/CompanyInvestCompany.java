@@ -4,44 +4,45 @@ import java.io.Serializable;
 import java.util.Random;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 import ldbc.finbench.datagen.entities.nodes.Company;
-import ldbc.finbench.datagen.entities.nodes.Person;
 import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 
-public class WorkIn implements DynamicActivity, Serializable {
-    private long personId;
-    private long companyId;
+public class CompanyInvestCompany implements DynamicActivity, Serializable {
+    private long fromCompanyId;
+    private long toCompanyId;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public WorkIn(long personId, long companyId, long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
-        this.personId = personId;
-        this.companyId = companyId;
+    public CompanyInvestCompany(long fromCompanyId, long toCompanyId,
+                                long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
+        this.fromCompanyId = fromCompanyId;
+        this.toCompanyId = toCompanyId;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static void createWorkIn(Random random, Person person, Company company) {
-        long creationDate = Dictionaries.dates.randomPersonToCompanyDate(random, person, company);
+    public static void createCompanyInvestCompany(Random random, Company fromCompany, Company toCompany) {
+        long creationDate = Dictionaries.dates.randomCompanyToCompanyDate(random, fromCompany, toCompany);
 
-        person.setWorkIn(new WorkIn(person.getPersonId(), company.getCompanyId(), creationDate, 0, false));
+        fromCompany.getCompanyInvestCompanies().add(new CompanyInvestCompany(fromCompany.getCompanyId(),
+                toCompany.getCompanyId(), creationDate, 0, false));
     }
 
-    public long getPersonId() {
-        return personId;
+    public long getFromCompanyId() {
+        return fromCompanyId;
     }
 
-    public void setPersonId(long personId) {
-        this.personId = personId;
+    public void setFromCompanyId(long fromCompanyId) {
+        this.fromCompanyId = fromCompanyId;
     }
 
-    public long getCompanyId() {
-        return companyId;
+    public long getToCompanyId() {
+        return toCompanyId;
     }
 
-    public void setCompanyId(long companyId) {
-        this.companyId = companyId;
+    public void setToCompanyId(long toCompanyId) {
+        this.toCompanyId = toCompanyId;
     }
 
     @Override

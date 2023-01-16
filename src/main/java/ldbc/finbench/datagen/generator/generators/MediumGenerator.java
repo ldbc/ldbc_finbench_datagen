@@ -2,9 +2,11 @@ package ldbc.finbench.datagen.generator.generators;
 
 import ldbc.finbench.datagen.entities.nodes.Medium;
 import ldbc.finbench.datagen.generator.DatagenParams;
+import ldbc.finbench.datagen.generator.dictionary.CompanyNameDictionary;
 import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 import ldbc.finbench.datagen.generator.dictionary.MediumNameDictionary;
 import ldbc.finbench.datagen.generator.distribution.DegreeDistribution;
+import ldbc.finbench.datagen.util.GeneratorConfiguration;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class MediumGenerator {
@@ -13,6 +15,12 @@ public class MediumGenerator {
     private MediumNameDictionary mediumNameDictionary;
     private RandomGeneratorFarm randomFarm;
     private int nextId = 0;
+
+    public MediumGenerator(GeneratorConfiguration conf) {
+        this.randomFarm = new RandomGeneratorFarm();
+        this.degreeDistribution.initialize(conf);
+        this.mediumNameDictionary = new MediumNameDictionary();
+    }
 
     private long composeMediumId(long id, long date) {
         long idMask = ~(0xFFFFFFFFFFFFFFFFL << 42);

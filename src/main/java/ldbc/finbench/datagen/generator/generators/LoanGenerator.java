@@ -20,7 +20,7 @@ public class LoanGenerator {
         return (bucket << 44) | ((id & idMask));
     }
 
-    private Loan generateLoan() {
+    public Loan generateLoan() {
 
         long creationDate = Dictionaries.dates.randomLoanCreationDate(randomFarm.get(RandomGeneratorFarm.Aspect.DATE));
         long loanId = composeLoanId(nextId++, creationDate);

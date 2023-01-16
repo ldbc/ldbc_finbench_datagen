@@ -3,45 +3,46 @@ package ldbc.finbench.datagen.entities.edges;
 import java.io.Serializable;
 import java.util.Random;
 import ldbc.finbench.datagen.entities.DynamicActivity;
-import ldbc.finbench.datagen.entities.nodes.Company;
 import ldbc.finbench.datagen.entities.nodes.Person;
 import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 
-public class WorkIn implements DynamicActivity, Serializable {
-    private long personId;
-    private long companyId;
+public class PersonGuaranteePerson implements DynamicActivity, Serializable {
+    private long fromPersonId;
+    private long toPersonId;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public WorkIn(long personId, long companyId, long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
-        this.personId = personId;
-        this.companyId = companyId;
+    public PersonGuaranteePerson(long fromPersonId, long toPersonId,
+                                 long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
+        this.fromPersonId = fromPersonId;
+        this.toPersonId = toPersonId;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static void createWorkIn(Random random, Person person, Company company) {
-        long creationDate = Dictionaries.dates.randomPersonToCompanyDate(random, person, company);
+    public static void createPersonGuaranteePerson(Random random, Person fromPerson, Person toPerson) {
+        long creationDate = Dictionaries.dates.randomPersonToPersonDate(random, fromPerson, toPerson);
 
-        person.setWorkIn(new WorkIn(person.getPersonId(), company.getCompanyId(), creationDate, 0, false));
+        fromPerson.getPersonGuaranteePeople().add(new PersonGuaranteePerson(fromPerson.getPersonId(),
+                toPerson.getPersonId(), creationDate, 0, false));
     }
 
-    public long getPersonId() {
-        return personId;
+    public long getFromPersonId() {
+        return fromPersonId;
     }
 
-    public void setPersonId(long personId) {
-        this.personId = personId;
+    public void setFromPersonId(long fromPersonId) {
+        this.fromPersonId = fromPersonId;
     }
 
-    public long getCompanyId() {
-        return companyId;
+    public long getToPersonId() {
+        return toPersonId;
     }
 
-    public void setCompanyId(long companyId) {
-        this.companyId = companyId;
+    public void setToPersonId(long toPersonId) {
+        this.toPersonId = toPersonId;
     }
 
     @Override
