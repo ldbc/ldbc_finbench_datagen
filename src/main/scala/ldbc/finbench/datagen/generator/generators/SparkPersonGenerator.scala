@@ -30,8 +30,9 @@ object SparkPersonGenerator {
 
     val partitions = numPartitions.getOrElse(spark.sparkContext.defaultParallelism)
 
-    spark.sparkContext
+    val personRdd = spark.sparkContext
       .range(0, numBlocks, step = 1, numSlices = partitions)
       .mapPartitions(personPartitionGenerator)
+    personRdd
   }
 }

@@ -6,14 +6,14 @@ package ldbc.finbench.datagen.model
 object raw {
 
   // define Person entity
-  case class Person(
+  case class PersonRaw(
       id: Long,
       name: String,
       isBlocked: Boolean
   )
 
   // define Account entity
-  case class Account(
+  case class AccountRaw(
       id: Long,
       createTime: Long,
       isBlocked: Boolean,
@@ -21,106 +21,106 @@ object raw {
   )
 
   // define Company entity
-  case class Company(
+  case class CompanyRaw(
       id: Long,
       name: String,
       isBlocked: Boolean
   )
 
   // define Loan entity
-  case class Loan(
+  case class LoanRaw(
       id: Long,
       loanAmount: Long,
       balance: Long
   )
 
   // define Medium entity
-  case class Medium(
+  case class MediumRaw(
       id: Long,
       name: String,
       isBlocked: Boolean
   )
 
   // define PersonApplyLoan relationship
-  case class PersonApplyLoan(
+  case class PersonApplyLoanRaw(
       `personId`: Long,
       `loanId`: Long
   )
 
   // define CompanyApplyLoan relationship
-  case class CompanyApplyLoan(
+  case class CompanyApplyLoanRaw(
       `companyId`: Long,
       `loanId`: Long
   )
 
   // define WorkIn relationship
-  case class WorkIn(
+  case class WorkInRaw(
       `personId`: Long,
       `companyId`: Long
   )
 
   // define PersonInvestCompany relationship
-  case class PersonInvestCompany(
+  case class PersonInvestCompanyRaw(
       `personId`: Long,
       `companyId`: Long
   )
 
   // define CompanyInvestCompany relationship
-  case class CompanyInvestCompany(
+  case class CompanyInvestCompanyRaw(
       `company1Id`: Long,
       `company2Id`: Long
   )
 
   // define PersonGuaranteePerson relationship
-  case class PersonGuaranteePerson(
+  case class PersonGuaranteePersonRaw(
       `person1Id`: Long,
       `person2Id`: Long
   )
 
   // define CompanyGuarantee relationship
-  case class CompanyGuaranteeCompany(
+  case class CompanyGuaranteeCompanyRaw(
       `company1Id`: Long,
       `company2Id`: Long
   )
 
   //define PersonOwnAccount relationship
-  case class PersonOwnAccount(
+  case class PersonOwnAccountRaw(
       `personId`: Long,
       `accountId`: Long
   )
 
   // define CompanyOwnAccount relationship
-  case class CompanyOwnAccount(
+  case class CompanyOwnAccountRaw(
       `companyId`: Long,
       `accountId`: Long
   )
 
   // define Transfer relationship
-  case class Transfer(
+  case class TransferRaw(
       `account1Id`: Long,
       `account2Id`: Long
   )
 
   // define Withdraw relationship
-  case class Withdraw(
+  case class WithdrawRaw(
       `account1Id`: Long,
       `account2Id`: Long
   )
 
   // define Repay relationship
-  case class Repay(
+  case class RepayRaw(
       `accountId`: Long,
       `loanId`: Long
   )
 
   // define Deposit relationship
-  case class Deposit(
+  case class DepositRaw(
       `loanId`: Long,
       `accountId`: Long
   )
 
   // define SignIn relationship
-  case class SignIn(
+  case class SignInRaw(
       `mediumId`: Long,
       `accountId`: Long
   )

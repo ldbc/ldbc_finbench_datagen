@@ -47,15 +47,6 @@ object dataframes {
 
   private object DataFrameWriter extends Writer[DataFrameSink] {
     override type Data = DataFrame
-
-    override def write(self: DataFrame, sink: DataFrameSink): Unit = {
-      self.write
-        .partitionBy(sink.partitionBy: _*)
-        .format(sink.format)
-        .options(sink.formatOptions)
-        .mode(sink.mode)
-        .save(sink.path)
-    }
   }
 
   trait WriterInstances {

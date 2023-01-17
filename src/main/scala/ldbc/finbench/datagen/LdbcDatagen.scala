@@ -22,7 +22,7 @@ object LdbcDatagen extends SparkApp {
       keepImplicitDeletes: Boolean = false,
       mode: String = "raw",
       batchPeriod: String = "day",
-      numThreads: Option[Int] = None,
+      numPartitions: Option[Int] = None,
       format: String = "csv",
       formatOptions: Map[String, String] = Map.empty,
       oversizeFactor: Option[Double] = None,
@@ -59,8 +59,8 @@ object LdbcDatagen extends SparkApp {
             "path in which case the default cluster file system is used."
         )
 
-      opt[Int]('n', "num-threads")
-        .action((x, c) => args.numThreads.set(c)(Some(x)))
+      opt[Int]('n', "num-partitions")
+        .action((x, c) => args.numPartitions.set(c)(Some(x)))
         .text("Controls parallelization and number of files written.")
 
       opt[String]('m', "mode")
@@ -143,7 +143,7 @@ object LdbcDatagen extends SparkApp {
       params = args.params,
       paramFile = args.paramFile,
       outputDir = args.outputDir,
-      numThreads = args.numThreads,
+      partitionsOpt = args.numPartitions,
       format = args.format,
       oversizeFactor = args.oversizeFactor
     )

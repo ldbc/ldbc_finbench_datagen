@@ -2,8 +2,14 @@ package ldbc.finbench.datagen.generator
 
 import java.net.URI
 import java.util.Properties
-import ldbc.finbench.datagen.generator.generators.SparkPersonGenerator
+
+import ldbc.finbench.datagen.generator.generators.{
+  SparkCompanyGenerator,
+  SparkMediumGenerator,
+  SparkPersonGenerator
+}
 import ldbc.finbench.datagen.generator.serializers.RawSerializer
+import ldbc.finbench.datagen.io.raw.{Csv, Parquet, RawSink}
 import ldbc.finbench.datagen.util.{
   ConfigParser,
   DatagenStage,
@@ -12,13 +18,14 @@ import ldbc.finbench.datagen.util.{
   SparkUI
 }
 import org.apache.hadoop.fs.{FSDataInputStream, FileSystem, Path}
+
 import scala.collection.JavaConverters._
 import scala.reflect.ClassTag
 
 object GenerationStage extends DatagenStage with Logging {
 
   case class Args(scaleFactor: String = "",
-                  numThreads: Option[Int] = None,
+                  partitionsOpt: Option[Int] = None,
                   params: Map[String, String] = Map.empty,
                   paramFile: Option[String] = None,
                   outputDir: String = "out",
@@ -40,12 +47,29 @@ object GenerationStage extends DatagenStage with Logging {
       .toInt
 
     // todo generate entities
-    val persons = SparkPersonGenerator(config, Some(partitions))
+    val persons   = SparkPersonGenerator(config, Some(partitions))
+    val companies = SparkCompanyGenerator(config, Some(partitions))
+    val mediums   = SparkMediumGenerator(config, Some(partitions))
+
+    // check the output format
+    val format = args.format match {
+      case "csv"     => Csv
+      case "parquet" => Parquet
+      case a =>
+        throw new IllegalArgumentException(s"Format `${a}` is not supported by the generator.")
+    }
+
+    val sparkPartitions = if (config.getPartition != null) {
+      Some(config.getPartition.toInt)
+    } else {
+      None
+    }
 
     SparkUI.job(implicitly[ClassTag[RawSerializer]].runtimeClass.getSimpleName,
                 "serialize Finbench data") {
-      val rawSerializer = new RawSerializer
-      rawSerializer.write()
+      val sink          = RawSink(config.getOutputDir, format, sparkPartitions)
+      val rawSerializer = new RawSerializer(sink, config)
+      rawSerializer.write(persons, companies, mediums)
     }
   }
 
@@ -67,13 +91,13 @@ object GenerationStage extends DatagenStage with Logging {
 
     for { (k, v) <- args.params } conf.put(k, v)
 
-    for { numThreads <- args.numThreads } conf.put("hadoop.numThreads", numThreads.toString)
+    for { partitions <- args.partitionsOpt } conf.put("spark.partitions", partitions.toString)
 
     // put scale factor conf
-    val factorMap: Map[String, String] = Map()
-    conf.putAll(factorMap.asJava)
-
+    conf.putAll(ConfigParser.scaleFactorConf(args.scaleFactor))
     conf.put("generator.outputDir", args.outputDir)
+    conf.put("generator.format", args.format)
+
     new GeneratorConfiguration(conf)
   }
 

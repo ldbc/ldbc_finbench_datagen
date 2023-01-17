@@ -2,7 +2,7 @@ package ldbc.finbench.datagen.io
 
 trait Writer[S] {
   type Data
-  def write(self: Data, sink: S): Unit
+//  def write(self: Data, sink: S): Unit
 }
 
 object Writer {
@@ -13,7 +13,6 @@ object Writer {
     type Sink
     def tcInstance: Writer.Aux[Sink, Data]
     def self: Data
-    def write(sink: Sink): Unit = tcInstance.write(self, sink)
   }
 
   object WriterOps {
