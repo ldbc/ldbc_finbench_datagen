@@ -1,5 +1,6 @@
 package ldbc.finbench.datagen.generator.events;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import ldbc.finbench.datagen.entities.edges.PersonGuaranteePerson;
@@ -17,20 +18,23 @@ public class PersonGuaranteeEvent {
         random = new Random();
     }
 
-    public void personGuarantee(List<Person> persons, int blockId) {
+    public List<PersonGuaranteePerson> personGuarantee(List<Person> persons, int blockId) {
         random.setSeed(blockId);
+        List<PersonGuaranteePerson> personGuaranteePeople = new ArrayList<>();
 
         for (int i = 0; i < persons.size(); i++) {
             Person p = persons.get(i);
             int personIndex = randIndex.nextInt(persons.size());
 
             if (guarantee()) {
-                PersonGuaranteePerson.createPersonGuaranteePerson(
+                PersonGuaranteePerson personGuaranteePerson = PersonGuaranteePerson.createPersonGuaranteePerson(
                         randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
                         p,
                         persons.get(personIndex));
+                personGuaranteePeople.add(personGuaranteePerson);
             }
         }
+        return personGuaranteePeople;
     }
 
     private boolean guarantee() {

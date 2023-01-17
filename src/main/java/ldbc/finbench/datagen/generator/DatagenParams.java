@@ -6,7 +6,7 @@ import ldbc.finbench.datagen.generator.distribution.ZipfDistribution;
 import ldbc.finbench.datagen.util.GeneratorConfiguration;
 
 public class DatagenParams {
-    public static final String DICTIONARY_DIRECTORY = "src/main/resources/datasource/";
+    public static final String DICTIONARY_DIRECTORY = "/datasource/";
 
     public static final String companyNameFile = DICTIONARY_DIRECTORY + "companies.txt";
     public static final String personSurnameFile = DICTIONARY_DIRECTORY + "surnames.txt";

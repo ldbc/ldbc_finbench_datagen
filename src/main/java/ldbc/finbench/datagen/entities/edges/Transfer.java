@@ -22,11 +22,14 @@ public class Transfer implements DynamicActivity, Serializable {
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static void createTransfer(Random random, Account fromAccount, Account toAccount) {
+    public static Transfer createTransfer(Random random, Account fromAccount, Account toAccount) {
         long creationDate = Dictionaries.dates.randomAccountToAccountDate(random, fromAccount, toAccount);
 
-        fromAccount.getTransfers().add(new Transfer(fromAccount.getAccountId(), toAccount.getAccountId(),
-                creationDate, 0, false));
+        Transfer transfer = new Transfer(fromAccount.getAccountId(), toAccount.getAccountId(),
+                creationDate, 0, false);
+        fromAccount.getTransfers().add(transfer);
+
+        return transfer;
     }
 
     public long getFromAccountId() {

@@ -1,35 +1,42 @@
 package ldbc.finbench.datagen.generator.events;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import ldbc.finbench.datagen.entities.edges.SignIn;
+import ldbc.finbench.datagen.entities.nodes.Account;
 import ldbc.finbench.datagen.entities.nodes.Medium;
-import ldbc.finbench.datagen.generator.generators.AccountGenerator;
+import ldbc.finbench.datagen.util.GeneratorConfiguration;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class SignInEvent {
     private RandomGeneratorFarm randomFarm;
+    private Random randIndex;
     private Random random;
 
     public SignInEvent() {
         randomFarm = new RandomGeneratorFarm();
+        randIndex = new Random();
         random = new Random();
     }
 
-    public void signIn(List<Medium> media, int blockId) {
+    public List<SignIn> signIn(List<Medium> media, List<Account> accounts, int blockId, GeneratorConfiguration conf) {
         random.setSeed(blockId);
+        List<SignIn> signIns = new ArrayList<>();
 
         for (int i = 0; i < media.size(); i++) {
             Medium m = media.get(i);
-            AccountGenerator accountGenerator = new AccountGenerator();
+            int accountIndex = randIndex.nextInt(accounts.size());
 
             if (sign()) {
-                SignIn.createSignIn(
+                SignIn signIn = SignIn.createSignIn(
                         randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
                         m,
-                        accountGenerator.generateAccount());
+                        accounts.get(accountIndex));
+                signIns.add(signIn);
             }
         }
+        return signIns;
     }
 
     private boolean sign() {

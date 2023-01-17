@@ -5,6 +5,7 @@ import ldbc.finbench.datagen.entities.nodes.Loan;
 import ldbc.finbench.datagen.generator.DatagenParams;
 import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 import ldbc.finbench.datagen.generator.distribution.DegreeDistribution;
+import ldbc.finbench.datagen.util.GeneratorConfiguration;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class LoanGenerator {
@@ -12,6 +13,12 @@ public class LoanGenerator {
     private DegreeDistribution degreeDistribution;
     private RandomGeneratorFarm randomFarm;
     private int nextId  = 0;
+
+    public LoanGenerator(GeneratorConfiguration conf) {
+        this.randomFarm = new RandomGeneratorFarm();
+        this.degreeDistribution = DatagenParams.getDegreeDistribution();
+        this.degreeDistribution.initialize(conf);
+    }
 
     private long composeLoanId(long id, long date) {
         long idMask = ~(0xFFFFFFFFFFFFFFFFL << 44);

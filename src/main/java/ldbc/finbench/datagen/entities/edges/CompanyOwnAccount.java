@@ -23,11 +23,14 @@ public class CompanyOwnAccount implements DynamicActivity, Serializable {
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static void createCompanyOwnAccount(Random random, Company company, Account account) {
+    public static CompanyOwnAccount createCompanyOwnAccount(Random random, Company company, Account account) {
         long creationDate = Dictionaries.dates.randomCompanyToAccountDate(random, company, account);
 
-        company.getCompanyOwnAccounts().add(new CompanyOwnAccount(company.getCompanyId(), account.getAccountId(),
-                creationDate, 0, false));
+        CompanyOwnAccount companyOwnAccount = new CompanyOwnAccount(company.getCompanyId(), account.getAccountId(),
+                creationDate, 0, false);
+        company.getCompanyOwnAccounts().add(companyOwnAccount);
+
+        return companyOwnAccount;
     }
 
     public long getCompanyId() {

@@ -19,7 +19,7 @@ public class ZipfDistribution extends DegreeDistribution {
     private int numSamples = 10000;
 
     public void initialize(GeneratorConfiguration conf) {
-        alpha = conf.getDouble("ldbc.snb.datagen.generator.distribution.ZipfDistribution.alpha", alpha);
+        alpha = conf.getDouble("ldbc.finbench.datagen.generator.distribution.ZipfDistribution.alpha", alpha);
         zipf = new org.apache.commons.math3.distribution.ZipfDistribution(maxDegree, alpha);
         for (int i = 0; i < numSamples; ++i) {
             int next = zipf.sample();

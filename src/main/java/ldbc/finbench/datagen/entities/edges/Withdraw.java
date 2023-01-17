@@ -22,11 +22,14 @@ public class Withdraw implements DynamicActivity, Serializable {
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static void createWithdraw(Random random, Account fromAccount, Account toAccount) {
+    public static Withdraw createWithdraw(Random random, Account fromAccount, Account toAccount) {
         long creationDate = Dictionaries.dates.randomAccountToAccountDate(random, fromAccount, toAccount);
 
-        fromAccount.getWithdraws().add(new Withdraw(fromAccount.getAccountId(), toAccount.getAccountId(),
-                creationDate, 0, false));
+        Withdraw withdraw = new Withdraw(fromAccount.getAccountId(), toAccount.getAccountId(),
+                creationDate, 0, false);
+        fromAccount.getWithdraws().add(withdraw);
+
+        return withdraw;
     }
 
     public long getFromAccountId() {

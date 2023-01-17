@@ -17,6 +17,7 @@ public class CompanyGenerator {
 
     public CompanyGenerator(GeneratorConfiguration conf) {
         this.randomFarm = new RandomGeneratorFarm();
+        this.degreeDistribution = DatagenParams.getDegreeDistribution();
         this.degreeDistribution.initialize(conf);
         this.companyNameDictionary = new CompanyNameDictionary();
     }
@@ -28,7 +29,7 @@ public class CompanyGenerator {
         return (bucket << 40) | ((id & idMask));
     }
 
-    private Company generateCompany() {
+    public Company generateCompany() {
 
         long creationDate = Dictionaries.dates.randomCompanyCreationDate(
                 randomFarm.get(RandomGeneratorFarm.Aspect.DATE));

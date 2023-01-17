@@ -3,6 +3,7 @@ package ldbc.finbench.datagen.generator.dictionary;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Random;
 import java.util.TreeMap;
 import ldbc.finbench.datagen.generator.DatagenParams;
@@ -19,7 +20,7 @@ public class PersonNameDictionary {
     private void load(String filePath) {
         try {
             InputStreamReader inputStreamReader = new InputStreamReader(
-                    getClass().getResourceAsStream(filePath), "UTF-8");
+                    getClass().getResourceAsStream(filePath), StandardCharsets.UTF_8);
             BufferedReader dictionary = new BufferedReader(inputStreamReader);
             String line;
             long totalNumSurnames = 0;
@@ -37,6 +38,7 @@ public class PersonNameDictionary {
 
     public PersonNameDictionary() {
         this.personSurnames = new TreeMap<>();
+        this.geometricDistribution  = new GeometricDistribution(1);
         load(DatagenParams.personSurnameFile);
     }
 
