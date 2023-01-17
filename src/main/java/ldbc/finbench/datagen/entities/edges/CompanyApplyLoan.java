@@ -10,14 +10,18 @@ import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 public class CompanyApplyLoan implements DynamicActivity, Serializable {
     private long companyId;
     private long loanId;
+    private long loanAmount;
+    private long loanBalance;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public CompanyApplyLoan(long companyId, long loanId, long creationDate,
-                            long deletionDate, boolean isExplicitlyDeleted) {
+    public CompanyApplyLoan(long companyId, long loanId, long loanAmount, long loanBalance,
+                            long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
         this.companyId = companyId;
         this.loanId = loanId;
+        this.loanAmount = loanAmount;
+        this.loanBalance = loanBalance;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
@@ -27,7 +31,7 @@ public class CompanyApplyLoan implements DynamicActivity, Serializable {
         long creationDate = Dictionaries.dates.randomCompanyToLoanDate(random, company, loan);
 
         CompanyApplyLoan companyApplyLoan = new CompanyApplyLoan(company.getCompanyId(), loan.getLoanId(),
-                creationDate, 0, false);
+                loan.getLoanAmount(), loan.getBalance(), creationDate, 0, false);
         company.getCompanyApplyLoans().add(companyApplyLoan);
 
         return companyApplyLoan;
@@ -47,6 +51,22 @@ public class CompanyApplyLoan implements DynamicActivity, Serializable {
 
     public void setLoanId(long loanId) {
         this.loanId = loanId;
+    }
+
+    public long getLoanAmount() {
+        return loanAmount;
+    }
+
+    public void setLoanAmount(long loanAmount) {
+        this.loanAmount = loanAmount;
+    }
+
+    public long getLoanBalance() {
+        return loanBalance;
+    }
+
+    public void setLoanBalance(long loanBalance) {
+        this.loanBalance = loanBalance;
     }
 
     @Override
