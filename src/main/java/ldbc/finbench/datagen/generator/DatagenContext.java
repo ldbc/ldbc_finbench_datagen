@@ -11,7 +11,7 @@ public class DatagenContext {
         if (!initialized) {
             DatagenParams.readConf(conf);
             // todo release the Dictionaries
-            //  Dictionaries.loadDictionaries();
+            Dictionaries.loadDictionaries();
             initialized = true;
         }
     }

@@ -23,11 +23,13 @@ public class PersonOwnAccount implements DynamicActivity, Serializable {
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static void createPersonOwnAccount(Random random, Person person, Account account) {
+    public static PersonOwnAccount createPersonOwnAccount(Random random, Person person, Account account) {
         long creationDate = Dictionaries.dates.randomPersonToAccountDate(random, person, account);
 
-        person.getPersonOwnAccounts().add(new PersonOwnAccount(person.getPersonId(), account.getAccountId(),
-                creationDate, 0, false));
+        PersonOwnAccount personOwnAccount = new PersonOwnAccount(person.getPersonId(), account.getAccountId(),
+                creationDate, 0, false);
+        person.getPersonOwnAccounts().add(personOwnAccount);
+        return personOwnAccount;
     }
 
     public long getPersonId() {

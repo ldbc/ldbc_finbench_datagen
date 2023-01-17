@@ -1,5 +1,6 @@
 package ldbc.finbench.datagen.generator.events;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import ldbc.finbench.datagen.entities.edges.Transfer;
@@ -17,20 +18,23 @@ public class TransferEvent {
         random = new Random();
     }
 
-    public void transfer(List<Account> accounts, int blockId) {
+    public List<Transfer> transfer(List<Account> accounts, int blockId) {
         random.setSeed(blockId);
+        List<Transfer> transfers = new ArrayList<>();
 
         for (int i = 0; i < accounts.size(); i++) {
             Account a = accounts.get(i);
             int accountIndex = randIndex.nextInt(accounts.size());
 
             if (trans()) {
-                Transfer.createTransfer(
+                Transfer transfer = Transfer.createTransfer(
                         randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
                         a,
                         accounts.get(accountIndex));
+                transfers.add(transfer);
             }
         }
+        return transfers;
     }
 
     private boolean trans() {

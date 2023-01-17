@@ -1,5 +1,6 @@
 package ldbc.finbench.datagen.generator.events;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import ldbc.finbench.datagen.entities.edges.WorkIn;
@@ -18,20 +19,23 @@ public class WorkInEvent {
         random = new Random();
     }
 
-    public void workIn(List<Person> persons, List<Company> companies, int blockId) {
+    public List<WorkIn> workIn(List<Person> persons, List<Company> companies, int blockId) {
         random.setSeed(blockId);
+        List<WorkIn> workIns = new ArrayList<>();
 
         for (int i = 0; i < persons.size(); i++) {
             Person p = persons.get(i);
             int companyIndex = randIndex.nextInt(companies.size());
 
             if (work()) {
-                WorkIn.createWorkIn(
+                WorkIn workIn = WorkIn.createWorkIn(
                         randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
                         p,
                         companies.get(companyIndex));
+                workIns.add(workIn);
             }
         }
+        return workIns;
     }
 
     private boolean work() {

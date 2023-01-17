@@ -22,10 +22,13 @@ public class WorkIn implements DynamicActivity, Serializable {
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static void createWorkIn(Random random, Person person, Company company) {
+    public static WorkIn createWorkIn(Random random, Person person, Company company) {
         long creationDate = Dictionaries.dates.randomPersonToCompanyDate(random, person, company);
 
-        person.setWorkIn(new WorkIn(person.getPersonId(), company.getCompanyId(), creationDate, 0, false));
+        WorkIn workIn = new WorkIn(person.getPersonId(), company.getCompanyId(), creationDate, 0, false);
+        person.setWorkIn(workIn);
+
+        return workIn;
     }
 
     public long getPersonId() {

@@ -23,11 +23,14 @@ public class CompanyApplyLoan implements DynamicActivity, Serializable {
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static void createCompanyApplyLoan(Random random, Company company, Loan loan) {
+    public static CompanyApplyLoan createCompanyApplyLoan(Random random, Company company, Loan loan) {
         long creationDate = Dictionaries.dates.randomCompanyToLoanDate(random, company, loan);
 
-        company.getCompanyApplyLoans().add(new CompanyApplyLoan(company.getCompanyId(), loan.getLoanId(),
-                creationDate, 0, false));
+        CompanyApplyLoan companyApplyLoan = new CompanyApplyLoan(company.getCompanyId(), loan.getLoanId(),
+                creationDate, 0, false);
+        company.getCompanyApplyLoans().add(companyApplyLoan);
+
+        return companyApplyLoan;
     }
 
     public long getCompanyId() {

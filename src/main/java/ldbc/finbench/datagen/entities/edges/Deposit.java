@@ -22,11 +22,14 @@ public class Deposit implements DynamicActivity, Serializable {
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static void createDeposit(Random random, Loan loan, Account account) {
+    public static Deposit createDeposit(Random random, Loan loan, Account account) {
         long creationDate = Dictionaries.dates.randomLoanToAccountDate(random, loan, account);
 
-        loan.getDeposits().add(new Deposit(loan.getLoanId(), account.getAccountId(),
-                creationDate, 0, false));
+        Deposit deposit = new Deposit(loan.getLoanId(), account.getAccountId(),
+                creationDate, 0, false);
+        loan.getDeposits().add(deposit);
+
+        return deposit;
     }
 
     public long getLoanId() {

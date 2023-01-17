@@ -22,11 +22,14 @@ public class Repay implements DynamicActivity, Serializable {
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static void createRepay(Random random, Account account, Loan loan) {
+    public static Repay createRepay(Random random, Account account, Loan loan) {
         long creationDate = Dictionaries.dates.randomAccountToLoanDate(random, account, loan);
 
-        account.getRepays().add(new Repay(account.getAccountId(), loan.getLoanId(),
-                creationDate, 0, false));
+        Repay repay = new Repay(account.getAccountId(), loan.getLoanId(),
+                creationDate, 0, false);
+        account.getRepays().add(repay);
+
+        return repay;
     }
 
     public long getAccountId() {

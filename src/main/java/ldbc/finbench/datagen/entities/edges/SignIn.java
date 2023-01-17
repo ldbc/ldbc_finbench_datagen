@@ -22,11 +22,14 @@ public class SignIn implements DynamicActivity, Serializable {
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static void createSignIn(Random random, Medium medium, Account account) {
+    public static SignIn createSignIn(Random random, Medium medium, Account account) {
         long creationDate = Dictionaries.dates.randomMediumToAccountDate(random, medium, account);
 
-        medium.getSignIns().add(new SignIn(medium.getMediumId(), account.getAccountId(),
-                creationDate, 0, false));
+        SignIn signIn = new SignIn(medium.getMediumId(), account.getAccountId(),
+                creationDate, 0, false);
+        medium.getSignIns().add(signIn);
+
+        return signIn;
     }
 
     public long getMediumId() {

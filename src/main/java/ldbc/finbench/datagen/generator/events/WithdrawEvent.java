@@ -1,5 +1,6 @@
 package ldbc.finbench.datagen.generator.events;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import ldbc.finbench.datagen.entities.edges.Withdraw;
@@ -17,20 +18,23 @@ public class WithdrawEvent {
         random = new Random();
     }
 
-    public void withdraw(List<Account> accounts, int blockId) {
+    public List<Withdraw> withdraw(List<Account> accounts, int blockId) {
         random.setSeed(blockId);
+        List<Withdraw> withdraws = new ArrayList<>();
 
         for (int i = 0; i < accounts.size(); i++) {
             Account a = accounts.get(i);
             int accountIndex = randIndex.nextInt(accounts.size());
 
             if (with()) {
-                Withdraw.createWithdraw(
+                Withdraw withdraw = Withdraw.createWithdraw(
                         randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
                         a,
                         accounts.get(accountIndex));
+                withdraws.add(withdraw);
             }
         }
+        return withdraws;
     }
 
     private boolean with() {

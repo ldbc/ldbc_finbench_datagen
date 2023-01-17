@@ -22,11 +22,15 @@ public class CompanyInvestCompany implements DynamicActivity, Serializable {
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static void createCompanyInvestCompany(Random random, Company fromCompany, Company toCompany) {
+    public static CompanyInvestCompany createCompanyInvestCompany(Random random,
+                                                                  Company fromCompany, Company toCompany) {
         long creationDate = Dictionaries.dates.randomCompanyToCompanyDate(random, fromCompany, toCompany);
 
-        fromCompany.getCompanyInvestCompanies().add(new CompanyInvestCompany(fromCompany.getCompanyId(),
-                toCompany.getCompanyId(), creationDate, 0, false));
+        CompanyInvestCompany companyInvestCompany = new CompanyInvestCompany(fromCompany.getCompanyId(),
+                toCompany.getCompanyId(), creationDate, 0, false);
+        fromCompany.getCompanyInvestCompanies().add(companyInvestCompany);
+
+        return companyInvestCompany;
     }
 
     public long getFromCompanyId() {

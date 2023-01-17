@@ -23,11 +23,14 @@ public class PersonApplyLoan implements DynamicActivity, Serializable {
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static void createPersonApplyLoan(Random random, Person person, Loan loan) {
+    public static PersonApplyLoan createPersonApplyLoan(Random random, Person person, Loan loan) {
         long creationDate = Dictionaries.dates.randomPersonToLoanDate(random, person, loan);
 
-        person.getPersonApplyLoans().add(new PersonApplyLoan(person.getPersonId(), loan.getLoanId(),
-                creationDate, 0, false));
+        PersonApplyLoan personApplyLoan = new PersonApplyLoan(person.getPersonId(), loan.getLoanId(),
+                creationDate, 0, false);
+        person.getPersonApplyLoans().add(personApplyLoan);
+
+        return personApplyLoan;
     }
 
     public long getPersonId() {

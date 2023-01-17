@@ -18,6 +18,7 @@ public class PersonGenerator {
 
     public PersonGenerator(GeneratorConfiguration conf, String degreeDistribution) {
         this.randomFarm = new RandomGeneratorFarm();
+        this.degreeDistribution = DatagenParams.getDegreeDistribution();
         this.degreeDistribution.initialize(conf);
         this.personNameDictionary = new PersonNameDictionary();
     }
@@ -30,7 +31,7 @@ public class PersonGenerator {
         return (bucket << 41) | ((id & idMask));
     }
 
-    private Person generatePerson() {
+    public Person generatePerson() {
 
         long creationDate = Dictionaries.dates.randomPersonCreationDate(
                 randomFarm.get(RandomGeneratorFarm.Aspect.DATE));

@@ -1,10 +1,13 @@
 package ldbc.finbench.datagen.generator.events;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import ldbc.finbench.datagen.entities.edges.PersonApplyLoan;
+import ldbc.finbench.datagen.entities.nodes.Loan;
 import ldbc.finbench.datagen.entities.nodes.Person;
 import ldbc.finbench.datagen.generator.generators.LoanGenerator;
+import ldbc.finbench.datagen.util.GeneratorConfiguration;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class PersonLoanEvent {
@@ -16,39 +19,34 @@ public class PersonLoanEvent {
         random = new Random();
     }
 
-    public void personLoan(List<Person> persons, int blockId) {
+    public List<PersonApplyLoan> personLoan(List<Person> persons, List<Loan> generatedLoans,
+                                            int blockId, GeneratorConfiguration conf) {
         random.setSeed(blockId);
+        List<PersonApplyLoan> personApplyLoans = new ArrayList<>();
 
         for (int i = 0; i < persons.size(); i++) {
             Person p = persons.get(i);
-            LoanGenerator loanGenerator = new LoanGenerator();
+
+            LoanGenerator loanGenerator = new LoanGenerator(conf);
+            Loan loan = loanGenerator.generateLoan();
+            generatedLoans.add(loan);
 
             if (loan()) {
-                PersonApplyLoan.createPersonApplyLoan(
+                PersonApplyLoan personApplyLoan = PersonApplyLoan.createPersonApplyLoan(
                         randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
                         p,
-                        loanGenerator.generateLoan());
+                        loan);
+                personApplyLoans.add(personApplyLoan);
             }
         }
+        return personApplyLoans;
     }
+
+
 
     private boolean loan() {
         //TODO determine whether to generate loan
         return true;
     }
 
-    private boolean deposit() {
-        //TODO determine whether to generate deposit
-        return true;
-    }
-
-    private boolean transfer() {
-        //TODO determine whether to generate transfer
-        return true;
-    }
-
-    private boolean repay() {
-        //TODO determine whether to generate repay
-        return true;
-    }
 }
