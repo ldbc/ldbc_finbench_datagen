@@ -9,15 +9,15 @@ import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 
 public class CompanyOwnAccount implements DynamicActivity, Serializable {
     private long companyId;
-    private long accountId;
+    private Account account;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public CompanyOwnAccount(long companyId, long accountId,
+    public CompanyOwnAccount(long companyId, Account account,
                              long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
         this.companyId = companyId;
-        this.accountId = accountId;
+        this.account = account;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
@@ -26,7 +26,7 @@ public class CompanyOwnAccount implements DynamicActivity, Serializable {
     public static CompanyOwnAccount createCompanyOwnAccount(Random random, Company company, Account account) {
         long creationDate = Dictionaries.dates.randomCompanyToAccountDate(random, company, account);
 
-        CompanyOwnAccount companyOwnAccount = new CompanyOwnAccount(company.getCompanyId(), account.getAccountId(),
+        CompanyOwnAccount companyOwnAccount = new CompanyOwnAccount(company.getCompanyId(), account,
                 creationDate, 0, false);
         company.getCompanyOwnAccounts().add(companyOwnAccount);
 
@@ -41,12 +41,12 @@ public class CompanyOwnAccount implements DynamicActivity, Serializable {
         this.companyId = companyId;
     }
 
-    public long getAccountId() {
-        return accountId;
+    public Account getAccount() {
+        return account;
     }
 
-    public void setAccountId(long accountId) {
-        this.accountId = accountId;
+    public void setAccount(Account account) {
+        this.account = account;
     }
 
     @Override

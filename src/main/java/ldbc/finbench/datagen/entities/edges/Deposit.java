@@ -8,15 +8,15 @@ import ldbc.finbench.datagen.entities.nodes.Loan;
 import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 
 public class Deposit implements DynamicActivity, Serializable {
-    private long loanId;
-    private long accountId;
+    private Loan loan;
+    private Account account;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public Deposit(long loanId, long accountId, long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
-        this.loanId = loanId;
-        this.accountId = accountId;
+    public Deposit(Loan loan, Account account, long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
+        this.loan = loan;
+        this.account = account;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
@@ -25,27 +25,27 @@ public class Deposit implements DynamicActivity, Serializable {
     public static Deposit createDeposit(Random random, Loan loan, Account account) {
         long creationDate = Dictionaries.dates.randomLoanToAccountDate(random, loan, account);
 
-        Deposit deposit = new Deposit(loan.getLoanId(), account.getAccountId(),
+        Deposit deposit = new Deposit(loan, account,
                 creationDate, 0, false);
         loan.getDeposits().add(deposit);
 
         return deposit;
     }
 
-    public long getLoanId() {
-        return loanId;
+    public Loan getLoan() {
+        return loan;
     }
 
-    public void setLoanId(long loanId) {
-        this.loanId = loanId;
+    public void setLoan(Loan loan) {
+        this.loan = loan;
     }
 
-    public long getAccountId() {
-        return accountId;
+    public Account getAccount() {
+        return account;
     }
 
-    public void setAccountId(long accountId) {
-        this.accountId = accountId;
+    public void setAccount(Account account) {
+        this.account = account;
     }
 
     @Override

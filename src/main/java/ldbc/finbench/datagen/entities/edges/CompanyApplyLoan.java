@@ -9,15 +9,15 @@ import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 
 public class CompanyApplyLoan implements DynamicActivity, Serializable {
     private long companyId;
-    private long loanId;
+    private Loan loan;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public CompanyApplyLoan(long companyId, long loanId, long creationDate,
+    public CompanyApplyLoan(long companyId, Loan loan, long creationDate,
                             long deletionDate, boolean isExplicitlyDeleted) {
         this.companyId = companyId;
-        this.loanId = loanId;
+        this.loan = loan;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
@@ -26,7 +26,7 @@ public class CompanyApplyLoan implements DynamicActivity, Serializable {
     public static CompanyApplyLoan createCompanyApplyLoan(Random random, Company company, Loan loan) {
         long creationDate = Dictionaries.dates.randomCompanyToLoanDate(random, company, loan);
 
-        CompanyApplyLoan companyApplyLoan = new CompanyApplyLoan(company.getCompanyId(), loan.getLoanId(),
+        CompanyApplyLoan companyApplyLoan = new CompanyApplyLoan(company.getCompanyId(), loan,
                 creationDate, 0, false);
         company.getCompanyApplyLoans().add(companyApplyLoan);
 
@@ -41,12 +41,12 @@ public class CompanyApplyLoan implements DynamicActivity, Serializable {
         this.companyId = companyId;
     }
 
-    public long getLoanId() {
-        return loanId;
+    public Loan getLoan() {
+        return loan;
     }
 
-    public void setLoanId(long loanId) {
-        this.loanId = loanId;
+    public void setLoan(Loan loan) {
+        this.loan = loan;
     }
 
     @Override

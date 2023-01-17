@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import ldbc.finbench.datagen.entities.edges.PersonApplyLoan;
-import ldbc.finbench.datagen.entities.nodes.Loan;
 import ldbc.finbench.datagen.entities.nodes.Person;
 import ldbc.finbench.datagen.generator.generators.LoanGenerator;
 import ldbc.finbench.datagen.util.GeneratorConfiguration;
@@ -19,23 +18,19 @@ public class PersonLoanEvent {
         random = new Random();
     }
 
-    public List<PersonApplyLoan> personLoan(List<Person> persons, List<Loan> generatedLoans,
-                                            int blockId, GeneratorConfiguration conf) {
+    public List<PersonApplyLoan> personLoan(List<Person> persons, int blockId, GeneratorConfiguration conf) {
         random.setSeed(blockId);
         List<PersonApplyLoan> personApplyLoans = new ArrayList<>();
 
         for (int i = 0; i < persons.size(); i++) {
             Person p = persons.get(i);
-
             LoanGenerator loanGenerator = new LoanGenerator(conf);
-            Loan loan = loanGenerator.generateLoan();
-            generatedLoans.add(loan);
 
             if (loan()) {
                 PersonApplyLoan personApplyLoan = PersonApplyLoan.createPersonApplyLoan(
                         randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
                         p,
-                        loan);
+                        loanGenerator.generateLoan());
                 personApplyLoans.add(personApplyLoan);
             }
         }

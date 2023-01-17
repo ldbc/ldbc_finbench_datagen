@@ -8,15 +8,15 @@ import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 
 public class Transfer implements DynamicActivity, Serializable {
     private long fromAccountId;
-    private long toAccountId;
+    private Account toAccount;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public Transfer(long fromAccountId, long toAccountId,
+    public Transfer(long fromAccountId, Account toAccount,
                     long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
         this.fromAccountId = fromAccountId;
-        this.toAccountId = toAccountId;
+        this.toAccount = toAccount;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
@@ -25,7 +25,7 @@ public class Transfer implements DynamicActivity, Serializable {
     public static Transfer createTransfer(Random random, Account fromAccount, Account toAccount) {
         long creationDate = Dictionaries.dates.randomAccountToAccountDate(random, fromAccount, toAccount);
 
-        Transfer transfer = new Transfer(fromAccount.getAccountId(), toAccount.getAccountId(),
+        Transfer transfer = new Transfer(fromAccount.getAccountId(), toAccount,
                 creationDate, 0, false);
         fromAccount.getTransfers().add(transfer);
 
@@ -40,12 +40,12 @@ public class Transfer implements DynamicActivity, Serializable {
         this.fromAccountId = fromAccountId;
     }
 
-    public long getToAccountId() {
-        return toAccountId;
+    public Account getToAccount() {
+        return toAccount;
     }
 
-    public void setToAccountId(long toAccountId) {
-        this.toAccountId = toAccountId;
+    public void setToAccount(Account toAccount) {
+        this.toAccount = toAccount;
     }
 
     @Override
