@@ -9,15 +9,19 @@ import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 
 public class PersonApplyLoan implements DynamicActivity, Serializable {
     private long personId;
-    private Loan loan;
+    private long loanId;
+    private long loanAmount;
+    private long loanBalance;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public PersonApplyLoan(long personId, Loan loan,
+    public PersonApplyLoan(long personId, long loanId, long loanAmount, long loanBalance,
                            long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
         this.personId = personId;
-        this.loan = loan;
+        this.loanId = loanId;
+        this.loanAmount = loanAmount;
+        this.loanBalance = loanBalance;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
@@ -26,8 +30,8 @@ public class PersonApplyLoan implements DynamicActivity, Serializable {
     public static PersonApplyLoan createPersonApplyLoan(Random random, Person person, Loan loan) {
         long creationDate = Dictionaries.dates.randomPersonToLoanDate(random, person, loan);
 
-        PersonApplyLoan personApplyLoan = new PersonApplyLoan(person.getPersonId(), loan,
-                creationDate, 0, false);
+        PersonApplyLoan personApplyLoan = new PersonApplyLoan(person.getPersonId(), loan.getLoanId(),
+                loan.getLoanAmount(), loan.getBalance(), creationDate, 0, false);
         person.getPersonApplyLoans().add(personApplyLoan);
 
         return personApplyLoan;
@@ -41,12 +45,28 @@ public class PersonApplyLoan implements DynamicActivity, Serializable {
         this.personId = personId;
     }
 
-    public Loan getLoan() {
-        return loan;
+    public long getLoanId() {
+        return loanId;
     }
 
-    public void setLoan(Loan loan) {
-        this.loan = loan;
+    public void setLoanId(long loanId) {
+        this.loanId = loanId;
+    }
+
+    public long getLoanAmount() {
+        return loanAmount;
+    }
+
+    public void setLoanAmount(long loanAmount) {
+        this.loanAmount = loanAmount;
+    }
+
+    public long getLoanBalance() {
+        return loanBalance;
+    }
+
+    public void setLoanBalance(long loanBalance) {
+        this.loanBalance = loanBalance;
     }
 
     @Override

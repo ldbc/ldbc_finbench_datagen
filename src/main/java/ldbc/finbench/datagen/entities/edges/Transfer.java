@@ -8,15 +8,21 @@ import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 
 public class Transfer implements DynamicActivity, Serializable {
     private long fromAccountId;
-    private Account toAccount;
+    private long toAccountId;
+    private String toAccountType;
+    private long toAccountCreationDate;
+    private boolean toAccountIsBlocked;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public Transfer(long fromAccountId, Account toAccount,
-                    long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
+    public Transfer(long fromAccountId, long toAccountId, String toAccountType, long toAccountCreationDate,
+                    boolean toAccountIsBlocked, long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
         this.fromAccountId = fromAccountId;
-        this.toAccount = toAccount;
+        this.toAccountId = toAccountId;
+        this.toAccountType = toAccountType;
+        this.toAccountCreationDate = toAccountCreationDate;
+        this.toAccountIsBlocked = toAccountIsBlocked;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
@@ -25,8 +31,8 @@ public class Transfer implements DynamicActivity, Serializable {
     public static Transfer createTransfer(Random random, Account fromAccount, Account toAccount) {
         long creationDate = Dictionaries.dates.randomAccountToAccountDate(random, fromAccount, toAccount);
 
-        Transfer transfer = new Transfer(fromAccount.getAccountId(), toAccount,
-                creationDate, 0, false);
+        Transfer transfer = new Transfer(fromAccount.getAccountId(), toAccount.getAccountId(), toAccount.getType(),
+                toAccount.getCreationDate(), toAccount.isBlocked(), creationDate, 0, false);
         fromAccount.getTransfers().add(transfer);
 
         return transfer;
@@ -40,12 +46,36 @@ public class Transfer implements DynamicActivity, Serializable {
         this.fromAccountId = fromAccountId;
     }
 
-    public Account getToAccount() {
-        return toAccount;
+    public long getToAccountId() {
+        return toAccountId;
     }
 
-    public void setToAccount(Account toAccount) {
-        this.toAccount = toAccount;
+    public void setToAccountId(long toAccountId) {
+        this.toAccountId = toAccountId;
+    }
+
+    public String getToAccountType() {
+        return toAccountType;
+    }
+
+    public void setToAccountType(String toAccountType) {
+        this.toAccountType = toAccountType;
+    }
+
+    public long getToAccountCreationDate() {
+        return toAccountCreationDate;
+    }
+
+    public void setToAccountCreationDate(long toAccountCreationDate) {
+        this.toAccountCreationDate = toAccountCreationDate;
+    }
+
+    public boolean isToAccountIsBlocked() {
+        return toAccountIsBlocked;
+    }
+
+    public void setToAccountIsBlocked(boolean toAccountIsBlocked) {
+        this.toAccountIsBlocked = toAccountIsBlocked;
     }
 
     @Override
