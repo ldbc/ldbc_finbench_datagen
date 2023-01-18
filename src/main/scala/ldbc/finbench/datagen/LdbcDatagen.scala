@@ -12,7 +12,7 @@ object LdbcDatagen extends SparkApp {
   val appName = "LDBC FinBench Datagen for Spark"
 
   case class Args(
-      scaleFactor: String = "1",
+      scaleFactor: String = "0.003",
       params: Map[String, String] = Map.empty,
       paramFile: Option[String] = None,
       outputDir: String = "out",

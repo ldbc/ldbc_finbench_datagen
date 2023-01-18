@@ -38,6 +38,7 @@ public class MediumNameDictionary {
 
     public MediumNameDictionary() {
         this.mediumNames = new TreeMap<>();
+        geometricDistribution = new GeometricDistribution(1);
         load(DatagenParams.mediumNameFile);
     }
 
