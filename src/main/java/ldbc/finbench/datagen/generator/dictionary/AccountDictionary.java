@@ -38,6 +38,7 @@ public class AccountDictionary {
     public AccountDictionary() {
         this.accountType = new TreeMap<>();
         load(DatagenParams.accountFile);
+        geometricDistribution = new GeometricDistribution(1);
     }
 
     public String getGeoDistRandomType(Random random, int numNames) {

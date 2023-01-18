@@ -1,5 +1,6 @@
 package ldbc.finbench.datagen.generator.events;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -10,7 +11,7 @@ import ldbc.finbench.datagen.entities.nodes.Account;
 import ldbc.finbench.datagen.entities.nodes.Loan;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
-public class SubEvents {
+public class SubEvents implements Serializable {
     private RandomGeneratorFarm randomFarm;
     private Random randIndex;
     private Random random;

@@ -8,6 +8,7 @@ import java.util.Random;
 import java.util.TreeMap;
 import ldbc.finbench.datagen.generator.DatagenParams;
 import ldbc.finbench.datagen.generator.distribution.GeometricDistribution;
+import org.apache.spark.util.random.GapSamplingReplacement;
 
 public class CompanyNameDictionary {
 
@@ -39,6 +40,7 @@ public class CompanyNameDictionary {
     public CompanyNameDictionary() {
         this.companyNames = new TreeMap<>();
         load(DatagenParams.companyNameFile);
+        geometricDistribution = new GeometricDistribution(1);
     }
 
     public String getGeoDistRandomName(Random random, int numNames) {

@@ -24,7 +24,7 @@ import scala.reflect.ClassTag
 
 object GenerationStage extends DatagenStage with Logging {
 
-  case class Args(scaleFactor: String = "",
+  case class Args(scaleFactor: String = "0.003",
                   partitionsOpt: Option[Int] = None,
                   params: Map[String, String] = Map.empty,
                   paramFile: Option[String] = None,
@@ -40,16 +40,23 @@ object GenerationStage extends DatagenStage with Logging {
     DatagenContext.initialize(config)
 
     // todo compute parallelism
-    val personNum = 100000 // TODO use DatagenParams.numPerson
-    val blockSize = 5000   // TODO use DatagenParams.blockSize
-    val partitions = Math
+    val personNum  = 100000 // TODO use DatagenParams.numPerson
+    val companyNum = 100000 // TODO use DatagenParams.numCompany
+    val mediumNum  = 100000 // TODO use DatagenParams.numMedium
+    val blockSize  = 5000   // TODO use DatagenParams.blockSize
+    val personPartitions = Math
       .min(Math.ceil(personNum.toDouble / blockSize).toLong, spark.sparkContext.defaultParallelism)
       .toInt
+    val companyPartitions = Math
+      .min(Math.ceil(companyNum.toDouble / blockSize).toLong, spark.sparkContext.defaultParallelism)
+      .toInt
+    val mediumPartitions = Math
+      .min(Math.ceil(mediumNum.toDouble / blockSize).toLong, spark.sparkContext.defaultParallelism)
+      .toInt
 
-    // todo generate entities
-    val persons   = SparkPersonGenerator(config, Some(partitions))
-    val companies = SparkCompanyGenerator(config, Some(partitions))
-    val mediums   = SparkMediumGenerator(config, Some(partitions))
+    val persons   = SparkPersonGenerator(config, Some(personPartitions))
+    val companies = SparkCompanyGenerator(config, Some(companyPartitions))
+    val mediums   = SparkMediumGenerator(config, Some(mediumPartitions))
 
     // check the output format
     val format = args.format match {
