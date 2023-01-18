@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Map;
 
-public class GeneratorConfiguration implements Iterable<Map.Entry<String,String>>, Serializable {
+public class GeneratorConfiguration implements Iterable<Map.Entry<String, String>>, Serializable {
     public final Map<String, String> map;
 
     public GeneratorConfiguration(Map<String, String> map) {
@@ -67,6 +67,14 @@ public class GeneratorConfiguration implements Iterable<Map.Entry<String,String>
 
     public String getOutputDir() {
         return map.get("generator.outputDir");
+    }
+
+    public String getFormat() {
+        return map.get("generator.format");
+    }
+
+    public String getPartition() {
+        return map.get("spark.partition");
     }
 
     public void printConfig() {
