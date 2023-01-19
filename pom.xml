@@ -6,7 +6,7 @@
 
     <groupId>ldbc.finbench.datagen</groupId>
     <artifactId>ldbc_finbench_datagen</artifactId>
-    <version>0.1.0-RC</version>
+    <version>0.1.0-alpha</version>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
