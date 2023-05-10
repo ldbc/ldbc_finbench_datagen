@@ -1,6 +1,6 @@
 package ldbc.finbench.datagen.generator.dictionary;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import ldbc.finbench.datagen.generator.DatagenParams;
 import ldbc.finbench.datagen.generator.generators.DateGenerator;
 
@@ -18,8 +18,8 @@ public class Dictionaries {
         accountTypes = new AccountDictionary();
 
         dates = new DateGenerator(
-                LocalDate.of(DatagenParams.startYear,1,1),
-                LocalDate.of(DatagenParams.startYear + DatagenParams.numYears,1,1)
+            LocalDateTime.of(DatagenParams.startYear, 1, 1, 0, 0, 0),
+            LocalDateTime.of(DatagenParams.startYear + DatagenParams.numYears, 1, 1, 0, 0, 0)
         );
     }
 

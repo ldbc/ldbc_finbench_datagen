@@ -1,44 +1,20 @@
 package ldbc.finbench.datagen.generator;
 
 import ldbc.finbench.datagen.generator.distribution.DegreeDistribution;
-import ldbc.finbench.datagen.generator.distribution.FacebookDegreeDistribution;
-import ldbc.finbench.datagen.generator.distribution.ZipfDistribution;
+import ldbc.finbench.datagen.generator.distribution.PowerLawDegreeDistribution;
 import ldbc.finbench.datagen.util.GeneratorConfiguration;
 
 public class DatagenParams {
-    public static final String DICTIONARY_DIRECTORY = "/datasource/";
-
+    public static final String DICTIONARY_DIRECTORY = "/dictionaries/";
     public static final String companyNameFile = DICTIONARY_DIRECTORY + "companies.txt";
     public static final String personSurnameFile = DICTIONARY_DIRECTORY + "surnames.txt";
     public static final String mediumNameFile = DICTIONARY_DIRECTORY + "medium.txt";
     public static final String accountFile = DICTIONARY_DIRECTORY + "account.txt";
-    public static final String facebookDegreeFile = DICTIONARY_DIRECTORY + "degreeFile.dat";
 
-    private enum ParameterNames {
-        BASE_CORRELATED("generator.baseProbCorrelated"),
-        BLOCK_SIZE("generator.blockSize"),
-        DEGREE_DISTRIBUTION("generator.degreeDistribution"),
-        DELTA("generator.delta"),
-        MAX_NUM_DEGREE("generator.maxNumDegree"),
-        MIN_TEXT_SIZE("generator.minTextSize"),
-        MISSING_RATIO("generator.missingRatio"),
-        NUM_UPDATE_STREAMS("generator.mode.interactive.numUpdateStreams"),
-        NUM_PERSONS("generator.numPersons"),
-        NUM_YEARS("generator.numYears"),
-        OUTPUT_DIR("generator.outputDir"),
-        START_YEAR("generator.startYear");
-
-        private final String name;
-
-        ParameterNames(String name) {
-            this.name = name;
-        }
-
-        public String toString() {
-            return name;
-        }
-    }
-
+    public static final String DISTRIBUTION_DIRECTORY = "/distributions/";
+    public static final String powerlawDegreeFile = DISTRIBUTION_DIRECTORY + "powerlaw.dat";
+    public static final String hourDistributionFile = DISTRIBUTION_DIRECTORY + "hourDistribution.dat";
+    public static final String powerLawActivityDeleteFile = DISTRIBUTION_DIRECTORY + "powerLawActivityDeleteDate.txt";
     public static double baseProbCorrelated = 0.0;
     public static int blockSize = 0;
     public static String degreeDistribution;
@@ -47,34 +23,30 @@ public class DatagenParams {
     public static int minTextSize = 0;
     public static double missingRatio = 0.0;
     public static int numUpdateStreams = 0;
-    public static long numPersons = 0;
+    public static long numAccounts = 0;
     public static int numYears = 0;
     public static String outputDir;
     public static int startYear = 0;
+    public static double personCompanyAccountRatio = 0.0;
 
 
     public static void readConf(GeneratorConfiguration conf) {
         try {
-            ParameterNames[] values = ParameterNames.values();
-            for (ParameterNames value : values) {
-                if (conf.get(value.toString()) == null) {
-                    throw new IllegalStateException("Missing " + value.toString() + " parameter");
-                }
-            }
-            baseProbCorrelated = doubleConf(conf,ParameterNames.BASE_CORRELATED);
-            blockSize = intConf(conf,ParameterNames.BLOCK_SIZE);
-            degreeDistribution = stringConf(conf,ParameterNames.DEGREE_DISTRIBUTION);
-            delta = intConf(conf,ParameterNames.DELTA);
-            maxNumDegree = longConf(conf,ParameterNames.MAX_NUM_DEGREE);
-            minTextSize = intConf(conf,ParameterNames.MIN_TEXT_SIZE);
-            missingRatio = doubleConf(conf,ParameterNames.MISSING_RATIO);
-            numUpdateStreams = intConf(conf,ParameterNames.NUM_UPDATE_STREAMS);
-            numPersons = longConf(conf,ParameterNames.NUM_PERSONS);
-            numYears = intConf(conf,ParameterNames.NUM_YEARS);
-            outputDir = stringConf(conf,ParameterNames.OUTPUT_DIR);
-            startYear = intConf(conf,ParameterNames.START_YEAR);
+            baseProbCorrelated = doubleConf(conf,"generator.baseProbCorrelated");
+            blockSize = intConf(conf,"generator.blockSize");
+            degreeDistribution = stringConf(conf,"generator.degreeDistribution");
+            delta = intConf(conf,"generator.delta");
+            maxNumDegree = longConf(conf,"generator.maxNumDegree");
+            minTextSize = intConf(conf,"generator.minTextSize");
+            missingRatio = doubleConf(conf,"generator.missingRatio");
+            numUpdateStreams = intConf(conf,"generator.mode.interactive.numUpdateStreams");
+            numAccounts = longConf(conf, "generator.numAccounts");
+            outputDir = stringConf(conf,"generator.outputDir");
+            startYear = intConf(conf,"generator.startYear");
+            numYears = intConf(conf,"generator.numYears");
+            personCompanyAccountRatio = doubleConf(conf, "generator.personCompanyAccountsRatio");
 
-            System.out.println(" ... Num Persons " + numPersons);
+            System.out.println(" ... Num Persons " + numAccounts);
             System.out.println(" ... Start Year " + startYear);
             System.out.println(" ... Num Years " + numYears);
         } catch (Exception e) {
@@ -84,20 +56,20 @@ public class DatagenParams {
         }
     }
 
-    private static Integer intConf(GeneratorConfiguration conf, ParameterNames param) {
-        return Integer.parseInt(conf.get(param.toString()));
+    private static Integer intConf(GeneratorConfiguration conf, String param) {
+        return Integer.parseInt(conf.get(param));
     }
 
-    private static Long longConf(GeneratorConfiguration conf, ParameterNames param) {
-        return Long.parseLong(conf.get(param.toString()));
+    private static Long longConf(GeneratorConfiguration conf, String param) {
+        return Long.parseLong(conf.get(param));
     }
 
-    private static Double doubleConf(GeneratorConfiguration conf, ParameterNames param) {
-        return Double.parseDouble(conf.get(param.toString()));
+    private static Double doubleConf(GeneratorConfiguration conf, String param) {
+        return Double.parseDouble(conf.get(param));
     }
 
-    private static String stringConf(GeneratorConfiguration conf, ParameterNames param) {
-        return conf.get(param.toString());
+    private static String stringConf(GeneratorConfiguration conf, String param) {
+        return conf.get(param);
     }
 
     private static double scale(long numPersons, double mean) {
@@ -105,20 +77,11 @@ public class DatagenParams {
     }
 
     public static DegreeDistribution getDegreeDistribution() {
-        DegreeDistribution output;
-        switch (degreeDistribution) {
-            case "Facebook":
-                output = new FacebookDegreeDistribution();
-                break;
-            case "Zipf":
-                output = new ZipfDistribution();
-                break;
-            default:
-                throw new IllegalStateException("Unexpected degree distribution: "
-                        + degreeDistribution);
+        if (degreeDistribution.equals("powerlaw")) {
+            return new PowerLawDegreeDistribution();
+        } else {
+            throw new IllegalStateException("Unexpected degree distribution: " + degreeDistribution);
         }
-
-        return output;
     }
 
 }

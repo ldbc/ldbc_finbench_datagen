@@ -8,14 +8,14 @@ import java.util.List;
 import ldbc.finbench.datagen.generator.DatagenParams;
 import ldbc.finbench.datagen.util.GeneratorConfiguration;
 
-public class FacebookDegreeDistribution extends BucketedDistribution {
+public class PowerLawDegreeDistribution extends BucketedDistribution {
     private int mean = 0;
     private static final int FB_MEAN = 190;
     private List<Bucket> buckets;
 
     @Override
     public List<Bucket> getBuckets(GeneratorConfiguration conf) {
-        mean = (int) mean(DatagenParams.numPersons);
+        mean = (int) mean(DatagenParams.numAccounts);
         buckets = new ArrayList<>();
         loadFBBuckets();
         rebuildBucketRange();
@@ -25,7 +25,7 @@ public class FacebookDegreeDistribution extends BucketedDistribution {
     private void loadFBBuckets() {
         try {
             BufferedReader fbDataReader = new BufferedReader(new InputStreamReader(
-                    getClass().getResourceAsStream(DatagenParams.facebookDegreeFile), StandardCharsets.UTF_8));
+                getClass().getResourceAsStream(DatagenParams.powerlawDegreeFile), StandardCharsets.UTF_8));
             String line;
             while ((line = fbDataReader.readLine()) != null) {
                 String[] data = line.split(" ");

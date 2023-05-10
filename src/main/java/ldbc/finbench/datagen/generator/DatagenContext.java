@@ -10,8 +10,7 @@ public class DatagenContext {
     public static synchronized void initialize(GeneratorConfiguration conf) {
         if (!initialized) {
             DatagenParams.readConf(conf);
-            // todo release the Dictionaries
-            Dictionaries.loadDictionaries();
+            Dictionaries.loadDictionaries();// TODO release the Dictionaries
             initialized = true;
         }
     }

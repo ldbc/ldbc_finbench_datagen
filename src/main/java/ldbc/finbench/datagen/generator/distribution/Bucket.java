@@ -27,8 +27,8 @@ public class Bucket {
         double acoeff = Math.log(avgDegreeAt1B) / Math.log(1000000000);
         double bcoeff = (acoeff - (Math.log(avgDegree) / Math.log(population))) / Math.log10(population);
 
-        int targetMean = (int) Math.round(Math.pow(DatagenParams.numPersons, (acoeff - bcoeff * Math
-                .log10(DatagenParams.numPersons))));
+        int targetMean = (int) Math.round(Math.pow(DatagenParams.numAccounts, (acoeff - bcoeff * Math
+                .log10(DatagenParams.numAccounts))));
         System.out.println("Distribution mean degree: " + avgDegree + " Distribution target mean " + targetMean);
         int bucketSize = (int) (Math.ceil(population / (double) (numBuckets)));
         int currentHistogramIndex = 0;

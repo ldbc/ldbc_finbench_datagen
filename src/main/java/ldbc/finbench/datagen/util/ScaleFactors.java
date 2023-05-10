@@ -14,16 +14,13 @@ import org.xml.sax.SAXException;
 public class ScaleFactors {
     public final TreeMap<String, ScaleFactor> value;
 
-    public static final String SCALE_FACTORS_FILE = "scale_factors.xml";
     public static final ScaleFactors INSTANCE = new ScaleFactors();
 
     private ScaleFactors() {
         try {
             value = new TreeMap<>();
-            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder dbuilder = dbFactory.newDocumentBuilder();
-            Document doc = dbuilder.parse(ScaleFactors.class
-                                    .getResourceAsStream("/" + SCALE_FACTORS_FILE));
+            DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            Document doc = builder.parse(ScaleFactors.class.getResourceAsStream("/parameters/scale_factors.xml"));
             doc.getDocumentElement().normalize();
 
             System.out.println("Reading scale factors..");
@@ -37,14 +34,11 @@ public class ScaleFactors {
                     NodeList properties = ((Element) node).getElementsByTagName("property");
                     for (int j = 0; j < properties.getLength(); ++j) {
                         Element property = (Element) properties.item(j);
-                        String name = property.getElementsByTagName("name")
-                                                .item(0).getTextContent();
-                        String value = property.getElementsByTagName("value")
-                                                .item(0).getTextContent();
+                        String name = property.getElementsByTagName("name").item(0).getTextContent();
+                        String value = property.getElementsByTagName("value").item(0).getTextContent();
                         scaleFactor.properties.put(name, value);
                     }
-                    System.out.println("Available scale factor configuration set "
-                                        + scaleFactorName);
+                    System.out.println("Available scale factor configuration set " + scaleFactorName);
                     value.put(scaleFactorName, scaleFactor);
                 }
             }

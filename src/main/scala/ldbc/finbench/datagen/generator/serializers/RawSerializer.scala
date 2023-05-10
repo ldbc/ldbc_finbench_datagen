@@ -54,11 +54,12 @@ class RawSerializer(sink: RawSink, conf: GeneratorConfiguration)(implicit spark:
   val random  = new Random()
   val options = sink.formatOptions ++ Map("header" -> "true", "delimiter" -> "|")
 
-  def write(personRdd: RDD[Person], companyRdd: RDD[Company], mediumRdd: RDD[Medium]): Unit = {
-    writePerson(personRdd)
-    writeCompany(companyRdd)
-    writeMedium(mediumRdd)
-    writeEvent(personRdd, companyRdd, mediumRdd)
+  def write(accountRdd: RDD[Account]): Unit = {
+    // TODO: serilize
+//    writePerson(personRdd)
+//    writeCompany(companyRdd)
+//    writeMedium(mediumRdd)
+//    writeEvent(personRdd, companyRdd, mediumRdd)
   }
 
   private def writePerson(self: RDD[Person]): Unit = {

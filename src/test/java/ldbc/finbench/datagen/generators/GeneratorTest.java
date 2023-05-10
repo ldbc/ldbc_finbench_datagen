@@ -14,7 +14,7 @@ public class GeneratorTest {
 
     @Test
     public void testPersonGenerator() {
-        Map<String, String> config = ConfigParser.readConfig("src/main/resources/params_default.ini");
+        Map<String, String> config = ConfigParser.readConfig("src/main/resources/parameters/params_default.ini");
         DatagenContext.initialize(new GeneratorConfiguration(config));
         PersonGenerator personGenerator = new PersonGenerator(new GeneratorConfiguration(config),"Facebook");
         Person person = personGenerator.generatePerson();
@@ -23,7 +23,7 @@ public class GeneratorTest {
 
     @Test
     public void testDatagenContext() {
-        Map<String, String> config = ConfigParser.readConfig("src/main/resources/params_default.ini");
+        Map<String, String> config = ConfigParser.readConfig("src/main/resources/parameters/params_default.ini");
         DatagenContext.initialize(new GeneratorConfiguration(config));
         System.out.println(DatagenParams.baseProbCorrelated);
         System.out.println(Dictionaries.personNames.getNumNames());
