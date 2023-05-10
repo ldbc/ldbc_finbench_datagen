@@ -57,6 +57,12 @@ public class DateGenerator {
         return randomDate(random, simulationStart, simulationEnd);
     }
 
+    // TODO: use Degree information to determine when an account's deleted
+    public Long randomAccountDeletionDate(Random random, long creationDate, long maxDeletionDate) {
+        long accountCreationDate = creationDate + DatagenParams.deleteDelta;
+        return randomDate(random, accountCreationDate, maxDeletionDate);
+    }
+
     public Long randomMediumCreationDate(Random random) {
         return randomDate(random, simulationStart, simulationEnd);
     }
@@ -66,49 +72,51 @@ public class DateGenerator {
     }
 
     public long randomPersonToAccountDate(Random random, Person person, Account account) {
-        long fromDate = Math.max(person.getCreationDate(), account.getCreationDate()) + DatagenParams.delta;
+        long fromDate = Math.max(person.getCreationDate(), account.getCreationDate()) + DatagenParams.deleteDelta;
         return randomDate(random, fromDate, simulationEnd);
     }
 
     public long randomCompanyToAccountDate(Random random, Company company, Account account) {
-        long fromDate = Math.max(company.getCreationDate(), account.getCreationDate()) + DatagenParams.delta;
+        long fromDate = Math.max(company.getCreationDate(), account.getCreationDate()) + DatagenParams.deleteDelta;
         return randomDate(random, fromDate, simulationEnd);
     }
 
     public long randomPersonToCompanyDate(Random random, Person person, Company company) {
-        long fromDate = Math.max(person.getCreationDate(), company.getCreationDate()) + DatagenParams.delta;
+        long fromDate = Math.max(person.getCreationDate(), company.getCreationDate()) + DatagenParams.deleteDelta;
         return randomDate(random, fromDate, simulationEnd);
     }
 
     public long randomCompanyToCompanyDate(Random random, Company fromCompany, Company toCompany) {
-        long fromDate = Math.max(fromCompany.getCreationDate(), toCompany.getCreationDate()) + DatagenParams.delta;
+        long fromDate =
+            Math.max(fromCompany.getCreationDate(), toCompany.getCreationDate()) + DatagenParams.deleteDelta;
         return randomDate(random, fromDate, simulationEnd);
     }
 
     public long randomMediumToAccountDate(Random random, Medium medium, Account account) {
-        long fromDate = Math.max(medium.getCreationDate(), account.getCreationDate()) + DatagenParams.delta;
+        long fromDate = Math.max(medium.getCreationDate(), account.getCreationDate()) + DatagenParams.deleteDelta;
         return randomDate(random, fromDate, simulationEnd);
     }
 
     public long randomPersonToPersonDate(Random random, Person fromPerson, Person toPerson) {
-        long fromDate = Math.max(fromPerson.getCreationDate(), toPerson.getCreationDate()) + DatagenParams.delta;
+        long fromDate = Math.max(fromPerson.getCreationDate(), toPerson.getCreationDate()) + DatagenParams.deleteDelta;
         return randomDate(random, fromDate, simulationEnd);
     }
 
     public long randomPersonToLoanDate(Random random, Person person, Loan loan) {
-        long fromDate = Math.max(person.getCreationDate(), loan.getCreationDate()) + DatagenParams.delta;
+        long fromDate = Math.max(person.getCreationDate(), loan.getCreationDate()) + DatagenParams.deleteDelta;
         return randomDate(random, fromDate, simulationEnd);
     }
 
     public long randomCompanyToLoanDate(Random random, Company company, Loan loan) {
-        long fromDate = Math.max(company.getCreationDate(), loan.getCreationDate()) + DatagenParams.delta;
+        long fromDate = Math.max(company.getCreationDate(), loan.getCreationDate()) + DatagenParams.deleteDelta;
         return randomDate(random, fromDate, simulationEnd);
     }
 
     // Only the hour distribution is tweaked in accordance with real profiling results.
     // The minute and second is generated randomly.
     public long randomAccountToAccountDate(Random random, Account fromAccount, Account toAccount) {
-        long fromDate = Math.max(fromAccount.getCreationDate(), toAccount.getCreationDate()) + DatagenParams.delta;
+        long fromDate =
+            Math.max(fromAccount.getCreationDate(), toAccount.getCreationDate()) + DatagenParams.deleteDelta;
         long randDate = randomDate(random, fromDate, simulationEnd);
         long randHour = timeDistribution.nextHour(random);
         long randMinute = timeDistribution.nextMinute(random);
@@ -117,12 +125,12 @@ public class DateGenerator {
     }
 
     public long randomLoanToAccountDate(Random random, Loan loan, Account account) {
-        long fromDate = Math.max(loan.getCreationDate(), account.getCreationDate()) + DatagenParams.delta;
+        long fromDate = Math.max(loan.getCreationDate(), account.getCreationDate()) + DatagenParams.deleteDelta;
         return randomDate(random, fromDate, simulationEnd);
     }
 
     public long randomAccountToLoanDate(Random random, Account account, Loan loan) {
-        long fromDate = Math.max(account.getCreationDate(), loan.getCreationDate()) + DatagenParams.delta;
+        long fromDate = Math.max(account.getCreationDate(), loan.getCreationDate()) + DatagenParams.deleteDelta;
         return randomDate(random, fromDate, simulationEnd);
     }
 
@@ -142,5 +150,9 @@ public class DateGenerator {
 
     public long getSimulationEnd() {
         return simulationEnd;
+    }
+
+    public Long getNetworkCollapse() {
+        return getSimulationStart() + TEN_YEARS;
     }
 }

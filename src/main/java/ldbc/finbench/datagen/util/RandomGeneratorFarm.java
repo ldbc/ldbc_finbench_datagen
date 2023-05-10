@@ -13,7 +13,9 @@ public class RandomGeneratorFarm {
         PERSON_NAME,
         COMPANY_NAME,
         MEDIUM_NAME,
-        ACCOUNT_TYPE
+        ACCOUNT_TYPE,
+        ACCOUNT_OWNER_TYPE,
+        DELETE_ACCOUNT,
     }
 
     public RandomGeneratorFarm() {

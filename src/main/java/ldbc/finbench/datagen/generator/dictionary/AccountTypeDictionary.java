@@ -9,7 +9,7 @@ import java.util.TreeMap;
 import ldbc.finbench.datagen.generator.DatagenParams;
 import ldbc.finbench.datagen.generator.distribution.GeometricDistribution;
 
-public class AccountDictionary {
+public class AccountTypeDictionary {
 
     private static final String SEPARATOR = ",";
 
@@ -35,7 +35,7 @@ public class AccountDictionary {
         }
     }
 
-    public AccountDictionary() {
+    public AccountTypeDictionary() {
         this.accountType = new TreeMap<>();
         load(DatagenParams.accountFile);
         geometricDistribution = new GeometricDistribution(1);

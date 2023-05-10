@@ -17,7 +17,7 @@ public class LoanGenerator {
     public LoanGenerator(GeneratorConfiguration conf) {
         this.randomFarm = new RandomGeneratorFarm();
         this.degreeDistribution = DatagenParams.getDegreeDistribution();
-        this.degreeDistribution.initialize(conf);
+        this.degreeDistribution.initialize();
     }
 
     private long composeLoanId(long id, long date) {

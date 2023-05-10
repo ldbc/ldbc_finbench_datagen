@@ -1,6 +1,7 @@
 package ldbc.finbench.datagen.generator;
 
 import ldbc.finbench.datagen.generator.distribution.DegreeDistribution;
+import ldbc.finbench.datagen.generator.distribution.PowerLawBucketsDistribution;
 import ldbc.finbench.datagen.generator.distribution.PowerLawDegreeDistribution;
 import ldbc.finbench.datagen.util.GeneratorConfiguration;
 
@@ -9,19 +10,21 @@ public class DatagenParams {
     public static final String companyNameFile = DICTIONARY_DIRECTORY + "companies.txt";
     public static final String personSurnameFile = DICTIONARY_DIRECTORY + "surnames.txt";
     public static final String mediumNameFile = DICTIONARY_DIRECTORY + "medium.txt";
-    public static final String accountFile = DICTIONARY_DIRECTORY + "account.txt";
+    public static final String accountFile = DICTIONARY_DIRECTORY + "accountTypes.txt";
 
     public static final String DISTRIBUTION_DIRECTORY = "/distributions/";
-    public static final String powerlawDegreeFile = DISTRIBUTION_DIRECTORY + "powerlaw.dat";
+    public static final String fbPowerlawDegreeFile = DISTRIBUTION_DIRECTORY + "facebookPowerlawBucket.dat";
     public static final String hourDistributionFile = DISTRIBUTION_DIRECTORY + "hourDistribution.dat";
+    public static final String accountDeleteFile = DISTRIBUTION_DIRECTORY + "accountDelete.txt";
     public static final String powerLawActivityDeleteFile = DISTRIBUTION_DIRECTORY + "powerLawActivityDeleteDate.txt";
-    public static double baseProbCorrelated = 0.0;
+    public static final String inDegreeRegressionFile = DISTRIBUTION_DIRECTORY + "inDegreeRegression.txt";
+    public static final String outDegreeRegressionFile = DISTRIBUTION_DIRECTORY + "outDegreeRegression.txt";
     public static int blockSize = 0;
     public static String degreeDistribution;
-    public static int delta = 0;
+    public static int deleteDelta = 0;
+    public static long minNumDegree = 0;
     public static long maxNumDegree = 0;
-    public static int minTextSize = 0;
-    public static double missingRatio = 0.0;
+    public static double blockedAccountRatio = 0.0;
     public static int numUpdateStreams = 0;
     public static long numAccounts = 0;
     public static int numYears = 0;
@@ -32,18 +35,17 @@ public class DatagenParams {
 
     public static void readConf(GeneratorConfiguration conf) {
         try {
-            baseProbCorrelated = doubleConf(conf,"generator.baseProbCorrelated");
-            blockSize = intConf(conf,"generator.blockSize");
-            degreeDistribution = stringConf(conf,"generator.degreeDistribution");
-            delta = intConf(conf,"generator.delta");
-            maxNumDegree = longConf(conf,"generator.maxNumDegree");
-            minTextSize = intConf(conf,"generator.minTextSize");
-            missingRatio = doubleConf(conf,"generator.missingRatio");
-            numUpdateStreams = intConf(conf,"generator.mode.interactive.numUpdateStreams");
+            blockSize = intConf(conf, "generator.blockSize");
+            degreeDistribution = stringConf(conf, "generator.degreeDistribution");
+            deleteDelta = intConf(conf, "generator.deleteDelta");
+            minNumDegree = longConf(conf, "generator.minNumDegree");
+            maxNumDegree = longConf(conf, "generator.maxNumDegree");
+            blockedAccountRatio = doubleConf(conf, "generator.blockedAccountRatio");
+            numUpdateStreams = intConf(conf, "generator.mode.interactive.numUpdateStreams");
             numAccounts = longConf(conf, "generator.numAccounts");
-            outputDir = stringConf(conf,"generator.outputDir");
-            startYear = intConf(conf,"generator.startYear");
-            numYears = intConf(conf,"generator.numYears");
+            outputDir = stringConf(conf, "generator.outputDir");
+            startYear = intConf(conf, "generator.startYear");
+            numYears = intConf(conf, "generator.numYears");
             personCompanyAccountRatio = doubleConf(conf, "generator.personCompanyAccountsRatio");
 
             System.out.println(" ... Num Persons " + numAccounts);
@@ -79,9 +81,10 @@ public class DatagenParams {
     public static DegreeDistribution getDegreeDistribution() {
         if (degreeDistribution.equals("powerlaw")) {
             return new PowerLawDegreeDistribution();
+        } else if (degreeDistribution.equals("powerlawbucket")) {
+            return new PowerLawBucketsDistribution();
         } else {
             throw new IllegalStateException("Unexpected degree distribution: " + degreeDistribution);
         }
     }
-
 }

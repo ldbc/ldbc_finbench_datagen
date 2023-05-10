@@ -14,13 +14,13 @@ public class Person implements Serializable {
     private String personName;
     private byte gender;
     private WorkIn workIn;
+    private long creationDate;
+    private long maxDegree;
+    private boolean isBlocked;
     private List<PersonOwnAccount> personOwnAccounts;
     private List<PersonInvestCompany> personInvestCompanies;
     private List<PersonGuaranteePerson> personGuaranteePeople;
     private List<PersonApplyLoan> personApplyLoans;
-    private long creationDate;
-    private long maxDegree;
-    private boolean isBlocked;
 
     public Person(long personId, String personName, byte gender, long creationDate, long maxDegree, boolean isBlocked) {
         this.personId = personId;

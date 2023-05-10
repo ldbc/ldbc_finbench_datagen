@@ -5,12 +5,20 @@
             <name>generator.numAccounts</name>
             <value>1700</value>
         </property>
+        <property>
+            <name>generator.maxDegree</name>
+            <value>100</value>
+        </property>
     </scale_factor>
 
     <scale_factor name="0.3">
         <property>
             <name>generator.numAccounts</name>
             <value>3900</value>
+        </property>
+        <property>
+            <name>generator.maxDegree</name>
+            <value>300</value>
         </property>
     </scale_factor>
 
@@ -19,12 +27,20 @@
             <name>generator.numAccounts</name>
             <value>10620</value>
         </property>
+        <property>
+            <name>generator.maxDegree</name>
+            <value>1000</value>
+        </property>
     </scale_factor>
 
     <scale_factor name="3">
         <property>
             <name>generator.numAccounts</name>
             <value>25870</value>
+        </property>
+        <property>
+            <name>generator.maxDegree</name>
+            <value>3000</value>
         </property>
     </scale_factor>
 
@@ -33,6 +49,10 @@
             <name>generator.numAccounts</name>
             <value>70800</value>
         </property>
+        <property>
+            <name>generator.maxDegree</name>
+            <value>10000</value>
+        </property>
     </scale_factor>
 
     <scale_factor name="30">
@@ -40,12 +60,9 @@
             <name>generator.numAccounts</name>
             <value>175950</value>
         </property>
-    </scale_factor>
-
-    <scale_factor name="100">
         <property>
-            <name>generator.numAccounts</name>
-            <value>487700</value>
+            <name>generator.maxDegree</name>
+            <value>30000</value>
         </property>
     </scale_factor>
 
