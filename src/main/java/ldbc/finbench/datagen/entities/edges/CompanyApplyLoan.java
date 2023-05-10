@@ -8,18 +8,18 @@ import ldbc.finbench.datagen.entities.nodes.Loan;
 import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 
 public class CompanyApplyLoan implements DynamicActivity, Serializable {
-    private long companyId;
-    private long loanId;
+    private Company company;
+    private Loan loan;
     private long loanAmount;
     private long loanBalance;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public CompanyApplyLoan(long companyId, long loanId, long loanAmount, long loanBalance,
+    public CompanyApplyLoan(Company company, Loan loan, long loanAmount, long loanBalance,
                             long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
-        this.companyId = companyId;
-        this.loanId = loanId;
+        this.company = company;
+        this.loan = loan;
         this.loanAmount = loanAmount;
         this.loanBalance = loanBalance;
         this.creationDate = creationDate;
@@ -29,28 +29,27 @@ public class CompanyApplyLoan implements DynamicActivity, Serializable {
 
     public static CompanyApplyLoan createCompanyApplyLoan(Random random, Company company, Loan loan) {
         long creationDate = Dictionaries.dates.randomCompanyToLoanDate(random, company, loan);
-
-        CompanyApplyLoan companyApplyLoan = new CompanyApplyLoan(company.getCompanyId(), loan.getLoanId(),
+        CompanyApplyLoan companyApplyLoan = new CompanyApplyLoan(company, loan,
                 loan.getLoanAmount(), loan.getBalance(), creationDate, 0, false);
         company.getCompanyApplyLoans().add(companyApplyLoan);
 
         return companyApplyLoan;
     }
 
-    public long getCompanyId() {
-        return companyId;
+    public Company getCompany() {
+        return company;
     }
 
-    public void setCompanyId(long companyId) {
-        this.companyId = companyId;
+    public void setCompany(Company company) {
+        this.company = company;
     }
 
-    public long getLoanId() {
-        return loanId;
+    public Loan getLoan() {
+        return loan;
     }
 
-    public void setLoanId(long loanId) {
-        this.loanId = loanId;
+    public void setLoan(Loan loan) {
+        this.loan = loan;
     }
 
     public long getLoanAmount() {

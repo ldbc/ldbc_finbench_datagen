@@ -11,6 +11,14 @@ import ldbc.finbench.datagen.util.GeneratorConfiguration;
 import org.junit.Test;
 
 public class DistributionTest {
+    Map<String, String> config;
+
+    public DistributionTest() {
+        config = ConfigParser.readConfig("src/main/resources/parameters/params_default.ini");
+        config.putAll(ConfigParser.scaleFactorConf("0.1")); // use scale factor 0.1
+        DatagenContext.initialize(new GeneratorConfiguration(config));
+    }
+
     @Test
     public void testTimeDistribution() {
         TimeDistribution timeDistribution = new TimeDistribution(DatagenParams.hourDistributionFile);
@@ -27,8 +35,6 @@ public class DistributionTest {
 
     @Test
     public void testPowerLawDegreeDistribution() {
-        Map<String, String> config = ConfigParser.readConfig("src/main/resources/parameters/params_default.ini");
-        DatagenContext.initialize(new GeneratorConfiguration(config));
         PowerLawDegreeDistribution pldd = new PowerLawDegreeDistribution();
         pldd.initialize();
         System.out.println("Generated InDegrees:");

@@ -13,7 +13,7 @@ import scala.reflect.ClassTag
 
 object GenerationStage extends DatagenStage with Logging {
 
-  case class Args(scaleFactor: String = "0.003", partitionsOpt: Option[Int] = None, params: Map[String, String] = Map.empty, paramFile: Option[String] = None, outputDir: String = "out", format: String = "csv", oversizeFactor: Option[Double] = None)
+  case class Args(scaleFactor: String = "0.1", partitionsOpt: Option[Int] = None, params: Map[String, String] = Map.empty, paramFile: Option[String] = None, outputDir: String = "out", format: String = "csv", oversizeFactor: Option[Double] = None)
 
   override type ArgsType = Args
 
@@ -35,18 +35,19 @@ object GenerationStage extends DatagenStage with Logging {
       None
     }
 
-    // TODO: compute parallelism
+
     val personNum = DatagenParams.numPersons
     val companyNum = DatagenParams.numCompanies
     val mediumNum = DatagenParams.numMediums
     val blockSize = DatagenParams.blockSize
-    val personPartitions = Math.min(Math.ceil(personNum.toDouble / blockSize).toLong, spark.sparkContext.defaultParallelism).toInt
-    val companyPartitions = Math.min(Math.ceil(companyNum.toDouble / blockSize).toLong, spark.sparkContext.defaultParallelism).toInt
-    val mediumPartitions = Math.min(Math.ceil(mediumNum.toDouble / blockSize).toLong, spark.sparkContext.defaultParallelism).toInt
+    val parallelism = spark.sparkContext.defaultParallelism // TODO: compute parallelism
 
-    val persons = SparkPersonGenerator(config, personNum, blockSize, Some(personPartitions))
-    val companies = SparkCompanyGenerator(config, companyNum, blockSize, Some(companyPartitions))
-    val mediums = SparkMediumGenerator(config, mediumNum, blockSize, Some(mediumPartitions))
+    val personPartitions = Some(Math.min(Math.ceil(personNum.toDouble / blockSize).toLong, parallelism).toInt)
+    val persons = SparkPersonGenerator(config, personNum, blockSize, personPartitions)
+    val companyPartitions = Some(Math.min(Math.ceil(companyNum.toDouble / blockSize).toLong, parallelism).toInt)
+    val companies = SparkCompanyGenerator(config, companyNum, blockSize, companyPartitions)
+    val mediumPartitions = Some(Math.min(Math.ceil(mediumNum.toDouble / blockSize).toLong, parallelism).toInt)
+    val mediums = SparkMediumGenerator(config, mediumNum, blockSize, mediumPartitions)
 
     SparkUI.job(implicitly[ClassTag[RawSerializer]].runtimeClass.getSimpleName, "serialize Finbench data") {
       val sink = RawSink(config.getOutputDir, format, sparkPartitions)

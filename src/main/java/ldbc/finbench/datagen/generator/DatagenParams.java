@@ -33,7 +33,10 @@ public class DatagenParams {
     public static int numYears = 0;
     public static String outputDir;
     public static int startYear = 0;
-    public static double personCompanyAccountRatio = 0.0;
+    // public static double personCompanyAccountRatio = 0.0;
+    public static double companyInvestedByPersonFraction = 0.0;
+    public static double companyHasWorkerFraction = 0.0;
+    public static double accountSignedInFraction = 0.0;
 
 
     public static void readConf(GeneratorConfiguration conf) {
@@ -44,15 +47,18 @@ public class DatagenParams {
             minNumDegree = longConf(conf, "generator.minNumDegree");
             maxNumDegree = longConf(conf, "generator.maxNumDegree");
             blockedAccountRatio = doubleConf(conf, "generator.blockedAccountRatio");
+            companyInvestedByPersonFraction = doubleConf(conf, "generator.companyInvestedByPersonFraction");
             numUpdateStreams = intConf(conf, "generator.mode.interactive.numUpdateStreams");
             //numAccounts = longConf(conf, "generator.numAccounts");
             numPersons = longConf(conf, "generator.numPersons");
             numCompanies = longConf(conf, "generator.numCompanies");
             numMediums = longConf(conf, "generator.numMediums");
             outputDir = stringConf(conf, "generator.outputDir");
-            startYear = intConf(conf, "generator.startYear");
+            startYear   = intConf(conf, "generator.startYear");
             numYears = intConf(conf, "generator.numYears");
-            personCompanyAccountRatio = doubleConf(conf, "generator.personCompanyAccountsRatio");
+            // personCompanyAccountRatio = doubleConf(conf, "generator.personCompanyAccountsRatio");
+            companyHasWorkerFraction = doubleConf(conf, "generator.companyHasWorkerFraction");
+            accountSignedInFraction = doubleConf(conf, "generator.accountSignedInFraction");
 
             System.out.println(" ... Num Accounts " + (numPersons + numCompanies));
             System.out.println(" ... Start Year " + startYear);

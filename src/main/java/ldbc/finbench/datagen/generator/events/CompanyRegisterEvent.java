@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import ldbc.finbench.datagen.entities.edges.CompanyOwnAccount;
 import ldbc.finbench.datagen.entities.nodes.Account;
+import ldbc.finbench.datagen.entities.nodes.AccountOwnerEnum;
 import ldbc.finbench.datagen.entities.nodes.Company;
 import ldbc.finbench.datagen.generator.generators.AccountGenerator;
 import ldbc.finbench.datagen.util.GeneratorConfiguration;
@@ -28,6 +29,8 @@ public class CompanyRegisterEvent implements Serializable {
 
         for (Company c : companies) {
             Account account = accountGenerator.generateAccount();
+            account.setAccountOwnerEnum(AccountOwnerEnum.COMPANY);
+            account.setCompanyOwner(c);
             CompanyOwnAccount companyOwnAccount = CompanyOwnAccount.createCompanyOwnAccount(
                 randomFarm.get(RandomGeneratorFarm.Aspect.DATE), c, account);
             companyOwnAccounts.add(companyOwnAccount);

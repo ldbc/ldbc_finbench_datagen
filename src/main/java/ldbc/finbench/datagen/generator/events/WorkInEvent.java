@@ -10,37 +10,31 @@ import ldbc.finbench.datagen.entities.nodes.Person;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class WorkInEvent implements Serializable {
-    private RandomGeneratorFarm randomFarm;
-    private Random randIndex;
-    private Random random;
+    private final RandomGeneratorFarm randomFarm;
+    private final Random randIndex;
 
     public WorkInEvent() {
         randomFarm = new RandomGeneratorFarm();
         randIndex = new Random();
-        random = new Random();
+    }
+
+    private void resetState(int seed) {
+        randomFarm.resetRandomGenerators(seed);
+        randIndex.setSeed(seed);
     }
 
     public List<WorkIn> workIn(List<Person> persons, List<Company> companies, int blockId) {
-        random.setSeed(blockId);
+        resetState(blockId);
         List<WorkIn> workIns = new ArrayList<>();
 
-        for (int i = 0; i < persons.size(); i++) {
-            Person p = persons.get(i);
+        for (Person p : persons) {
             int companyIndex = randIndex.nextInt(companies.size());
-
-            if (work()) {
-                WorkIn workIn = WorkIn.createWorkIn(
-                    randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
-                    p,
-                    companies.get(companyIndex));
-                workIns.add(workIn);
-            }
+            WorkIn workIn = WorkIn.createWorkIn(
+                randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
+                p,
+                companies.get(companyIndex));
+            workIns.add(workIn);
         }
         return workIns;
-    }
-
-    private boolean work() {
-        //TODO determine whether to generate workIn
-        return true;
     }
 }

@@ -8,15 +8,15 @@ import ldbc.finbench.datagen.entities.nodes.Medium;
 import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 
 public class SignIn implements DynamicActivity, Serializable {
-    private long mediumId;
-    private long accountId;
+    private Medium medium;
+    private Account account;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public SignIn(long mediumId, long accountId, long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
-        this.mediumId = mediumId;
-        this.accountId = accountId;
+    public SignIn(Medium medium, Account account, long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
+        this.medium = medium;
+        this.account = account;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
@@ -24,28 +24,27 @@ public class SignIn implements DynamicActivity, Serializable {
 
     public static SignIn createSignIn(Random random, Medium medium, Account account) {
         long creationDate = Dictionaries.dates.randomMediumToAccountDate(random, medium, account);
-
-        SignIn signIn = new SignIn(medium.getMediumId(), account.getAccountId(),
-                creationDate, 0, false);
+        SignIn signIn = new SignIn(medium, account, creationDate, account.getDeletionDate(),
+                                   account.isExplicitlyDeleted());
         medium.getSignIns().add(signIn);
 
         return signIn;
     }
 
-    public long getMediumId() {
-        return mediumId;
+    public Medium getMedium() {
+        return medium;
     }
 
-    public void setMediumId(long mediumId) {
-        this.mediumId = mediumId;
+    public void setMedium(Medium medium) {
+        this.medium = medium;
     }
 
-    public long getAccountId() {
-        return accountId;
+    public Account getAccount() {
+        return account;
     }
 
-    public void setAccountId(long accountId) {
-        this.accountId = accountId;
+    public void setAccount(Account account) {
+        this.account = account;
     }
 
     @Override

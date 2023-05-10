@@ -44,6 +44,10 @@ public class AccountGenerator implements Serializable {
         return (bucket << 43) | ((id & idMask));
     }
 
+    // Note:
+    // - maxOutDegree is left as 0 to be assigned by shuffled maxInDegree later
+    // - AccountOwnerEnum will be determined when person or company registers its own account
+    // TODO: Use the bucket degree distribution instead of using formula and maxDegree in each scale
     public Account generateAccount() {
         Account account = new Account();
 
@@ -56,7 +60,6 @@ public class AccountGenerator implements Serializable {
         account.setAccountId(accountId);
 
         // Set inDegree
-        // TODO: Use the bucket degree distribution instead of using formula and maxDegree in each scale
         long maxInDegree = Math.min(degreeDistribution.nextDegree(), DatagenParams.maxNumDegree);
         account.setMaxInDegree(maxInDegree);
 
@@ -72,22 +75,11 @@ public class AccountGenerator implements Serializable {
         account.setType(type);
 
         // Set isBlocked
-        boolean isBlocked = blockRandom.nextDouble() < DatagenParams.blockedAccountRatio;
-        account.setBlocked(isBlocked);
-
-        // Set accountOwnerEnum.
-        // Note: Person or Company will be set later
-        if (personOrCompanyOwnRandom.nextDouble() < DatagenParams.personCompanyAccountRatio) {
-            account.setAccountOwnerEnum(AccountOwnerEnum.PERSON);
-        } else {
-            account.setAccountOwnerEnum(AccountOwnerEnum.COMPANY);
-        }
+        account.setBlocked(blockRandom.nextDouble() < DatagenParams.blockedAccountRatio);
 
         // Set deletionDate
         long deletionDate;
-        boolean delete =
-            accountDeleteDistribution.isDeleted(randFarm.get(RandomGeneratorFarm.Aspect.DELETE_ACCOUNT), maxInDegree);
-        if (delete) {
+        if (accountDeleteDistribution.isDeleted(randFarm.get(RandomGeneratorFarm.Aspect.DELETE_ACCOUNT), maxInDegree)) {
             account.setExplicitlyDeleted(true);
             long maxDeletionDate = Dictionaries.dates.getSimulationEnd();
             deletionDate = Dictionaries.dates.randomAccountDeletionDate(randFarm.get(RandomGeneratorFarm.Aspect.DATE),

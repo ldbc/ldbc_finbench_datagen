@@ -7,16 +7,16 @@ import ldbc.finbench.datagen.entities.nodes.Company;
 import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 
 public class CompanyGuaranteeCompany implements DynamicActivity, Serializable {
-    private long fromCompanyId;
-    private long toCompanyId;
+    private Company fromCompany;
+    private Company toCompany;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public CompanyGuaranteeCompany(long fromCompanyId, long toCompanyId,
+    public CompanyGuaranteeCompany(Company fromCompany, Company toCompany,
                                    long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
-        this.fromCompanyId = fromCompanyId;
-        this.toCompanyId = toCompanyId;
+        this.fromCompany = fromCompany;
+        this.toCompany = toCompany;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
@@ -25,28 +25,27 @@ public class CompanyGuaranteeCompany implements DynamicActivity, Serializable {
     public static CompanyGuaranteeCompany createCompanyGuaranteeCompany(Random random,
                                                                         Company fromCompany, Company toCompany) {
         long creationDate = Dictionaries.dates.randomCompanyToCompanyDate(random, fromCompany, toCompany);
-
-        CompanyGuaranteeCompany companyGuaranteeCompany = new CompanyGuaranteeCompany(fromCompany.getCompanyId(),
-                toCompany.getCompanyId(), creationDate, 0, false);
+        CompanyGuaranteeCompany companyGuaranteeCompany = new CompanyGuaranteeCompany(fromCompany,
+                toCompany, creationDate, 0, false);
         fromCompany.getCompanyGuaranteeCompanies().add(companyGuaranteeCompany);
 
         return companyGuaranteeCompany;
     }
 
-    public long getFromCompanyId() {
-        return fromCompanyId;
+    public Company getFromCompany() {
+        return fromCompany;
     }
 
-    public void setFromCompanyId(long fromCompanyId) {
-        this.fromCompanyId = fromCompanyId;
+    public void setFromCompany(Company fromCompany) {
+        this.fromCompany = fromCompany;
     }
 
-    public long getToCompanyId() {
-        return toCompanyId;
+    public Company getToCompany() {
+        return toCompany;
     }
 
-    public void setToCompanyId(long toCompanyId) {
-        this.toCompanyId = toCompanyId;
+    public void setToCompany(Company toCompany) {
+        this.toCompany = toCompany;
     }
 
     @Override

@@ -7,16 +7,16 @@ import ldbc.finbench.datagen.entities.nodes.Person;
 import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 
 public class PersonGuaranteePerson implements DynamicActivity, Serializable {
-    private long fromPersonId;
-    private long toPersonId;
+    private Person fromPerson;
+    private Person toPerson;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public PersonGuaranteePerson(long fromPersonId, long toPersonId,
+    public PersonGuaranteePerson(Person fromPerson, Person toPerson,
                                  long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
-        this.fromPersonId = fromPersonId;
-        this.toPersonId = toPersonId;
+        this.fromPerson = fromPerson;
+        this.toPerson = toPerson;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
@@ -24,28 +24,27 @@ public class PersonGuaranteePerson implements DynamicActivity, Serializable {
 
     public static PersonGuaranteePerson createPersonGuaranteePerson(Random random, Person fromPerson, Person toPerson) {
         long creationDate = Dictionaries.dates.randomPersonToPersonDate(random, fromPerson, toPerson);
-
-        PersonGuaranteePerson personGuaranteePerson = new PersonGuaranteePerson(fromPerson.getPersonId(),
-                toPerson.getPersonId(), creationDate, 0, false);
+        PersonGuaranteePerson personGuaranteePerson = new PersonGuaranteePerson(fromPerson,
+                                                                                toPerson, creationDate, 0, false);
         fromPerson.getPersonGuaranteePeople().add(personGuaranteePerson);
 
         return personGuaranteePerson;
     }
 
-    public long getFromPersonId() {
-        return fromPersonId;
+    public Person getFromPerson() {
+        return fromPerson;
     }
 
-    public void setFromPersonId(long fromPersonId) {
-        this.fromPersonId = fromPersonId;
+    public void setFromPerson(Person fromPerson) {
+        this.fromPerson = fromPerson;
     }
 
-    public long getToPersonId() {
-        return toPersonId;
+    public Person getToPerson() {
+        return toPerson;
     }
 
-    public void setToPersonId(long toPersonId) {
-        this.toPersonId = toPersonId;
+    public void setToPerson(Person toPerson) {
+        this.toPerson = toPerson;
     }
 
     @Override
