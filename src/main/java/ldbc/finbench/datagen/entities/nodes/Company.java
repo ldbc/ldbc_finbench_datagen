@@ -11,13 +11,13 @@ import ldbc.finbench.datagen.entities.edges.CompanyOwnAccount;
 public class Company implements Serializable {
     private long companyId;
     private String companyName;
+    private long creationDate;
+    private long maxDegree;
+    private boolean isBlocked;
     private List<CompanyOwnAccount> companyOwnAccounts;
     private List<CompanyInvestCompany> companyInvestCompanies;
     private List<CompanyGuaranteeCompany> companyGuaranteeCompanies;
     private List<CompanyApplyLoan> companyApplyLoans;
-    private long creationDate;
-    private long maxDegree;
-    private boolean isBlocked;
 
     public Company(long companyId, String companyName, long creationDate, long maxDegree, boolean isBlocked) {
         this.companyId = companyId;

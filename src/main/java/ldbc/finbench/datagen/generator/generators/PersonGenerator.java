@@ -19,7 +19,7 @@ public class PersonGenerator {
     public PersonGenerator(GeneratorConfiguration conf, String degreeDistribution) {
         this.randomFarm = new RandomGeneratorFarm();
         this.degreeDistribution = DatagenParams.getDegreeDistribution();
-        this.degreeDistribution.initialize(conf);
+        this.degreeDistribution.initialize();
         this.personNameDictionary = new PersonNameDictionary();
     }
 

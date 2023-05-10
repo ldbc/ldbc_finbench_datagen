@@ -20,7 +20,7 @@ public class MediumGenerator {
     public MediumGenerator(GeneratorConfiguration conf) {
         this.randomFarm = new RandomGeneratorFarm();
         this.degreeDistribution = DatagenParams.getDegreeDistribution();
-        this.degreeDistribution.initialize(conf);
+        this.degreeDistribution.initialize();
         this.mediumNameDictionary = new MediumNameDictionary();
     }
 

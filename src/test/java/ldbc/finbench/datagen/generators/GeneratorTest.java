@@ -25,7 +25,6 @@ public class GeneratorTest {
     public void testDatagenContext() {
         Map<String, String> config = ConfigParser.readConfig("src/main/resources/parameters/params_default.ini");
         DatagenContext.initialize(new GeneratorConfiguration(config));
-        System.out.println(DatagenParams.baseProbCorrelated);
         System.out.println(Dictionaries.personNames.getNumNames());
     }
 

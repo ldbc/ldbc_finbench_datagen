@@ -4,7 +4,7 @@ import ldbc.finbench.datagen.util.GeneratorConfiguration;
 
 public abstract class DegreeDistribution {
 
-    public abstract void initialize(GeneratorConfiguration conf);
+    public abstract void initialize();
 
     public abstract void reset(long seed);
 

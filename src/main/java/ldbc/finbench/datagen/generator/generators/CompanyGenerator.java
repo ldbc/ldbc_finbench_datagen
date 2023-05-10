@@ -20,7 +20,7 @@ public class CompanyGenerator {
     public CompanyGenerator(GeneratorConfiguration conf) {
         this.randomFarm = new RandomGeneratorFarm();
         this.degreeDistribution = DatagenParams.getDegreeDistribution();
-        this.degreeDistribution.initialize(conf);
+        this.degreeDistribution.initialize();
         this.companyNameDictionary = new CompanyNameDictionary();
     }
 
