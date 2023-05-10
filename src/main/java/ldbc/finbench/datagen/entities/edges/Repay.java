@@ -8,15 +8,15 @@ import ldbc.finbench.datagen.entities.nodes.Loan;
 import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 
 public class Repay implements DynamicActivity, Serializable {
-    private long accountId;
-    private long loanId;
+    private Account account;
+    private Loan loan;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public Repay(long accountId, long loanId, long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
-        this.accountId = accountId;
-        this.loanId = loanId;
+    public Repay(Account account, Loan loan, long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
+        this.account = account;
+        this.loan = loan;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
@@ -24,28 +24,26 @@ public class Repay implements DynamicActivity, Serializable {
 
     public static Repay createRepay(Random random, Account account, Loan loan) {
         long creationDate = Dictionaries.dates.randomAccountToLoanDate(random, account, loan);
-
-        Repay repay = new Repay(account.getAccountId(), loan.getLoanId(),
-                creationDate, 0, false);
+        Repay repay = new Repay(account, loan, creationDate, 0, false);
         account.getRepays().add(repay);
 
         return repay;
     }
 
-    public long getAccountId() {
-        return accountId;
+    public Account getAccount() {
+        return account;
     }
 
-    public void setAccountId(long accountId) {
-        this.accountId = accountId;
+    public void setAccount(Account account) {
+        this.account = account;
     }
 
-    public long getLoanId() {
-        return loanId;
+    public Loan getLoan() {
+        return loan;
     }
 
-    public void setLoanId(long loanId) {
-        this.loanId = loanId;
+    public void setLoan(Loan loan) {
+        this.loan = loan;
     }
 
     @Override

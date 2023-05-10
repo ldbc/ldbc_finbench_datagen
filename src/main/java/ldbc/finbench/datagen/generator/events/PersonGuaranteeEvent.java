@@ -9,37 +9,33 @@ import ldbc.finbench.datagen.entities.nodes.Person;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class PersonGuaranteeEvent implements Serializable {
-    private RandomGeneratorFarm randomFarm;
-    private Random randIndex;
-    private Random random;
+    private final RandomGeneratorFarm randomFarm;
+    private final Random randIndex;
 
     public PersonGuaranteeEvent() {
         randomFarm = new RandomGeneratorFarm();
         randIndex = new Random();
-        random = new Random();
+    }
+
+
+    private void resetState(int seed) {
+        randomFarm.resetRandomGenerators(seed);
+        randIndex.setSeed(seed);
     }
 
     public List<PersonGuaranteePerson> personGuarantee(List<Person> persons, int blockId) {
-        random.setSeed(blockId);
+        resetState(blockId);
         List<PersonGuaranteePerson> personGuaranteePeople = new ArrayList<>();
-
+        // TODO
         for (int i = 0; i < persons.size(); i++) {
             Person p = persons.get(i);
             int personIndex = randIndex.nextInt(persons.size());
-
-            if (guarantee()) {
-                PersonGuaranteePerson personGuaranteePerson = PersonGuaranteePerson.createPersonGuaranteePerson(
-                    randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
-                    p,
-                    persons.get(personIndex));
-                personGuaranteePeople.add(personGuaranteePerson);
-            }
+            PersonGuaranteePerson personGuaranteePerson = PersonGuaranteePerson.createPersonGuaranteePerson(
+                randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
+                p,
+                persons.get(personIndex));
+            personGuaranteePeople.add(personGuaranteePerson);
         }
         return personGuaranteePeople;
-    }
-
-    private boolean guarantee() {
-        //TODO determine whether to generate guarantee
-        return true;
     }
 }

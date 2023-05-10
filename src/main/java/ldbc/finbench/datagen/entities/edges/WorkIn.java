@@ -8,15 +8,15 @@ import ldbc.finbench.datagen.entities.nodes.Person;
 import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 
 public class WorkIn implements DynamicActivity, Serializable {
-    private long personId;
-    private long companyId;
+    private Person person;
+    private Company company;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public WorkIn(long personId, long companyId, long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
-        this.personId = personId;
-        this.companyId = companyId;
+    public WorkIn(Person person, Company company, long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
+        this.person = person;
+        this.company = company;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
@@ -24,27 +24,26 @@ public class WorkIn implements DynamicActivity, Serializable {
 
     public static WorkIn createWorkIn(Random random, Person person, Company company) {
         long creationDate = Dictionaries.dates.randomPersonToCompanyDate(random, person, company);
-
-        WorkIn workIn = new WorkIn(person.getPersonId(), company.getCompanyId(), creationDate, 0, false);
+        WorkIn workIn = new WorkIn(person, company, creationDate, 0, false);
         person.setWorkIn(workIn);
 
         return workIn;
     }
 
-    public long getPersonId() {
-        return personId;
+    public Person getPerson() {
+        return person;
     }
 
-    public void setPersonId(long personId) {
-        this.personId = personId;
+    public void setPerson(Person person) {
+        this.person = person;
     }
 
-    public long getCompanyId() {
-        return companyId;
+    public Company getCompany() {
+        return company;
     }
 
-    public void setCompanyId(long companyId) {
-        this.companyId = companyId;
+    public void setCompany(Company company) {
+        this.company = company;
     }
 
     @Override

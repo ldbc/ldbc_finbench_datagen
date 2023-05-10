@@ -1,6 +1,7 @@
 package ldbc.finbench.datagen.entities.nodes;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import ldbc.finbench.datagen.entities.edges.Repay;
 import ldbc.finbench.datagen.entities.edges.Transfer;
@@ -24,6 +25,9 @@ public class Account implements Serializable {
     private List<Repay> repays;
 
     public Account() {
+        transfers = new ArrayList<>();
+        withdraws = new ArrayList<>();
+        repays = new ArrayList<>();
     }
 
     public long getAccountId() {
@@ -114,7 +118,6 @@ public class Account implements Serializable {
     public void setAccountOwnerEnum(AccountOwnerEnum accountOwnerEnum) {
         this.accountOwnerEnum = accountOwnerEnum;
     }
-
 
     public boolean isExplicitlyDeleted() {
         return isExplicitlyDeleted;

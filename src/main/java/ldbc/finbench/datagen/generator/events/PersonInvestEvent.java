@@ -10,37 +10,32 @@ import ldbc.finbench.datagen.entities.nodes.Person;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class PersonInvestEvent implements Serializable {
-    private RandomGeneratorFarm randomFarm;
-    private Random randIndex;
-    private Random random;
+    private final RandomGeneratorFarm randomFarm;
+    private final Random randIndex;
 
     public PersonInvestEvent() {
         randomFarm = new RandomGeneratorFarm();
         randIndex = new Random();
-        random = new Random();
+    }
+
+    private void resetState(int seed) {
+        randomFarm.resetRandomGenerators(seed);
+        randIndex.setSeed(seed);
     }
 
     public List<PersonInvestCompany> personInvest(List<Person> persons, List<Company> companies, int blockId) {
-        random.setSeed(blockId);
+        resetState(blockId);
         List<PersonInvestCompany> personInvestCompanies = new ArrayList<>();
 
-        for (int i = 0; i < persons.size(); i++) {
-            Person p = persons.get(i);
+        // TODO: person can invest multiple companies
+        for (Person p : persons) {
             int companyIndex = randIndex.nextInt(companies.size());
-
-            if (invest()) {
-                PersonInvestCompany personInvestCompany = PersonInvestCompany.createPersonInvestCompany(
-                    randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
-                    p,
-                    companies.get(companyIndex));
-                personInvestCompanies.add(personInvestCompany);
-            }
+            PersonInvestCompany personInvestCompany = PersonInvestCompany.createPersonInvestCompany(
+                randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
+                p,
+                companies.get(companyIndex));
+            personInvestCompanies.add(personInvestCompany);
         }
         return personInvestCompanies;
-    }
-
-    private boolean invest() {
-        //TODO determine whether to generate Invest
-        return true;
     }
 }

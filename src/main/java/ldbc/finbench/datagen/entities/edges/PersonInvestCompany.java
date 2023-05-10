@@ -8,16 +8,17 @@ import ldbc.finbench.datagen.entities.nodes.Person;
 import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 
 public class PersonInvestCompany implements DynamicActivity, Serializable {
-    private long personId;
-    private long companyId;
+
+    private Person person;
+    private Company company;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public PersonInvestCompany(long personId, long companyId,
+    public PersonInvestCompany(Person person, Company company,
                                long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
-        this.personId = personId;
-        this.companyId = companyId;
+        this.person = person;
+        this.company = company;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
@@ -25,28 +26,26 @@ public class PersonInvestCompany implements DynamicActivity, Serializable {
 
     public static PersonInvestCompany createPersonInvestCompany(Random random, Person person, Company company) {
         long creationDate = Dictionaries.dates.randomPersonToCompanyDate(random, person, company);
-
-        PersonInvestCompany personInvestCompany = new PersonInvestCompany(person.getPersonId(), company.getCompanyId(),
-                creationDate, 0, false);
+        PersonInvestCompany personInvestCompany = new PersonInvestCompany(person, company, creationDate, 0, false);
         person.getPersonInvestCompanies().add(personInvestCompany);
 
         return personInvestCompany;
     }
 
-    public long getPersonId() {
-        return personId;
+    public Company getCompany() {
+        return company;
     }
 
-    public void setPersonId(long personId) {
-        this.personId = personId;
+    public void setCompany(Company company) {
+        this.company = company;
     }
 
-    public long getCompanyId() {
-        return companyId;
+    public Person getPerson() {
+        return person;
     }
 
-    public void setCompanyId(long companyId) {
-        this.companyId = companyId;
+    public void setPerson(Person person) {
+        this.person = person;
     }
 
     @Override

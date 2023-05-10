@@ -7,16 +7,16 @@ import ldbc.finbench.datagen.entities.nodes.Account;
 import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 
 public class Withdraw implements DynamicActivity, Serializable {
-    private long fromAccountId;
-    private long toAccountId;
+    private Account fromAccount;
+    private Account toAccount;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public Withdraw(long fromAccountId, long toAccountId,
+    public Withdraw(Account fromAccount, Account toAccount,
                     long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
-        this.fromAccountId = fromAccountId;
-        this.toAccountId = toAccountId;
+        this.fromAccount = fromAccount;
+        this.toAccount = toAccount;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
@@ -24,28 +24,27 @@ public class Withdraw implements DynamicActivity, Serializable {
 
     public static Withdraw createWithdraw(Random random, Account fromAccount, Account toAccount) {
         long creationDate = Dictionaries.dates.randomAccountToAccountDate(random, fromAccount, toAccount);
-
-        Withdraw withdraw = new Withdraw(fromAccount.getAccountId(), toAccount.getAccountId(),
-                creationDate, 0, false);
+        // TODO: calcu min delete date
+        Withdraw withdraw = new Withdraw(fromAccount, toAccount, creationDate, 0, false);
         fromAccount.getWithdraws().add(withdraw);
 
         return withdraw;
     }
 
-    public long getFromAccountId() {
-        return fromAccountId;
+    public Account getFromAccount() {
+        return fromAccount;
     }
 
-    public void setFromAccountId(long fromAccountId) {
-        this.fromAccountId = fromAccountId;
+    public void setFromAccount(Account fromAccount) {
+        this.fromAccount = fromAccount;
     }
 
-    public long getToAccountId() {
-        return toAccountId;
+    public Account getToAccount() {
+        return toAccount;
     }
 
-    public void setToAccountId(long toAccountId) {
-        this.toAccountId = toAccountId;
+    public void setToAccount(Account toAccount) {
+        this.toAccount = toAccount;
     }
 
     @Override

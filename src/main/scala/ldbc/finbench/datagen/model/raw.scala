@@ -51,27 +51,28 @@ object raw {
   case class PersonApplyLoanRaw(
       `personId`: Long,
       `loanId`: Long,
-      timestamp: Long
+      createTime: Long
   )
 
   // define CompanyApplyLoan relationship
   case class CompanyApplyLoanRaw(
       `companyId`: Long,
       `loanId`: Long,
-      timestamp: Long
+      createTime: Long
   )
 
   // define WorkIn relationship
   case class WorkInRaw(
       `personId`: Long,
-      `companyId`: Long
+      `companyId`: Long,
+      createTime: Long
   )
 
   // define PersonInvestCompany relationship
   case class PersonInvestCompanyRaw(
       `personId`: Long,
       `companyId`: Long,
-      timestamp: Long,
+      createTime: Long,
       ratio: Float
   )
 
@@ -79,7 +80,7 @@ object raw {
   case class CompanyInvestCompanyRaw(
       `company1Id`: Long,
       `company2Id`: Long,
-      timestamp: Long,
+      createTime: Long,
       ratio: Float
   )
 
@@ -87,14 +88,14 @@ object raw {
   case class PersonGuaranteePersonRaw(
       `person1Id`: Long,
       `person2Id`: Long,
-      timestamp: Long
+      createTime: Long
   )
 
   // define CompanyGuarantee relationship
   case class CompanyGuaranteeCompanyRaw(
       `company1Id`: Long,
       `company2Id`: Long,
-      timestamp: Long
+      createTime: Long
   )
 
   //define PersonOwnAccount relationship
@@ -117,7 +118,7 @@ object raw {
   case class TransferRaw(
       `account1Id`: Long,
       `account2Id`: Long,
-      timestamp: Long,
+      createTime: Long,
       amount: Long,
       `type`: String
   )
@@ -126,7 +127,7 @@ object raw {
   case class WithdrawRaw(
       `account1Id`: Long,
       `account2Id`: Long,
-      timestamp: Long,
+      createTime: Long,
       amount: Long
   )
 
@@ -134,7 +135,7 @@ object raw {
   case class RepayRaw(
       `accountId`: Long,
       `loanId`: Long,
-      timestamp: Long,
+      createTime: Long,
       amount: Long
   )
 
@@ -142,7 +143,7 @@ object raw {
   case class DepositRaw(
       `loanId`: Long,
       `accountId`: Long,
-      timestamp: Long,
+      createTime: Long,
       amount: Long
   )
 
@@ -150,6 +151,7 @@ object raw {
   case class SignInRaw(
       `mediumId`: Long,
       `accountId`: Long,
-      timestamp: Long
+      createTime: Long,
+      deleteTime: Long
   )
 }

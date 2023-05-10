@@ -11,37 +11,31 @@ import ldbc.finbench.datagen.util.GeneratorConfiguration;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class SignInEvent implements Serializable {
-    private RandomGeneratorFarm randomFarm;
-    private Random randIndex;
-    private Random random;
+    private final RandomGeneratorFarm randomFarm;
+    private final Random randIndex;
 
     public SignInEvent() {
         randomFarm = new RandomGeneratorFarm();
         randIndex = new Random();
-        random = new Random();
+    }
+
+    private void resetState(int seed) {
+        randomFarm.resetRandomGenerators(seed);
+        randIndex.setSeed(seed);
     }
 
     public List<SignIn> signIn(List<Medium> media, List<Account> accounts, int blockId, GeneratorConfiguration conf) {
-        random.setSeed(blockId);
+        resetState(blockId);
         List<SignIn> signIns = new ArrayList<>();
 
-        for (int i = 0; i < media.size(); i++) {
-            Medium m = media.get(i);
+        for (Medium m : media) {
             int accountIndex = randIndex.nextInt(accounts.size());
-
-            if (sign()) {
-                SignIn signIn = SignIn.createSignIn(
-                    randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
-                    m,
-                    accounts.get(accountIndex));
-                signIns.add(signIn);
-            }
+            SignIn signIn = SignIn.createSignIn(
+                randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
+                m,
+                accounts.get(accountIndex));
+            signIns.add(signIn);
         }
         return signIns;
-    }
-
-    private boolean sign() {
-        //TODO determine whether to generate signIn
-        return true;
     }
 }

@@ -8,20 +8,16 @@ import ldbc.finbench.datagen.entities.nodes.Person;
 import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 
 public class PersonApplyLoan implements DynamicActivity, Serializable {
-    private long personId;
-    private long loanId;
-    private long loanAmount;
-    private long loanBalance;
+    private Person person;
+    private Loan loan;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public PersonApplyLoan(long personId, long loanId, long loanAmount, long loanBalance,
-                           long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
-        this.personId = personId;
-        this.loanId = loanId;
-        this.loanAmount = loanAmount;
-        this.loanBalance = loanBalance;
+    public PersonApplyLoan(Person person, Loan loan, long creationDate, long deletionDate,
+                           boolean isExplicitlyDeleted) {
+        this.person = person;
+        this.loan = loan;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
@@ -29,44 +25,26 @@ public class PersonApplyLoan implements DynamicActivity, Serializable {
 
     public static PersonApplyLoan createPersonApplyLoan(Random random, Person person, Loan loan) {
         long creationDate = Dictionaries.dates.randomPersonToLoanDate(random, person, loan);
-
-        PersonApplyLoan personApplyLoan = new PersonApplyLoan(person.getPersonId(), loan.getLoanId(),
-                loan.getLoanAmount(), loan.getBalance(), creationDate, 0, false);
+        PersonApplyLoan personApplyLoan = new PersonApplyLoan(person, loan, creationDate, 0, false);
         person.getPersonApplyLoans().add(personApplyLoan);
 
         return personApplyLoan;
     }
 
-    public long getPersonId() {
-        return personId;
+    public Person getPerson() {
+        return person;
     }
 
-    public void setPersonId(long personId) {
-        this.personId = personId;
+    public void setPerson(Person person) {
+        this.person = person;
     }
 
-    public long getLoanId() {
-        return loanId;
+    public Loan getLoan() {
+        return loan;
     }
 
-    public void setLoanId(long loanId) {
-        this.loanId = loanId;
-    }
-
-    public long getLoanAmount() {
-        return loanAmount;
-    }
-
-    public void setLoanAmount(long loanAmount) {
-        this.loanAmount = loanAmount;
-    }
-
-    public long getLoanBalance() {
-        return loanBalance;
-    }
-
-    public void setLoanBalance(long loanBalance) {
-        this.loanBalance = loanBalance;
+    public void setLoan(Loan loan) {
+        this.loan = loan;
     }
 
     @Override
