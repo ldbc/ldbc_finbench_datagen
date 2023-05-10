@@ -15,14 +15,21 @@ public class Person implements Serializable {
     private byte gender;
     private WorkIn workIn;
     private long creationDate;
-    private long maxDegree;
+    //    private long maxDegree;
     private boolean isBlocked;
     private List<PersonOwnAccount> personOwnAccounts;
     private List<PersonInvestCompany> personInvestCompanies;
     private List<PersonGuaranteePerson> personGuaranteePeople;
     private List<PersonApplyLoan> personApplyLoans;
 
-    public Person(long personId, String personName, byte gender, long creationDate, long maxDegree, boolean isBlocked) {
+    public Person() {
+        personOwnAccounts = new ArrayList<>();
+        personInvestCompanies = new ArrayList<>();
+        personGuaranteePeople = new ArrayList<>();
+        personApplyLoans = new ArrayList<>();
+    }
+
+    public Person(long personId, String personName, byte gender, long creationDate, boolean isBlocked) {
         this.personId = personId;
         this.personName = personName;
         this.gender = gender;
@@ -31,7 +38,6 @@ public class Person implements Serializable {
         personGuaranteePeople = new ArrayList<>();
         personApplyLoans = new ArrayList<>();
         this.creationDate = creationDate;
-        this.maxDegree = maxDegree;
         this.isBlocked = isBlocked;
     }
 
@@ -105,14 +111,6 @@ public class Person implements Serializable {
 
     public void setCreationDate(long creationDate) {
         this.creationDate = creationDate;
-    }
-
-    public long getMaxDegree() {
-        return maxDegree;
-    }
-
-    public void setMaxDegree(long maxDegree) {
-        this.maxDegree = maxDegree;
     }
 
     public boolean isBlocked() {

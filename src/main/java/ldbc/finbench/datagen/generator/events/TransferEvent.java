@@ -29,9 +29,9 @@ public class TransferEvent implements Serializable {
 
             if (trans()) {
                 Transfer transfer = Transfer.createTransfer(
-                        randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
-                        a,
-                        accounts.get(accountIndex));
+                    randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
+                    a,
+                    accounts.get(accountIndex));
                 transfers.add(transfer);
             }
         }

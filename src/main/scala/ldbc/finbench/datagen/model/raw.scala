@@ -10,6 +10,7 @@ object raw {
   // define Person entity
   case class PersonRaw(
       id: Long,
+      createTime: Long,
       name: String,
       isBlocked: Boolean
   )
@@ -18,6 +19,7 @@ object raw {
   case class AccountRaw(
       id: Long,
       createTime: Long,
+      deleteTime: Long,
       isBlocked: Boolean,
       `type`: String
   )
@@ -25,6 +27,7 @@ object raw {
   // define Company entity
   case class CompanyRaw(
       id: Long,
+      createTime: Long,
       name: String,
       isBlocked: Boolean
   )
@@ -39,6 +42,7 @@ object raw {
   // define Medium entity
   case class MediumRaw(
       id: Long,
+      createTime: Long,
       name: String,
       isBlocked: Boolean
   )

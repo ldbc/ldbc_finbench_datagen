@@ -29,9 +29,9 @@ public class WithdrawEvent implements Serializable {
 
             if (with()) {
                 Withdraw withdraw = Withdraw.createWithdraw(
-                        randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
-                        a,
-                        accounts.get(accountIndex));
+                    randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
+                    a,
+                    accounts.get(accountIndex));
                 withdraws.add(withdraw);
             }
         }

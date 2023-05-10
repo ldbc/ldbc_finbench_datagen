@@ -12,22 +12,28 @@ public class Company implements Serializable {
     private long companyId;
     private String companyName;
     private long creationDate;
-    private long maxDegree;
+    //    private long maxDegree;
     private boolean isBlocked;
     private List<CompanyOwnAccount> companyOwnAccounts;
     private List<CompanyInvestCompany> companyInvestCompanies;
     private List<CompanyGuaranteeCompany> companyGuaranteeCompanies;
     private List<CompanyApplyLoan> companyApplyLoans;
 
-    public Company(long companyId, String companyName, long creationDate, long maxDegree, boolean isBlocked) {
+    public Company() {
+        companyOwnAccounts = new ArrayList<>();
+        companyInvestCompanies = new ArrayList<>();
+        companyGuaranteeCompanies = new ArrayList<>();
+        companyApplyLoans = new ArrayList<>();
+    }
+
+    public Company(long companyId, String companyName, long creationDate, boolean isBlocked) {
         this.companyId = companyId;
         this.companyName = companyName;
         companyOwnAccounts = new ArrayList<>();
         companyInvestCompanies = new ArrayList<>();
         companyGuaranteeCompanies = new ArrayList<>();
         companyApplyLoans = new ArrayList<>();
-        this.creationDate =  creationDate;
-        this.maxDegree = maxDegree;
+        this.creationDate = creationDate;
         this.isBlocked = isBlocked;
     }
 
@@ -85,14 +91,6 @@ public class Company implements Serializable {
 
     public void setCreationDate(long creationDate) {
         this.creationDate = creationDate;
-    }
-
-    public long getMaxDegree() {
-        return maxDegree;
-    }
-
-    public void setMaxDegree(long maxDegree) {
-        this.maxDegree = maxDegree;
     }
 
     public boolean isBlocked() {

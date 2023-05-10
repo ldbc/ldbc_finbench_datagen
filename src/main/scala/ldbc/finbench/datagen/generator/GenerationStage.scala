@@ -1,6 +1,6 @@
 package ldbc.finbench.datagen.generator
 
-import ldbc.finbench.datagen.generator.generators.SparkAccountGenerator
+import ldbc.finbench.datagen.generator.generators.{SparkCompanyGenerator, SparkMediumGenerator, SparkPersonGenerator}
 import ldbc.finbench.datagen.generator.serializers.RawSerializer
 import ldbc.finbench.datagen.io.raw.{Csv, Parquet, RawSink}
 import ldbc.finbench.datagen.util._
@@ -22,12 +22,6 @@ object GenerationStage extends DatagenStage with Logging {
     val config = buildConfig(args)
     DatagenContext.initialize(config)
 
-    // TODO compute parallelism
-    val accountNum = DatagenParams.numAccounts
-    val blockSize = DatagenParams.blockSize
-    val accountPartitions = Math.min(Math.ceil(accountNum.toDouble / blockSize).toLong, spark.sparkContext.defaultParallelism).toInt
-    val accounts = SparkAccountGenerator(config, Some(accountPartitions))
-
     // check the output format
     val format = args.format match {
       case "csv" => Csv
@@ -41,10 +35,23 @@ object GenerationStage extends DatagenStage with Logging {
       None
     }
 
+    // TODO: compute parallelism
+    val personNum = DatagenParams.numPersons
+    val companyNum = DatagenParams.numCompanies
+    val mediumNum = DatagenParams.numMediums
+    val blockSize = DatagenParams.blockSize
+    val personPartitions = Math.min(Math.ceil(personNum.toDouble / blockSize).toLong, spark.sparkContext.defaultParallelism).toInt
+    val companyPartitions = Math.min(Math.ceil(companyNum.toDouble / blockSize).toLong, spark.sparkContext.defaultParallelism).toInt
+    val mediumPartitions = Math.min(Math.ceil(mediumNum.toDouble / blockSize).toLong, spark.sparkContext.defaultParallelism).toInt
+
+    val persons = SparkPersonGenerator(config, personNum, blockSize, Some(personPartitions))
+    val companies = SparkCompanyGenerator(config, companyNum, blockSize, Some(companyPartitions))
+    val mediums = SparkMediumGenerator(config, mediumNum, blockSize, Some(mediumPartitions))
+
     SparkUI.job(implicitly[ClassTag[RawSerializer]].runtimeClass.getSimpleName, "serialize Finbench data") {
       val sink = RawSink(config.getOutputDir, format, sparkPartitions)
       val rawSerializer = new RawSerializer(sink, config)
-      rawSerializer.write(accounts)
+      rawSerializer.write(persons, companies, mediums)
     }
   }
 
@@ -55,8 +62,7 @@ object GenerationStage extends DatagenStage with Logging {
    * @return {@link GeneratorConfiguration} */
   private def buildConfig(args: Args): GeneratorConfiguration = {
     val conf = new java.util.HashMap[String, String]
-    val props = new Properties()
-    // Read default values at first
+    val props = new Properties() // Read default values at first
     props.load(getClass.getClassLoader.getResourceAsStream("parameters/params_default.ini"))
     conf.putAll(props.asScala.asJava)
 
@@ -64,8 +70,7 @@ object GenerationStage extends DatagenStage with Logging {
 
     for {(k, v) <- args.params} conf.put(k, v)
 
-    for {partitions <- args.partitionsOpt} conf.put("spark.partitions", partitions.toString)
-    // Following params will overwrite the values in params_default
+    for {partitions <- args.partitionsOpt} conf.put("spark.partitions", partitions.toString) // Following params will overwrite the values in params_default
     conf.putAll(ConfigParser.scaleFactorConf(args.scaleFactor)) // put scale factor conf
     conf.put("generator.outputDir", args.outputDir)
     conf.put("generator.format", args.format)

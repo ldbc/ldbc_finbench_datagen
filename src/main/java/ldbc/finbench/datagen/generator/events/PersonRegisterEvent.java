@@ -30,9 +30,9 @@ public class PersonRegisterEvent implements Serializable {
 
             if (own()) {
                 PersonOwnAccount personOwnAccount = PersonOwnAccount.createPersonOwnAccount(
-                        randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
-                        p,
-                        accountGenerator.generateAccount());
+                    randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
+                    p,
+                    accountGenerator.generateAccount());
                 personOwnAccounts.add(personOwnAccount);
             }
         }

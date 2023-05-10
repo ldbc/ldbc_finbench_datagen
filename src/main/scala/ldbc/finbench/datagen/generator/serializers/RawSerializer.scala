@@ -1,44 +1,11 @@
 package ldbc.finbench.datagen.generator.serializers
 
-import ldbc.finbench.datagen.entities.edges.{
-  CompanyApplyLoan,
-  CompanyGuaranteeCompany,
-  CompanyInvestCompany,
-  Deposit,
-  PersonApplyLoan,
-  PersonGuaranteePerson,
-  PersonInvestCompany,
-  Repay,
-  SignIn,
-  Transfer,
-  Withdraw,
-  WorkIn
-}
-import ldbc.finbench.datagen.entities.nodes.{Account, Company, Loan, Medium, Person}
-import ldbc.finbench.datagen.generator.generators.{ActivityGenerator, SparkRanker}
+import ldbc.finbench.datagen.entities.edges._
+import ldbc.finbench.datagen.entities.nodes._
+import ldbc.finbench.datagen.generator.generators.ActivityGenerator
 import ldbc.finbench.datagen.io.Writer
 import ldbc.finbench.datagen.io.raw.RawSink
-import ldbc.finbench.datagen.model.raw.{
-  AccountRaw,
-  CompanyApplyLoanRaw,
-  CompanyGuaranteeCompanyRaw,
-  CompanyInvestCompanyRaw,
-  CompanyOwnAccountRaw,
-  CompanyRaw,
-  DepositRaw,
-  LoanRaw,
-  MediumRaw,
-  PersonApplyLoanRaw,
-  PersonGuaranteePersonRaw,
-  PersonInvestCompanyRaw,
-  PersonOwnAccountRaw,
-  PersonRaw,
-  RepayRaw,
-  SignInRaw,
-  TransferRaw,
-  WithdrawRaw,
-  WorkInRaw
-}
+import ldbc.finbench.datagen.model.raw._
 import ldbc.finbench.datagen.util.GeneratorConfiguration
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
@@ -49,23 +16,20 @@ import scala.util.Random
 // todo config the paramMap (including header, mode, dateFormat and so on)
 // todo replace the random with java entities properties
 class RawSerializer(sink: RawSink, conf: GeneratorConfiguration)(implicit spark: SparkSession)
-    extends Writer[RawSink]
+  extends Writer[RawSink]
     with Serializable {
-  val random  = new Random()
+  val random = new Random()
   val options = sink.formatOptions ++ Map("header" -> "true", "delimiter" -> "|")
 
-  def write(accountRdd: RDD[Account]): Unit = {
-    // TODO: serilize
-//    writePerson(personRdd)
-//    writeCompany(companyRdd)
-//    writeMedium(mediumRdd)
+  def write(personRdd: RDD[Person], companyRdd: RDD[Company], mediumRdd: RDD[Medium]): Unit = {
+    writePerson(personRdd)
+    writeCompany(companyRdd)
+    writeMedium(mediumRdd)
 //    writeEvent(personRdd, companyRdd, mediumRdd)
   }
 
   private def writePerson(self: RDD[Person]): Unit = {
-    val rawPersons = self.map { p: Person =>
-      PersonRaw(p.getPersonId, p.getPersonName, p.isBlocked)
-    }
+    val rawPersons = self.map { p: Person => PersonRaw(p.getPersonId, p.getCreationDate, p.getPersonName, p.isBlocked) }
     val df = spark.createDataFrame(rawPersons)
     df.write
       .format(sink.format.toString)
@@ -74,9 +38,7 @@ class RawSerializer(sink: RawSink, conf: GeneratorConfiguration)(implicit spark:
   }
 
   private def writeCompany(self: RDD[Company]): Unit = {
-    val rawCompanies = self.map { c: Company =>
-      CompanyRaw(c.getCompanyId, c.getCompanyName, c.isBlocked)
-    }
+    val rawCompanies = self.map { c: Company => CompanyRaw(c.getCompanyId, c.getCreationDate, c.getCompanyName, c.isBlocked) }
     val df = spark.createDataFrame(rawCompanies)
     df.write
       .format(sink.format.toString)
@@ -85,9 +47,7 @@ class RawSerializer(sink: RawSink, conf: GeneratorConfiguration)(implicit spark:
   }
 
   private def writeMedium(self: RDD[Medium]): Unit = {
-    val rawMedium = self.map { m: Medium =>
-      MediumRaw(m.getMediumId, m.getMediumName, m.isBlocked)
-    }
+    val rawMedium = self.map { m: Medium => MediumRaw(m.getMediumId, m.getCreationDate, m.getMediumName, m.isBlocked) }
     val df = spark.createDataFrame(rawMedium)
     df.write
       .format(sink.format.toString)
@@ -96,9 +56,7 @@ class RawSerializer(sink: RawSink, conf: GeneratorConfiguration)(implicit spark:
   }
 
   private def writeAccount(self: RDD[Account]): Unit = {
-    val rawAccount = self.map { a: Account =>
-      AccountRaw(a.getAccountId, a.getCreationDate, a.isBlocked, a.getType)
-    }
+    val rawAccount = self.map { a: Account => AccountRaw(a.getAccountId, a.getCreationDate, a.getDeletionDate, a.isBlocked, a.getType) }
     val df = spark.createDataFrame(rawAccount)
     df.write
       .format(sink.format.toString)
@@ -125,9 +83,9 @@ class RawSerializer(sink: RawSink, conf: GeneratorConfiguration)(implicit spark:
   private def writePersonInvest(self: RDD[PersonInvestCompany]): Unit = {
     val rawPersonInvest = self.map { invest =>
       PersonInvestCompanyRaw(invest.getPersonId,
-                             invest.getCompanyId,
-                             invest.getCreationDate,
-                             random.nextFloat())
+        invest.getCompanyId,
+        invest.getCreationDate,
+        random.nextFloat())
     }
     val df = spark.createDataFrame(rawPersonInvest)
     df.write
@@ -139,9 +97,9 @@ class RawSerializer(sink: RawSink, conf: GeneratorConfiguration)(implicit spark:
   private def writeCompanyInvest(self: RDD[CompanyInvestCompany]): Unit = {
     val rawCompanyInvest = self.map { invest =>
       CompanyInvestCompanyRaw(invest.getFromCompanyId,
-                              invest.getToCompanyId,
-                              invest.getCreationDate,
-                              random.nextFloat())
+        invest.getToCompanyId,
+        invest.getCreationDate,
+        random.nextFloat())
     }
     val df = spark.createDataFrame(rawCompanyInvest)
     df.write
@@ -175,8 +133,8 @@ class RawSerializer(sink: RawSink, conf: GeneratorConfiguration)(implicit spark:
   private def writePersonGua(self: RDD[PersonGuaranteePerson]): Unit = {
     val rawPersonGua = self.map { guarantee =>
       PersonGuaranteePersonRaw(guarantee.getFromPersonId,
-                               guarantee.getToPersonId,
-                               guarantee.getCreationDate)
+        guarantee.getToPersonId,
+        guarantee.getCreationDate)
     }
     val df = spark.createDataFrame(rawPersonGua)
     df.write
@@ -188,8 +146,8 @@ class RawSerializer(sink: RawSink, conf: GeneratorConfiguration)(implicit spark:
   private def writeCompanyGua(self: RDD[CompanyGuaranteeCompany]): Unit = {
     val rawCompanyGua = self.map { guarantee =>
       CompanyGuaranteeCompanyRaw(guarantee.getFromCompanyId,
-                                 guarantee.getToCompanyId,
-                                 guarantee.getCreationDate)
+        guarantee.getToCompanyId,
+        guarantee.getCreationDate)
     }
     val df = spark.createDataFrame(rawCompanyGua)
     df.write
@@ -234,10 +192,10 @@ class RawSerializer(sink: RawSink, conf: GeneratorConfiguration)(implicit spark:
   private def writeTransfer(self: RDD[Transfer]): Unit = {
     val rawTransfer = self.map { transfer =>
       TransferRaw(transfer.getFromAccountId,
-                  transfer.getToAccountId,
-                  transfer.getCreationDate,
-                  random.nextLong(),
-                  "type")
+        transfer.getToAccountId,
+        transfer.getCreationDate,
+        random.nextLong(),
+        "type")
     }
     val df = spark.createDataFrame(rawTransfer)
     df.write
@@ -249,9 +207,9 @@ class RawSerializer(sink: RawSink, conf: GeneratorConfiguration)(implicit spark:
   private def writeWithdraw(self: RDD[Withdraw]): Unit = {
     val rawWithdraw = self.map { withdraw =>
       WithdrawRaw(withdraw.getFromAccountId,
-                  withdraw.getToAccountId,
-                  withdraw.getCreationDate,
-                  random.nextLong())
+        withdraw.getToAccountId,
+        withdraw.getCreationDate,
+        random.nextLong())
     }
     val df = spark.createDataFrame(rawWithdraw)
     df.write
@@ -263,9 +221,9 @@ class RawSerializer(sink: RawSink, conf: GeneratorConfiguration)(implicit spark:
   private def writeDeposit(self: RDD[Deposit]): Unit = {
     val rawDeposit = self.map { deposit =>
       DepositRaw(deposit.getLoanId,
-                 deposit.getAccountId,
-                 deposit.getCreationDate,
-                 deposit.getLoanAmount)
+        deposit.getAccountId,
+        deposit.getCreationDate,
+        deposit.getLoanAmount)
     }
     val df = spark.createDataFrame(rawDeposit)
     df.write
@@ -329,35 +287,35 @@ class RawSerializer(sink: RawSink, conf: GeneratorConfiguration)(implicit spark:
 
     val accountRdd = accountInfo1.union(accountInfo2)
 
-    val personInvestRdd  = activityGenerator.personInvestEvent(personRdd, companyRdd)
+    val personInvestRdd = activityGenerator.personInvestEvent(personRdd, companyRdd)
     val companyInvestRdd = activityGenerator.companyInvestEvent(companyRdd)
-    val workInRdd        = activityGenerator.workInEvent(personRdd, companyRdd)
-    val signRdd          = activityGenerator.signEvent(mediumRdd, accountRdd)
+    val workInRdd = activityGenerator.workInEvent(personRdd, companyRdd)
+    val signRdd = activityGenerator.signEvent(mediumRdd, accountRdd)
 
-    val personGuaranteeRdd  = activityGenerator.personGuaranteeEvent(personRdd)
+    val personGuaranteeRdd = activityGenerator.personGuaranteeEvent(personRdd)
     val companyGuaranteeRdd = activityGenerator.companyGuaranteeEvent(companyRdd)
-    val personLoanRdd       = activityGenerator.personLoanEvent(personRdd)
-    val companyLoadRdd      = activityGenerator.companyLoanEvent(companyRdd)
+    val personLoanRdd = activityGenerator.personLoanEvent(personRdd)
+    val companyLoadRdd = activityGenerator.companyLoanEvent(companyRdd)
     val loanInfo1 = personLoanRdd.map(personApplyLoan => {
       new Loan(personApplyLoan.getLoanId,
-               personApplyLoan.getLoanAmount,
-               personApplyLoan.getLoanBalance,
-               personApplyLoan.getCreationDate,
-               10)
+        personApplyLoan.getLoanAmount,
+        personApplyLoan.getLoanBalance,
+        personApplyLoan.getCreationDate,
+        10)
     })
     val loanInfo2 = companyLoadRdd.map(companyApplyLoan => {
       new Loan(companyApplyLoan.getLoanId,
-               companyApplyLoan.getLoanAmount,
-               companyApplyLoan.getLoanBalance,
-               companyApplyLoan.getCreationDate,
-               10)
+        companyApplyLoan.getLoanAmount,
+        companyApplyLoan.getLoanBalance,
+        companyApplyLoan.getCreationDate,
+        10)
     })
     val loanRdd = loanInfo1.union(loanInfo2)
 
     val transferRdd = activityGenerator.transferEvent(accountRdd)
     val withdrawRdd = activityGenerator.withdrawEvent(accountRdd)
-    val depositRdd  = activityGenerator.depositEvent(loanRdd, accountRdd)
-    val repayRdd    = activityGenerator.repayEvent(accountRdd, loanRdd)
+    val depositRdd = activityGenerator.depositEvent(loanRdd, accountRdd)
+    val repayRdd = activityGenerator.repayEvent(accountRdd, loanRdd)
 
     writePersonOwnAccount(personOwnAccount)
     writeCompanyOwnAccount(companyOwnAccount)

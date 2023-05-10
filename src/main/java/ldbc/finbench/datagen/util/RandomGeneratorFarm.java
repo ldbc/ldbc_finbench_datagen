@@ -16,6 +16,7 @@ public class RandomGeneratorFarm {
         ACCOUNT_TYPE,
         ACCOUNT_OWNER_TYPE,
         DELETE_ACCOUNT,
+        NUM_ASPECT                  // This must be always the last one.
     }
 
     public RandomGeneratorFarm() {

@@ -24,8 +24,9 @@ public class AccountGenerator {
     public AccountGenerator(GeneratorConfiguration conf) {
         this.randFarm = new RandomGeneratorFarm();
         this.degreeDistribution = DatagenParams.getDegreeDistribution();
-        this.accountDeleteDistribution = new AccountDeleteDistribution(DatagenParams.accountDeleteFile);
         this.degreeDistribution.initialize();
+        this.accountDeleteDistribution = new AccountDeleteDistribution(DatagenParams.accountDeleteFile);
+        this.accountDeleteDistribution.initialize();
         this.accountTypeDictionary = new AccountTypeDictionary();
         this.blockRandom = new Random(0);
         this.personOrCompanyOwnRandom = new Random(0);
@@ -61,8 +62,8 @@ public class AccountGenerator {
 
         // Set type
         String type =
-            Dictionaries.accountTypes.getGeoDistRandomType(randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_TYPE),
-                                                           accountTypeDictionary.getNumNames());
+            Dictionaries.accountTypes.getUniformDistRandomType(randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_TYPE),
+                                                               accountTypeDictionary.getNumNames());
         account.setType(type);
 
         // Set isBlocked
@@ -95,7 +96,13 @@ public class AccountGenerator {
         return account;
     }
 
+    private void resetState(int seed) {
+        degreeDistribution.reset(seed);
+        randFarm.resetRandomGenerators(seed);
+    }
+
     public Iterator<Account> generateAccountBlock(int blockId, int blockSize) {
+        resetState(blockId);
         nextId = blockId * blockSize;
         return new Iterator<Account>() {
             private int accountNum = 0;

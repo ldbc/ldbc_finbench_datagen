@@ -29,9 +29,9 @@ public class CompanyGuaranteeEvent implements Serializable {
 
             if (guarantee()) {
                 CompanyGuaranteeCompany companyGuaranteeCompany = CompanyGuaranteeCompany.createCompanyGuaranteeCompany(
-                        randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
-                        c,
-                        companies.get(companyIndex));
+                    randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
+                    c,
+                    companies.get(companyIndex));
                 companyGuaranteeCompanies.add(companyGuaranteeCompany);
             }
         }
