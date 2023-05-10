@@ -30,9 +30,9 @@ public class PersonInvestEvent implements Serializable {
 
             if (invest()) {
                 PersonInvestCompany personInvestCompany = PersonInvestCompany.createPersonInvestCompany(
-                        randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
-                        p,
-                        companies.get(companyIndex));
+                    randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
+                    p,
+                    companies.get(companyIndex));
                 personInvestCompanies.add(personInvestCompany);
             }
         }

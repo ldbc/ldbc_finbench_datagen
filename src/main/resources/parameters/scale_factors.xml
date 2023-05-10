@@ -1,9 +1,21 @@
 <?xml version="1.0"?>
 <scale_factors>
     <scale_factor name="0.1">
+<!--        <property>-->
+<!--            <name>generator.numAccounts</name>-->
+<!--            <value>1700</value>-->
+<!--        </property>-->
         <property>
-            <name>generator.numAccounts</name>
-            <value>1700</value>
+            <name>generator.numPersons</name>
+            <value>1000</value>
+        </property>
+        <property>
+            <name>generator.numCompanies</name>
+            <value>700</value>
+        </property>
+        <property>
+            <name>generator.numMediums</name>
+            <value>1000</value>
         </property>
         <property>
             <name>generator.maxDegree</name>
@@ -12,9 +24,17 @@
     </scale_factor>
 
     <scale_factor name="0.3">
+<!--        <property>-->
+<!--            <name>generator.numAccounts</name>-->
+<!--            <value>3900</value>-->
+<!--        </property>-->
         <property>
-            <name>generator.numAccounts</name>
-            <value>3900</value>
+            <name>generator.numPersons</name>
+            <value>1000</value>
+        </property>
+        <property>
+            <name>generator.numCompanies</name>
+            <value>700</value>
         </property>
         <property>
             <name>generator.maxDegree</name>
@@ -23,9 +43,17 @@
     </scale_factor>
 
     <scale_factor name="1">
+<!--        <property>-->
+<!--            <name>generator.numAccounts</name>-->
+<!--            <value>10620</value>-->
+<!--        </property>-->
         <property>
-            <name>generator.numAccounts</name>
-            <value>10620</value>
+            <name>generator.numPersons</name>
+            <value>1000</value>
+        </property>
+        <property>
+            <name>generator.numCompanies</name>
+            <value>700</value>
         </property>
         <property>
             <name>generator.maxDegree</name>
@@ -34,9 +62,17 @@
     </scale_factor>
 
     <scale_factor name="3">
+<!--        <property>-->
+<!--            <name>generator.numAccounts</name>-->
+<!--            <value>25870</value>-->
+<!--        </property>-->
         <property>
-            <name>generator.numAccounts</name>
-            <value>25870</value>
+            <name>generator.numPersons</name>
+            <value>1000</value>
+        </property>
+        <property>
+            <name>generator.numCompanies</name>
+            <value>700</value>
         </property>
         <property>
             <name>generator.maxDegree</name>
@@ -45,9 +81,17 @@
     </scale_factor>
 
     <scale_factor name="10">
+<!--        <property>-->
+<!--            <name>generator.numAccounts</name>-->
+<!--            <value>70800</value>-->
+<!--        </property>-->
         <property>
-            <name>generator.numAccounts</name>
-            <value>70800</value>
+            <name>generator.numPersons</name>
+            <value>1000</value>
+        </property>
+        <property>
+            <name>generator.numCompanies</name>
+            <value>700</value>
         </property>
         <property>
             <name>generator.maxDegree</name>
@@ -56,9 +100,17 @@
     </scale_factor>
 
     <scale_factor name="30">
+<!--        <property>-->
+<!--            <name>generator.numAccounts</name>-->
+<!--            <value>175950</value>-->
+<!--        </property>-->
         <property>
-            <name>generator.numAccounts</name>
-            <value>175950</value>
+            <name>generator.numPersons</name>
+            <value>1000</value>
+        </property>
+        <property>
+            <name>generator.numCompanies</name>
+            <value>700</value>
         </property>
         <property>
             <name>generator.maxDegree</name>

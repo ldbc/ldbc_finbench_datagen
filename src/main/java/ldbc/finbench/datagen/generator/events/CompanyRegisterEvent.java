@@ -29,9 +29,9 @@ public class CompanyRegisterEvent implements Serializable {
 
             if (own()) {
                 CompanyOwnAccount companyOwnAccount = CompanyOwnAccount.createCompanyOwnAccount(
-                        randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
-                        c,
-                        accountGenerator.generateAccount());
+                    randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
+                    c,
+                    accountGenerator.generateAccount());
                 companyOwnAccounts.add(companyOwnAccount);
             }
         }

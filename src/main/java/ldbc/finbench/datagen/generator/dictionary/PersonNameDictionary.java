@@ -7,27 +7,28 @@ import java.nio.charset.StandardCharsets;
 import java.util.Random;
 import java.util.TreeMap;
 import ldbc.finbench.datagen.generator.DatagenParams;
-import ldbc.finbench.datagen.generator.distribution.GeometricDistribution;
 
 public class PersonNameDictionary {
 
     private static final String SEPARATOR = ",";
-    private TreeMap<Long,String> personSurnames;
-    private GeometricDistribution geometricDistribution;
+    private final TreeMap<Long, String> personSurnames;
 
-    //TODO add other params
+    public PersonNameDictionary() {
+        this.personSurnames = new TreeMap<>();
+        load(DatagenParams.personSurnameFile);
+    }
 
     private void load(String filePath) {
         try {
             InputStreamReader inputStreamReader = new InputStreamReader(
-                    getClass().getResourceAsStream(filePath), StandardCharsets.UTF_8);
+                getClass().getResourceAsStream(filePath), StandardCharsets.UTF_8);
             BufferedReader dictionary = new BufferedReader(inputStreamReader);
             String line;
             long totalNumSurnames = 0;
             while ((line = dictionary.readLine()) != null) {
                 String[] data = line.split(SEPARATOR);
                 String surname = data[2].trim();
-                this.personSurnames.put(totalNumSurnames,surname);
+                this.personSurnames.put(totalNumSurnames, surname);
                 totalNumSurnames++;
             }
             dictionary.close();
@@ -36,23 +37,8 @@ public class PersonNameDictionary {
         }
     }
 
-    public PersonNameDictionary() {
-        this.personSurnames = new TreeMap<>();
-        this.geometricDistribution  = new GeometricDistribution(1);
-        load(DatagenParams.personSurnameFile);
-    }
-
-    public String getGeoDistRandomName(Random random, int numNames) {
-        long nameIndex = -1;
-        double prob = random.nextDouble();
-        int rank = geometricDistribution.inverseFunctionInt(prob);
-
-        if (numNames > rank) {
-            nameIndex = rank;
-        } else {
-            nameIndex = random.nextInt(numNames);
-        }
-
+    public String getUniformDistRandName(Random random) {
+        long nameIndex = random.nextInt(personSurnames.size());
         return personSurnames.get(nameIndex);
     }
 

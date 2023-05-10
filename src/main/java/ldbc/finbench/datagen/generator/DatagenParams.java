@@ -26,7 +26,10 @@ public class DatagenParams {
     public static long maxNumDegree = 0;
     public static double blockedAccountRatio = 0.0;
     public static int numUpdateStreams = 0;
-    public static long numAccounts = 0;
+    //    public static long numAccounts = 0;
+    public static long numPersons = 0;
+    public static long numCompanies = 0;
+    public static long numMediums = 0;
     public static int numYears = 0;
     public static String outputDir;
     public static int startYear = 0;
@@ -42,13 +45,16 @@ public class DatagenParams {
             maxNumDegree = longConf(conf, "generator.maxNumDegree");
             blockedAccountRatio = doubleConf(conf, "generator.blockedAccountRatio");
             numUpdateStreams = intConf(conf, "generator.mode.interactive.numUpdateStreams");
-            numAccounts = longConf(conf, "generator.numAccounts");
+            //numAccounts = longConf(conf, "generator.numAccounts");
+            numPersons = longConf(conf, "generator.numPersons");
+            numCompanies = longConf(conf, "generator.numCompanies");
+            numMediums = longConf(conf, "generator.numMediums");
             outputDir = stringConf(conf, "generator.outputDir");
             startYear = intConf(conf, "generator.startYear");
             numYears = intConf(conf, "generator.numYears");
             personCompanyAccountRatio = doubleConf(conf, "generator.personCompanyAccountsRatio");
 
-            System.out.println(" ... Num Persons " + numAccounts);
+            System.out.println(" ... Num Accounts " + (numPersons + numCompanies));
             System.out.println(" ... Start Year " + startYear);
             System.out.println(" ... Num Years " + numYears);
         } catch (Exception e) {

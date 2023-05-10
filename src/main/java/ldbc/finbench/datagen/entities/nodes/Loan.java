@@ -13,7 +13,7 @@ public class Loan implements Serializable {
     private long creationDate;
     private long maxDegree;
 
-    public Loan(long loanId, long loanAmount, long balance,long creationDate, long maxDegree) {
+    public Loan(long loanId, long loanAmount, long balance, long creationDate, long maxDegree) {
         this.loanId = loanId;
         this.loanAmount = loanAmount;
         this.balance = balance;

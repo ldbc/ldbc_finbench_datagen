@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import ldbc.finbench.datagen.generator.DatagenParams;
-import ldbc.finbench.datagen.util.GeneratorConfiguration;
 
 public class PowerLawBucketsDistribution extends DegreeDistribution {
 
@@ -18,7 +17,7 @@ public class PowerLawBucketsDistribution extends DegreeDistribution {
     private static final int FB_MEAN = 190;
 
     public void initialize() {
-        mean = (int) mean(DatagenParams.numAccounts);
+        mean = (int) mean(DatagenParams.numPersons + DatagenParams.numCompanies);
         buckets = new ArrayList<>();
         loadFBBuckets();
         rebuildBucketRange();

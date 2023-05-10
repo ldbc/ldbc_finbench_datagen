@@ -10,15 +10,18 @@ public class Medium implements Serializable {
     private String mediumName;
     private List<SignIn> signIns;
     private long creationDate;
-    private long maxDegree;
+    //private long maxDegree;
     private boolean isBlocked;
 
-    public Medium(long mediumId, String mediumName, long creationDate, long maxDegree, boolean isBlocked) {
+    public Medium() {
+        signIns = new ArrayList<>();
+    }
+
+    public Medium(long mediumId, String mediumName, long creationDate, boolean isBlocked) {
+        signIns = new ArrayList<>();
         this.mediumId = mediumId;
         this.mediumName = mediumName;
-        signIns = new ArrayList<>();
         this.creationDate = creationDate;
-        this.maxDegree = maxDegree;
         this.isBlocked = isBlocked;
     }
 
@@ -54,13 +57,6 @@ public class Medium implements Serializable {
         this.creationDate = creationDate;
     }
 
-    public long getMaxDegree() {
-        return maxDegree;
-    }
-
-    public void setMaxDegree(long maxDegree) {
-        this.maxDegree = maxDegree;
-    }
 
     public boolean isBlocked() {
         return isBlocked;

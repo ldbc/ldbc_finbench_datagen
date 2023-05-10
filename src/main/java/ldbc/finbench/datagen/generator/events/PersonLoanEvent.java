@@ -29,15 +29,14 @@ public class PersonLoanEvent implements Serializable {
 
             if (loan()) {
                 PersonApplyLoan personApplyLoan = PersonApplyLoan.createPersonApplyLoan(
-                        randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
-                        p,
-                        loanGenerator.generateLoan());
+                    randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
+                    p,
+                    loanGenerator.generateLoan());
                 personApplyLoans.add(personApplyLoan);
             }
         }
         return personApplyLoans;
     }
-
 
 
     private boolean loan() {

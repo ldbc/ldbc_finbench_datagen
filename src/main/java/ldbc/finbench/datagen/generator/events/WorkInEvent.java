@@ -30,9 +30,9 @@ public class WorkInEvent implements Serializable {
 
             if (work()) {
                 WorkIn workIn = WorkIn.createWorkIn(
-                        randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
-                        p,
-                        companies.get(companyIndex));
+                    randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
+                    p,
+                    companies.get(companyIndex));
                 workIns.add(workIn);
             }
         }

@@ -29,9 +29,9 @@ public class CompanyLoanEvent implements Serializable {
 
             if (loan()) {
                 CompanyApplyLoan companyApplyLoan = CompanyApplyLoan.createCompanyApplyLoan(
-                        randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
-                        c,
-                        loanGenerator.generateLoan());
+                    randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
+                    c,
+                    loanGenerator.generateLoan());
                 companyApplyLoans.add(companyApplyLoan);
             }
         }

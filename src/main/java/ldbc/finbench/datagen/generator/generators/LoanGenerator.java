@@ -12,7 +12,7 @@ public class LoanGenerator {
 
     private DegreeDistribution degreeDistribution;
     private RandomGeneratorFarm randomFarm;
-    private int nextId  = 0;
+    private int nextId = 0;
 
     public LoanGenerator(GeneratorConfiguration conf) {
         this.randomFarm = new RandomGeneratorFarm();
@@ -23,7 +23,7 @@ public class LoanGenerator {
     private long composeLoanId(long id, long date) {
         long idMask = ~(0xFFFFFFFFFFFFFFFFL << 44);
         long bucket = (long) (256 * (date - Dictionaries.dates.getSimulationStart()) / (double) Dictionaries.dates
-                .getSimulationEnd());
+            .getSimulationEnd());
         return (bucket << 44) | ((id & idMask));
     }
 
@@ -35,7 +35,7 @@ public class LoanGenerator {
         long loanBalance = new Random().nextLong();
         long maxDegree = Math.min(degreeDistribution.nextDegree(), DatagenParams.maxNumDegree);
 
-        return new Loan(loanId,creationDate,loanAmount,loanBalance,maxDegree);
+        return new Loan(loanId, creationDate, loanAmount, loanBalance, maxDegree);
     }
 
 }

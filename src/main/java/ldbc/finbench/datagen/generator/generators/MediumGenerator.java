@@ -1,53 +1,49 @@
 package ldbc.finbench.datagen.generator.generators;
 
 import java.util.Iterator;
-import ldbc.finbench.datagen.entities.nodes.Company;
 import ldbc.finbench.datagen.entities.nodes.Medium;
-import ldbc.finbench.datagen.generator.DatagenParams;
 import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
-import ldbc.finbench.datagen.generator.dictionary.MediumNameDictionary;
-import ldbc.finbench.datagen.generator.distribution.DegreeDistribution;
 import ldbc.finbench.datagen.util.GeneratorConfiguration;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class MediumGenerator {
-
-    private DegreeDistribution degreeDistribution;
-    private MediumNameDictionary mediumNameDictionary;
-    private RandomGeneratorFarm randomFarm;
+    private final RandomGeneratorFarm randomFarm;
     private int nextId = 0;
 
     public MediumGenerator(GeneratorConfiguration conf) {
         this.randomFarm = new RandomGeneratorFarm();
-        this.degreeDistribution = DatagenParams.getDegreeDistribution();
-        this.degreeDistribution.initialize();
-        this.mediumNameDictionary = new MediumNameDictionary();
     }
 
     private long composeMediumId(long id, long date) {
         long idMask = ~(0xFFFFFFFFFFFFFFFFL << 42);
         long bucket =
-                (long) (256 * (date - Dictionaries.dates.getSimulationStart()) / (double) Dictionaries.dates
-                        .getSimulationEnd());
+            (long) (256 * (date - Dictionaries.dates.getSimulationStart()) / (double) Dictionaries.dates
+                .getSimulationEnd());
         return (bucket << 42) | ((id & idMask));
     }
 
     public Medium generateMedium() {
+        Medium medium = new Medium();
 
         long creationDate = Dictionaries.dates.randomMediumCreationDate(
-                randomFarm.get(RandomGeneratorFarm.Aspect.DATE));
+            randomFarm.get(RandomGeneratorFarm.Aspect.DATE));
+        medium.setCreationDate(creationDate);
+
         long mediumId = composeMediumId(nextId++, creationDate);
-        String mediunName = Dictionaries.mediumNames.getGeoDistRandomName(
-                randomFarm.get(RandomGeneratorFarm.Aspect.MEDIUM_NAME),
-                mediumNameDictionary.getNumNames());
-        long maxDegree = Math.min(degreeDistribution.nextDegree(), DatagenParams.maxNumDegree);
-        boolean isBlocked = false;
+        medium.setMediumId(mediumId);
 
-        return new Medium(mediumId, mediunName, creationDate, maxDegree, isBlocked);
+        String mediunName =
+            Dictionaries.mediumNames.getUniformDistRandomName(randomFarm.get(RandomGeneratorFarm.Aspect.MEDIUM_NAME));
+        medium.setMediumName(mediunName);
 
+        // Set blocked to false by default
+        medium.setBlocked(false);
+
+        return medium;
     }
 
     public Iterator<Medium> generateMediumBlock(int blockId, int blockSize) {
+        randomFarm.resetRandomGenerators(blockId);
         nextId = blockId * blockSize;
         return new Iterator<Medium>() {
             private int mediumNum = 0;

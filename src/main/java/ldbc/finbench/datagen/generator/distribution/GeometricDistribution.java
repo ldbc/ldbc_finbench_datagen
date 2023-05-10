@@ -44,7 +44,7 @@ public class GeometricDistribution {
             return 0.0;
         }
 
-        return 1.0 - Math.pow(1.0 - p, (double)x + 1.0);
+        return 1.0 - Math.pow(1.0 - p, (double) x + 1.0);
     }
 
     public double complementaryFunction(int x) {
@@ -82,7 +82,7 @@ public class GeometricDistribution {
             return Integer.MAX_VALUE;
         }
 
-        return (int)Math.floor(Math.log1p(-u) / vprob);
+        return (int) Math.floor(Math.log1p(-u) / vprob);
     }
 
     public static int inverseFunction(double p, double u) {
@@ -103,7 +103,7 @@ public class GeometricDistribution {
         }
 
         double v = Math.log1p(-p);
-        return (int)Math.floor(Math.log1p(-u) / v);
+        return (int) Math.floor(Math.log1p(-u) / v);
     }
 
     public double getMean() {

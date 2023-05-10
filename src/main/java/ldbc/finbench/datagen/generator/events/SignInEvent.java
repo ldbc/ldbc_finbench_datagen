@@ -31,9 +31,9 @@ public class SignInEvent implements Serializable {
 
             if (sign()) {
                 SignIn signIn = SignIn.createSignIn(
-                        randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
-                        m,
-                        accounts.get(accountIndex));
+                    randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
+                    m,
+                    accounts.get(accountIndex));
                 signIns.add(signIn);
             }
         }
