@@ -2,18 +2,27 @@ package ldbc.finbench.datagen.util;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.ZoneId;
 
-public class DateUtils {
+public class DateTimeUtils {
     public static ZoneId UTC = ZoneId.of("UTC");
 
     public static long toEpochMilli(LocalDate ld) {
         return ld.atStartOfDay(UTC).toInstant().toEpochMilli();
     }
 
+    public static long toEpochMilli(LocalDateTime ldt) {
+        return ldt.atZone(UTC).toInstant().toEpochMilli();
+    }
+
     public static LocalDate utcDateOfEpochMilli(long epochMilli) {
         return Instant.ofEpochMilli(epochMilli).atZone(UTC).toLocalDate();
+    }
+
+    public static LocalDateTime utcDateTimeOfEpochMilli(long epochMilli) {
+        return Instant.ofEpochMilli(epochMilli).atZone(UTC).toLocalDateTime();
     }
 
     public static boolean isTravelSeason(long epochMilli) {
@@ -36,12 +45,12 @@ public class DateUtils {
     }
 
     public static int getYear(long epochMilli) {
-        LocalDate date = utcDateOfEpochMilli(epochMilli);
-        return date.getYear();
+        LocalDateTime datetime = utcDateTimeOfEpochMilli(epochMilli);
+        return datetime.getYear();
     }
 
     public static Month getMonth(long epochMilli) {
-        LocalDate date = utcDateOfEpochMilli(epochMilli);
-        return date.getMonth();
+        LocalDateTime datetime = utcDateTimeOfEpochMilli(epochMilli);
+        return datetime.getMonth();
     }
 }

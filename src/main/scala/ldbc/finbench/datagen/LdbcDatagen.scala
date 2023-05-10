@@ -136,8 +136,6 @@ object LdbcDatagen extends SparkApp {
   }
 
   override def run(args: ArgsType): Unit = {
-    val irFormat = env.irFormat
-
     val generatorArgs = GenerationStage.Args(
       scaleFactor = args.scaleFactor,
       params = args.params,

@@ -1,36 +1,19 @@
 package ldbc.finbench.datagen.generator
 
-import java.net.URI
-import java.util.Properties
-
-import ldbc.finbench.datagen.generator.generators.{
-  SparkCompanyGenerator,
-  SparkMediumGenerator,
-  SparkPersonGenerator
-}
+import ldbc.finbench.datagen.generator.generators.SparkAccountGenerator
 import ldbc.finbench.datagen.generator.serializers.RawSerializer
 import ldbc.finbench.datagen.io.raw.{Csv, Parquet, RawSink}
-import ldbc.finbench.datagen.util.{
-  ConfigParser,
-  DatagenStage,
-  GeneratorConfiguration,
-  Logging,
-  SparkUI
-}
+import ldbc.finbench.datagen.util._
 import org.apache.hadoop.fs.{FSDataInputStream, FileSystem, Path}
 
+import java.net.URI
+import java.util.Properties
 import scala.collection.JavaConverters._
 import scala.reflect.ClassTag
 
 object GenerationStage extends DatagenStage with Logging {
 
-  case class Args(scaleFactor: String = "0.003",
-                  partitionsOpt: Option[Int] = None,
-                  params: Map[String, String] = Map.empty,
-                  paramFile: Option[String] = None,
-                  outputDir: String = "out",
-                  format: String = "csv",
-                  oversizeFactor: Option[Double] = None)
+  case class Args(scaleFactor: String = "0.003", partitionsOpt: Option[Int] = None, params: Map[String, String] = Map.empty, paramFile: Option[String] = None, outputDir: String = "out", format: String = "csv", oversizeFactor: Option[Double] = None)
 
   override type ArgsType = Args
 
@@ -39,31 +22,17 @@ object GenerationStage extends DatagenStage with Logging {
     val config = buildConfig(args)
     DatagenContext.initialize(config)
 
-    // todo compute parallelism
-    val personNum  = 100000 // TODO use DatagenParams.numPerson
-    val companyNum = 100000 // TODO use DatagenParams.numCompany
-    val mediumNum  = 100000 // TODO use DatagenParams.numMedium
-    val blockSize  = 5000   // TODO use DatagenParams.blockSize
-    val personPartitions = Math
-      .min(Math.ceil(personNum.toDouble / blockSize).toLong, spark.sparkContext.defaultParallelism)
-      .toInt
-    val companyPartitions = Math
-      .min(Math.ceil(companyNum.toDouble / blockSize).toLong, spark.sparkContext.defaultParallelism)
-      .toInt
-    val mediumPartitions = Math
-      .min(Math.ceil(mediumNum.toDouble / blockSize).toLong, spark.sparkContext.defaultParallelism)
-      .toInt
-
-    val persons   = SparkPersonGenerator(config, Some(personPartitions))
-    val companies = SparkCompanyGenerator(config, Some(companyPartitions))
-    val mediums   = SparkMediumGenerator(config, Some(mediumPartitions))
+    // TODO compute parallelism
+    val accountNum = DatagenParams.numAccounts
+    val blockSize = DatagenParams.blockSize
+    val accountPartitions = Math.min(Math.ceil(accountNum.toDouble / blockSize).toLong, spark.sparkContext.defaultParallelism).toInt
+    val accounts = SparkAccountGenerator(config, Some(accountPartitions))
 
     // check the output format
     val format = args.format match {
-      case "csv"     => Csv
+      case "csv" => Csv
       case "parquet" => Parquet
-      case a =>
-        throw new IllegalArgumentException(s"Format `${a}` is not supported by the generator.")
+      case a => throw new IllegalArgumentException(s"Format `${a}` is not supported by the generator.")
     }
 
     val sparkPartitions = if (config.getPartition != null) {
@@ -72,36 +41,32 @@ object GenerationStage extends DatagenStage with Logging {
       None
     }
 
-    SparkUI.job(implicitly[ClassTag[RawSerializer]].runtimeClass.getSimpleName,
-                "serialize Finbench data") {
-      val sink          = RawSink(config.getOutputDir, format, sparkPartitions)
+    SparkUI.job(implicitly[ClassTag[RawSerializer]].runtimeClass.getSimpleName, "serialize Finbench data") {
+      val sink = RawSink(config.getOutputDir, format, sparkPartitions)
       val rawSerializer = new RawSerializer(sink, config)
-      rawSerializer.write(persons, companies, mediums)
+      rawSerializer.write(accounts)
     }
   }
 
   /**
-    * build GeneratorConfiguration from user args
-    *
-    * @param args user params
-    * @return {@link GeneratorConfiguration}
-    */
+   * build GeneratorConfiguration from user args
+   *
+   * @param args user params
+   * @return {@link GeneratorConfiguration} */
   private def buildConfig(args: Args): GeneratorConfiguration = {
-    val conf        = new java.util.HashMap[String, String]
-    val props       = new Properties()
-    val inputStream = getClass.getClassLoader.getResourceAsStream("params_default.ini")
-    props.load(inputStream)
+    val conf = new java.util.HashMap[String, String]
+    val props = new Properties()
+    // Read default values at first
+    props.load(getClass.getClassLoader.getResourceAsStream("parameters/params_default.ini"))
     conf.putAll(props.asScala.asJava)
 
-    for { paramsFile <- args.paramFile } conf.putAll(
-      ConfigParser.readConfig(openPropFileStream(URI.create(paramsFile))))
+    for {paramsFile <- args.paramFile} conf.putAll(ConfigParser.readConfig(openPropFileStream(URI.create(paramsFile))))
 
-    for { (k, v) <- args.params } conf.put(k, v)
+    for {(k, v) <- args.params} conf.put(k, v)
 
-    for { partitions <- args.partitionsOpt } conf.put("spark.partitions", partitions.toString)
-
-    // put scale factor conf
-    conf.putAll(ConfigParser.scaleFactorConf(args.scaleFactor))
+    for {partitions <- args.partitionsOpt} conf.put("spark.partitions", partitions.toString)
+    // Following params will overwrite the values in params_default
+    conf.putAll(ConfigParser.scaleFactorConf(args.scaleFactor)) // put scale factor conf
     conf.put("generator.outputDir", args.outputDir)
     conf.put("generator.format", args.format)
 
@@ -109,8 +74,7 @@ object GenerationStage extends DatagenStage with Logging {
   }
 
   /**
-    * read hdfs uri to get FSDataInputStream
-    */
+   * read hdfs uri to get FSDataInputStream */
   private def openPropFileStream(uri: URI): FSDataInputStream = {
     val fs = FileSystem.get(uri, spark.sparkContext.hadoopConfiguration)
     fs.open(new Path(uri.getPath))
