@@ -25,7 +25,7 @@ class RawSerializer(sink: RawSink, conf: GeneratorConfiguration)(implicit spark:
     writePerson(personRdd)
     writeCompany(companyRdd)
     writeMedium(mediumRdd)
-//    writeEvent(personRdd, companyRdd, mediumRdd)
+    writeEvent(personRdd, companyRdd, mediumRdd)
   }
 
   private def writePerson(self: RDD[Person]): Unit = {
@@ -244,94 +244,88 @@ class RawSerializer(sink: RawSink, conf: GeneratorConfiguration)(implicit spark:
 
   }
 
-  private def writeEvent(personRdd: RDD[Person],
-                         companyRdd: RDD[Company],
-                         mediumRdd: RDD[Medium]): Unit = {
+  private def writeEvent(personRdd: RDD[Person], companyRdd: RDD[Company], mediumRdd: RDD[Medium]): Unit = {
     val activityGenerator = new ActivityGenerator(conf)
 
+    // Simulation: simulate person register account event
     val personOwnAccountInfo = activityGenerator.personRegisterEvent(personRdd)
-    // extract personOwnAccount relationship
+    // Extraction: extract personOwnAccount edges
     val personOwnAccount: RDD[PersonOwnAccountRaw] =
       personOwnAccountInfo.map(personOwnAccountRaw => {
-        PersonOwnAccountRaw(personOwnAccountRaw.getPersonId, personOwnAccountRaw.getAccountId)
+        PersonOwnAccountRaw(
+          personOwnAccountRaw.getPerson.getPersonId,
+          personOwnAccountRaw.getAccount.getAccountId,
+          personOwnAccountRaw.getCreationDate,
+          personOwnAccountRaw.getDeletionDate)
       })
-
-    // extract accountInfo
-    val accountInfo1 = personOwnAccountInfo.map(personOwnAccountRaw => {
-      new Account(
-        personOwnAccountRaw.getAccountId,
-        personOwnAccountRaw.getAccountType,
-        personOwnAccountRaw.getAccountCreationDate,
-        10000,
-        personOwnAccountRaw.isAccountIsBlocked
-      )
+    // Extraction: extract accounts vertices registered by persons
+    val accountInfoByPerson = personOwnAccountInfo.map(personOwnAccountRaw => {
+      personOwnAccountRaw.getAccount
     })
 
+    // Simulation: simulate company register account event
     val companyOwnAccountInfo = activityGenerator.companyRegisterEvent(companyRdd)
-    // extract companyOwnAccount relationship
+    // Extraction: extract companyOwnAccount relationship
     val companyOwnAccount: RDD[CompanyOwnAccountRaw] =
       companyOwnAccountInfo.map(companyOwnAccountRaw => {
-        CompanyOwnAccountRaw(companyOwnAccountRaw.getCompanyId, companyOwnAccountRaw.getAccountId)
+        CompanyOwnAccountRaw(
+          companyOwnAccountRaw.getCompany.getCompanyId,
+          companyOwnAccountRaw.getAccount.getAccountId,
+          companyOwnAccountRaw.getCreationDate,
+          companyOwnAccountRaw.getDeletionDate)
       })
-
-    // extract accountInfo
-    val accountInfo2 = companyOwnAccountInfo.map(companyOwnAccountRaw => {
-      new Account(
-        companyOwnAccountRaw.getAccountId,
-        companyOwnAccountRaw.getAccountType,
-        companyOwnAccountRaw.getAccountCreationDate,
-        10000,
-        companyOwnAccountRaw.isAccountIsBlocked
-      )
+    // Extraction: extract accounts vertices registered by companies
+    val accountInfoByCompany = companyOwnAccountInfo.map(companyOwnAccountRaw => {
+      companyOwnAccountRaw.getAccount
     })
 
-    val accountRdd = accountInfo1.union(accountInfo2)
-
-    val personInvestRdd = activityGenerator.personInvestEvent(personRdd, companyRdd)
-    val companyInvestRdd = activityGenerator.companyInvestEvent(companyRdd)
-    val workInRdd = activityGenerator.workInEvent(personRdd, companyRdd)
-    val signRdd = activityGenerator.signEvent(mediumRdd, accountRdd)
-
-    val personGuaranteeRdd = activityGenerator.personGuaranteeEvent(personRdd)
-    val companyGuaranteeRdd = activityGenerator.companyGuaranteeEvent(companyRdd)
-    val personLoanRdd = activityGenerator.personLoanEvent(personRdd)
-    val companyLoadRdd = activityGenerator.companyLoanEvent(companyRdd)
-    val loanInfo1 = personLoanRdd.map(personApplyLoan => {
-      new Loan(personApplyLoan.getLoanId,
-        personApplyLoan.getLoanAmount,
-        personApplyLoan.getLoanBalance,
-        personApplyLoan.getCreationDate,
-        10)
-    })
-    val loanInfo2 = companyLoadRdd.map(companyApplyLoan => {
-      new Loan(companyApplyLoan.getLoanId,
-        companyApplyLoan.getLoanAmount,
-        companyApplyLoan.getLoanBalance,
-        companyApplyLoan.getCreationDate,
-        10)
-    })
-    val loanRdd = loanInfo1.union(loanInfo2)
-
-    val transferRdd = activityGenerator.transferEvent(accountRdd)
-    val withdrawRdd = activityGenerator.withdrawEvent(accountRdd)
-    val depositRdd = activityGenerator.depositEvent(loanRdd, accountRdd)
-    val repayRdd = activityGenerator.repayEvent(accountRdd, loanRdd)
+    val accountRdd = accountInfoByPerson.union(accountInfoByCompany)
+    //
+    //    val personInvestRdd = activityGenerator.personInvestEvent(personRdd, companyRdd)
+    //    val companyInvestRdd = activityGenerator.companyInvestEvent(companyRdd)
+    //    val workInRdd = activityGenerator.workInEvent(personRdd, companyRdd)
+    //    val signRdd = activityGenerator.signEvent(mediumRdd, accountRdd)
+    //
+    //    val personGuaranteeRdd = activityGenerator.personGuaranteeEvent(personRdd)
+    //    val companyGuaranteeRdd = activityGenerator.companyGuaranteeEvent(companyRdd)
+    //    val personLoanRdd = activityGenerator.personLoanEvent(personRdd)
+    //    val companyLoadRdd = activityGenerator.companyLoanEvent(companyRdd)
+    //    val loanInfo1 = personLoanRdd.map(personApplyLoan => {
+    //      new Loan(personApplyLoan.getLoanId,
+    //        personApplyLoan.getLoanAmount,
+    //        personApplyLoan.getLoanBalance,
+    //        personApplyLoan.getCreationDate,
+    //        10)
+    //    })
+    //    val loanInfo2 = companyLoadRdd.map(companyApplyLoan => {
+    //      new Loan(companyApplyLoan.getLoanId,
+    //        companyApplyLoan.getLoanAmount,
+    //        companyApplyLoan.getLoanBalance,
+    //        companyApplyLoan.getCreationDate,
+    //        10)
+    //    })
+    //    val loanRdd = loanInfo1.union(loanInfo2)
+    //
+    //    val transferRdd = activityGenerator.transferEvent(accountRdd)
+    //    val withdrawRdd = activityGenerator.withdrawEvent(accountRdd)
+    //    val depositRdd = activityGenerator.depositEvent(loanRdd, accountRdd)
+    //    val repayRdd = activityGenerator.repayEvent(accountRdd, loanRdd)
 
     writePersonOwnAccount(personOwnAccount)
     writeCompanyOwnAccount(companyOwnAccount)
     writeAccount(accountRdd)
-    writePersonInvest(personInvestRdd)
-    writeCompanyInvest(companyInvestRdd)
-    writeWorkIn(workInRdd)
-    writeSignIn(signRdd)
-    writePersonGua(personGuaranteeRdd)
-    writeCompanyGua(companyGuaranteeRdd)
-    writePersonLoan(personLoanRdd)
-    writeCompanyLoan(companyLoadRdd)
-    writeLoan(loanRdd)
-    writeTransfer(transferRdd)
-    writeWithdraw(withdrawRdd)
-    writeDeposit(depositRdd)
-    writeRepay(repayRdd)
+    //    writePersonInvest(personInvestRdd)
+    //    writeCompanyInvest(companyInvestRdd)
+    //    writeWorkIn(workInRdd)
+    //    writeSignIn(signRdd)
+    //    writePersonGua(personGuaranteeRdd)
+    //    writeCompanyGua(companyGuaranteeRdd)
+    //    writePersonLoan(personLoanRdd)
+    //    writeCompanyLoan(companyLoadRdd)
+    //    writeLoan(loanRdd)
+    //    writeTransfer(transferRdd)
+    //    writeWithdraw(withdrawRdd)
+    //    writeDeposit(depositRdd)
+    //    writeRepay(repayRdd)
   }
 }

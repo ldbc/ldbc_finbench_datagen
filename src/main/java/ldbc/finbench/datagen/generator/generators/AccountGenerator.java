@@ -1,5 +1,6 @@
 package ldbc.finbench.datagen.generator.generators;
 
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Random;
 import ldbc.finbench.datagen.entities.nodes.Account;
@@ -12,7 +13,11 @@ import ldbc.finbench.datagen.generator.distribution.DegreeDistribution;
 import ldbc.finbench.datagen.util.GeneratorConfiguration;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
-public class AccountGenerator {
+// TODO:
+//  To share the degree context across PersonRegister and CompanyRegister to generate the account,
+//  this AccountGenerator with its distributions and dictionaries implements Serializable to run
+//  in Spark, which may slow the generation.
+public class AccountGenerator implements Serializable {
     private final DegreeDistribution degreeDistribution;
     private final AccountDeleteDistribution accountDeleteDistribution;
     private final AccountTypeDictionary accountTypeDictionary;

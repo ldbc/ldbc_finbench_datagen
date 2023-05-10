@@ -39,15 +39,16 @@ package ldbc.finbench.datagen.generator.distribution;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class AccountDeleteDistribution {
+public class AccountDeleteDistribution implements Serializable {
 
     private double[] distribution;
-    private String distributionFile;
+    private final String distributionFile;
 
     public AccountDeleteDistribution(String distributionFile) {
         this.distributionFile = distributionFile;

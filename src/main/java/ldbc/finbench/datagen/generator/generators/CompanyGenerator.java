@@ -42,8 +42,12 @@ public class CompanyGenerator {
         return company;
     }
 
+    private void resetState(int seed) {
+        randomFarm.resetRandomGenerators(seed);
+    }
+
     public Iterator<Company> generateCompanyBlock(int blockId, int blockSize) {
-        randomFarm.resetRandomGenerators(blockId);
+        resetState(blockId);
         nextId = blockId * blockSize;
         return new Iterator<Company>() {
             private int companyNum = 0;

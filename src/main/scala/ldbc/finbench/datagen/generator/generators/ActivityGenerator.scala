@@ -46,6 +46,7 @@ import scala.util.Random
 
 class ActivityGenerator(conf: GeneratorConfiguration) extends Serializable {
   val blockSize = DatagenParams.blockSize
+  val accountGenerator = new AccountGenerator(conf)
 
   def personRegisterEvent(personRDD: RDD[Person]): RDD[PersonOwnAccount] = {
     val blocks = personRDD.zipWithUniqueId().map { case (v, k) => (k / blockSize, (k, v)) }
@@ -63,7 +64,7 @@ class ActivityGenerator(conf: GeneratorConfiguration) extends Serializable {
           val personList = new util.ArrayList[Person](persons.size)
           for (p <- persons.values) { personList.add(p) }
 
-          personRegisterGen.personRegister(personList, block.toInt, conf)
+          personRegisterGen.personRegister(personList, accountGenerator, block.toInt, conf)
         }
 
         for {
@@ -93,7 +94,7 @@ class ActivityGenerator(conf: GeneratorConfiguration) extends Serializable {
           val companyRegisterGroups = for { (block, companies) <- groups } yield {
             val companyList = new util.ArrayList[Company](companies.size)
             for (p <- companies.values) { companyList.add(p) }
-            companyRegisterGen.companyRegister(companyList, block.toInt, conf)
+            companyRegisterGen.companyRegister(companyList, accountGenerator, block.toInt, conf)
           }
 
           for {
