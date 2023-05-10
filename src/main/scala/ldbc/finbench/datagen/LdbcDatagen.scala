@@ -150,36 +150,35 @@ object LdbcDatagen extends SparkApp {
 
     GenerationStage.run(generatorArgs)
 
-    // TODO  by siwei-gu
-    if (args.generateFactors) {
-      val factorArgs = FactorGenerationStage.Args(
-        outputDir = args.outputDir,
-        format = args.factorFormat
-      )
-      FactorGenerationStage.run(factorArgs)
-    }
-
-    // TODO release the transform stage
-    /*
-    Dictionaries.loadDictionaries()
-    val transformArgs = TransformationStage.Args(
-      outputDir = args.outputDir,
-      explodeEdges = args.explodeEdges,
-      explodeAttrs = args.explodeAttrs,
-      keepImplicitDeletes = args.keepImplicitDeletes,
-      simulationStart = Dictionaries.dates.getSimulationStart,
-      simulationEnd = Dictionaries.dates.getSimulationEnd,
-      mode = args.mode match {
-        case "raw"         => Mode.Raw
-        case "bi"          => Mode.BI
-        case "interactive" => Mode.Interactive
-      },
-      irFormat,
-      format = args.format,
-      formatOptions = args.formatOptions,
-      epochMillis = args.epochMillis
-    )
-    TransformationStage.run(transformArgs)
-   */
+    // TODO
+//    if (args.generateFactors) {
+//      val factorArgs = FactorGenerationStage.Args(
+//        outputDir = args.outputDir,
+//        format = args.factorFormat
+//      )
+//      FactorGenerationStage.run(factorArgs)
+//    }
+//
+//
+//
+//    Dictionaries.loadDictionaries()
+//    val transformArgs = TransformationStage.Args(
+//      outputDir = args.outputDir,
+//      explodeEdges = args.explodeEdges,
+//      explodeAttrs = args.explodeAttrs,
+//      keepImplicitDeletes = args.keepImplicitDeletes,
+//      simulationStart = Dictionaries.dates.getSimulationStart,
+//      simulationEnd = Dictionaries.dates.getSimulationEnd,
+//      mode = args.mode match {
+//        case "raw"         => Mode.Raw
+//        case "bi"          => Mode.BI
+//        case "interactive" => Mode.Interactive
+//      },
+//      irFormat,
+//      format = args.format,
+//      formatOptions = args.formatOptions,
+//      epochMillis = args.epochMillis
+//    )
+//    TransformationStage.run(transformArgs)
   }
 }
