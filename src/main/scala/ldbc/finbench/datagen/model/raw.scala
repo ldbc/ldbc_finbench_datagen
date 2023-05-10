@@ -100,13 +100,17 @@ object raw {
   //define PersonOwnAccount relationship
   case class PersonOwnAccountRaw(
       `personId`: Long,
-      `accountId`: Long
+      `accountId`: Long,
+      createTime: Long,
+      deleteTime: Long
   )
 
   // define CompanyOwnAccount relationship
   case class CompanyOwnAccountRaw(
       `companyId`: Long,
-      `accountId`: Long
+      `accountId`: Long,
+      createTime: Long,
+      deleteTime: Long
   )
 
   // define Transfer relationship

@@ -8,78 +8,49 @@ import ldbc.finbench.datagen.entities.nodes.Company;
 import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 
 public class CompanyOwnAccount implements DynamicActivity, Serializable {
-    private long companyId;
-    private long accountId;
-    private String accountType;
-    private long accountCreationDate;
-    private boolean accountIsBlocked;
+    private Company company;
+
+    private Account account;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public CompanyOwnAccount(long companyId, long accountId, String accountType,
-                             long accountCreationDate, boolean accountIsBlocked,
-                             long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
-        this.companyId = companyId;
-        this.accountId = accountId;
-        this.accountType = accountType;
-        this.accountCreationDate = accountCreationDate;
-        this.accountIsBlocked = accountIsBlocked;
+    public CompanyOwnAccount(Company company, Account account, long creationDate, long deletionDate,
+                             boolean isExplicitlyDeleted) {
+        this.company = company;
+        this.account = account;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
+    // TODO: company can own multiple accounts
     public static CompanyOwnAccount createCompanyOwnAccount(Random random, Company company, Account account) {
         long creationDate = Dictionaries.dates.randomCompanyToAccountDate(random, company, account);
-
-        CompanyOwnAccount companyOwnAccount = new CompanyOwnAccount(company.getCompanyId(),
-                account.getAccountId(), account.getType(), account.getCreationDate(),
-                account.isBlocked(), creationDate, 0, false);
+        CompanyOwnAccount companyOwnAccount =
+            new CompanyOwnAccount(company, account, creationDate, account.getDeletionDate(),
+                                  account.isExplicitlyDeleted());
         company.getCompanyOwnAccounts().add(companyOwnAccount);
 
         return companyOwnAccount;
     }
 
-    public long getCompanyId() {
-        return companyId;
+    public Company getCompany() {
+        return company;
     }
 
-    public void setCompanyId(long companyId) {
-        this.companyId = companyId;
+    public void setCompany(Company company) {
+        this.company = company;
     }
 
-    public long getAccountId() {
-        return accountId;
+    public Account getAccount() {
+        return account;
     }
 
-    public void setAccountId(long accountId) {
-        this.accountId = accountId;
+    public void setAccount(Account account) {
+        this.account = account;
     }
 
-    public String getAccountType() {
-        return accountType;
-    }
-
-    public void setAccountType(String accountType) {
-        this.accountType = accountType;
-    }
-
-    public long getAccountCreationDate() {
-        return accountCreationDate;
-    }
-
-    public void setAccountCreationDate(long accountCreationDate) {
-        this.accountCreationDate = accountCreationDate;
-    }
-
-    public boolean isAccountIsBlocked() {
-        return accountIsBlocked;
-    }
-
-    public void setAccountIsBlocked(boolean accountIsBlocked) {
-        this.accountIsBlocked = accountIsBlocked;
-    }
 
     @Override
     public long getCreationDate() {

@@ -1,10 +1,11 @@
 package ldbc.finbench.datagen.util;
 
+import java.io.Serializable;
 import java.util.Random;
 
-public class RandomGeneratorFarm {
-    private int numRandomGenerators;
-    private Random[] randomGenerators;
+public class RandomGeneratorFarm implements Serializable {
+    private final int numRandomGenerators;
+    private final Random[] randomGenerators;
 
     public enum Aspect {
         DATE,

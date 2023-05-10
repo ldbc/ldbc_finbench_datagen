@@ -45,8 +45,12 @@ public class PersonGenerator {
         return person;
     }
 
+    private void resetState(int seed) {
+        randomFarm.resetRandomGenerators(seed);
+    }
+
     public Iterator<Person> generatePersonBlock(int blockId, int blockSize) {
-        randomFarm.resetRandomGenerators(blockId);
+        resetState(blockId);
         nextId = blockId * blockSize;
         return new Iterator<Person>() {
             private int personNum = 0;

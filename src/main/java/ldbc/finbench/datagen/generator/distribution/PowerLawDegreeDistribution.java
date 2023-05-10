@@ -2,6 +2,7 @@ package ldbc.finbench.datagen.generator.distribution;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Random;
@@ -13,7 +14,7 @@ import ldbc.finbench.datagen.generator.DatagenParams;
 // TODO:
 //  This degree generator should generate in-degree and out-degree separately. But it is complex to make the
 //  sum of indegree equals to sum of outdegree. Temporarily we use the same beta for in-degree and out-degree.
-public class PowerLawDegreeDistribution extends DegreeDistribution {
+public class PowerLawDegreeDistribution extends DegreeDistribution implements Serializable {
     private double inDegreeBeta;
     private double outDegreeBeta;
     private long minDegree;

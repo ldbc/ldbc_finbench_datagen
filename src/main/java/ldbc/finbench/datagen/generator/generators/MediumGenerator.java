@@ -42,8 +42,12 @@ public class MediumGenerator {
         return medium;
     }
 
+    private void resetState(int seed) {
+        randomFarm.resetRandomGenerators(seed);
+    }
+
     public Iterator<Medium> generateMediumBlock(int blockId, int blockSize) {
-        randomFarm.resetRandomGenerators(blockId);
+        resetState(blockId);
         nextId = blockId * blockSize;
         return new Iterator<Medium>() {
             private int mediumNum = 0;

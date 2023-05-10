@@ -1,7 +1,6 @@
 package ldbc.finbench.datagen.entities.nodes;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 import ldbc.finbench.datagen.entities.edges.Repay;
 import ldbc.finbench.datagen.entities.edges.Transfer;
@@ -25,18 +24,6 @@ public class Account implements Serializable {
     private List<Repay> repays;
 
     public Account() {
-    }
-
-    public Account(long accountId, String type, long creationDate, long maxInDegree, boolean isBlocked) {
-        this.accountId = accountId;
-        this.type = type;
-        transfers = new ArrayList<>();
-        withdraws = new ArrayList<>();
-        repays = new ArrayList<>();
-        this.creationDate = creationDate;
-        this.maxInDegree = maxInDegree;
-        this.isBlocked = isBlocked;
-        accountOwnerEnum = AccountOwnerEnum.PERSON;
     }
 
     public long getAccountId() {

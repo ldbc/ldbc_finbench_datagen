@@ -21,7 +21,7 @@ public class DatagenParams {
     public static final String outDegreeRegressionFile = DISTRIBUTION_DIRECTORY + "outDegreeRegression.txt";
     public static int blockSize = 0;
     public static String degreeDistribution;
-    public static int deleteDelta = 0;
+    public static int delta = 0;
     public static long minNumDegree = 0;
     public static long maxNumDegree = 0;
     public static double blockedAccountRatio = 0.0;
@@ -40,7 +40,7 @@ public class DatagenParams {
         try {
             blockSize = intConf(conf, "generator.blockSize");
             degreeDistribution = stringConf(conf, "generator.degreeDistribution");
-            deleteDelta = intConf(conf, "generator.deleteDelta");
+            delta = intConf(conf, "generator.deleteDelta");
             minNumDegree = longConf(conf, "generator.minNumDegree");
             maxNumDegree = longConf(conf, "generator.maxNumDegree");
             blockedAccountRatio = doubleConf(conf, "generator.blockedAccountRatio");
