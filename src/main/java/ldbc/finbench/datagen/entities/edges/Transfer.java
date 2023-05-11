@@ -10,7 +10,7 @@ public class Transfer implements DynamicActivity, Serializable {
     private Account fromAccount;
     private Account toAccount;
     private String type;
-    private long amount;
+    private double amount;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
@@ -33,11 +33,11 @@ public class Transfer implements DynamicActivity, Serializable {
         return transfer;
     }
 
-    public long getAmount() {
+    public double getAmount() {
         return amount;
     }
 
-    public void setAmount(long amount) {
+    public void setAmount(double amount) {
         this.amount = amount;
     }
 

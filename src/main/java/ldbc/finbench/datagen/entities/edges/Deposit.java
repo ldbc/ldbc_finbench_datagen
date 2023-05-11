@@ -10,7 +10,7 @@ import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 public class Deposit implements DynamicActivity, Serializable {
     private Loan loan;
     private Account account;
-    private long amount;
+    private double amount;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
@@ -25,17 +25,18 @@ public class Deposit implements DynamicActivity, Serializable {
 
     public static Deposit createDeposit(Random random, Loan loan, Account account) {
         long creationDate = Dictionaries.dates.randomLoanToAccountDate(random, loan, account);
-        Deposit deposit = new Deposit(loan, account, creationDate, account.getDeletionDate(), account.isExplicitlyDeleted());
+        Deposit deposit =
+            new Deposit(loan, account, creationDate, account.getDeletionDate(), account.isExplicitlyDeleted());
         loan.getDeposits().add(deposit);
 
         return deposit;
     }
 
-    public long getAmount() {
+    public double getAmount() {
         return amount;
     }
 
-    public void setAmount(long amount) {
+    public void setAmount(double amount) {
         this.amount = amount;
     }
 

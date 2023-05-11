@@ -16,6 +16,7 @@ class ActivityGenerator(conf: GeneratorConfiguration) extends Serializable {
   val blockSize = DatagenParams.blockSize
   // Use a common account generator to maintain the degree distribution of the generators
   val accountGenerator = new AccountGenerator(conf)
+  val loanGenerator = new LoanGenerator(conf)
 
   def personRegisterEvent(personRDD: RDD[Person]): RDD[PersonOwnAccount] = {
     val blocks = personRDD.zipWithUniqueId().map { case (v, k) => (k / blockSize, (k, v)) }
@@ -187,7 +188,7 @@ class ActivityGenerator(conf: GeneratorConfiguration) extends Serializable {
       val personLoanEvent = new PersonLoanEvent
       val personList = new util.ArrayList[Person]()
       persons.foreach(personList.add)
-      val loanList = personLoanEvent.personLoan(personList, TaskContext.getPartitionId(), conf)
+      val loanList = personLoanEvent.personLoan(personList, loanGenerator, TaskContext.getPartitionId(), conf)
       for {applyLoan <- loanList.iterator().asScala} yield applyLoan
     })
   }
@@ -197,7 +198,7 @@ class ActivityGenerator(conf: GeneratorConfiguration) extends Serializable {
       val companyLoanEvent = new CompanyLoanEvent
       val companyList = new util.ArrayList[Company]()
       companies.foreach(companyList.add)
-      val loanList = companyLoanEvent.companyLoan(companyList, TaskContext.getPartitionId(), conf)
+      val loanList = companyLoanEvent.companyLoan(companyList, loanGenerator, TaskContext.getPartitionId(), conf)
       for {
         applyLoan <- loanList.iterator().asScala
       } yield applyLoan

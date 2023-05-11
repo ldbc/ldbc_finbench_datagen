@@ -36,8 +36,8 @@ object raw {
   // define Loan entity
   case class LoanRaw(
       id: Long,
-      loanAmount: Long,
-      balance: Long
+      loanAmount: Double,
+      balance: Double
   )
 
   // define Medium entity
@@ -122,7 +122,7 @@ object raw {
       `account1Id`: Long,
       `account2Id`: Long,
       createTime: Long,
-      amount: Long,
+      amount: Double,
       `type`: String,
       isExplicitDeleted: Boolean
   )
@@ -132,7 +132,7 @@ object raw {
       `account1Id`: Long,
       `account2Id`: Long,
       createTime: Long,
-      amount: Long,
+      amount: Double,
       isExplicitDeleted: Boolean
   )
 
@@ -141,7 +141,7 @@ object raw {
       `accountId`: Long,
       `loanId`: Long,
       createTime: Long,
-      amount: Long,
+      amount: Double,
       isExplicitDeleted: Boolean
   )
 
@@ -150,7 +150,7 @@ object raw {
       `loanId`: Long,
       `accountId`: Long,
       createTime: Long,
-      amount: Long,
+      amount: Double,
       isExplicitDeleted: Boolean
   )
 

@@ -17,6 +17,7 @@ public class RandomGeneratorFarm implements Serializable {
         ACCOUNT_TYPE,
         ACCOUNT_OWNER_TYPE,
         DELETE_ACCOUNT,
+        LOAN_AMOUNT,
         NUM_ASPECT                  // This must be always the last one.
     }
 

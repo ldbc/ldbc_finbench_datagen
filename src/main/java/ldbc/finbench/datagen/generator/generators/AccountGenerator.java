@@ -23,7 +23,6 @@ public class AccountGenerator implements Serializable {
     private final AccountTypeDictionary accountTypeDictionary;
     private final RandomGeneratorFarm randFarm;
     private final Random blockRandom;
-    private final Random personOrCompanyOwnRandom;
     private int nextId = 0;
 
     public AccountGenerator(GeneratorConfiguration conf) {
@@ -34,7 +33,6 @@ public class AccountGenerator implements Serializable {
         this.accountDeleteDistribution.initialize();
         this.accountTypeDictionary = new AccountTypeDictionary();
         this.blockRandom = new Random(0);
-        this.personOrCompanyOwnRandom = new Random(0);
     }
 
     private long composeAccountId(long id, long date) {
@@ -93,6 +91,7 @@ public class AccountGenerator implements Serializable {
         return account;
     }
 
+    // TODO: resetState not used yet
     private void resetState(int seed) {
         degreeDistribution.reset(seed);
         randFarm.resetRandomGenerators(seed);
