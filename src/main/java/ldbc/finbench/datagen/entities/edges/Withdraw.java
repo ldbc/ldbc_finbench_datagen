@@ -9,6 +9,7 @@ import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 public class Withdraw implements DynamicActivity, Serializable {
     private Account fromAccount;
     private Account toAccount;
+    private long amount;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
@@ -29,6 +30,14 @@ public class Withdraw implements DynamicActivity, Serializable {
         fromAccount.getWithdraws().add(withdraw);
 
         return withdraw;
+    }
+
+    public long getAmount() {
+        return amount;
+    }
+
+    public void setAmount(long amount) {
+        this.amount = amount;
     }
 
     public Account getFromAccount() {

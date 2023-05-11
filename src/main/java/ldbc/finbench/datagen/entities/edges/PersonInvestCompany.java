@@ -8,9 +8,9 @@ import ldbc.finbench.datagen.entities.nodes.Person;
 import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 
 public class PersonInvestCompany implements DynamicActivity, Serializable {
-
     private Person person;
     private Company company;
+    private double ratio;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
@@ -30,6 +30,14 @@ public class PersonInvestCompany implements DynamicActivity, Serializable {
         person.getPersonInvestCompanies().add(personInvestCompany);
 
         return personInvestCompany;
+    }
+
+    public double getRatio() {
+        return ratio;
+    }
+
+    public void setRatio(double ratio) {
+        this.ratio = ratio;
     }
 
     public Company getCompany() {

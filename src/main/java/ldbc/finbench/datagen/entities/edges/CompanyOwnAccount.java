@@ -9,7 +9,6 @@ import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 
 public class CompanyOwnAccount implements DynamicActivity, Serializable {
     private Company company;
-
     private Account account;
     private long creationDate;
     private long deletionDate;

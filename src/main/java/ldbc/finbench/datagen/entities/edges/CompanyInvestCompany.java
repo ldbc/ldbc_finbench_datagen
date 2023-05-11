@@ -9,6 +9,7 @@ import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 public class CompanyInvestCompany implements DynamicActivity, Serializable {
     private Company fromCompany;
     private Company toCompany;
+    private double ratio;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
@@ -30,6 +31,14 @@ public class CompanyInvestCompany implements DynamicActivity, Serializable {
         fromCompany.getCompanyInvestCompanies().add(companyInvestCompany);
 
         return companyInvestCompany;
+    }
+
+    public double getRatio() {
+        return ratio;
+    }
+
+    public void setRatio(double ratio) {
+        this.ratio = ratio;
     }
 
     public Company getFromCompany() {
