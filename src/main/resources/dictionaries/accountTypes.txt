@@ -1,10 +1,12 @@
-AccountType0
-AccountType1
-AccountType2
-AccountType3
-AccountType4
-AccountType5
-AccountType6
-AccountType7
-AccountType8
-AccountType9
+certificate of deposit
+credit card
+retirement account
+merchant account
+escrow account
+trust account
+foreign currency
+corporate account
+brokerage account
+custodial account
+debit card
+prepaid card

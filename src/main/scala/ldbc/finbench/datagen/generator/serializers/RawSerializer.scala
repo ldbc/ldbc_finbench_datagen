@@ -33,13 +33,12 @@ class RawSerializer(sink: RawSink, conf: GeneratorConfiguration)(implicit spark:
     val companyOwnAccountInfo = activityGenerator.companyRegisterEvent(companyRdd)
 
     // Merge accounts vertices registered by persons and companies
-    val accountInfoByPerson = personOwnAccountInfo.map(personOwnAccountRaw => {
+    val accountRdd = personOwnAccountInfo.map(personOwnAccountRaw => {
       personOwnAccountRaw.getAccount
-    })
-    val accountInfoByCompany = companyOwnAccountInfo.map(companyOwnAccountRaw => {
+    }).union(companyOwnAccountInfo.map(companyOwnAccountRaw => {
       companyOwnAccountRaw.getAccount
-    })
-    val accountRdd = accountInfoByPerson.union(accountInfoByCompany)
+    }))
+
 
     // Simulation: simulate person invest company event
     val personInvestRdd = activityGenerator.personInvestEvent(personRdd, companyRdd)
@@ -89,18 +88,18 @@ class RawSerializer(sink: RawSink, conf: GeneratorConfiguration)(implicit spark:
     activitySerializer.writePersonOwnAccount(personOwnAccountInfo)
     activitySerializer.writeCompanyOwnAccount(companyOwnAccountInfo)
     activitySerializer.writeAccount(accountRdd)
-    activitySerializer.writePersonInvest(personInvestRdd)
-    activitySerializer.writeCompanyInvest(companyInvestRdd)
-    activitySerializer.writeWorkIn(workInRdd)
-    activitySerializer.writeSignIn(signInRdd)
-    activitySerializer.writePersonGuarantee(personGuaranteeRdd)
-    activitySerializer.writeCompanyGuarantee(companyGuaranteeRdd)
-    activitySerializer.writePersonLoan(personLoanRdd)
-    activitySerializer.writeCompanyLoan(companyLoanRdd)
-    activitySerializer.writeLoan(loanRdd)
+    //    activitySerializer.writePersonInvest(personInvestRdd)
+    //    activitySerializer.writeCompanyInvest(companyInvestRdd)
+    //    activitySerializer.writeWorkIn(workInRdd)
+    //    activitySerializer.writeSignIn(signInRdd)
+    //    activitySerializer.writePersonGuarantee(personGuaranteeRdd)
+    //    activitySerializer.writeCompanyGuarantee(companyGuaranteeRdd)
+    //    activitySerializer.writePersonLoan(personLoanRdd)
+    //    activitySerializer.writeCompanyLoan(companyLoanRdd)
+    //    activitySerializer.writeLoan(loanRdd)
     activitySerializer.writeTransfer(transferRdd)
-    activitySerializer.writeWithdraw(withdrawRdd)
-    activitySerializer.writeDeposit(depositRdd)
-    activitySerializer.writeRepay(repayRdd)
+    //    activitySerializer.writeWithdraw(withdrawRdd)
+    //    activitySerializer.writeDeposit(depositRdd)
+    //    activitySerializer.writeRepay(repayRdd)
   }
 }

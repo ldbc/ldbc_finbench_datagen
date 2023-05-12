@@ -26,9 +26,10 @@ public class Transfer implements DynamicActivity, Serializable {
 
     public static Transfer createTransfer(Random random, Account fromAccount, Account toAccount) {
         long creationDate = Dictionaries.dates.randomAccountToAccountDate(random, fromAccount, toAccount);
-        // TODO: calcu min delete date
-        Transfer transfer = new Transfer(fromAccount, toAccount, creationDate, 0, false);
-        fromAccount.getTransfers().add(transfer);
+        long deleteDate = 0; // TODO: calcu min delete date
+        boolean willDelete = fromAccount.isExplicitlyDeleted()&&toAccount.isExplicitlyDeleted();
+        Transfer transfer = new Transfer(fromAccount, toAccount, creationDate, deleteDate, willDelete);
+        fromAccount.getTransferIns().add(transfer);
 
         return transfer;
     }

@@ -22,6 +22,8 @@ object raw {
       deleteTime: Long,
       isBlocked: Boolean,
       `type`: String,
+      inDegree: Long,
+      OutDegree: Long,
       isExplicitDeleted: Boolean
   )
 
