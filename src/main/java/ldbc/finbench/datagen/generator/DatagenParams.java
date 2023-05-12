@@ -7,9 +7,9 @@ import ldbc.finbench.datagen.util.GeneratorConfiguration;
 
 public class DatagenParams {
     public static final String DICTIONARY_DIRECTORY = "/dictionaries/";
-    public static final String companyNameFile = DICTIONARY_DIRECTORY + "companies.txt";
+    public static final String companyNameFile = DICTIONARY_DIRECTORY + "companyNames.txt";
     public static final String personSurnameFile = DICTIONARY_DIRECTORY + "surnames.txt";
-    public static final String mediumNameFile = DICTIONARY_DIRECTORY + "medium.txt";
+    public static final String mediumNameFile = DICTIONARY_DIRECTORY + "mediumNames.txt";
     public static final String accountFile = DICTIONARY_DIRECTORY + "accountTypes.txt";
 
     public static final String DISTRIBUTION_DIRECTORY = "/distributions/";
