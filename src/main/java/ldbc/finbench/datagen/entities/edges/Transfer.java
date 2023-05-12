@@ -9,6 +9,8 @@ import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 public class Transfer implements DynamicActivity, Serializable {
     private Account fromAccount;
     private Account toAccount;
+    private String type;
+    private double amount;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
@@ -29,6 +31,22 @@ public class Transfer implements DynamicActivity, Serializable {
         fromAccount.getTransfers().add(transfer);
 
         return transfer;
+    }
+
+    public double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(double amount) {
+        this.amount = amount;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public Account getFromAccount() {

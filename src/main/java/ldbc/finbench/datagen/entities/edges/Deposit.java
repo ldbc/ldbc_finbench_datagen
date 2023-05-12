@@ -10,6 +10,7 @@ import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 public class Deposit implements DynamicActivity, Serializable {
     private Loan loan;
     private Account account;
+    private double amount;
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
@@ -29,6 +30,14 @@ public class Deposit implements DynamicActivity, Serializable {
         loan.getDeposits().add(deposit);
 
         return deposit;
+    }
+
+    public double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(double amount) {
+        this.amount = amount;
     }
 
     public Loan getLoan() {

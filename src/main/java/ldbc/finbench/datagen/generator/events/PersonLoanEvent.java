@@ -21,12 +21,12 @@ public class PersonLoanEvent implements Serializable {
         randomFarm.resetRandomGenerators(seed);
     }
 
-    public List<PersonApplyLoan> personLoan(List<Person> persons, int blockId, GeneratorConfiguration conf) {
+    public List<PersonApplyLoan> personLoan(List<Person> persons, LoanGenerator loanGenerator, int blockId,
+                                            GeneratorConfiguration conf) {
         resetState(blockId);
         List<PersonApplyLoan> personApplyLoans = new ArrayList<>();
 
         for (Person p : persons) {
-            LoanGenerator loanGenerator = new LoanGenerator(conf);
             PersonApplyLoan personApplyLoan = PersonApplyLoan.createPersonApplyLoan(
                 randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
                 p,

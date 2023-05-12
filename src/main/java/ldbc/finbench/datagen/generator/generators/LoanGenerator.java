@@ -9,12 +9,15 @@ import ldbc.finbench.datagen.util.GeneratorConfiguration;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class LoanGenerator {
-
-    private DegreeDistribution degreeDistribution;
-    private RandomGeneratorFarm randomFarm;
+    private final double loanAmountMin;
+    private final double loanAmountMax;
+    private final DegreeDistribution degreeDistribution;
+    private final RandomGeneratorFarm randomFarm;
     private int nextId = 0;
 
     public LoanGenerator(GeneratorConfiguration conf) {
+        this.loanAmountMin = 0; // TODO: set by config
+        this.loanAmountMax = 1000000; // TODO: set by config
         this.randomFarm = new RandomGeneratorFarm();
         this.degreeDistribution = DatagenParams.getDegreeDistribution();
         this.degreeDistribution.initialize();
@@ -27,15 +30,21 @@ public class LoanGenerator {
         return (bucket << 44) | ((id & idMask));
     }
 
-    public Loan generateLoan() {
+    // TODO: Reset not used yet
+    private void resetState(int seed) {
+        degreeDistribution.reset(seed);
+        randomFarm.resetRandomGenerators(seed);
+    }
 
+    public Loan generateLoan() {
         long creationDate = Dictionaries.dates.randomLoanCreationDate(randomFarm.get(RandomGeneratorFarm.Aspect.DATE));
         long loanId = composeLoanId(nextId++, creationDate);
-        long loanAmount = new Random().nextLong();
-        long loanBalance = new Random().nextLong();
+        double loanAmount =
+            randomFarm.get(RandomGeneratorFarm.Aspect.LOAN_AMOUNT).nextDouble() * (loanAmountMax - loanAmountMin)
+                + loanAmountMin;
         long maxDegree = Math.min(degreeDistribution.nextDegree(), DatagenParams.maxNumDegree);
-
-        return new Loan(loanId, creationDate, loanAmount, loanBalance, maxDegree);
+        // Balance equals to the quota in a new loan
+        return new Loan(loanId, loanAmount, loanAmount, creationDate, maxDegree);
     }
 
 }

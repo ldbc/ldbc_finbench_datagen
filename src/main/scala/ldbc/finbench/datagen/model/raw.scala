@@ -21,7 +21,8 @@ object raw {
       createTime: Long,
       deleteTime: Long,
       isBlocked: Boolean,
-      `type`: String
+      `type`: String,
+      isExplicitDeleted: Boolean
   )
 
   // define Company entity
@@ -35,8 +36,8 @@ object raw {
   // define Loan entity
   case class LoanRaw(
       id: Long,
-      loanAmount: Long,
-      balance: Long
+      loanAmount: Double,
+      balance: Double
   )
 
   // define Medium entity
@@ -73,7 +74,7 @@ object raw {
       `personId`: Long,
       `companyId`: Long,
       createTime: Long,
-      ratio: Float
+      ratio: Double
   )
 
   // define CompanyInvestCompany relationship
@@ -81,7 +82,7 @@ object raw {
       `company1Id`: Long,
       `company2Id`: Long,
       createTime: Long,
-      ratio: Float
+      ratio: Double
   )
 
   // define PersonGuaranteePerson relationship
@@ -103,7 +104,8 @@ object raw {
       `personId`: Long,
       `accountId`: Long,
       createTime: Long,
-      deleteTime: Long
+      deleteTime: Long,
+      isExplicitDeleted: Boolean
   )
 
   // define CompanyOwnAccount relationship
@@ -111,7 +113,8 @@ object raw {
       `companyId`: Long,
       `accountId`: Long,
       createTime: Long,
-      deleteTime: Long
+      deleteTime: Long,
+      isExplicitDeleted: Boolean
   )
 
   // define Transfer relationship
@@ -119,8 +122,9 @@ object raw {
       `account1Id`: Long,
       `account2Id`: Long,
       createTime: Long,
-      amount: Long,
-      `type`: String
+      amount: Double,
+      `type`: String,
+      isExplicitDeleted: Boolean
   )
 
   // define Withdraw relationship
@@ -128,7 +132,8 @@ object raw {
       `account1Id`: Long,
       `account2Id`: Long,
       createTime: Long,
-      amount: Long
+      amount: Double,
+      isExplicitDeleted: Boolean
   )
 
   // define Repay relationship
@@ -136,7 +141,8 @@ object raw {
       `accountId`: Long,
       `loanId`: Long,
       createTime: Long,
-      amount: Long
+      amount: Double,
+      isExplicitDeleted: Boolean
   )
 
   // define Deposit relationship
@@ -144,7 +150,8 @@ object raw {
       `loanId`: Long,
       `accountId`: Long,
       createTime: Long,
-      amount: Long
+      amount: Double,
+      isExplicitDeleted: Boolean
   )
 
   // define SignIn relationship
@@ -152,6 +159,7 @@ object raw {
       `mediumId`: Long,
       `accountId`: Long,
       createTime: Long,
-      deleteTime: Long
+      deleteTime: Long,
+      isExplicitDeleted: Boolean
   )
 }

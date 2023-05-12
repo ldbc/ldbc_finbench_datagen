@@ -12,7 +12,6 @@ import org.apache.spark.sql.SparkSession
 //  - re-implement the code in more elegant way
 //  - repartition with the partition option
 //  - config the paramMap (including header, mode, dateFormat and so on)
-//  - replace the random with java entities properties
 class RawSerializer(sink: RawSink, conf: GeneratorConfiguration)(implicit spark: SparkSession) extends Writer[RawSink] with Serializable {
 
   val options = sink.formatOptions ++ Map("header" -> "true", "delimiter" -> "|")
@@ -67,13 +66,13 @@ class RawSerializer(sink: RawSink, conf: GeneratorConfiguration)(implicit spark:
     val companyLoanRdd = activityGenerator.companyLoanEvent(companyRdd)
 
     // Merge accounts vertices registered by persons and companies
-    val loanInfoAppliedByPerson = personLoanRdd.map(personApplyLoan => {
-      new Loan(personApplyLoan.getLoan.getLoanId, personApplyLoan.getLoan.getLoanAmount, personApplyLoan.getLoan.getBalance, personApplyLoan.getCreationDate, 10)
-    })
-    val loanInfoAppliedByCompany = companyLoanRdd.map(companyApplyLoan => {
-      new Loan(companyApplyLoan.getLoan.getLoanId, companyApplyLoan.getLoanAmount, companyApplyLoan.getLoanBalance, companyApplyLoan.getCreationDate, 10)
-    })
-    val loanRdd = loanInfoAppliedByPerson.union(loanInfoAppliedByCompany)
+    val loanRdd = personLoanRdd.map(companyLoan => {
+      new Loan(companyLoan.getLoan.getLoanId, companyLoan.getLoan.getLoanAmount, companyLoan.getLoan.getBalance, companyLoan.getCreationDate, 10)
+    }).union(
+      companyLoanRdd.map(companyLoan => {
+        new Loan(companyLoan.getLoan.getLoanId, companyLoan.getLoan.getLoanAmount, companyLoan.getLoan.getBalance, companyLoan.getCreationDate, 10)
+      })
+    )
 
     // Simulation: simulate transfer event
     val transferRdd = activityGenerator.transferEvent(accountRdd)

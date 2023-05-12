@@ -7,13 +7,13 @@ import ldbc.finbench.datagen.entities.edges.Deposit;
 
 public class Loan implements Serializable {
     private long loanId;
-    private long loanAmount;
-    private long balance;
+    private double loanAmount;
+    private double balance;
     private List<Deposit> deposits;
     private long creationDate;
     private long maxDegree;
 
-    public Loan(long loanId, long loanAmount, long balance, long creationDate, long maxDegree) {
+    public Loan(long loanId, double loanAmount, double balance, long creationDate, long maxDegree) {
         this.loanId = loanId;
         this.loanAmount = loanAmount;
         this.balance = balance;
@@ -30,19 +30,19 @@ public class Loan implements Serializable {
         this.loanId = loanId;
     }
 
-    public long getLoanAmount() {
+    public double getLoanAmount() {
         return loanAmount;
     }
 
-    public void setLoanAmount(long loanAmount) {
+    public void setLoanAmount(double loanAmount) {
         this.loanAmount = loanAmount;
     }
 
-    public long getBalance() {
+    public double getBalance() {
         return balance;
     }
 
-    public void setBalance(long balance) {
+    public void setBalance(double balance) {
         this.balance = balance;
     }
 
