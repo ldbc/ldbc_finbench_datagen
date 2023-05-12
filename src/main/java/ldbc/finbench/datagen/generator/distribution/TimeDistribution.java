@@ -11,8 +11,7 @@ public class TimeDistribution {
     private Map<Integer, Double> hourDistribution;
     private double[] hourProbs;
     private final double[] hourCumulatives;
-
-
+    
     public TimeDistribution(String hourDistributionFile) {
         loadDistribution(hourDistributionFile);
         hourCumulatives = new double[hourProbs.length];

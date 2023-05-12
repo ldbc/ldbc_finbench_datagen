@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Random;
 import ldbc.finbench.datagen.entities.nodes.Account;
-import ldbc.finbench.datagen.entities.nodes.AccountOwnerEnum;
 import ldbc.finbench.datagen.generator.DatagenParams;
 import ldbc.finbench.datagen.generator.dictionary.AccountTypeDictionary;
 import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
@@ -27,7 +26,7 @@ public class AccountGenerator implements Serializable {
 
     public AccountGenerator(GeneratorConfiguration conf) {
         this.randFarm = new RandomGeneratorFarm();
-        this.degreeDistribution = DatagenParams.getDegreeDistribution();
+        this.degreeDistribution = DatagenParams.getInDegreeDistribution();
         this.degreeDistribution.initialize();
         this.accountDeleteDistribution = new AccountDeleteDistribution(DatagenParams.accountDeleteFile);
         this.accountDeleteDistribution.initialize();
@@ -67,6 +66,7 @@ public class AccountGenerator implements Serializable {
         account.setMaxOutDegree(maxOutDegree);
 
         // Set type
+        // TODO: the account type should be determined by the type of account owner. Design a ranking function
         String type =
             Dictionaries.accountTypes.getUniformDistRandomType(randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_TYPE),
                                                                accountTypeDictionary.getNumNames());
