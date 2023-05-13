@@ -19,7 +19,8 @@ public class DatagenParams {
     public static final String powerLawActivityDeleteFile = DISTRIBUTION_DIRECTORY + "powerLawActivityDeleteDate.txt";
     public static final String inDegreeRegressionFile = DISTRIBUTION_DIRECTORY + "inDegreeRegression.txt";
     public static final String outDegreeRegressionFile = DISTRIBUTION_DIRECTORY + "outDegreeRegression.txt";
-    public static final String multiplictyPowerlawRegressionFile = DISTRIBUTION_DIRECTORY + "multiplicityPowerlawRegression.txt";
+    public static final String multiplictyPowerlawRegressionFile =
+        DISTRIBUTION_DIRECTORY + "multiplicityPowerlawRegression.txt";
     public static int blockSize = 0;
     public static String degreeDistribution;
     public static String multiplicityDistribution;
@@ -59,7 +60,7 @@ public class DatagenParams {
             numCompanies = longConf(conf, "generator.numCompanies");
             numMediums = longConf(conf, "generator.numMediums");
             outputDir = stringConf(conf, "generator.outputDir");
-            startYear   = intConf(conf, "generator.startYear");
+            startYear = intConf(conf, "generator.startYear");
             numYears = intConf(conf, "generator.numYears");
             companyInvestedByPersonFraction = doubleConf(conf, "generator.companyInvestedByPersonFraction");
             companyHasWorkerFraction = doubleConf(conf, "generator.companyHasWorkerFraction");

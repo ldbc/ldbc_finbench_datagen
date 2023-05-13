@@ -56,7 +56,8 @@ public class DistributionTest {
         System.out.println();
 
         PowerLawFormulaDistribution multiplicity =
-            new PowerLawFormulaDistribution(DatagenParams.multiplictyPowerlawRegressionFile, DatagenParams.minMultiplicity,
+            new PowerLawFormulaDistribution(DatagenParams.multiplictyPowerlawRegressionFile,
+                                            DatagenParams.minMultiplicity,
                                             DatagenParams.maxMultiplicity);
         multiplicity.initialize();
         System.out.println("\nGenerated Multiplicity:");
