@@ -13,6 +13,3 @@ function gen {
 }
 
 $1
-
-
-
