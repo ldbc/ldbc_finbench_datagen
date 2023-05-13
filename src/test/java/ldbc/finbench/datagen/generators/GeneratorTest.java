@@ -13,7 +13,7 @@ public class GeneratorTest {
     Map<String, String> config;
 
     public GeneratorTest() {
-        config = ConfigParser.readConfig("src/main/resources/parameters/params_default.ini");
+        config = ConfigParser.readConfig("src/main/resources/params_default.ini");
         config.putAll(ConfigParser.scaleFactorConf("0.1")); // use scale factor 0.1
         DatagenContext.initialize(new GeneratorConfiguration(config));
     }

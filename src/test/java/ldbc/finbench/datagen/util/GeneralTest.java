@@ -7,7 +7,7 @@ public class GeneralTest {
 
     @Test
     public void testConfigParser() {
-        Map<String, String> config = ConfigParser.readConfig("src/main/resources/parameters/params_default.ini");
+        Map<String, String> config = ConfigParser.readConfig("src/main/resources/params_default.ini");
         System.out.println(config);
         assert config.size() > 0;
     }
