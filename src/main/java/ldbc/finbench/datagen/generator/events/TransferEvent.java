@@ -9,7 +9,6 @@ import ldbc.finbench.datagen.entities.edges.Transfer;
 import ldbc.finbench.datagen.entities.nodes.Account;
 import ldbc.finbench.datagen.generator.DatagenParams;
 import ldbc.finbench.datagen.generator.distribution.DegreeDistribution;
-import ldbc.finbench.datagen.generator.distribution.PowerLawFormulaDistribution;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class TransferEvent implements Serializable {
@@ -23,6 +22,7 @@ public class TransferEvent implements Serializable {
         randIndex = new Random();
         shuffleRandom = new Random();
         multiplicityDistribution = DatagenParams.getMultiplicityDistribution();
+        multiplicityDistribution.initialize();
     }
 
     private void resetState(int seed) {
@@ -33,32 +33,49 @@ public class TransferEvent implements Serializable {
     }
 
     // OutDegrees is shuffled with InDegrees
-    private List<Long> shuffleToOutDegree(List<Long> inDegrees) {
-        List<Long> outDegrees = new ArrayList<>(inDegrees);
-        Collections.shuffle(outDegrees, shuffleRandom);
-        return outDegrees;
+    private void setOutDegreeWithShuffle(List<Account> accounts) {
+        List<Long> degrees = new ArrayList<>();
+        accounts.forEach(a -> degrees.add(a.getMaxInDegree()));
+        Collections.shuffle(degrees, shuffleRandom);
+        for (int i = 0; i < accounts.size(); i++) {
+            accounts.get(i).setMaxOutDegree(degrees.get(i));
+        }
     }
 
+    private boolean distanceProbOK(int distance) {
+        double randProb = randomFarm.get(RandomGeneratorFarm.Aspect.UNIFORM).nextDouble();
+        double prob = Math.pow(DatagenParams.baseProbCorrelated, Math.abs(distance));
+        return ((randProb < prob) || (randProb < DatagenParams.limitProCorrelated));
+    }
+
+    // TODO: can not coalesce when large scale data generated in cluster
     public List<Transfer> transfer(List<Account> accounts, int blockId) {
         resetState(blockId);
-        List<Transfer> transfers = new ArrayList<>();
+        setOutDegreeWithShuffle(accounts);
 
-        List<Long> inDegrees = new ArrayList<>();
-        accounts.forEach(a -> inDegrees.add(a.getMaxInDegree()));
-        List<Long> outDegrees = shuffleToOutDegree(inDegrees);
-
-        long multiplicity =  multiplicityDistribution.nextDegree();
-
+        List<Transfer> allTransfers = new ArrayList<>();
 
         for (int i = 0; i < accounts.size(); i++) {
-            Account a = accounts.get(i);
-            int accountIndex = randIndex.nextInt(accounts.size());
-            Transfer transfer = Transfer.createTransfer(
-                randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
-                a,
-                accounts.get(accountIndex));
-            transfers.add(transfer);
+            Account from = accounts.get(i);
+            while (from.getAvaialbleOutDegree() != 0) {
+                // i!=j: Transfer to self is not allowed
+                for (int j = 0; j < accounts.size(); j++) {
+                    if (i == j) {
+                        continue;
+                    }
+                    Account to = accounts.get(j);
+                    long numTransfers = Math.min(multiplicityDistribution.nextDegree(), from.getAvaialbleOutDegree());
+                    if (numTransfers <= to.getAvaialbleInDegree() && distanceProbOK(j - i)) {
+                        for (int mindex = 0; mindex < numTransfers; mindex++) {
+                            // Note: nearly impossible to generate same date
+                            Random dateRandom = randomFarm.get(RandomGeneratorFarm.Aspect.DATE);
+                            Transfer transfer = Transfer.createTransfer(dateRandom, from, to, mindex);
+                            allTransfers.add(transfer);
+                        }
+                    }
+                }
+            }
         }
-        return transfers;
+        return allTransfers;
     }
 }

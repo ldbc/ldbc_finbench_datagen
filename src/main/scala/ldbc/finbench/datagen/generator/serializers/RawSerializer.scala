@@ -33,12 +33,14 @@ class RawSerializer(sink: RawSink, conf: GeneratorConfiguration)(implicit spark:
     val companyOwnAccountInfo = activityGenerator.companyRegisterEvent(companyRdd)
 
     // Merge accounts vertices registered by persons and companies
+    // TODO: can not coalesce when large scale data generated in cluster
     val accountRdd = personOwnAccountInfo.map(personOwnAccountRaw => {
       personOwnAccountRaw.getAccount
     }).union(companyOwnAccountInfo.map(companyOwnAccountRaw => {
       companyOwnAccountRaw.getAccount
-    }))
+    })).coalesce(1)
 
+    // TODO: move shuffle outdegree here
 
     // Simulation: simulate person invest company event
     val personInvestRdd = activityGenerator.personInvestEvent(personRdd, companyRdd)
@@ -71,7 +73,7 @@ class RawSerializer(sink: RawSink, conf: GeneratorConfiguration)(implicit spark:
       companyLoanRdd.map(companyLoan => {
         new Loan(companyLoan.getLoan.getLoanId, companyLoan.getLoan.getLoanAmount, companyLoan.getLoan.getBalance, companyLoan.getCreationDate, 10)
       })
-    )
+    ).coalesce(1)
 
     // Simulation: simulate transfer event
     val transferRdd = activityGenerator.transferEvent(accountRdd)

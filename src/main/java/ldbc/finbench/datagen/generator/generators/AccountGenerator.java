@@ -91,8 +91,7 @@ public class AccountGenerator implements Serializable {
         return account;
     }
 
-    // TODO: resetState not used yet
-    private void resetState(int seed) {
+    public void resetState(long seed) {
         degreeDistribution.reset(seed);
         randFarm.resetRandomGenerators(seed);
     }

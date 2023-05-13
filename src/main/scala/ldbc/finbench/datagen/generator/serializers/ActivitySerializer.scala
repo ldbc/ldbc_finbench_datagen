@@ -31,7 +31,7 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
   }
 
   def writeAccount(self: RDD[Account]): Unit = {
-    val rawAccount = self.map { a: Account => AccountRaw(a.getAccountId, a.getCreationDate, a.getDeletionDate, a.isBlocked, a.getType, a.getMaxInDegree, a.getMaxOutDegree, a.isExplicitlyDeleted) }
+    val rawAccount = self.map { a: Account => AccountRaw(a.getAccountId, a.getCreationDate, a.getDeletionDate, a.isBlocked, a.getType, a.getMaxInDegree, a.getMaxOutDegree, a.isExplicitlyDeleted, a.getAccountOwnerEnum.toString) }
     val df = spark.createDataFrame(rawAccount)
     df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/account")
   }
@@ -115,7 +115,7 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
 
   def writeTransfer(self: RDD[Transfer]): Unit = {
     val df = spark.createDataFrame(self.map { t =>
-      TransferRaw(t.getFromAccount.getAccountId, t.getToAccount.getAccountId, t.getCreationDate, t.getAmount, t.getType, t.isExplicitlyDeleted)
+      TransferRaw(t.getFromAccount.getAccountId, t.getToAccount.getAccountId, t.getMultiplicityId, t.getCreationDate, t.getDeletionDate, t.getAmount, t.isExplicitlyDeleted)
     })
     df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/transfer")
   }

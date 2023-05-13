@@ -9,27 +9,29 @@ import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
 public class Transfer implements DynamicActivity, Serializable {
     private Account fromAccount;
     private Account toAccount;
-    private String type;
     private double amount;
     private long creationDate;
     private long deletionDate;
+    private long multiplicityId;
     private boolean isExplicitlyDeleted;
 
-    public Transfer(Account fromAccount, Account toAccount, long creationDate, long deletionDate,
+    public Transfer(Account fromAccount, Account toAccount, long creationDate, long deletionDate, long multiplicityId,
                     boolean isExplicitlyDeleted) {
         this.fromAccount = fromAccount;
         this.toAccount = toAccount;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
+        this.multiplicityId = multiplicityId;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static Transfer createTransfer(Random random, Account fromAccount, Account toAccount) {
+    public static Transfer createTransfer(Random random, Account fromAccount, Account toAccount, long multiplicityId) {
         long creationDate = Dictionaries.dates.randomAccountToAccountDate(random, fromAccount, toAccount);
-        long deleteDate = 0; // TODO: calcu min delete date
-        boolean willDelete = fromAccount.isExplicitlyDeleted()&&toAccount.isExplicitlyDeleted();
-        Transfer transfer = new Transfer(fromAccount, toAccount, creationDate, deleteDate, willDelete);
-        fromAccount.getTransferIns().add(transfer);
+        long deleteDate = Math.min(fromAccount.getDeletionDate(), toAccount.getDeletionDate());
+        boolean willDelete = fromAccount.isExplicitlyDeleted() && toAccount.isExplicitlyDeleted();
+        Transfer transfer = new Transfer(fromAccount, toAccount, creationDate, deleteDate, multiplicityId, willDelete);
+        fromAccount.getTransferOuts().add(transfer);
+        toAccount.getTransferIns().add(transfer);
 
         return transfer;
     }
@@ -40,14 +42,6 @@ public class Transfer implements DynamicActivity, Serializable {
 
     public void setAmount(double amount) {
         this.amount = amount;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
     }
 
     public Account getFromAccount() {
@@ -64,6 +58,14 @@ public class Transfer implements DynamicActivity, Serializable {
 
     public void setToAccount(Account toAccount) {
         this.toAccount = toAccount;
+    }
+
+    public long getMultiplicityId() {
+        return multiplicityId;
+    }
+
+    public void setMultiplicityId(long multiplicityId) {
+        this.multiplicityId = multiplicityId;
     }
 
     @Override

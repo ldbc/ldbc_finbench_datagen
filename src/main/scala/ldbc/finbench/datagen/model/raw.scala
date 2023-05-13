@@ -24,7 +24,8 @@ object raw {
       `type`: String,
       inDegree: Long,
       OutDegree: Long,
-      isExplicitDeleted: Boolean
+      isExplicitDeleted: Boolean,
+      Owner: String
   )
 
   // define Company entity
@@ -121,11 +122,12 @@ object raw {
 
   // define Transfer relationship
   case class TransferRaw(
-      `account1Id`: Long,
-      `account2Id`: Long,
+      `fromId`: Long,
+      `toId`: Long,
+      multiplicityId: Long,
       createTime: Long,
+      deleteTime: Long,
       amount: Double,
-      `type`: String,
       isExplicitDeleted: Boolean
   )
 

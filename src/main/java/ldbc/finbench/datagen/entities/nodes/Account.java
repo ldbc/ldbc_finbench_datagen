@@ -32,6 +32,14 @@ public class Account implements Serializable {
         repays = new ArrayList<>();
     }
 
+    public long getAvaialbleInDegree(){
+        return maxInDegree - transferIns.size();
+    }
+
+    public long getAvaialbleOutDegree(){
+        return maxOutDegree - transferOuts.size();
+    }
+
     public long getAccountId() {
         return accountId;
     }

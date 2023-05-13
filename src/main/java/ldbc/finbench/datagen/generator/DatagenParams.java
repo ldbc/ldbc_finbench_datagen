@@ -39,6 +39,8 @@ public class DatagenParams {
     public static double companyInvestedByPersonFraction = 0.0;
     public static double companyHasWorkerFraction = 0.0;
     public static double accountSignedInFraction = 0.0;
+    public static double baseProbCorrelated = 0.0;
+    public static double limitProCorrelated = 0.0;
 
 
     public static void readConf(GeneratorConfiguration conf) {
@@ -52,7 +54,6 @@ public class DatagenParams {
             minMultiplicity = intConf(conf, "generator.minMultiplicity");
             maxMultiplicity = intConf(conf, "generator.maxMultiplicity");
             blockedAccountRatio = doubleConf(conf, "generator.blockedAccountRatio");
-            companyInvestedByPersonFraction = doubleConf(conf, "generator.companyInvestedByPersonFraction");
             numUpdateStreams = intConf(conf, "generator.mode.interactive.numUpdateStreams");
             numPersons = longConf(conf, "generator.numPersons");
             numCompanies = longConf(conf, "generator.numCompanies");
@@ -60,8 +61,11 @@ public class DatagenParams {
             outputDir = stringConf(conf, "generator.outputDir");
             startYear   = intConf(conf, "generator.startYear");
             numYears = intConf(conf, "generator.numYears");
+            companyInvestedByPersonFraction = doubleConf(conf, "generator.companyInvestedByPersonFraction");
             companyHasWorkerFraction = doubleConf(conf, "generator.companyHasWorkerFraction");
             accountSignedInFraction = doubleConf(conf, "generator.accountSignedInFraction");
+            baseProbCorrelated = doubleConf(conf, "generator.baseProbCorrelated");
+            limitProCorrelated = doubleConf(conf, "generator.limitProCorrelated");
 
             System.out.println(" ... Num Accounts " + (numPersons + numCompanies));
             System.out.println(" ... Start Year " + startYear);
