@@ -117,6 +117,7 @@ public class DateGenerator {
     public long randomAccountToAccountDate(Random random, Account fromAccount, Account toAccount) {
         long fromDate =
             Math.max(fromAccount.getCreationDate(), toAccount.getCreationDate()) + DatagenParams.delta;
+        // TODO: the date here is not rounded
         long randDate = randomDate(random, fromDate, simulationEnd);
         long randHour = timeDistribution.nextHour(random);
         long randMinute = timeDistribution.nextMinute(random);

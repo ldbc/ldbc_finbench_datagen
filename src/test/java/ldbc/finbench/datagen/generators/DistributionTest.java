@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.Random;
 import ldbc.finbench.datagen.generator.DatagenContext;
 import ldbc.finbench.datagen.generator.DatagenParams;
-import ldbc.finbench.datagen.generator.distribution.PowerLawDegreeDistribution;
+import ldbc.finbench.datagen.generator.distribution.PowerLawFormulaDistribution;
 import ldbc.finbench.datagen.generator.distribution.TimeDistribution;
 import ldbc.finbench.datagen.util.ConfigParser;
 import ldbc.finbench.datagen.util.GeneratorConfiguration;
@@ -35,19 +35,34 @@ public class DistributionTest {
 
     @Test
     public void testPowerLawDegreeDistribution() {
-        PowerLawDegreeDistribution pldd = new PowerLawDegreeDistribution();
-        pldd.initialize();
-        System.out.println("Generated InDegrees:");
+        PowerLawFormulaDistribution inDegreeDist =
+            new PowerLawFormulaDistribution(DatagenParams.inDegreeRegressionFile, DatagenParams.minNumDegree,
+                                            DatagenParams.maxNumDegree);
+        inDegreeDist.initialize();
+        System.out.println("\nGenerated InDegrees:");
         for (int i = 0; i < 1000; i++) {
-            System.out.print(pldd.nextInDegree() + " ");
+            System.out.print(inDegreeDist.nextDegree() + " ");
         }
+        System.out.println();
+
+        PowerLawFormulaDistribution outDegreeDist =
+            new PowerLawFormulaDistribution(DatagenParams.outDegreeRegressionFile, DatagenParams.minNumDegree,
+                                            DatagenParams.maxNumDegree);
+        outDegreeDist.initialize();
         System.out.println("\nGenerated OutDegrees:");
         for (int i = 0; i < 1000; i++) {
-            System.out.print(pldd.nextOutDegree() + " ");
+            System.out.print(outDegreeDist.nextDegree() + " ");
         }
-        System.out.println("\nGenerated Degrees:");
+        System.out.println();
+
+        PowerLawFormulaDistribution multiplicity =
+            new PowerLawFormulaDistribution(DatagenParams.multiplictyPowerlawRegressionFile,
+                                            DatagenParams.minMultiplicity,
+                                            DatagenParams.maxMultiplicity);
+        multiplicity.initialize();
+        System.out.println("\nGenerated Multiplicity:");
         for (int i = 0; i < 1000; i++) {
-            System.out.print(pldd.nextDegree() + " ");
+            System.out.print(multiplicity.nextDegree() + " ");
         }
         System.out.println();
     }

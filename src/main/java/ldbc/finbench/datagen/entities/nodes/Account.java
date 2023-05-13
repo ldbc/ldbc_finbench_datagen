@@ -20,14 +20,24 @@ public class Account implements Serializable {
     private Person personOwner;
     private Company companyOwner;
     private boolean isExplicitlyDeleted;
-    private List<Transfer> transfers;
+    private List<Transfer> transferIns;
+    private List<Transfer> transferOuts;
     private List<Withdraw> withdraws;
     private List<Repay> repays;
 
     public Account() {
-        transfers = new ArrayList<>();
+        transferIns = new ArrayList<>();
+        transferOuts = new ArrayList<>();
         withdraws = new ArrayList<>();
         repays = new ArrayList<>();
+    }
+
+    public long getAvaialbleInDegree() {
+        return maxInDegree - transferIns.size();
+    }
+
+    public long getAvaialbleOutDegree() {
+        return maxOutDegree - transferOuts.size();
     }
 
     public long getAccountId() {
@@ -46,12 +56,20 @@ public class Account implements Serializable {
         this.type = type;
     }
 
-    public List<Transfer> getTransfers() {
-        return transfers;
+    public List<Transfer> getTransferIns() {
+        return transferIns;
     }
 
-    public void setTransfers(List<Transfer> transfers) {
-        this.transfers = transfers;
+    public void setTransferIns(List<Transfer> transferIns) {
+        this.transferIns = transferIns;
+    }
+
+    public List<Transfer> getTransferOuts() {
+        return transferOuts;
+    }
+
+    public void setTransferOuts(List<Transfer> transferIns) {
+        this.transferOuts = transferIns;
     }
 
     public List<Withdraw> getWithdraws() {
