@@ -5,7 +5,7 @@ import org.apache.spark.sql.SaveMode
 package object raw {
 
   sealed trait RawFormat
-  case object Csv     extends RawFormat { override def toString = "csv"     }
+  case object Csv     extends RawFormat { override def toString = "org.apache.spark.sql.execution.datasources.csv.CSVFileFormat"     }
   case object Parquet extends RawFormat { override def toString = "parquet" }
 
   case class RawSink(

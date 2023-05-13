@@ -63,9 +63,10 @@ def run_local(
         **spark_conf
     }
 
-    arg_opts = [
-        *(['--num-threads', str(parallelism)] if parallelism else []),
-    ]
+    # num-threads configuration for hadoop is not support yet in Scala part
+    # arg_opts = [
+    #     *(['--num-threads', str(parallelism)] if parallelism else []),
+    # ]
 
     conf = flatten([['-c', f'{k}={v}'] for k, v in final_spark_conf.items()])
     cmd = [
@@ -75,7 +76,7 @@ def run_local(
         *opt_class,
         *additional_opts,
         jar_file,
-        *arg_opts,
+        # *arg_opts,
         *passthrough_args
     ]
 
