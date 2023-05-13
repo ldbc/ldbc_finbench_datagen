@@ -79,6 +79,8 @@ def run_local(
         *passthrough_args
     ]
 
+    print(cmd)
+
     default_env = dict(os.environ)
 
     run(cmd, env=default_env)
