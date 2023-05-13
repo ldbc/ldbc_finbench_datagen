@@ -5,7 +5,7 @@ import java.util.Random;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 import ldbc.finbench.datagen.entities.nodes.Account;
 import ldbc.finbench.datagen.entities.nodes.Loan;
-import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
+import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 
 public class Deposit implements DynamicActivity, Serializable {
     private Loan loan;
