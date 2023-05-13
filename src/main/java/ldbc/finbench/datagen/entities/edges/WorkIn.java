@@ -5,7 +5,7 @@ import java.util.Random;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 import ldbc.finbench.datagen.entities.nodes.Company;
 import ldbc.finbench.datagen.entities.nodes.Person;
-import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
+import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 
 public class WorkIn implements DynamicActivity, Serializable {
     private Person person;

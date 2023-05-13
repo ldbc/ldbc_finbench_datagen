@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Random;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 import ldbc.finbench.datagen.entities.nodes.Account;
-import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
+import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 
 public class Withdraw implements DynamicActivity, Serializable {
     private Account fromAccount;

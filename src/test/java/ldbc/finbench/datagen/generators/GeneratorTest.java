@@ -2,9 +2,9 @@ package ldbc.finbench.datagen.generators;
 
 import java.util.Map;
 import ldbc.finbench.datagen.entities.nodes.Person;
-import ldbc.finbench.datagen.generator.DatagenContext;
-import ldbc.finbench.datagen.generator.dictionary.Dictionaries;
-import ldbc.finbench.datagen.generator.generators.PersonGenerator;
+import ldbc.finbench.datagen.generation.DatagenContext;
+import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
+import ldbc.finbench.datagen.generation.generators.PersonGenerator;
 import ldbc.finbench.datagen.util.ConfigParser;
 import ldbc.finbench.datagen.util.GeneratorConfiguration;
 import org.junit.Test;

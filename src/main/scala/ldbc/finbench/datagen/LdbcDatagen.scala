@@ -1,8 +1,8 @@
 package ldbc.finbench.datagen
 
 import ldbc.finbench.datagen.factors.FactorGenerationStage
-import ldbc.finbench.datagen.generator.GenerationStage
-import ldbc.finbench.datagen.generator.dictionary.Dictionaries
+import ldbc.finbench.datagen.generation.GenerationStage
+import ldbc.finbench.datagen.generation.dictionary.Dictionaries
 import ldbc.finbench.datagen.model.Mode
 import ldbc.finbench.datagen.transformation.TransformationStage
 import ldbc.finbench.datagen.util.SparkApp
