@@ -24,7 +24,6 @@ public class CompanyOwnAccount implements DynamicActivity, Serializable {
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    // TODO: company can own multiple accounts
     public static CompanyOwnAccount createCompanyOwnAccount(Random random, Company company, Account account) {
         long creationDate = Dictionaries.dates.randomCompanyToAccountDate(random, company, account);
         CompanyOwnAccount companyOwnAccount =

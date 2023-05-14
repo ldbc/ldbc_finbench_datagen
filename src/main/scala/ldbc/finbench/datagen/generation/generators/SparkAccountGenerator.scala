@@ -13,7 +13,7 @@ object SparkAccountGenerator {
 
   def apply(conf: GeneratorConfiguration, numPartitions: Option[Int] = None)(
     implicit spark: SparkSession): RDD[Account] = {
-    val numAccounts = 10000 // TODO use DatagenParams.numAccounts
+    val numAccounts = 10000
 
     val accountPartitionGenerator = (blocks: Iterator[Long]) => {
       DatagenContext.initialize(conf)
