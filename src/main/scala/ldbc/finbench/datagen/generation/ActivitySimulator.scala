@@ -24,21 +24,21 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
 
   private val personNum: Long = DatagenParams.numPersons
   private val personPartitions = Some(Math.min(Math.ceil(personNum.toDouble / blockSize).toLong, parallelism).toInt)
-  private val personRdd: RDD[Person] = SparkPersonGenerator(personNum, blockSize, personPartitions)
 
   private val companyNum: Long = DatagenParams.numCompanies
   private val companyPartitions = Some(Math.min(Math.ceil(companyNum.toDouble / blockSize).toLong, parallelism).toInt)
-  private val companyRdd: RDD[Company] = SparkCompanyGenerator(companyNum, blockSize, companyPartitions)
 
   private val mediumNum: Long = DatagenParams.numMediums
   private val mediumPartitions = Some(Math.min(Math.ceil(mediumNum.toDouble / blockSize).toLong, parallelism).toInt)
-  private val mediumRdd: RDD[Medium] = SparkMediumGenerator(mediumNum, blockSize, mediumPartitions)
+
 
   def simulate(): Unit = {
     // simulate person register account event
+    val personRdd: RDD[Person] = SparkPersonGenerator(personNum, blockSize, personPartitions)
     val personOwnAccountInfo = activityGenerator.personRegisterEvent(personRdd)
 
     // simulate company register account event
+    val companyRdd: RDD[Company] = SparkCompanyGenerator(companyNum, blockSize, companyPartitions)
     val companyOwnAccountInfo = activityGenerator.companyRegisterEvent(companyRdd)
 
     // Merge accounts vertices registered by persons and companies
@@ -47,14 +47,15 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
       .union(companyOwnAccountInfo.map(companyOwnAccount => companyOwnAccount.getAccount))
       .coalesce(1)
 
+    // simulate person signIn medium event
+    val mediumRdd: RDD[Medium] = SparkMediumGenerator(mediumNum, blockSize, mediumPartitions)
+    val signInRdd = activityGenerator.signInEvent(mediumRdd, accountRdd)
+
     // simulate person or company invest company event
     val investRdd = activityGenerator.investEvent(personRdd, companyRdd)
 
     // simulate person work in company event
     val workInRdd = activityGenerator.workInEvent(personRdd, companyRdd)
-
-    // simulate person signIn medium event
-    val signInRdd = activityGenerator.signInEvent(mediumRdd, accountRdd)
 
     // simulate person guarantee person event
     val personGuaranteeRdd = activityGenerator.personGuaranteeEvent(personRdd)
