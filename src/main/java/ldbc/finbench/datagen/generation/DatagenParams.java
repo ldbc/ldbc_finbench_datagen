@@ -25,7 +25,8 @@ public class DatagenParams {
     public static int startYear = 0;
     public static int numYears = 0;
     public static int blockSize = 0;
-    public static int delta = 0;
+    public static long deleteDelta = 0;
+    public static long activityDelta = 0;
     public static int maxAccountsPerOwner = 0;
     public static String tsfDegreeDistribution;
     public static String tsfMultiplicityDistribution;
@@ -34,6 +35,7 @@ public class DatagenParams {
     public static int tsfMinMultiplicity = 0;
     public static int tsfMaxMultiplicity = 0;
     public static double blockedAccountRatio = 0.0;
+    public static double blockedMediumRatio = 0.0;
     public static int numUpdateStreams = 0;
     public static long numPersons = 0;
     public static long numCompanies = 0;
@@ -44,8 +46,10 @@ public class DatagenParams {
     public static double companyHasWorkerFraction = 0.0;
     public static double accountSignedInFraction = 0.0;
     public static int maxSignInPerPair = 0;
+    public static int maxAccountToSignIn = 0;
     public static double personGuaranteeFraction = 0.0;
     public static double companyGuaranteeFraction = 0.0;
+    public static int maxTargetsToGuarantee = 0;
     public static double personLoanFraction = 0.0;
     public static double companyLoanFraction = 0.0;
     public static int maxLoans = 0;
@@ -66,9 +70,12 @@ public class DatagenParams {
             outputDir = stringConf(conf, "generator.outputDir");
             startYear = intConf(conf, "generator.startYear");
             numYears = intConf(conf, "generator.numYears");
-            delta = intConf(conf, "generator.deleteDelta");
+            deleteDelta = longConf(conf, "generator.deleteDelta"); // 10h by default
+            activityDelta = longConf(conf, "generator.activityDelta"); // 3600s/1h by default
 
             blockedAccountRatio = doubleConf(conf, "account.blockedAccountRatio");
+
+            blockedMediumRatio = doubleConf(conf, "medium.blockedMediumRatio");
 
             maxAccountsPerOwner = intConf(conf, "own.maxAccounts");
 
@@ -83,9 +90,11 @@ public class DatagenParams {
 
             accountSignedInFraction = doubleConf(conf, "signIn.accountSignedInFraction");
             maxSignInPerPair = intConf(conf, "signIn.maxMultiplicity");
+            maxAccountToSignIn = intConf(conf, "signIn.maxAccountToSignIn");
 
             personGuaranteeFraction = doubleConf(conf, "guarantee.personGuaranteeFraction");
             companyGuaranteeFraction = doubleConf(conf, "guarantee.companyGuaranteeFraction");
+            maxTargetsToGuarantee = intConf(conf, "guarantee.maxTargetsToGuarantee");
 
             personLoanFraction = doubleConf(conf, "loan.personLoanFraction");
             companyLoanFraction = doubleConf(conf, "loan.companyLoanFraction");

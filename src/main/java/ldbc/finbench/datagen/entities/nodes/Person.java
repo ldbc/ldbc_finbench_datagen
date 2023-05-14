@@ -12,11 +12,9 @@ import ldbc.finbench.datagen.entities.edges.WorkIn;
 public class Person implements Serializable {
     private long personId;
     private String personName;
-    private byte gender;
-    private WorkIn workIn;
     private long creationDate;
-    //    private long maxDegree;
     private boolean isBlocked;
+    private WorkIn workIn;
     private List<PersonOwnAccount> personOwnAccounts;
     private List<PersonInvestCompany> personInvestCompanies;
     private List<PersonGuaranteePerson> guaranteeSrc;
@@ -64,14 +62,6 @@ public class Person implements Serializable {
 
     public void setPersonName(String personName) {
         this.personName = personName;
-    }
-
-    public byte getGender() {
-        return gender;
-    }
-
-    public void setGender(byte gender) {
-        this.gender = gender;
     }
 
     public WorkIn getWorkIn() {

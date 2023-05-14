@@ -1,17 +1,21 @@
 package ldbc.finbench.datagen.generation.generators;
 
 import java.util.Iterator;
+import java.util.Random;
 import ldbc.finbench.datagen.entities.nodes.Medium;
+import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.util.GeneratorConfiguration;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class MediumGenerator {
     private final RandomGeneratorFarm randomFarm;
+    private final Random blockRandom;
     private int nextId = 0;
 
     public MediumGenerator() {
         this.randomFarm = new RandomGeneratorFarm();
+        this.blockRandom = new Random(DatagenParams.defaultSeed);
     }
 
     private long composeMediumId(long id, long date) {
@@ -36,14 +40,15 @@ public class MediumGenerator {
             Dictionaries.mediumNames.getUniformDistRandomName(randomFarm.get(RandomGeneratorFarm.Aspect.MEDIUM_NAME));
         medium.setMediumName(mediunName);
 
-        // Set blocked to false by default
-        medium.setBlocked(false);
+        // Set isBlocked
+        medium.setBlocked(blockRandom.nextDouble() < DatagenParams.blockedMediumRatio);
 
         return medium;
     }
 
     private void resetState(int seed) {
         randomFarm.resetRandomGenerators(seed);
+        blockRandom.setSeed(seed);
     }
 
     public Iterator<Medium> generateMediumBlock(int blockId, int blockSize) {
