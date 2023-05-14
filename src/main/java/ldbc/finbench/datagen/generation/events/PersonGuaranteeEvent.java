@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Random;
 import ldbc.finbench.datagen.entities.edges.PersonGuaranteePerson;
 import ldbc.finbench.datagen.entities.nodes.Person;
+import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class PersonGuaranteeEvent implements Serializable {
@@ -14,7 +15,7 @@ public class PersonGuaranteeEvent implements Serializable {
 
     public PersonGuaranteeEvent() {
         randomFarm = new RandomGeneratorFarm();
-        randIndex = new Random();
+        randIndex = new Random(DatagenParams.defaultSeed);
     }
 
 

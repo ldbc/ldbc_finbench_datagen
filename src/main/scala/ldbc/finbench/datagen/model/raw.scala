@@ -74,16 +74,16 @@ object raw {
 
   // define PersonInvestCompany relationship
   case class PersonInvestCompanyRaw(
-      `personId`: Long,
-      `companyId`: Long,
+      investorId: Long,
+      companyId: Long,
       createTime: Long,
       ratio: Double
   )
 
   // define CompanyInvestCompany relationship
   case class CompanyInvestCompanyRaw(
-      `company1Id`: Long,
-      `company2Id`: Long,
+      investorId: Long,
+      companyId: Long,
       createTime: Long,
       ratio: Double
   )

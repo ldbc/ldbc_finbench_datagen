@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Random;
 import ldbc.finbench.datagen.entities.edges.CompanyInvestCompany;
 import ldbc.finbench.datagen.entities.nodes.Company;
+import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class CompanyInvestEvent implements Serializable {
@@ -14,15 +15,22 @@ public class CompanyInvestEvent implements Serializable {
 
     public CompanyInvestEvent() {
         randomFarm = new RandomGeneratorFarm();
-        randIndex = new Random();
+        randIndex = new Random(DatagenParams.defaultSeed);
     }
 
-    private void resetState(int seed) {
+    public void resetState(int seed) {
         randomFarm.resetRandomGenerators(seed);
         randIndex.setSeed(seed);
     }
 
-    public List<CompanyInvestCompany> companyInvest(List<Company> companies, int blockId) {
+    public CompanyInvestCompany companyInvest(Company investor, Company invested) {
+        return CompanyInvestCompany.createCompanyInvestCompany(randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
+                                                               randomFarm.get(RandomGeneratorFarm.Aspect.INVEST_RATIO),
+                                                               investor, invested);
+    }
+
+    // Note: not used
+    public List<CompanyInvestCompany> companyInvestBatch(List<Company> companies, int blockId) {
         resetState(blockId);
         List<CompanyInvestCompany> companyInvestCompanies = new ArrayList<>();
         // TODO: person can invest multiple companies
@@ -32,6 +40,7 @@ public class CompanyInvestEvent implements Serializable {
             int companyIndex = randIndex.nextInt(companies.size());
             CompanyInvestCompany companyInvestCompany = CompanyInvestCompany.createCompanyInvestCompany(
                 randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
+                randomFarm.get(RandomGeneratorFarm.Aspect.INVEST_RATIO),
                 c,
                 companies.get(companyIndex));
             companyInvestCompanies.add(companyInvestCompany);

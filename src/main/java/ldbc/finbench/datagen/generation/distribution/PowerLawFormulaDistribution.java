@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Random;
+import ldbc.finbench.datagen.generation.DatagenParams;
 
 // PowerLaw Degree Distribution is generated using transformed uniform distribution.
 // The formula is: x = [(x1^(n+1) - x0^(n+1))*y + x0^(n+1)]^(1/(n+1))
@@ -49,7 +50,7 @@ public class PowerLawFormulaDistribution extends DegreeDistribution implements S
     @Override
     public void initialize() {
         degreeBeta = readAndCalculateMeanForBeta(degreeDistributionFile);
-        degreeRandom = new Random(0);
+        degreeRandom = new Random(DatagenParams.defaultSeed);
     }
 
     @Override

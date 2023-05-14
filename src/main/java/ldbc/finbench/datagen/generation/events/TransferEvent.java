@@ -19,8 +19,8 @@ public class TransferEvent implements Serializable {
 
     public TransferEvent() {
         randomFarm = new RandomGeneratorFarm();
-        randIndex = new Random();
-        shuffleRandom = new Random();
+        randIndex = new Random(DatagenParams.defaultSeed);
+        shuffleRandom = new Random(DatagenParams.defaultSeed);
         multiplicityDistribution = DatagenParams.getMultiplicityDistribution();
         multiplicityDistribution.initialize();
     }

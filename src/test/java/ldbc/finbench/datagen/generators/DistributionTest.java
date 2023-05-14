@@ -27,8 +27,9 @@ public class DistributionTest {
             System.out.println(entry.getKey() + " " + entry.getValue());
         }
         System.out.println("Generated hours:");
+        Random random = new Random(DatagenParams.defaultSeed);
         for (int i = 0; i < 100; i++) {
-            System.out.print(timeDistribution.nextHour(new Random()) + " ");
+            System.out.print(timeDistribution.nextHour(random) + " ");
         }
         System.out.println();
     }

@@ -8,6 +8,7 @@ import ldbc.finbench.datagen.entities.edges.PersonOwnAccount;
 import ldbc.finbench.datagen.entities.nodes.Account;
 import ldbc.finbench.datagen.entities.nodes.AccountOwnerEnum;
 import ldbc.finbench.datagen.entities.nodes.Person;
+import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.generation.generators.AccountGenerator;
 import ldbc.finbench.datagen.util.GeneratorConfiguration;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
@@ -18,7 +19,7 @@ public class PersonRegisterEvent implements Serializable {
 
     public PersonRegisterEvent() {
         randomFarm = new RandomGeneratorFarm();
-        random = new Random();
+        random = new Random(DatagenParams.defaultSeed);
     }
 
     private void resetState(AccountGenerator accountGenerator, int seed) {

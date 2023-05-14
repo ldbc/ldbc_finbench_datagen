@@ -21,10 +21,10 @@ public class PowerLawBucketsDistribution extends DegreeDistribution {
         buckets = new ArrayList<>();
         loadFBBuckets();
         rebuildBucketRange();
-        randomPercentile = new Random(0);
+        randomPercentile = new Random(DatagenParams.defaultSeed);
         randomDegree = new ArrayList<>();
         for (int i = 0; i < buckets.size(); i++) {
-            randomDegree.add(new Random(0));
+            randomDegree.add(new Random(DatagenParams.defaultSeed));
         }
     }
 

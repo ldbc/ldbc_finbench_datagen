@@ -7,6 +7,7 @@ import java.util.Random;
 import ldbc.finbench.datagen.entities.edges.WorkIn;
 import ldbc.finbench.datagen.entities.nodes.Company;
 import ldbc.finbench.datagen.entities.nodes.Person;
+import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class WorkInEvent implements Serializable {
@@ -15,7 +16,7 @@ public class WorkInEvent implements Serializable {
 
     public WorkInEvent() {
         randomFarm = new RandomGeneratorFarm();
-        randIndex = new Random();
+        randIndex = new Random(DatagenParams.defaultSeed);
     }
 
     private void resetState(int seed) {

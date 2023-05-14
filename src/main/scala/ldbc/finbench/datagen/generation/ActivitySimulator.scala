@@ -47,11 +47,8 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
       .union(companyOwnAccountInfo.map(companyOwnAccount => companyOwnAccount.getAccount))
       .coalesce(1)
 
-    // simulate person invest company event
-    val personInvestRdd = activityGenerator.personInvestEvent(personRdd, companyRdd)
-
-    // simulate company invest company event
-    val companyInvestRdd = activityGenerator.companyInvestEvent(companyRdd)
+    // simulate person or company invest company event
+    val investRdd = activityGenerator.investEvent(personRdd, companyRdd)
 
     // simulate person work in company event
     val workInRdd = activityGenerator.workInEvent(personRdd, companyRdd)
@@ -95,8 +92,7 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     activitySerializer.writePersonOwnAccount(personOwnAccountInfo)
     activitySerializer.writeCompanyOwnAccount(companyOwnAccountInfo)
     activitySerializer.writeAccount(accountRdd)
-    activitySerializer.writePersonInvest(personInvestRdd)
-    activitySerializer.writeCompanyInvest(companyInvestRdd)
+    activitySerializer.writeInvest(investRdd)
     activitySerializer.writeWorkIn(workInRdd)
     activitySerializer.writeSignIn(signInRdd)
     activitySerializer.writePersonGuarantee(personGuaranteeRdd)

@@ -49,18 +49,16 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
     df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/companyOwnAccount")
   }
 
-  def writePersonInvest(self: RDD[PersonInvestCompany]): Unit = {
-    val df = spark.createDataFrame(self.map { pic =>
+  def writeInvest(self: RDD[Either[PersonInvestCompany, CompanyInvestCompany]]): Unit = {
+    val personInvest = self.filter(_.isLeft).map(_.left.get)
+    spark.createDataFrame(personInvest.map { pic =>
       PersonInvestCompanyRaw(pic.getPerson.getPersonId, pic.getCompany.getCompanyId, pic.getCreationDate, pic.getRatio)
-    })
-    df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/personInvest")
-  }
+    }).write.format(sink.format.toString).options(options).save(sink.outputDir + "/personInvest")
 
-  def writeCompanyInvest(self: RDD[CompanyInvestCompany]): Unit = {
-    val df = spark.createDataFrame(self.map { cic =>
+    val companyInvest = self.filter(_.isRight).map(_.right.get)
+    spark.createDataFrame(companyInvest.map { cic =>
       CompanyInvestCompanyRaw(cic.getFromCompany.getCompanyId, cic.getToCompany.getCompanyId, cic.getCreationDate, cic.getRatio)
-    })
-    df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/companyInvest")
+    }).write.format(sink.format.toString).options(options).save(sink.outputDir + "/companyInvest")
   }
 
   def writeWorkIn(self: RDD[WorkIn]): Unit = {

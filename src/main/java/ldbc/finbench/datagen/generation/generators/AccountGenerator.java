@@ -31,7 +31,7 @@ public class AccountGenerator implements Serializable {
         this.accountDeleteDistribution = new AccountDeleteDistribution(DatagenParams.accountDeleteFile);
         this.accountDeleteDistribution.initialize();
         this.accountTypeDictionary = new AccountTypeDictionary();
-        this.blockRandom = new Random(0);
+        this.blockRandom = new Random(DatagenParams.defaultSeed);
     }
 
     private long composeAccountId(long id, long date) {

@@ -9,6 +9,7 @@ import ldbc.finbench.datagen.entities.edges.Repay;
 import ldbc.finbench.datagen.entities.edges.Transfer;
 import ldbc.finbench.datagen.entities.nodes.Account;
 import ldbc.finbench.datagen.entities.nodes.Loan;
+import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class SubEvents implements Serializable {
@@ -18,8 +19,8 @@ public class SubEvents implements Serializable {
 
     public SubEvents() {
         randomFarm = new RandomGeneratorFarm();
-        randIndex = new Random();
-        random = new Random();
+        randIndex = new Random(DatagenParams.defaultSeed);
+        random = new Random(DatagenParams.defaultSeed);
     }
 
     public void resetState(int seed) {

@@ -7,6 +7,7 @@ import java.util.Random;
 import ldbc.finbench.datagen.entities.edges.PersonApplyLoan;
 import ldbc.finbench.datagen.entities.nodes.Loan;
 import ldbc.finbench.datagen.entities.nodes.Person;
+import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.generation.generators.LoanGenerator;
 import ldbc.finbench.datagen.util.GeneratorConfiguration;
@@ -18,7 +19,7 @@ public class PersonLoanEvent implements Serializable {
 
     public PersonLoanEvent() {
         randomFarm = new RandomGeneratorFarm();
-        random = new Random();
+        random = new Random(DatagenParams.defaultSeed);
     }
 
     private void resetState(LoanGenerator loanGenerator, int seed) {

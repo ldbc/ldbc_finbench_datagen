@@ -2,6 +2,7 @@ package ldbc.finbench.datagen.util;
 
 import java.io.Serializable;
 import java.util.Random;
+import ldbc.finbench.datagen.generation.DatagenParams;
 
 public class RandomGeneratorFarm implements Serializable {
     private final int numRandomGenerators;
@@ -19,6 +20,7 @@ public class RandomGeneratorFarm implements Serializable {
         DELETE_ACCOUNT,
         LOAN_AMOUNT,
         UNIFORM,
+        INVEST_RATIO,
         NUM_ASPECT                  // This must be always the last one.
     }
 
@@ -26,7 +28,7 @@ public class RandomGeneratorFarm implements Serializable {
         numRandomGenerators = Aspect.values().length;
         randomGenerators = new Random[numRandomGenerators];
         for (int i = 0; i < numRandomGenerators; ++i) {
-            randomGenerators[i] = new Random();
+            randomGenerators[i] = new Random(DatagenParams.defaultSeed);
         }
     }
 

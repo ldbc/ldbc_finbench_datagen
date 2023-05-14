@@ -22,6 +22,7 @@ public class DatagenParams {
     public static final String multiplictyPowerlawRegressionFile =
         DISTRIBUTION_DIRECTORY + "multiplicityPowerlawRegression.txt";
     public static int blockSize = 0;
+    public static int defaultSeed = 0;
     public static String degreeDistribution;
     public static String multiplicityDistribution;
     public static int delta = 0;
@@ -37,7 +38,9 @@ public class DatagenParams {
     public static int numYears = 0;
     public static String outputDir;
     public static int startYear = 0;
-    public static double companyInvestedByPersonFraction = 0.0;
+    public static double companyInvestedFraction = 0.0;
+    public static int minInvestors = 0;
+    public static int maxInvestors = 0;
     public static double companyHasWorkerFraction = 0.0;
     public static double accountSignedInFraction = 0.0;
     public static double baseProbCorrelated = 0.0;
@@ -47,6 +50,7 @@ public class DatagenParams {
     public static void readConf(GeneratorConfiguration conf) {
         try {
             blockSize = intConf(conf, "spark.blockSize");
+            defaultSeed = intConf(conf, "generator.defaultSeed");
             numUpdateStreams = intConf(conf, "generator.mode.interactive.numUpdateStreams");
             numPersons = longConf(conf, "generator.numPersons");
             numCompanies = longConf(conf, "generator.numCompanies");
@@ -55,7 +59,9 @@ public class DatagenParams {
             startYear = intConf(conf, "generator.startYear");
             numYears = intConf(conf, "generator.numYears");
             delta = intConf(conf, "generator.deleteDelta");
+
             blockedAccountRatio = doubleConf(conf, "account.blockedAccountRatio");
+
             degreeDistribution = stringConf(conf, "transfer.degreeDistribution");
             minNumDegree = longConf(conf, "transfer.minNumDegree");
             maxNumDegree = longConf(conf, "transfer.maxNumDegree");
@@ -64,9 +70,13 @@ public class DatagenParams {
             maxMultiplicity = intConf(conf, "transfer.maxMultiplicity");
             baseProbCorrelated = doubleConf(conf, "transfer.baseProbCorrelated");
             limitProCorrelated = doubleConf(conf, "transfer.limitProCorrelated");
-            companyInvestedByPersonFraction = doubleConf(conf, "generator.companyInvestedByPersonFraction");
-            companyHasWorkerFraction = doubleConf(conf, "generator.companyHasWorkerFraction");
-            accountSignedInFraction = doubleConf(conf, "generator.accountSignedInFraction");
+
+            companyInvestedFraction = doubleConf(conf, "invest.companyInvestedFraction");
+            minInvestors = intConf(conf, "invest.minInvestors");
+            maxInvestors = intConf(conf, "invest.maxInvestors");
+
+            companyHasWorkerFraction = doubleConf(conf, "workIn.companyHasWorkerFraction");
+            accountSignedInFraction = doubleConf(conf, "signIn.accountSignedInFraction");
 
             System.out.println(" ... Num Accounts " + (numPersons + numCompanies));
             System.out.println(" ... Start Year " + startYear);
