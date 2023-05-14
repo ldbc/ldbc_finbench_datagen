@@ -6,38 +6,38 @@ import ldbc.finbench.datagen.generation.distribution.PowerLawFormulaDistribution
 import ldbc.finbench.datagen.util.GeneratorConfiguration;
 
 public class DatagenParams {
-    public static final String DICTIONARY_DIRECTORY = "/dictionaries/";
-    public static final String companyNameFile = DICTIONARY_DIRECTORY + "companyNames.txt";
-    public static final String personSurnameFile = DICTIONARY_DIRECTORY + "surnames.txt";
-    public static final String mediumNameFile = DICTIONARY_DIRECTORY + "mediumNames.txt";
-    public static final String accountFile = DICTIONARY_DIRECTORY + "accountTypes.txt";
+    public static final String DICTIONARY_DIR = "/dictionaries/";
+    public static final String companyNameFile = DICTIONARY_DIR + "companyNames.txt";
+    public static final String personSurnameFile = DICTIONARY_DIR + "surnames.txt";
+    public static final String mediumNameFile = DICTIONARY_DIR + "mediumNames.txt";
+    public static final String accountFile = DICTIONARY_DIR + "accountTypes.txt";
+    public static final String DISTRIBUTION_DIR = "/distributions/";
+    public static final String fbPowerlawDegreeFile = DISTRIBUTION_DIR + "facebookPowerlawBucket.dat";
+    public static final String hourDistributionFile = DISTRIBUTION_DIR + "hourDistribution.dat";
+    public static final String accountDeleteFile = DISTRIBUTION_DIR + "accountDelete.txt";
+    public static final String powerLawActivityDeleteFile = DISTRIBUTION_DIR + "powerLawActivityDeleteDate.txt";
+    public static final String inDegreeRegressionFile = DISTRIBUTION_DIR + "inDegreeRegression.txt";
+    public static final String outDegreeRegressionFile = DISTRIBUTION_DIR + "outDegreeRegression.txt";
+    public static final String multiplictyPowerlawRegFile = DISTRIBUTION_DIR + "multiplicityPowerlawRegression.txt";
 
-    public static final String DISTRIBUTION_DIRECTORY = "/distributions/";
-    public static final String fbPowerlawDegreeFile = DISTRIBUTION_DIRECTORY + "facebookPowerlawBucket.dat";
-    public static final String hourDistributionFile = DISTRIBUTION_DIRECTORY + "hourDistribution.dat";
-    public static final String accountDeleteFile = DISTRIBUTION_DIRECTORY + "accountDelete.txt";
-    public static final String powerLawActivityDeleteFile = DISTRIBUTION_DIRECTORY + "powerLawActivityDeleteDate.txt";
-    public static final String inDegreeRegressionFile = DISTRIBUTION_DIRECTORY + "inDegreeRegression.txt";
-    public static final String outDegreeRegressionFile = DISTRIBUTION_DIRECTORY + "outDegreeRegression.txt";
-    public static final String multiplictyPowerlawRegressionFile =
-        DISTRIBUTION_DIRECTORY + "multiplicityPowerlawRegression.txt";
-    public static int blockSize = 0;
     public static int defaultSeed = 0;
-    public static String degreeDistribution;
-    public static String multiplicityDistribution;
+    public static String outputDir;
+    public static int startYear = 0;
+    public static int numYears = 0;
+    public static int blockSize = 0;
     public static int delta = 0;
-    public static long minNumDegree = 0;
-    public static long maxNumDegree = 0;
-    public static int minMultiplicity = 0;
-    public static int maxMultiplicity = 0;
+    public static int maxAccountsPerOwner = 0;
+    public static String tsfDegreeDistribution;
+    public static String tsfMultiplicityDistribution;
+    public static long tsfMinNumDegree = 0;
+    public static long tsfMaxNumDegree = 0;
+    public static int tsfMinMultiplicity = 0;
+    public static int tsfMaxMultiplicity = 0;
     public static double blockedAccountRatio = 0.0;
     public static int numUpdateStreams = 0;
     public static long numPersons = 0;
     public static long numCompanies = 0;
     public static long numMediums = 0;
-    public static int numYears = 0;
-    public static String outputDir;
-    public static int startYear = 0;
     public static double companyInvestedFraction = 0.0;
     public static int minInvestors = 0;
     public static int maxInvestors = 0;
@@ -59,7 +59,7 @@ public class DatagenParams {
         try {
             blockSize = intConf(conf, "spark.blockSize");
             defaultSeed = intConf(conf, "generator.defaultSeed");
-            numUpdateStreams = intConf(conf, "generator.mode.interactive.numUpdateStreams");
+            numUpdateStreams = intConf(conf, "generator.numUpdateStreams");
             numPersons = longConf(conf, "generator.numPersons");
             numCompanies = longConf(conf, "generator.numCompanies");
             numMediums = longConf(conf, "generator.numMediums");
@@ -70,12 +70,14 @@ public class DatagenParams {
 
             blockedAccountRatio = doubleConf(conf, "account.blockedAccountRatio");
 
-            degreeDistribution = stringConf(conf, "transfer.degreeDistribution");
-            minNumDegree = longConf(conf, "transfer.minNumDegree");
-            maxNumDegree = longConf(conf, "transfer.maxNumDegree");
-            multiplicityDistribution = stringConf(conf, "transfer.multiplicityDistribution");
-            minMultiplicity = intConf(conf, "transfer.minMultiplicity");
-            maxMultiplicity = intConf(conf, "transfer.maxMultiplicity");
+            maxAccountsPerOwner = intConf(conf, "account.own.maxAccounts");
+
+            tsfDegreeDistribution = stringConf(conf, "transfer.degreeDistribution");
+            tsfMinNumDegree = longConf(conf, "transfer.minNumDegree");
+            tsfMaxNumDegree = longConf(conf, "transfer.maxNumDegree");
+            tsfMultiplicityDistribution = stringConf(conf, "transfer.multiplicityDistribution");
+            tsfMinMultiplicity = intConf(conf, "transfer.minMultiplicity");
+            tsfMaxMultiplicity = intConf(conf, "transfer.maxMultiplicity");
             baseProbCorrelated = doubleConf(conf, "transfer.baseProbCorrelated");
             limitProCorrelated = doubleConf(conf, "transfer.limitProCorrelated");
 
@@ -128,35 +130,35 @@ public class DatagenParams {
     }
 
     public static DegreeDistribution getInDegreeDistribution() {
-        if (degreeDistribution.equals("powerlaw")) {
-            return new PowerLawFormulaDistribution(DatagenParams.inDegreeRegressionFile, DatagenParams.minNumDegree,
-                                                   DatagenParams.maxNumDegree);
-        } else if (degreeDistribution.equals("powerlawbucket")) {
+        if (tsfDegreeDistribution.equals("powerlaw")) {
+            return new PowerLawFormulaDistribution(DatagenParams.inDegreeRegressionFile, DatagenParams.tsfMinNumDegree,
+                                                   DatagenParams.tsfMaxNumDegree);
+        } else if (tsfDegreeDistribution.equals("powerlawbucket")) {
             return new PowerLawBucketsDistribution();
         } else {
-            throw new IllegalStateException("Unexpected inDegree distribution: " + degreeDistribution);
+            throw new IllegalStateException("Unexpected inDegree distribution: " + tsfDegreeDistribution);
         }
     }
 
     public static DegreeDistribution getOutDegreeDistribution() {
-        if (degreeDistribution.equals("powerlaw")) {
-            return new PowerLawFormulaDistribution(DatagenParams.outDegreeRegressionFile, DatagenParams.minNumDegree,
-                                                   DatagenParams.maxNumDegree);
-        } else if (degreeDistribution.equals("powerlawbucket")) {
+        if (tsfDegreeDistribution.equals("powerlaw")) {
+            return new PowerLawFormulaDistribution(DatagenParams.outDegreeRegressionFile, DatagenParams.tsfMinNumDegree,
+                                                   DatagenParams.tsfMaxNumDegree);
+        } else if (tsfDegreeDistribution.equals("powerlawbucket")) {
             return new PowerLawBucketsDistribution();
         } else {
-            throw new IllegalStateException("Unexpected outDegree distribution: " + degreeDistribution);
+            throw new IllegalStateException("Unexpected outDegree distribution: " + tsfDegreeDistribution);
         }
     }
 
-    public static DegreeDistribution getMultiplicityDistribution() {
-        if (multiplicityDistribution.equals("powerlaw")) {
-            return new PowerLawFormulaDistribution(DatagenParams.multiplictyPowerlawRegressionFile,
-                                                   DatagenParams.minMultiplicity, DatagenParams.maxMultiplicity);
-        } else if (multiplicityDistribution.equals("powerlawbucket")) {
+    public static DegreeDistribution getTsfMultiplicityDistribution() {
+        if (tsfMultiplicityDistribution.equals("powerlaw")) {
+            return new PowerLawFormulaDistribution(DatagenParams.multiplictyPowerlawRegFile,
+                                                   DatagenParams.tsfMinMultiplicity, DatagenParams.tsfMaxMultiplicity);
+        } else if (tsfMultiplicityDistribution.equals("powerlawbucket")) {
             return new PowerLawBucketsDistribution();
         } else {
-            throw new IllegalStateException("Unexpected multiplicty distribution: " + multiplicityDistribution);
+            throw new IllegalStateException("Unexpected multiplicty distribution: " + tsfMultiplicityDistribution);
         }
     }
 }

@@ -9,7 +9,6 @@ import ldbc.finbench.datagen.generation.dictionary.AccountTypeDictionary;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.generation.distribution.AccountDeleteDistribution;
 import ldbc.finbench.datagen.generation.distribution.DegreeDistribution;
-import ldbc.finbench.datagen.util.GeneratorConfiguration;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 // TODO:
@@ -57,7 +56,7 @@ public class AccountGenerator implements Serializable {
         account.setAccountId(accountId);
 
         // Set inDegree
-        long maxInDegree = Math.min(degreeDistribution.nextDegree(), DatagenParams.maxNumDegree);
+        long maxInDegree = Math.min(degreeDistribution.nextDegree(), DatagenParams.tsfMaxNumDegree);
         account.setMaxInDegree(maxInDegree);
 
         // Set outDegree.

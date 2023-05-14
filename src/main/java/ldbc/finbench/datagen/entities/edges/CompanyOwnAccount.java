@@ -5,6 +5,7 @@ import java.util.Random;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 import ldbc.finbench.datagen.entities.nodes.Account;
 import ldbc.finbench.datagen.entities.nodes.Company;
+import ldbc.finbench.datagen.entities.nodes.PersonOrCompany;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 
 public class CompanyOwnAccount implements DynamicActivity, Serializable {
@@ -30,6 +31,8 @@ public class CompanyOwnAccount implements DynamicActivity, Serializable {
             new CompanyOwnAccount(company, account, creationDate, account.getDeletionDate(),
                                   account.isExplicitlyDeleted());
         company.getCompanyOwnAccounts().add(companyOwnAccount);
+        account.setOwnerType(PersonOrCompany.COMPANY);
+        account.setCompanyOwner(company);
 
         return companyOwnAccount;
     }

@@ -40,7 +40,7 @@ public class LoanGenerator implements Serializable {
         double loanAmount =
             randomFarm.get(RandomGeneratorFarm.Aspect.LOAN_AMOUNT).nextDouble() * (loanAmountMax - loanAmountMin)
                 + loanAmountMin;
-        long maxDegree = Math.min(degreeDistribution.nextDegree(), DatagenParams.maxNumDegree);
+        long maxDegree = Math.min(degreeDistribution.nextDegree(), DatagenParams.tsfMaxNumDegree);
         // Balance equals to the quota in a new loan
         return new Loan(loanId, loanAmount, loanAmount, creationDate, maxDegree);
     }
