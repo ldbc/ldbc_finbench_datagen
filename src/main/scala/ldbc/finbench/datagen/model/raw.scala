@@ -92,15 +92,15 @@ object raw {
 
   // define PersonGuaranteePerson relationship
   case class PersonGuaranteePersonRaw(
-      `person1Id`: Long,
-      `person2Id`: Long,
+      from: Long,
+      to: Long,
       createTime: Long
   )
 
   // define CompanyGuarantee relationship
   case class CompanyGuaranteeCompanyRaw(
-      `company1Id`: Long,
-      `company2Id`: Long,
+      from: Long,
+      to: Long,
       createTime: Long
   )
 

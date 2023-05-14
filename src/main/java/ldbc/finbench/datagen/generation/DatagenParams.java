@@ -48,6 +48,7 @@ public class DatagenParams {
     public static int maxAccountToSignIn = 0;
     public static double personGuaranteeFraction = 0.0;
     public static double companyGuaranteeFraction = 0.0;
+    public static int maxTargetsToGuarantee = 0;
     public static double personLoanFraction = 0.0;
     public static double companyLoanFraction = 0.0;
     public static int maxLoans = 0;
@@ -91,6 +92,7 @@ public class DatagenParams {
 
             personGuaranteeFraction = doubleConf(conf, "guarantee.personGuaranteeFraction");
             companyGuaranteeFraction = doubleConf(conf, "guarantee.companyGuaranteeFraction");
+            maxTargetsToGuarantee = intConf(conf, "guarantee.maxTargetsToGuarantee");
 
             personLoanFraction = doubleConf(conf, "loan.personLoanFraction");
             companyLoanFraction = doubleConf(conf, "loan.companyLoanFraction");

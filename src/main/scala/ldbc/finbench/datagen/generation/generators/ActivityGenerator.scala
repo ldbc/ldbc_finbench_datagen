@@ -187,7 +187,6 @@ class ActivityGenerator() extends Serializable {
     })
   }
 
-  // TODO: refine
   def withdrawEvent(accountRDD: RDD[Account]): RDD[Withdraw] = {
     val withdrawEvent = new WithdrawEvent
     accountRDD.mapPartitions(accounts => {
@@ -196,7 +195,6 @@ class ActivityGenerator() extends Serializable {
     })
   }
 
-  // TODO: refine
   def depositEvent(loanRDD: RDD[Loan], accountRDD: RDD[Account]): RDD[Deposit] = {
     val fraction = 1.0 // todo config the company list size
 
@@ -218,7 +216,6 @@ class ActivityGenerator() extends Serializable {
     depositRels
   }
 
-  // TODO: refine
   def repayEvent(accountRDD: RDD[Account], loanRDD: RDD[Loan]): RDD[Repay] = {
     val fraction = 1.0 // todo config the company list size
     val accountParts = accountRDD.partitions.length
