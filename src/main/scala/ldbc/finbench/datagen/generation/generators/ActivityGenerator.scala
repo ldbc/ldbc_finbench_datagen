@@ -86,7 +86,7 @@ class ActivityGenerator() extends Serializable {
     val companySampleList = new util.ArrayList[util.List[Company]](personParts)
     for (i <- 1 to personParts) {
       // TODO: consider sample
-      companySampleList.add(companyRDD.collect().toList.asJava)
+      companySampleList.add(companyRDD.sample(withReplacement = false, fraction, DatagenParams.defaultSeed).collect().toList.asJava)
     }
 
     val personInvestRels = personRDD.mapPartitions(persons => {

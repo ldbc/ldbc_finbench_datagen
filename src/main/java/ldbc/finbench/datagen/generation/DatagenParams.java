@@ -22,6 +22,7 @@ public class DatagenParams {
     public static final String multiplictyPowerlawRegressionFile =
         DISTRIBUTION_DIRECTORY + "multiplicityPowerlawRegression.txt";
     public static int blockSize = 0;
+    public static int defaultSeed = 0;
     public static String degreeDistribution;
     public static String multiplicityDistribution;
     public static int delta = 0;
@@ -47,6 +48,7 @@ public class DatagenParams {
     public static void readConf(GeneratorConfiguration conf) {
         try {
             blockSize = intConf(conf, "spark.blockSize");
+            defaultSeed = intConf(conf, "generator.defaultSeed");
             numUpdateStreams = intConf(conf, "generator.mode.interactive.numUpdateStreams");
             numPersons = longConf(conf, "generator.numPersons");
             numCompanies = longConf(conf, "generator.numCompanies");
@@ -64,9 +66,9 @@ public class DatagenParams {
             maxMultiplicity = intConf(conf, "transfer.maxMultiplicity");
             baseProbCorrelated = doubleConf(conf, "transfer.baseProbCorrelated");
             limitProCorrelated = doubleConf(conf, "transfer.limitProCorrelated");
-            companyInvestedByPersonFraction = doubleConf(conf, "generator.companyInvestedByPersonFraction");
-            companyHasWorkerFraction = doubleConf(conf, "generator.companyHasWorkerFraction");
-            accountSignedInFraction = doubleConf(conf, "generator.accountSignedInFraction");
+            companyInvestedByPersonFraction = doubleConf(conf, "invest.companyInvestedByPersonFraction");
+            companyHasWorkerFraction = doubleConf(conf, "workIn.companyHasWorkerFraction");
+            accountSignedInFraction = doubleConf(conf, "signIn.accountSignedInFraction");
 
             System.out.println(" ... Num Accounts " + (numPersons + numCompanies));
             System.out.println(" ... Start Year " + startYear);

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Random;
 import ldbc.finbench.datagen.entities.edges.CompanyInvestCompany;
 import ldbc.finbench.datagen.entities.nodes.Company;
+import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class CompanyInvestEvent implements Serializable {
@@ -14,7 +15,7 @@ public class CompanyInvestEvent implements Serializable {
 
     public CompanyInvestEvent() {
         randomFarm = new RandomGeneratorFarm();
-        randIndex = new Random();
+        randIndex = new Random(DatagenParams.defaultSeed);
     }
 
     private void resetState(int seed) {

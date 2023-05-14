@@ -7,6 +7,7 @@ import java.util.Random;
 import ldbc.finbench.datagen.entities.edges.SignIn;
 import ldbc.finbench.datagen.entities.nodes.Account;
 import ldbc.finbench.datagen.entities.nodes.Medium;
+import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.util.GeneratorConfiguration;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
@@ -16,7 +17,7 @@ public class SignInEvent implements Serializable {
 
     public SignInEvent() {
         randomFarm = new RandomGeneratorFarm();
-        randIndex = new Random();
+        randIndex = new Random(DatagenParams.defaultSeed);
     }
 
     private void resetState(int seed) {

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Random;
 import ldbc.finbench.datagen.entities.edges.Withdraw;
 import ldbc.finbench.datagen.entities.nodes.Account;
+import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class WithdrawEvent implements Serializable {
@@ -14,7 +15,7 @@ public class WithdrawEvent implements Serializable {
 
     public WithdrawEvent() {
         randomFarm = new RandomGeneratorFarm();
-        randIndex = new Random();
+        randIndex = new Random(DatagenParams.defaultSeed);
     }
 
 
