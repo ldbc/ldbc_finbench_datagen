@@ -92,7 +92,8 @@ public class DateGenerator {
     }
 
     public long randomPersonToPersonDate(Random random, Person fromPerson, Person toPerson) {
-        long fromDate = Math.max(fromPerson.getCreationDate(), toPerson.getCreationDate()) + DatagenParams.activityDelta;
+        long fromDate =
+            Math.max(fromPerson.getCreationDate(), toPerson.getCreationDate()) + DatagenParams.activityDelta;
         return randomDate(random, fromDate, simulationEnd);
     }
 
