@@ -24,9 +24,10 @@ public class PersonGuaranteePerson implements DynamicActivity, Serializable {
 
     public static PersonGuaranteePerson createPersonGuaranteePerson(Random random, Person fromPerson, Person toPerson) {
         long creationDate = Dictionaries.dates.randomPersonToPersonDate(random, fromPerson, toPerson);
-        PersonGuaranteePerson personGuaranteePerson = new PersonGuaranteePerson(fromPerson,
-                                                                                toPerson, creationDate, 0, false);
-        fromPerson.getPersonGuaranteePeople().add(personGuaranteePerson);
+        PersonGuaranteePerson personGuaranteePerson =
+            new PersonGuaranteePerson(fromPerson, toPerson, creationDate, 0, false);
+        fromPerson.getGuaranteeSrc().add(personGuaranteePerson);
+        toPerson.getGuaranteeDst().add(personGuaranteePerson);
 
         return personGuaranteePerson;
     }

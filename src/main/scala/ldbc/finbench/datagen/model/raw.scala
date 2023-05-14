@@ -55,6 +55,7 @@ object raw {
   case class PersonApplyLoanRaw(
       `personId`: Long,
       `loanId`: Long,
+      loanAmount: Double,
       createTime: Long
   )
 
@@ -62,6 +63,7 @@ object raw {
   case class CompanyApplyLoanRaw(
       `companyId`: Long,
       `loanId`: Long,
+      loanAmount: Double,
       createTime: Long
   )
 
@@ -162,6 +164,7 @@ object raw {
   case class SignInRaw(
       `mediumId`: Long,
       `accountId`: Long,
+      multiplicityId: Long,
       createTime: Long,
       deleteTime: Long,
       isExplicitDeleted: Boolean

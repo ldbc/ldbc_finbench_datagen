@@ -5,6 +5,7 @@ import java.util.Random;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 import ldbc.finbench.datagen.entities.nodes.Company;
 import ldbc.finbench.datagen.entities.nodes.Loan;
+import ldbc.finbench.datagen.entities.nodes.PersonOrCompany;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 
 public class CompanyApplyLoan implements DynamicActivity, Serializable {
@@ -26,6 +27,9 @@ public class CompanyApplyLoan implements DynamicActivity, Serializable {
     public static CompanyApplyLoan createCompanyApplyLoan(long creationDate, Company company, Loan loan) {
         CompanyApplyLoan companyApplyLoan = new CompanyApplyLoan(company, loan, creationDate, 0, false);
         company.getCompanyApplyLoans().add(companyApplyLoan);
+        loan.setOwnerType(PersonOrCompany.COMPANY);
+        loan.setOwnerCompany(company);
+
         return companyApplyLoan;
     }
 

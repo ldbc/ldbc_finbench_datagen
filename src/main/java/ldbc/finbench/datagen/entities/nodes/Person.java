@@ -19,26 +19,35 @@ public class Person implements Serializable {
     private boolean isBlocked;
     private List<PersonOwnAccount> personOwnAccounts;
     private List<PersonInvestCompany> personInvestCompanies;
-    private List<PersonGuaranteePerson> personGuaranteePeople;
+    private List<PersonGuaranteePerson> guaranteeSrc;
+    private List<PersonGuaranteePerson> guaranteeDst;
     private List<PersonApplyLoan> personApplyLoans;
 
     public Person() {
         personOwnAccounts = new ArrayList<>();
         personInvestCompanies = new ArrayList<>();
-        personGuaranteePeople = new ArrayList<>();
+        guaranteeSrc = new ArrayList<>();
+        guaranteeDst = new ArrayList<>();
         personApplyLoans = new ArrayList<>();
     }
 
-    public Person(long personId, String personName, byte gender, long creationDate, boolean isBlocked) {
-        this.personId = personId;
-        this.personName = personName;
-        this.gender = gender;
-        personOwnAccounts = new ArrayList<>();
-        personInvestCompanies = new ArrayList<>();
-        personGuaranteePeople = new ArrayList<>();
-        personApplyLoans = new ArrayList<>();
-        this.creationDate = creationDate;
-        this.isBlocked = isBlocked;
+    public boolean canGuarantee(Person to) {
+        if (this.getPersonId() == to.getPersonId()) {
+            return false;
+        }
+        // can not guarantee the same person twice
+        for (PersonGuaranteePerson guarantee : guaranteeSrc) {
+            if (guarantee.getToPerson().getPersonId() == to.getPersonId()) {
+                return false;
+            }
+        }
+        // can not guarantee cyclically
+        for (PersonGuaranteePerson guarantee : guaranteeDst) {
+            if (guarantee.getFromPerson().getPersonId() == to.getPersonId()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public long getPersonId() {
@@ -89,12 +98,20 @@ public class Person implements Serializable {
         this.personInvestCompanies = personInvestCompanies;
     }
 
-    public List<PersonGuaranteePerson> getPersonGuaranteePeople() {
-        return personGuaranteePeople;
+    public List<PersonGuaranteePerson> getGuaranteeSrc() {
+        return guaranteeSrc;
     }
 
-    public void setPersonGuaranteePeople(List<PersonGuaranteePerson> personGuaranteePeople) {
-        this.personGuaranteePeople = personGuaranteePeople;
+    public void setGuaranteeSrc(List<PersonGuaranteePerson> guaranteeSrc) {
+        this.guaranteeSrc = guaranteeSrc;
+    }
+
+    public List<PersonGuaranteePerson> getGuaranteeDst() {
+        return guaranteeDst;
+    }
+
+    public void setGuaranteeDst(List<PersonGuaranteePerson> guaranteeDst) {
+        this.guaranteeDst = guaranteeDst;
     }
 
     public List<PersonApplyLoan> getPersonApplyLoans() {

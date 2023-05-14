@@ -27,15 +27,14 @@ public class PersonGuaranteeEvent implements Serializable {
     public List<PersonGuaranteePerson> personGuarantee(List<Person> persons, int blockId) {
         resetState(blockId);
         List<PersonGuaranteePerson> personGuaranteePeople = new ArrayList<>();
-        // TODO
         for (int i = 0; i < persons.size(); i++) {
-            Person p = persons.get(i);
-            int personIndex = randIndex.nextInt(persons.size());
-            PersonGuaranteePerson personGuaranteePerson = PersonGuaranteePerson.createPersonGuaranteePerson(
-                randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
-                p,
-                persons.get(personIndex));
-            personGuaranteePeople.add(personGuaranteePerson);
+            Person person = persons.get(i);
+            Person toPerson = persons.get(randIndex.nextInt(persons.size()));
+            if (person.canGuarantee(toPerson)) {
+                PersonGuaranteePerson personGuaranteePerson = PersonGuaranteePerson.createPersonGuaranteePerson(
+                    randomFarm.get(RandomGeneratorFarm.Aspect.DATE), person, toPerson);
+                personGuaranteePeople.add(personGuaranteePerson);
+            }
         }
         return personGuaranteePeople;
     }

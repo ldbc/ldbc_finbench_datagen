@@ -21,7 +21,7 @@ public class TransferEvent implements Serializable {
         randomFarm = new RandomGeneratorFarm();
         randIndex = new Random(DatagenParams.defaultSeed);
         shuffleRandom = new Random(DatagenParams.defaultSeed);
-        multiplicityDistribution = DatagenParams.getMultiplicityDistribution();
+        multiplicityDistribution = DatagenParams.getTsfMultiplicityDistribution();
         multiplicityDistribution.initialize();
     }
 

@@ -1,5 +1,5 @@
 package ldbc.finbench.datagen.entities.nodes;
 
-public enum AccountOwnerEnum {
+public enum PersonOrCompany {
     PERSON, COMPANY
 }

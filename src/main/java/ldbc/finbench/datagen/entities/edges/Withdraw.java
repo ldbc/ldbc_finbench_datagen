@@ -25,8 +25,9 @@ public class Withdraw implements DynamicActivity, Serializable {
 
     public static Withdraw createWithdraw(Random random, Account fromAccount, Account toAccount) {
         long creationDate = Dictionaries.dates.randomAccountToAccountDate(random, fromAccount, toAccount);
-        // TODO: calcu min delete date
-        Withdraw withdraw = new Withdraw(fromAccount, toAccount, creationDate, 0, false);
+        long deleteDate = Math.min(fromAccount.getDeletionDate(), toAccount.getDeletionDate());
+        boolean willDelete = fromAccount.isExplicitlyDeleted() && toAccount.isExplicitlyDeleted();
+        Withdraw withdraw = new Withdraw(fromAccount, toAccount, creationDate, deleteDate, willDelete);
         fromAccount.getWithdraws().add(withdraw);
 
         return withdraw;

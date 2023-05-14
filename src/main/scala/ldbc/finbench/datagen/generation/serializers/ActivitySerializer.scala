@@ -30,7 +30,7 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
   }
 
   def writeAccount(self: RDD[Account]): Unit = {
-    val rawAccount = self.map { a: Account => AccountRaw(a.getAccountId, a.getCreationDate, a.getDeletionDate, a.isBlocked, a.getType, a.getMaxInDegree, a.getMaxOutDegree, a.isExplicitlyDeleted, a.getAccountOwnerEnum.toString) }
+    val rawAccount = self.map { a: Account => AccountRaw(a.getAccountId, a.getCreationDate, a.getDeletionDate, a.isBlocked, a.getType, a.getMaxInDegree, a.getMaxOutDegree, a.isExplicitlyDeleted, a.getOwnerType.toString) }
     val df = spark.createDataFrame(rawAccount)
     df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/account")
   }
@@ -70,7 +70,7 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
 
   def writeSignIn(self: RDD[SignIn]): Unit = {
     val df = spark.createDataFrame(self.map { signIn =>
-      SignInRaw(signIn.getMedium.getMediumId, signIn.getAccount.getAccountId, signIn.getCreationDate, signIn.getDeletionDate, signIn.isExplicitlyDeleted)
+      SignInRaw(signIn.getMedium.getMediumId, signIn.getAccount.getAccountId, signIn.getMultiplicityId, signIn.getCreationDate, signIn.getDeletionDate, signIn.isExplicitlyDeleted)
     })
     df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/signIn")
   }
@@ -90,15 +90,15 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
   }
 
   def writePersonLoan(self: RDD[PersonApplyLoan]): Unit = {
-    val df = spark.createDataFrame(self.map { applyLoan =>
-      PersonApplyLoanRaw(applyLoan.getPerson.getPersonId, applyLoan.getLoan.getLoanId, applyLoan.getCreationDate)
+    val df = spark.createDataFrame(self.map { apply =>
+      PersonApplyLoanRaw(apply.getPerson.getPersonId, apply.getLoan.getLoanId, apply.getLoan.getLoanAmount, apply.getCreationDate)
     })
     df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/personApplyLoan")
   }
 
   def writeCompanyLoan(self: RDD[CompanyApplyLoan]): Unit = {
-    val df = spark.createDataFrame(self.map { applyLoan =>
-      CompanyApplyLoanRaw(applyLoan.getCompany.getCompanyId, applyLoan.getLoan.getLoanId, applyLoan.getCreationDate)
+    val df = spark.createDataFrame(self.map { apply =>
+      CompanyApplyLoanRaw(apply.getCompany.getCompanyId, apply.getLoan.getLoanId, apply.getLoan.getLoanAmount, apply.getCreationDate)
     })
     df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/companyApplyLoan")
   }

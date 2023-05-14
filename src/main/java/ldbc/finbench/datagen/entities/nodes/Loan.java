@@ -9,17 +9,22 @@ public class Loan implements Serializable {
     private long loanId;
     private double loanAmount;
     private double balance;
-    private List<Deposit> deposits;
     private long creationDate;
     private long maxDegree;
+
+    private PersonOrCompany ownerType;
+
+    private Person ownerPerson;
+    private Company ownerCompany;
+    private List<Deposit> deposits;
 
     public Loan(long loanId, double loanAmount, double balance, long creationDate, long maxDegree) {
         this.loanId = loanId;
         this.loanAmount = loanAmount;
         this.balance = balance;
-        deposits = new ArrayList<>();
         this.creationDate = creationDate;
         this.maxDegree = maxDegree;
+        deposits = new ArrayList<>();
     }
 
     public long getLoanId() {
@@ -46,14 +51,6 @@ public class Loan implements Serializable {
         this.balance = balance;
     }
 
-    public List<Deposit> getDeposits() {
-        return deposits;
-    }
-
-    public void setDeposits(List<Deposit> deposits) {
-        this.deposits = deposits;
-    }
-
     public long getCreationDate() {
         return creationDate;
     }
@@ -62,11 +59,44 @@ public class Loan implements Serializable {
         this.creationDate = creationDate;
     }
 
+    public PersonOrCompany getOwnerType() {
+        return ownerType;
+    }
+
+    public void setOwnerType(PersonOrCompany ownerType) {
+        this.ownerType = ownerType;
+    }
+
     public long getMaxDegree() {
         return maxDegree;
     }
 
     public void setMaxDegree(long maxDegree) {
         this.maxDegree = maxDegree;
+    }
+
+    public List<Deposit> getDeposits() {
+        return deposits;
+    }
+
+    public void setDeposits(List<Deposit> deposits) {
+        this.deposits = deposits;
+    }
+
+
+    public Person getOwnerPerson() {
+        return ownerPerson;
+    }
+
+    public void setOwnerPerson(Person ownerPerson) {
+        this.ownerPerson = ownerPerson;
+    }
+
+    public Company getOwnerCompany() {
+        return ownerCompany;
+    }
+
+    public void setOwnerCompany(Company ownerCompany) {
+        this.ownerCompany = ownerCompany;
     }
 }

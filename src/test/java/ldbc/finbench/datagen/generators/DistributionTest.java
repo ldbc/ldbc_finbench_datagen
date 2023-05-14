@@ -37,8 +37,8 @@ public class DistributionTest {
     @Test
     public void testPowerLawDegreeDistribution() {
         PowerLawFormulaDistribution inDegreeDist =
-            new PowerLawFormulaDistribution(DatagenParams.inDegreeRegressionFile, DatagenParams.minNumDegree,
-                                            DatagenParams.maxNumDegree);
+            new PowerLawFormulaDistribution(DatagenParams.inDegreeRegressionFile, DatagenParams.tsfMinNumDegree,
+                                            DatagenParams.tsfMaxNumDegree);
         inDegreeDist.initialize();
         System.out.println("\nGenerated InDegrees:");
         for (int i = 0; i < 1000; i++) {
@@ -47,8 +47,8 @@ public class DistributionTest {
         System.out.println();
 
         PowerLawFormulaDistribution outDegreeDist =
-            new PowerLawFormulaDistribution(DatagenParams.outDegreeRegressionFile, DatagenParams.minNumDegree,
-                                            DatagenParams.maxNumDegree);
+            new PowerLawFormulaDistribution(DatagenParams.outDegreeRegressionFile, DatagenParams.tsfMinNumDegree,
+                                            DatagenParams.tsfMaxNumDegree);
         outDegreeDist.initialize();
         System.out.println("\nGenerated OutDegrees:");
         for (int i = 0; i < 1000; i++) {
@@ -57,9 +57,9 @@ public class DistributionTest {
         System.out.println();
 
         PowerLawFormulaDistribution multiplicity =
-            new PowerLawFormulaDistribution(DatagenParams.multiplictyPowerlawRegressionFile,
-                                            DatagenParams.minMultiplicity,
-                                            DatagenParams.maxMultiplicity);
+            new PowerLawFormulaDistribution(DatagenParams.multiplictyPowerlawRegFile,
+                                            DatagenParams.tsfMinMultiplicity,
+                                            DatagenParams.tsfMaxMultiplicity);
         multiplicity.initialize();
         System.out.println("\nGenerated Multiplicity:");
         for (int i = 0; i < 1000; i++) {
