@@ -12,10 +12,11 @@ import scala.collection.JavaConverters._
 import scala.collection.SortedMap
 
 class ActivityGenerator() extends Serializable {
+  // TODO: Move the type definitions to the some common place
   type EitherPersonOrCompany = Either[Person, Company]
   type EitherPersonInvestOrCompanyInvest = Either[PersonInvestCompany, CompanyInvestCompany]
 
-  val blockSize = DatagenParams.blockSize
+  val blockSize: Int = DatagenParams.blockSize
   // Use a common account generator to maintain the degree distribution of the generators
   val accountGenerator = new AccountGenerator()
   val loanGenerator = new LoanGenerator()
