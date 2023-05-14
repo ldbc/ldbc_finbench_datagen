@@ -35,7 +35,8 @@ object GenerationStage extends DatagenStage with Logging {
     }
 
     SparkUI.job(implicitly[ClassTag[ActivitySimulator]].runtimeClass.getSimpleName, "serialize Finbench data") {
-      new ActivitySimulator(RawSink(config.getOutputDir, format, sparkPartitions), config).simulate()
+      val simulator = new ActivitySimulator(RawSink(config.getOutputDir, format, sparkPartitions), config)
+      simulator.simulate()
     }
   }
 
