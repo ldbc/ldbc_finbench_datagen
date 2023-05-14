@@ -70,7 +70,7 @@ public class DatagenParams {
 
             blockedAccountRatio = doubleConf(conf, "account.blockedAccountRatio");
 
-            maxAccountsPerOwner = intConf(conf, "account.own.maxAccounts");
+            maxAccountsPerOwner = intConf(conf, "own.maxAccounts");
 
             tsfDegreeDistribution = stringConf(conf, "transfer.degreeDistribution");
             tsfMinNumDegree = longConf(conf, "transfer.minNumDegree");
