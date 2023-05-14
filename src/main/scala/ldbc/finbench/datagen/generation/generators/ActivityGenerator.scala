@@ -83,23 +83,25 @@ class ActivityGenerator() extends Serializable {
   }
 
   def investEvent(personRDD: RDD[Person], companyRDD: RDD[Company]): RDD[EitherPersonInvestOrCompanyInvest] = {
+    val seedRandom = new scala.util.Random(DatagenParams.defaultSeed)
     val numInvestorsRandom = new scala.util.Random(DatagenParams.defaultSeed)
     val sampleRandom = new scala.util.Random(DatagenParams.defaultSeed)
     val personInvestGenerator = new PersonInvestEvent()
     val companyInvestGenerator = new CompanyInvestEvent()
+
     // Sample some companies to be invested
     val investedCompanyRDD = companyRDD.sample(withReplacement = false, DatagenParams.companyInvestedFraction, DatagenParams.defaultSeed)
     // Merge to either
     val personEitherRDD: RDD[EitherPersonOrCompany] = personRDD.map(person => Left(person))
     val companyEitherRDD: RDD[EitherPersonOrCompany] = companyRDD.map(company => Right(company))
     val mergedEither = personEitherRDD.union(companyEitherRDD).collect().toList
+
     // TODO: optimize the Spark process when large scale
     investedCompanyRDD.map(investedCompany => {
-      val blockId = TaskContext.getPartitionId()
-      numInvestorsRandom.setSeed(blockId)
-      sampleRandom.setSeed(blockId)
-      personInvestGenerator.resetState(blockId)
-      companyInvestGenerator.resetState(blockId)
+      numInvestorsRandom.setSeed(seedRandom.nextInt())
+      sampleRandom.setSeed(seedRandom.nextInt())
+      personInvestGenerator.resetState(seedRandom.nextInt())
+      companyInvestGenerator.resetState(seedRandom.nextInt())
 
       val numInvestors = numInvestorsRandom.nextInt(DatagenParams.maxInvestors - DatagenParams.minInvestors + 1) + DatagenParams.minInvestors
       // Note: check if fraction 0.1 has enough numInvestors to take
