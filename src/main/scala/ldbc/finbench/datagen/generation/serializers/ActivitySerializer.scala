@@ -49,6 +49,13 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
     df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/companyOwnAccount")
   }
 
+  def writeInvest(self: RDD[Either[PersonInvestCompany, CompanyInvestCompany]]): Unit = {
+    val personInvest = self.filter(_.isLeft).map(_.left.get)
+    val companyInvest = self.filter(_.isRight).map(_.right.get)
+    writePersonInvest(personInvest)
+    writeCompanyInvest(companyInvest)
+  }
+
   def writePersonInvest(self: RDD[PersonInvestCompany]): Unit = {
     val df = spark.createDataFrame(self.map { pic =>
       PersonInvestCompanyRaw(pic.getPerson.getPersonId, pic.getCompany.getCompanyId, pic.getCreationDate, pic.getRatio)

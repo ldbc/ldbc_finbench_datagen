@@ -38,7 +38,9 @@ public class DatagenParams {
     public static int numYears = 0;
     public static String outputDir;
     public static int startYear = 0;
-    public static double companyInvestedByPersonFraction = 0.0;
+    public static double companyInvestedFraction = 0.0;
+    public static int minInvestors = 0;
+    public static int maxInvestors = 0;
     public static double companyHasWorkerFraction = 0.0;
     public static double accountSignedInFraction = 0.0;
     public static double baseProbCorrelated = 0.0;
@@ -57,7 +59,9 @@ public class DatagenParams {
             startYear = intConf(conf, "generator.startYear");
             numYears = intConf(conf, "generator.numYears");
             delta = intConf(conf, "generator.deleteDelta");
+
             blockedAccountRatio = doubleConf(conf, "account.blockedAccountRatio");
+
             degreeDistribution = stringConf(conf, "transfer.degreeDistribution");
             minNumDegree = longConf(conf, "transfer.minNumDegree");
             maxNumDegree = longConf(conf, "transfer.maxNumDegree");
@@ -66,7 +70,11 @@ public class DatagenParams {
             maxMultiplicity = intConf(conf, "transfer.maxMultiplicity");
             baseProbCorrelated = doubleConf(conf, "transfer.baseProbCorrelated");
             limitProCorrelated = doubleConf(conf, "transfer.limitProCorrelated");
-            companyInvestedByPersonFraction = doubleConf(conf, "invest.companyInvestedByPersonFraction");
+
+            companyInvestedFraction = doubleConf(conf, "invest.companyInvestedFraction");
+            minInvestors = intConf(conf, "invest.minInvestors");
+            maxInvestors = intConf(conf, "invest.maxInvestors");
+
             companyHasWorkerFraction = doubleConf(conf, "workIn.companyHasWorkerFraction");
             accountSignedInFraction = doubleConf(conf, "signIn.accountSignedInFraction");
 

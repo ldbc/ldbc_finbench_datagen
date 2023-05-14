@@ -16,20 +16,28 @@ public class PersonInvestCompany implements DynamicActivity, Serializable {
     private boolean isExplicitlyDeleted;
 
     public PersonInvestCompany(Person person, Company company,
-                               long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
+                               long creationDate, long deletionDate, double ratio, boolean isExplicitlyDeleted) {
         this.person = person;
         this.company = company;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
+        this.ratio = ratio;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static PersonInvestCompany createPersonInvestCompany(Random random, Person person, Company company) {
-        long creationDate = Dictionaries.dates.randomPersonToCompanyDate(random, person, company);
-        PersonInvestCompany personInvestCompany = new PersonInvestCompany(person, company, creationDate, 0, false);
+    public static PersonInvestCompany createPersonInvestCompany(Random dateRandom, Random ratioRandom, Person person,
+                                                                Company company) {
+        long creationDate = Dictionaries.dates.randomPersonToCompanyDate(dateRandom, person, company);
+        double ratio = ratioRandom.nextDouble();
+        PersonInvestCompany personInvestCompany = new PersonInvestCompany(person, company, creationDate, 0, ratio,
+                                                                          false);
         person.getPersonInvestCompanies().add(personInvestCompany);
 
         return personInvestCompany;
+    }
+
+    public void scaleRatio(double sum) {
+        this.ratio = this.ratio / sum;
     }
 
     public double getRatio() {

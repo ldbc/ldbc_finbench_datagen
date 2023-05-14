@@ -4,7 +4,6 @@ import ldbc.finbench.datagen.entities.edges._
 import ldbc.finbench.datagen.entities.nodes._
 import ldbc.finbench.datagen.generation.DatagenParams
 import ldbc.finbench.datagen.generation.events._
-import ldbc.finbench.datagen.util.GeneratorConfiguration
 import org.apache.spark.TaskContext
 import org.apache.spark.rdd.RDD
 
@@ -13,6 +12,9 @@ import scala.collection.JavaConverters._
 import scala.collection.SortedMap
 
 class ActivityGenerator() extends Serializable {
+  type EitherPersonOrCompany = Either[Person, Company]
+  type EitherPersonInvestOrCompanyInvest = Either[PersonInvestCompany, CompanyInvestCompany]
+
   val blockSize = DatagenParams.blockSize
   // Use a common account generator to maintain the degree distribution of the generators
   val accountGenerator = new AccountGenerator()
@@ -23,10 +25,10 @@ class ActivityGenerator() extends Serializable {
     val blocks = personRDD.zipWithUniqueId().map { case (v, k) => (k / blockSize, (k, v)) }
 
     val personOwnAccount = blocks.combineByKeyWithClassTag(
-        personByRank => SortedMap(personByRank),
-        (map: SortedMap[Long, Person], personByRank) => map + personByRank,
-        (a: SortedMap[Long, Person], b: SortedMap[Long, Person]) => a ++ b
-      )
+      personByRank => SortedMap(personByRank),
+      (map: SortedMap[Long, Person], personByRank) => map + personByRank,
+      (a: SortedMap[Long, Person], b: SortedMap[Long, Person]) => a ++ b
+    )
       .mapPartitions(groups => {
         val personRegisterGen = new PersonRegisterEvent
 
@@ -79,42 +81,42 @@ class ActivityGenerator() extends Serializable {
     companyOwnAccount
   }
 
-  def personInvestEvent(personRDD: RDD[Person], companyRDD: RDD[Company]): RDD[PersonInvestCompany] = {
-    val fraction = DatagenParams.companyInvestedByPersonFraction
+  def investEvent(personRDD: RDD[Person], companyRDD: RDD[Company]): RDD[EitherPersonInvestOrCompanyInvest] = {
+    val numInvestorsRandom = new scala.util.Random(DatagenParams.defaultSeed)
+    val sampleRandom = new scala.util.Random(DatagenParams.defaultSeed)
+    val personInvestGenerator = new PersonInvestEvent()
+    val companyInvestGenerator = new CompanyInvestEvent()
+    // Sample some companies to be invested
+    val investedCompanyRDD = companyRDD.sample(withReplacement = false, DatagenParams.companyInvestedFraction, DatagenParams.defaultSeed)
+    // Merge to either
+    val personEitherRDD: RDD[EitherPersonOrCompany] = personRDD.map(person => Left(person))
+    val companyEitherRDD: RDD[EitherPersonOrCompany] = companyRDD.map(company => Right(company))
+    val mergedEither = personEitherRDD.union(companyEitherRDD).collect().toList
+    // TODO: optimize the Spark process when large scale
+    investedCompanyRDD.map(investedCompany => {
+      val blockId = TaskContext.getPartitionId()
+      numInvestorsRandom.setSeed(blockId)
+      sampleRandom.setSeed(blockId)
+      personInvestGenerator.resetState(blockId)
+      companyInvestGenerator.resetState(blockId)
 
-    val personParts = personRDD.partitions.length
-    val companySampleList = new util.ArrayList[util.List[Company]](personParts)
-    for (i <- 1 to personParts) {
-      // TODO: consider sample
-      companySampleList.add(companyRDD.sample(withReplacement = false, fraction, DatagenParams.defaultSeed).collect().toList.asJava)
+      val numInvestors = numInvestorsRandom.nextInt(DatagenParams.maxInvestors - DatagenParams.minInvestors + 1) + DatagenParams.minInvestors
+      // Note: check if fraction 0.1 has enough numInvestors to take
+      val investRels = sampleRandom.shuffle(mergedEither).take(numInvestors).map {
+        case Left(person) => Left(personInvestGenerator.personInvest(person, investedCompany))
+        case Right(company) => Right(companyInvestGenerator.companyInvest(company, investedCompany))
+      }
+      val ratioSum = investRels.map {
+        case Left(personInvest) => personInvest.getRatio
+        case Right(companyInvest) => companyInvest.getRatio
+      }.sum
+      investRels.foreach {
+        case Left(personInvest) => personInvest.scaleRatio(ratioSum)
+        case Right(companyInvest) => companyInvest.scaleRatio(ratioSum)
+      }
+      investRels
     }
-
-    val personInvestRels = personRDD.mapPartitions(persons => {
-      val personList = new util.ArrayList[Person]()
-      persons.foreach(personList.add)
-      val personInvestGenerator = new PersonInvestEvent()
-      val part = TaskContext.getPartitionId()
-      val personInvestList = personInvestGenerator.personInvest(personList, companySampleList.get(part), part)
-      for {
-        personInvest <- personInvestList.iterator().asScala
-      } yield personInvest
-    })
-
-    personInvestRels
-  }
-
-  def companyInvestEvent(companyRDD: RDD[Company]): RDD[CompanyInvestCompany] = {
-    val companyInvestRels = companyRDD.mapPartitions(companies => {
-      val companyList = new util.ArrayList[Company]()
-      companies.foreach(companyList.add)
-      val companyInvestGenerator = new CompanyInvestEvent()
-      val companyInvestList = companyInvestGenerator.companyInvest(companyList, TaskContext.get.partitionId)
-      for {
-        companyInvest <- companyInvestList.iterator().asScala
-      } yield companyInvest
-    })
-
-    companyInvestRels
+    ).flatMap(investRels => investRels)
   }
 
   def workInEvent(personRDD: RDD[Person], companyRDD: RDD[Company]): RDD[WorkIn] = {

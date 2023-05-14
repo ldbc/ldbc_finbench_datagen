@@ -18,12 +18,19 @@ public class CompanyInvestEvent implements Serializable {
         randIndex = new Random(DatagenParams.defaultSeed);
     }
 
-    private void resetState(int seed) {
+    public void resetState(int seed) {
         randomFarm.resetRandomGenerators(seed);
         randIndex.setSeed(seed);
     }
 
-    public List<CompanyInvestCompany> companyInvest(List<Company> companies, int blockId) {
+    public CompanyInvestCompany companyInvest(Company investor, Company invested) {
+        return CompanyInvestCompany.createCompanyInvestCompany(randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
+                                                               randomFarm.get(RandomGeneratorFarm.Aspect.INVEST_RATIO),
+                                                               investor, invested);
+    }
+
+    // Note: not used
+    public List<CompanyInvestCompany> companyInvestBatch(List<Company> companies, int blockId) {
         resetState(blockId);
         List<CompanyInvestCompany> companyInvestCompanies = new ArrayList<>();
         // TODO: person can invest multiple companies
@@ -33,6 +40,7 @@ public class CompanyInvestEvent implements Serializable {
             int companyIndex = randIndex.nextInt(companies.size());
             CompanyInvestCompany companyInvestCompany = CompanyInvestCompany.createCompanyInvestCompany(
                 randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
+                randomFarm.get(RandomGeneratorFarm.Aspect.INVEST_RATIO),
                 c,
                 companies.get(companyIndex));
             companyInvestCompanies.add(companyInvestCompany);
