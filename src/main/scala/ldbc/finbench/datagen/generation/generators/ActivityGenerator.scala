@@ -188,7 +188,7 @@ class ActivityGenerator(conf: GeneratorConfiguration) extends Serializable {
       val personLoanEvent = new PersonLoanEvent
       val personList = new util.ArrayList[Person]()
       persons.foreach(personList.add)
-      val loanList = personLoanEvent.personLoan(personList, loanGenerator, TaskContext.getPartitionId(), conf)
+      val loanList = personLoanEvent.personLoan(personList, loanGenerator, TaskContext.getPartitionId())
       for {applyLoan <- loanList.iterator().asScala} yield applyLoan
     })
   }
@@ -198,7 +198,7 @@ class ActivityGenerator(conf: GeneratorConfiguration) extends Serializable {
       val companyLoanEvent = new CompanyLoanEvent
       val companyList = new util.ArrayList[Company]()
       companies.foreach(companyList.add)
-      val loanList = companyLoanEvent.companyLoan(companyList, loanGenerator, TaskContext.getPartitionId(), conf)
+      val loanList = companyLoanEvent.companyLoan(companyList, loanGenerator, TaskContext.getPartitionId())
       for {
         applyLoan <- loanList.iterator().asScala
       } yield applyLoan

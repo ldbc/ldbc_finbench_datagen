@@ -39,11 +39,9 @@ class ActivitySimulator(sink: RawSink, conf: GeneratorConfiguration)(implicit sp
 
     // Merge accounts vertices registered by persons and companies
     // TODO: can not coalesce when large scale data generated in cluster
-    val accountRdd = personOwnAccountInfo.map(personOwnAccountRaw => {
-      personOwnAccountRaw.getAccount
-    }).union(companyOwnAccountInfo.map(companyOwnAccountRaw => {
-      companyOwnAccountRaw.getAccount
-    })).coalesce(1)
+    val accountRdd = personOwnAccountInfo.map(personOwnAccount => personOwnAccount.getAccount)
+      .union(companyOwnAccountInfo.map(companyOwnAccount => companyOwnAccount.getAccount))
+      .coalesce(1)
 
     // simulate person invest company event
     val personInvestRdd = activityGenerator.personInvestEvent(personRdd, companyRdd)
@@ -70,13 +68,9 @@ class ActivitySimulator(sink: RawSink, conf: GeneratorConfiguration)(implicit sp
     val companyLoanRdd = activityGenerator.companyLoanEvent(companyRdd)
 
     // Merge accounts vertices registered by persons and companies
-    val loanRdd = personLoanRdd.map(companyLoan => {
-      new Loan(companyLoan.getLoan.getLoanId, companyLoan.getLoan.getLoanAmount, companyLoan.getLoan.getBalance, companyLoan.getCreationDate, 10)
-    }).union(
-      companyLoanRdd.map(companyLoan => {
-        new Loan(companyLoan.getLoan.getLoanId, companyLoan.getLoan.getLoanAmount, companyLoan.getLoan.getBalance, companyLoan.getCreationDate, 10)
-      })
-    ).coalesce(1)
+    val loanRdd = personLoanRdd.map(personLoan => personLoan.getLoan)
+      .union(companyLoanRdd.map(companyLoan => companyLoan.getLoan))
+      .coalesce(1)
 
     // simulate transfer event
     val transferRdd = activityGenerator.transferEvent(accountRdd)
