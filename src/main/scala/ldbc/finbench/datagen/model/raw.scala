@@ -162,6 +162,7 @@ object raw {
   case class SignInRaw(
       `mediumId`: Long,
       `accountId`: Long,
+      multiplicityId: Long,
       createTime: Long,
       deleteTime: Long,
       isExplicitDeleted: Boolean

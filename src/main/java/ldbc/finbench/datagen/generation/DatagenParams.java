@@ -43,6 +43,7 @@ public class DatagenParams {
     public static int maxInvestors = 0;
     public static double companyHasWorkerFraction = 0.0;
     public static double accountSignedInFraction = 0.0;
+    public static int maxSignInPerPair = 0;
     public static double baseProbCorrelated = 0.0;
     public static double limitProCorrelated = 0.0;
 
@@ -77,6 +78,7 @@ public class DatagenParams {
 
             companyHasWorkerFraction = doubleConf(conf, "workIn.companyHasWorkerFraction");
             accountSignedInFraction = doubleConf(conf, "signIn.accountSignedInFraction");
+            maxSignInPerPair = intConf(conf, "signIn.maxSignInPerPair");
 
             System.out.println(" ... Num Accounts " + (numPersons + numCompanies));
             System.out.println(" ... Start Year " + startYear);

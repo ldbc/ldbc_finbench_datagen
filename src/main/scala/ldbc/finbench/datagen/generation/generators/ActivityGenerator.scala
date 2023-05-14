@@ -24,6 +24,7 @@ class ActivityGenerator() extends Serializable {
 
   def personRegisterEvent(personRDD: RDD[Person]): RDD[PersonOwnAccount] = {
     val blocks = personRDD.zipWithUniqueId().map { case (v, k) => (k / blockSize, (k, v)) }
+    val personRegisterGen = new PersonRegisterEvent
 
     val personOwnAccount = blocks.combineByKeyWithClassTag(
       personByRank => SortedMap(personByRank),
@@ -31,15 +32,8 @@ class ActivityGenerator() extends Serializable {
       (a: SortedMap[Long, Person], b: SortedMap[Long, Person]) => a ++ b
     )
       .mapPartitions(groups => {
-        val personRegisterGen = new PersonRegisterEvent
-
         val personRegisterGroups = for {(block, persons) <- groups} yield {
-          val personList = new util.ArrayList[Person](persons.size)
-          for (p <- persons.values) {
-            personList.add(p)
-          }
-
-          personRegisterGen.personRegister(personList, accountGenerator, block.toInt)
+          personRegisterGen.personRegister(persons.values.toList.asJava, accountGenerator, block.toInt)
         }
 
         for {
@@ -51,34 +45,24 @@ class ActivityGenerator() extends Serializable {
   }
 
   def companyRegisterEvent(companyRDD: RDD[Company]): RDD[CompanyOwnAccount] = {
-    val blocks = companyRDD
-      .zipWithUniqueId()
-      .map(row => (row._2, row._1))
-      .map { case (k, v) => (k / blockSize, (k, v)) }
+    val blocks = companyRDD.zipWithUniqueId().map(row => (row._2, row._1)).map { case (k, v) => (k / blockSize, (k, v)) }
+    val companyRegisterGen = new CompanyRegisterEvent
 
-    val companyOwnAccount =
-      blocks
-        .combineByKeyWithClassTag(
-          companyById => SortedMap(companyById),
-          (map: SortedMap[Long, Company], companyById) => map + companyById,
-          (a: SortedMap[Long, Company], b: SortedMap[Long, Company]) => a ++ b
-        )
-        .mapPartitions(groups => {
-          val companyRegisterGen = new CompanyRegisterEvent
+    val companyOwnAccount = blocks.combineByKeyWithClassTag(
+      companyById => SortedMap(companyById),
+      (map: SortedMap[Long, Company], companyById) => map + companyById,
+      (a: SortedMap[Long, Company], b: SortedMap[Long, Company]) => a ++ b
+    )
+      .mapPartitions(groups => {
+        val companyRegisterGroups = for {(block, companies) <- groups} yield {
+          companyRegisterGen.companyRegister(companies.values.toList.asJava, accountGenerator, block.toInt)
+        }
 
-          val companyRegisterGroups = for {(block, companies) <- groups} yield {
-            val companyList = new util.ArrayList[Company](companies.size)
-            for (p <- companies.values) {
-              companyList.add(p)
-            }
-            companyRegisterGen.companyRegister(companyList, accountGenerator, block.toInt)
-          }
-
-          for {
-            companyOwnAccounts <- companyRegisterGroups
-            companyOwnAccount <- companyOwnAccounts.iterator().asScala
-          } yield companyOwnAccount
-        })
+        for {
+          companyOwnAccounts <- companyRegisterGroups
+          companyOwnAccount <- companyOwnAccounts.iterator().asScala
+        } yield companyOwnAccount
+      })
     companyOwnAccount
   }
 
@@ -146,20 +130,18 @@ class ActivityGenerator() extends Serializable {
   }
 
   def signInEvent(mediumRDD: RDD[Medium], accountRDD: RDD[Account]): RDD[SignIn] = {
-    val fraction = DatagenParams.accountSignedInFraction
+    val sampleRandom = new scala.util.Random(DatagenParams.defaultSeed)
     val mediumParts = mediumRDD.partitions.length
     val accountSampleList = new util.ArrayList[util.List[Account]](mediumParts)
     for (i <- 1 to mediumParts) {
-      // TODO: consider sample
-      accountSampleList.add(accountRDD.collect().toList.asJava)
+      val sampleAccounts = accountRDD.sample(withReplacement = false, DatagenParams.accountSignedInFraction/mediumParts, sampleRandom.nextLong())
+      accountSampleList.add(sampleAccounts.collect().toList.asJava)
     }
 
+    val signGenerator = new SignInEvent()
     val signRels = mediumRDD.mapPartitions(mediums => {
-      val mediumList = new util.ArrayList[Medium]()
-      mediums.foreach(mediumList.add)
-      val signGenerator = new SignInEvent()
-      val part = TaskContext.getPartitionId()
-      val signInList = signGenerator.signIn(mediumList, accountSampleList.get(part), part)
+      val partitionId = TaskContext.getPartitionId()
+      val signInList = signGenerator.signIn(mediums.toList.asJava, accountSampleList.get(partitionId), partitionId)
       for {
         signIn <- signInList.iterator().asScala
       } yield signIn

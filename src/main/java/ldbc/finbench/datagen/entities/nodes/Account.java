@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import ldbc.finbench.datagen.entities.edges.Repay;
+import ldbc.finbench.datagen.entities.edges.SignIn;
 import ldbc.finbench.datagen.entities.edges.Transfer;
 import ldbc.finbench.datagen.entities.edges.Withdraw;
 
@@ -24,12 +25,14 @@ public class Account implements Serializable {
     private List<Transfer> transferOuts;
     private List<Withdraw> withdraws;
     private List<Repay> repays;
+    private List<SignIn> signIns;
 
     public Account() {
         transferIns = new ArrayList<>();
         transferOuts = new ArrayList<>();
         withdraws = new ArrayList<>();
         repays = new ArrayList<>();
+        signIns = new ArrayList<>();
     }
 
     public long getAvaialbleInDegree() {
@@ -159,5 +162,13 @@ public class Account implements Serializable {
 
     public void setCompanyOwner(Company companyOwner) {
         this.companyOwner = companyOwner;
+    }
+
+    public List<SignIn> getSignIns() {
+        return signIns;
+    }
+
+    public void setSignIns(List<SignIn> signIns) {
+        this.signIns = signIns;
     }
 }
