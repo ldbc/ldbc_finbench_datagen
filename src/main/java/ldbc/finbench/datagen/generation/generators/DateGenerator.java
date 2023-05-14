@@ -65,10 +65,6 @@ public class DateGenerator {
         return randomDate(random, simulationStart, simulationEnd);
     }
 
-    public Long randomLoanCreationDate(Random random) {
-        return randomDate(random, simulationStart, simulationEnd);
-    }
-
     public long randomPersonToAccountDate(Random random, Person person, Account account) {
         long fromDate = Math.max(person.getCreationDate(), account.getCreationDate()) + DatagenParams.activityDelta;
         return randomDate(random, fromDate, simulationEnd);
@@ -132,10 +128,11 @@ public class DateGenerator {
         return randomDate(random, fromDate, simulationEnd);
     }
 
+    // Not used
+    // TODO: if generated value outside the valid bound just pick the midpoint, this can be handled better.
     public long powerLawDeleteDate(Random random, long minDate, long maxDate) {
         long deletionDate =
             (long) (minDate + powerLawActivityDeleteDistribution.nextDouble(random.nextDouble(), random));
-        // TODO: if generated value outside the valid bound just pick the midpoint, this can be handled better.
         if (deletionDate > maxDate) {
             deletionDate = minDate + (maxDate - minDate) / 2;
         }
