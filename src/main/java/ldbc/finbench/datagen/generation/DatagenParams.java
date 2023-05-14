@@ -25,7 +25,8 @@ public class DatagenParams {
     public static int startYear = 0;
     public static int numYears = 0;
     public static int blockSize = 0;
-    public static int delta = 0;
+    public static long deleteDelta = 0;
+    public static long activityDelta = 0;
     public static int maxAccountsPerOwner = 0;
     public static String tsfDegreeDistribution;
     public static String tsfMultiplicityDistribution;
@@ -69,7 +70,8 @@ public class DatagenParams {
             outputDir = stringConf(conf, "generator.outputDir");
             startYear = intConf(conf, "generator.startYear");
             numYears = intConf(conf, "generator.numYears");
-            delta = intConf(conf, "generator.deleteDelta");
+            deleteDelta = longConf(conf, "generator.deleteDelta"); // 10h by default
+            activityDelta = longConf(conf, "generator.activityDelta"); // 3600s/1h by default
 
             blockedAccountRatio = doubleConf(conf, "account.blockedAccountRatio");
 

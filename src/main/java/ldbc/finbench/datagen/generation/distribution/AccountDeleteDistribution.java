@@ -75,7 +75,7 @@ public class AccountDeleteDistribution implements Serializable {
         }
     }
 
-    public boolean isDeleted(Random random, long maxKnows) {
-        return random.nextDouble() < distribution[(int) maxKnows];
+    public boolean isDeleted(Random random, long maxDegree) {
+        return random.nextDouble() < distribution[(int) maxDegree];
     }
 }
