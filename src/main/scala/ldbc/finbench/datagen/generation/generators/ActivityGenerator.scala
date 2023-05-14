@@ -151,11 +151,9 @@ class ActivityGenerator() extends Serializable {
   }
 
   def personGuaranteeEvent(personRDD: RDD[Person]): RDD[PersonGuaranteePerson] = {
+    val personGuaranteeEvent = new PersonGuaranteeEvent
     personRDD.mapPartitions(persons => {
-      val personGuaranteeEvent = new PersonGuaranteeEvent
-      val personList = new util.ArrayList[Person]()
-      persons.foreach(personList.add)
-      val guaranteeList = personGuaranteeEvent.personGuarantee(personList, TaskContext.getPartitionId())
+      val guaranteeList = personGuaranteeEvent.personGuarantee(persons.toList.asJava, TaskContext.getPartitionId())
       for {
         guarantee <- guaranteeList.iterator().asScala
       } yield guarantee
@@ -163,11 +161,9 @@ class ActivityGenerator() extends Serializable {
   }
 
   def companyGuaranteeEvent(companyRDD: RDD[Company]): RDD[CompanyGuaranteeCompany] = {
+    val companyGuaranteeEvent = new CompanyGuaranteeEvent
     companyRDD.mapPartitions(companies => {
-      val companyGuaranteeEvent = new CompanyGuaranteeEvent
-      val companyList = new util.ArrayList[Company]()
-      companies.foreach(companyList.add)
-      val guaranteeList = companyGuaranteeEvent.companyGuarantee(companyList, TaskContext.getPartitionId())
+      val guaranteeList = companyGuaranteeEvent.companyGuarantee(companies.toList.asJava, TaskContext.getPartitionId())
       for {
         guarantee <- guaranteeList.iterator().asScala
       } yield guarantee

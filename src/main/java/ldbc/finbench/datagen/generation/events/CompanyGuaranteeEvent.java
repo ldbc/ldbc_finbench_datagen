@@ -27,16 +27,14 @@ public class CompanyGuaranteeEvent implements Serializable {
     public List<CompanyGuaranteeCompany> companyGuarantee(List<Company> companies, int blockId) {
         resetState(blockId);
         List<CompanyGuaranteeCompany> companyGuaranteeCompanies = new ArrayList<>();
-
-        // TODO
         for (int i = 0; i < companies.size(); i++) {
-            Company c = companies.get(i);
-            int companyIndex = randIndex.nextInt(companies.size());
-            CompanyGuaranteeCompany companyGuaranteeCompany = CompanyGuaranteeCompany.createCompanyGuaranteeCompany(
-                randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
-                c,
-                companies.get(companyIndex));
-            companyGuaranteeCompanies.add(companyGuaranteeCompany);
+            Company company = companies.get(i);
+            Company toCompany = companies.get(randIndex.nextInt(companies.size()));
+            if (company.canGuarantee(toCompany)) {
+                CompanyGuaranteeCompany companyGuaranteeCompany = CompanyGuaranteeCompany.createCompanyGuaranteeCompany(
+                    randomFarm.get(RandomGeneratorFarm.Aspect.DATE), company, toCompany);
+                companyGuaranteeCompanies.add(companyGuaranteeCompany);
+            }
         }
         return companyGuaranteeCompanies;
     }

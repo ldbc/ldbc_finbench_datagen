@@ -57,16 +57,12 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     // simulate person work in company event
     val workInRdd = activityGenerator.workInEvent(personRdd, companyRdd)
 
-    // simulate person guarantee person event
+    // simulate person guarantee person event and company guarantee company event
     val personGuaranteeRdd = activityGenerator.personGuaranteeEvent(personRdd)
-
-    // simulate company guarantee company event
     val companyGuaranteeRdd = activityGenerator.companyGuaranteeEvent(companyRdd)
 
-    // simulate person apply loans event
+    // simulate person apply loans event and company apply loans event
     val personLoanRdd = activityGenerator.personLoanEvent(personRdd)
-
-    // simulate company apply loans event
     val companyLoanRdd = activityGenerator.companyLoanEvent(companyRdd)
 
     // Merge accounts vertices registered by persons and companies

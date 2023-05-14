@@ -7,6 +7,7 @@ import ldbc.finbench.datagen.entities.edges.CompanyApplyLoan;
 import ldbc.finbench.datagen.entities.edges.CompanyGuaranteeCompany;
 import ldbc.finbench.datagen.entities.edges.CompanyInvestCompany;
 import ldbc.finbench.datagen.entities.edges.CompanyOwnAccount;
+import ldbc.finbench.datagen.entities.edges.PersonGuaranteePerson;
 
 public class Company implements Serializable {
     private long companyId;
@@ -16,25 +17,35 @@ public class Company implements Serializable {
     private boolean isBlocked;
     private List<CompanyOwnAccount> companyOwnAccounts;
     private List<CompanyInvestCompany> companyInvestCompanies;
-    private List<CompanyGuaranteeCompany> companyGuaranteeCompanies;
+    private List<CompanyGuaranteeCompany> guaranteeSrc;
+    private List<CompanyGuaranteeCompany> guaranteeDst;
     private List<CompanyApplyLoan> companyApplyLoans;
 
     public Company() {
         companyOwnAccounts = new ArrayList<>();
         companyInvestCompanies = new ArrayList<>();
-        companyGuaranteeCompanies = new ArrayList<>();
+        guaranteeSrc = new ArrayList<>();
+        guaranteeDst = new ArrayList<>();
         companyApplyLoans = new ArrayList<>();
     }
 
-    public Company(long companyId, String companyName, long creationDate, boolean isBlocked) {
-        this.companyId = companyId;
-        this.companyName = companyName;
-        companyOwnAccounts = new ArrayList<>();
-        companyInvestCompanies = new ArrayList<>();
-        companyGuaranteeCompanies = new ArrayList<>();
-        companyApplyLoans = new ArrayList<>();
-        this.creationDate = creationDate;
-        this.isBlocked = isBlocked;
+    public boolean canGuarantee(Company to) {
+        if (this.getCompanyId() == to.getCompanyId()) {
+            return false;
+        }
+        // can not guarantee the same company twice
+        for (CompanyGuaranteeCompany guarantee : guaranteeSrc) {
+            if (guarantee.getToCompany().getCompanyId() == to.getCompanyId()) {
+                return false;
+            }
+        }
+        // can not guarantee cyclically
+        for (CompanyGuaranteeCompany guarantee : guaranteeDst) {
+            if (guarantee.getFromCompany().getCompanyId() == to.getCompanyId()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public long getCompanyId() {
@@ -69,12 +80,20 @@ public class Company implements Serializable {
         this.companyInvestCompanies = companyInvestCompanies;
     }
 
-    public List<CompanyGuaranteeCompany> getCompanyGuaranteeCompanies() {
-        return companyGuaranteeCompanies;
+    public List<CompanyGuaranteeCompany> getGuaranteeSrc() {
+        return guaranteeSrc;
     }
 
-    public void setCompanyGuaranteeCompanies(List<CompanyGuaranteeCompany> companyGuaranteeCompanies) {
-        this.companyGuaranteeCompanies = companyGuaranteeCompanies;
+    public void setGuaranteeSrc(List<CompanyGuaranteeCompany> guaranteeSrc) {
+        this.guaranteeSrc = guaranteeSrc;
+    }
+
+    public List<CompanyGuaranteeCompany> getGuaranteeDst() {
+        return guaranteeDst;
+    }
+
+    public void setGuaranteeDst(List<CompanyGuaranteeCompany> guaranteeDst) {
+        this.guaranteeDst = guaranteeDst;
     }
 
     public List<CompanyApplyLoan> getCompanyApplyLoans() {

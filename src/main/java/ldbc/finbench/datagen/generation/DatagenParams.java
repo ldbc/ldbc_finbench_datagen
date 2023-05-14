@@ -78,7 +78,7 @@ public class DatagenParams {
 
             companyHasWorkerFraction = doubleConf(conf, "workIn.companyHasWorkerFraction");
             accountSignedInFraction = doubleConf(conf, "signIn.accountSignedInFraction");
-            maxSignInPerPair = intConf(conf, "signIn.maxSignInPerPair");
+            maxSignInPerPair = intConf(conf, "signIn.maxMultiplicity");
 
             System.out.println(" ... Num Accounts " + (numPersons + numCompanies));
             System.out.println(" ... Start Year " + startYear);

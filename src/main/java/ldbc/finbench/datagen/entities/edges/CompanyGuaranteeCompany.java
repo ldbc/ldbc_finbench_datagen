@@ -27,7 +27,8 @@ public class CompanyGuaranteeCompany implements DynamicActivity, Serializable {
         long creationDate = Dictionaries.dates.randomCompanyToCompanyDate(random, fromCompany, toCompany);
         CompanyGuaranteeCompany companyGuaranteeCompany = new CompanyGuaranteeCompany(fromCompany,
                 toCompany, creationDate, 0, false);
-        fromCompany.getCompanyGuaranteeCompanies().add(companyGuaranteeCompany);
+        fromCompany.getGuaranteeSrc().add(companyGuaranteeCompany);
+        toCompany.getGuaranteeDst().add(companyGuaranteeCompany);
 
         return companyGuaranteeCompany;
     }
