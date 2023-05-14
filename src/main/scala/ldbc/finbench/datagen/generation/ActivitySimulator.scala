@@ -13,22 +13,26 @@ import org.apache.spark.sql.SparkSession
 //  - re-implement the code in more elegant and less verbose way
 //  - repartition with the partition option
 //  - config the paramMap (including header, mode, dateFormat and so on)
-class ActivitySimulator(sink: RawSink, conf: GeneratorConfiguration)(implicit spark: SparkSession) extends Writer[RawSink] with Serializable {
+class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Writer[RawSink] with Serializable {
 
   private val options: Map[String, String] = sink.formatOptions ++ Map("header" -> "true", "delimiter" -> "|")
   private val parallelism = spark.sparkContext.defaultParallelism // TODO: compute parallelism
-  private val personNum: Long = DatagenParams.numPersons
-  private val companyNum: Long = DatagenParams.numCompanies
-  private val mediumNum: Long = DatagenParams.numMediums
   private val blockSize: Int = DatagenParams.blockSize
-  private val activityGenerator = new ActivityGenerator(conf)
+
+  private val activityGenerator = new ActivityGenerator()
   private val activitySerializer = new ActivitySerializer(sink, options)
+
+  private val personNum: Long = DatagenParams.numPersons
   private val personPartitions = Some(Math.min(Math.ceil(personNum.toDouble / blockSize).toLong, parallelism).toInt)
-  private val personRdd: RDD[Person] = SparkPersonGenerator(conf, personNum, blockSize, personPartitions)
+  private val personRdd: RDD[Person] = SparkPersonGenerator(personNum, blockSize, personPartitions)
+
+  private val companyNum: Long = DatagenParams.numCompanies
   private val companyPartitions = Some(Math.min(Math.ceil(companyNum.toDouble / blockSize).toLong, parallelism).toInt)
-  private val companyRdd: RDD[Company] = SparkCompanyGenerator(conf, companyNum, blockSize, companyPartitions)
+  private val companyRdd: RDD[Company] = SparkCompanyGenerator(companyNum, blockSize, companyPartitions)
+
+  private val mediumNum: Long = DatagenParams.numMediums
   private val mediumPartitions = Some(Math.min(Math.ceil(mediumNum.toDouble / blockSize).toLong, parallelism).toInt)
-  private val mediumRdd: RDD[Medium] = SparkMediumGenerator(conf, mediumNum, blockSize, mediumPartitions)
+  private val mediumRdd: RDD[Medium] = SparkMediumGenerator(mediumNum, blockSize, mediumPartitions)
 
   def simulate(): Unit = {
     // simulate person register account event
@@ -39,11 +43,9 @@ class ActivitySimulator(sink: RawSink, conf: GeneratorConfiguration)(implicit sp
 
     // Merge accounts vertices registered by persons and companies
     // TODO: can not coalesce when large scale data generated in cluster
-    val accountRdd = personOwnAccountInfo.map(personOwnAccountRaw => {
-      personOwnAccountRaw.getAccount
-    }).union(companyOwnAccountInfo.map(companyOwnAccountRaw => {
-      companyOwnAccountRaw.getAccount
-    })).coalesce(1)
+    val accountRdd = personOwnAccountInfo.map(personOwnAccount => personOwnAccount.getAccount)
+      .union(companyOwnAccountInfo.map(companyOwnAccount => companyOwnAccount.getAccount))
+      .coalesce(1)
 
     // simulate person invest company event
     val personInvestRdd = activityGenerator.personInvestEvent(personRdd, companyRdd)
@@ -70,13 +72,9 @@ class ActivitySimulator(sink: RawSink, conf: GeneratorConfiguration)(implicit sp
     val companyLoanRdd = activityGenerator.companyLoanEvent(companyRdd)
 
     // Merge accounts vertices registered by persons and companies
-    val loanRdd = personLoanRdd.map(companyLoan => {
-      new Loan(companyLoan.getLoan.getLoanId, companyLoan.getLoan.getLoanAmount, companyLoan.getLoan.getBalance, companyLoan.getCreationDate, 10)
-    }).union(
-      companyLoanRdd.map(companyLoan => {
-        new Loan(companyLoan.getLoan.getLoanId, companyLoan.getLoan.getLoanAmount, companyLoan.getLoan.getBalance, companyLoan.getCreationDate, 10)
-      })
-    ).coalesce(1)
+    val loanRdd = personLoanRdd.map(personLoan => personLoan.getLoan)
+      .union(companyLoanRdd.map(companyLoan => companyLoan.getLoan))
+      .coalesce(1)
 
     // simulate transfer event
     val transferRdd = activityGenerator.transferEvent(accountRdd)

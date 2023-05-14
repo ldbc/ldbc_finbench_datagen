@@ -10,7 +10,7 @@ public class CompanyGenerator {
     private final RandomGeneratorFarm randomFarm;
     private int nextId = 0;
 
-    public CompanyGenerator(GeneratorConfiguration conf) {
+    public CompanyGenerator() {
         this.randomFarm = new RandomGeneratorFarm();
     }
 

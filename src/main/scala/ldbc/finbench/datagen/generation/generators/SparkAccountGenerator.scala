@@ -17,7 +17,7 @@ object SparkAccountGenerator {
 
     val accountPartitionGenerator = (blocks: Iterator[Long]) => {
       DatagenContext.initialize(conf)
-      val accountGenerator = new AccountGenerator(conf)
+      val accountGenerator = new AccountGenerator()
       for {
         i <- blocks
         size = Math.min(numAccounts - DatagenParams.blockSize * i, DatagenParams.blockSize)

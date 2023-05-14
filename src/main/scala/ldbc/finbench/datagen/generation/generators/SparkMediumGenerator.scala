@@ -8,12 +8,12 @@ import org.apache.spark.sql.SparkSession
 import scala.collection.JavaConverters.asScalaIteratorConverter
 
 object SparkMediumGenerator {
-  def apply(conf: GeneratorConfiguration, mediumNums: Long, blockSize: Int, numPartitions: Option[Int] = None)(
+  def apply(mediumNums: Long, blockSize: Int, numPartitions: Option[Int] = None)(
     implicit spark: SparkSession): RDD[Medium] = {
     val numBlocks = Math.ceil(mediumNums / blockSize.toDouble).toInt
 
     val mediumPartitionGenerator = (blocks: Iterator[Long]) => {
-      val mediumGenerator = new MediumGenerator(conf)
+      val mediumGenerator = new MediumGenerator()
 
       for {
         i <- blocks

@@ -10,7 +10,7 @@ public class MediumGenerator {
     private final RandomGeneratorFarm randomFarm;
     private int nextId = 0;
 
-    public MediumGenerator(GeneratorConfiguration conf) {
+    public MediumGenerator() {
         this.randomFarm = new RandomGeneratorFarm();
     }
 

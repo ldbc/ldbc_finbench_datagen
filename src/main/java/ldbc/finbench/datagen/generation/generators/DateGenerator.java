@@ -102,13 +102,13 @@ public class DateGenerator {
         return randomDate(random, fromDate, simulationEnd);
     }
 
-    public long randomPersonToLoanDate(Random random, Person person, Loan loan) {
-        long fromDate = Math.max(person.getCreationDate(), loan.getCreationDate()) + DatagenParams.delta;
+    public long randomPersonToLoanDate(Random random, Person person) {
+        long fromDate = person.getCreationDate() + DatagenParams.delta;
         return randomDate(random, fromDate, simulationEnd);
     }
 
-    public long randomCompanyToLoanDate(Random random, Company company, Loan loan) {
-        long fromDate = Math.max(company.getCreationDate(), loan.getCreationDate()) + DatagenParams.delta;
+    public long randomCompanyToLoanDate(Random random, Company company) {
+        long fromDate = company.getCreationDate() + DatagenParams.delta;
         return randomDate(random, fromDate, simulationEnd);
     }
 

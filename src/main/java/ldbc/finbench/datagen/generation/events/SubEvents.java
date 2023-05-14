@@ -12,9 +12,9 @@ import ldbc.finbench.datagen.entities.nodes.Loan;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class SubEvents implements Serializable {
-    private RandomGeneratorFarm randomFarm;
-    private Random randIndex;
-    private Random random;
+    private final RandomGeneratorFarm randomFarm;
+    private final Random randIndex;
+    private final Random random;
 
     public SubEvents() {
         randomFarm = new RandomGeneratorFarm();
@@ -22,9 +22,15 @@ public class SubEvents implements Serializable {
         random = new Random();
     }
 
+    public void resetState(int seed) {
+        randomFarm.resetRandomGenerators(seed);
+        randIndex.setSeed(seed);
+        random.setSeed(seed);
+    }
+
 
     public List<Deposit> subEventDeposit(List<Loan> loans, List<Account> accounts, int blockId) {
-        random.setSeed(blockId);
+        resetState(blockId);
         List<Deposit> deposits = new ArrayList<>();
 
         for (int i = 0; i < loans.size(); i++) {
@@ -62,7 +68,7 @@ public class SubEvents implements Serializable {
     }
 
     public List<Repay> subEventRepay(List<Account> accounts, List<Loan> loans, int blockId) {
-        random.setSeed(blockId);
+        resetState(blockId);
         List<Repay> repays = new ArrayList<>();
 
         for (int i = 0; i < accounts.size(); i++) {

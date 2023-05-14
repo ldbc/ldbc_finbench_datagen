@@ -46,15 +46,7 @@ public class DatagenParams {
 
     public static void readConf(GeneratorConfiguration conf) {
         try {
-            blockSize = intConf(conf, "generator.blockSize");
-            degreeDistribution = stringConf(conf, "generator.degreeDistribution");
-            multiplicityDistribution = stringConf(conf, "generator.multiplicityDistribution");
-            delta = intConf(conf, "generator.deleteDelta");
-            minNumDegree = longConf(conf, "generator.minNumDegree");
-            maxNumDegree = longConf(conf, "generator.maxNumDegree");
-            minMultiplicity = intConf(conf, "generator.minMultiplicity");
-            maxMultiplicity = intConf(conf, "generator.maxMultiplicity");
-            blockedAccountRatio = doubleConf(conf, "generator.blockedAccountRatio");
+            blockSize = intConf(conf, "spark.blockSize");
             numUpdateStreams = intConf(conf, "generator.mode.interactive.numUpdateStreams");
             numPersons = longConf(conf, "generator.numPersons");
             numCompanies = longConf(conf, "generator.numCompanies");
@@ -62,11 +54,19 @@ public class DatagenParams {
             outputDir = stringConf(conf, "generator.outputDir");
             startYear = intConf(conf, "generator.startYear");
             numYears = intConf(conf, "generator.numYears");
+            delta = intConf(conf, "generator.deleteDelta");
+            blockedAccountRatio = doubleConf(conf, "account.blockedAccountRatio");
+            degreeDistribution = stringConf(conf, "transfer.degreeDistribution");
+            minNumDegree = longConf(conf, "transfer.minNumDegree");
+            maxNumDegree = longConf(conf, "transfer.maxNumDegree");
+            multiplicityDistribution = stringConf(conf, "transfer.multiplicityDistribution");
+            minMultiplicity = intConf(conf, "transfer.minMultiplicity");
+            maxMultiplicity = intConf(conf, "transfer.maxMultiplicity");
+            baseProbCorrelated = doubleConf(conf, "transfer.baseProbCorrelated");
+            limitProCorrelated = doubleConf(conf, "transfer.limitProCorrelated");
             companyInvestedByPersonFraction = doubleConf(conf, "generator.companyInvestedByPersonFraction");
             companyHasWorkerFraction = doubleConf(conf, "generator.companyHasWorkerFraction");
             accountSignedInFraction = doubleConf(conf, "generator.accountSignedInFraction");
-            baseProbCorrelated = doubleConf(conf, "generator.baseProbCorrelated");
-            limitProCorrelated = doubleConf(conf, "generator.limitProCorrelated");
 
             System.out.println(" ... Num Accounts " + (numPersons + numCompanies));
             System.out.println(" ... Start Year " + startYear);

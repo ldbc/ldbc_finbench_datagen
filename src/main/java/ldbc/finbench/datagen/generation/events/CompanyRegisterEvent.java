@@ -9,7 +9,6 @@ import ldbc.finbench.datagen.entities.nodes.Account;
 import ldbc.finbench.datagen.entities.nodes.AccountOwnerEnum;
 import ldbc.finbench.datagen.entities.nodes.Company;
 import ldbc.finbench.datagen.generation.generators.AccountGenerator;
-import ldbc.finbench.datagen.util.GeneratorConfiguration;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class CompanyRegisterEvent implements Serializable {
@@ -29,7 +28,7 @@ public class CompanyRegisterEvent implements Serializable {
     }
 
     public List<CompanyOwnAccount> companyRegister(List<Company> companies, AccountGenerator accountGenerator,
-                                                   int blockId, GeneratorConfiguration conf) {
+                                                   int blockId) {
         resetState(accountGenerator, blockId);
         List<CompanyOwnAccount> companyOwnAccounts = new ArrayList<>();
 

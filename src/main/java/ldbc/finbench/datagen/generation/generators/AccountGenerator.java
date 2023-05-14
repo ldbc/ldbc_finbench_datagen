@@ -24,7 +24,7 @@ public class AccountGenerator implements Serializable {
     private final Random blockRandom;
     private int nextId = 0;
 
-    public AccountGenerator(GeneratorConfiguration conf) {
+    public AccountGenerator() {
         this.randFarm = new RandomGeneratorFarm();
         this.degreeDistribution = DatagenParams.getInDegreeDistribution();
         this.degreeDistribution.initialize();

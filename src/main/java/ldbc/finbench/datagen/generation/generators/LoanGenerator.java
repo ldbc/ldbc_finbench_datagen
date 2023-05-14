@@ -15,7 +15,7 @@ public class LoanGenerator implements Serializable {
     private final RandomGeneratorFarm randomFarm;
     private int nextId = 0;
 
-    public LoanGenerator(GeneratorConfiguration conf) {
+    public LoanGenerator() {
         this.loanAmountMin = 0; // TODO: set by config
         this.loanAmountMax = 1000000; // TODO: set by config
         this.randomFarm = new RandomGeneratorFarm();
@@ -30,14 +30,13 @@ public class LoanGenerator implements Serializable {
         return (bucket << 44) | ((id & idMask));
     }
 
-    // TODO: Reset not used yet
-    private void resetState(int seed) {
+    public void resetState(long seed) {
         degreeDistribution.reset(seed);
         randomFarm.resetRandomGenerators(seed);
     }
 
-    public Loan generateLoan() {
-        long creationDate = Dictionaries.dates.randomLoanCreationDate(randomFarm.get(RandomGeneratorFarm.Aspect.DATE));
+    // Loan createDate is set when applying for a loan
+    public Loan generateLoan(long creationDate) {
         long loanId = composeLoanId(nextId++, creationDate);
         double loanAmount =
             randomFarm.get(RandomGeneratorFarm.Aspect.LOAN_AMOUNT).nextDouble() * (loanAmountMax - loanAmountMin)

@@ -20,7 +20,7 @@ public class ScaleFactors {
         try {
             value = new TreeMap<>();
             DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            Document doc = builder.parse(ScaleFactors.class.getResourceAsStream("/parameters/scale_factors.xml"));
+            Document doc = builder.parse(ScaleFactors.class.getResourceAsStream("/scale_factors.xml"));
             doc.getDocumentElement().normalize();
 
             System.out.println("Reading scale factors..");
