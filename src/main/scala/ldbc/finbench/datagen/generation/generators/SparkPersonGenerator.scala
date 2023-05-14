@@ -8,12 +8,12 @@ import org.apache.spark.sql.SparkSession
 import scala.collection.JavaConverters.asScalaIteratorConverter
 
 object SparkPersonGenerator {
-  def apply(conf: GeneratorConfiguration, numPersons: Long, blockSize: Int, numPartitions: Option[Int] = None)(
+  def apply(numPersons: Long, blockSize: Int, numPartitions: Option[Int] = None)(
     implicit spark: SparkSession): RDD[Person] = {
     val numBlocks = Math.ceil(numPersons / blockSize.toDouble).toInt
 
     val personPartitionGenerator = (blocks: Iterator[Long]) => {
-      val personGenerator = new PersonGenerator(conf, conf.get("generator.distribution.degreeDistribution"))
+      val personGenerator = new PersonGenerator()
 
       for {
         i <- blocks

@@ -8,12 +8,12 @@ import org.apache.spark.sql.SparkSession
 import scala.collection.JavaConverters.asScalaIteratorConverter
 
 object SparkCompanyGenerator {
-  def apply(conf: GeneratorConfiguration, companyNums: Long, blockSize: Int, numPartitions: Option[Int] = None)(
+  def apply(companyNums: Long, blockSize: Int, numPartitions: Option[Int] = None)(
     implicit spark: SparkSession): RDD[Company] = {
     val numBlocks = Math.ceil(companyNums / blockSize.toDouble).toInt
 
     val companyPartitionGenerator = (blocks: Iterator[Long]) => {
-      val companyGenerator = new CompanyGenerator(conf)
+      val companyGenerator = new CompanyGenerator()
 
       for {
         i <- blocks

@@ -13,22 +13,26 @@ import org.apache.spark.sql.SparkSession
 //  - re-implement the code in more elegant and less verbose way
 //  - repartition with the partition option
 //  - config the paramMap (including header, mode, dateFormat and so on)
-class ActivitySimulator(sink: RawSink, conf: GeneratorConfiguration)(implicit spark: SparkSession) extends Writer[RawSink] with Serializable {
+class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Writer[RawSink] with Serializable {
 
   private val options: Map[String, String] = sink.formatOptions ++ Map("header" -> "true", "delimiter" -> "|")
   private val parallelism = spark.sparkContext.defaultParallelism // TODO: compute parallelism
-  private val personNum: Long = DatagenParams.numPersons
-  private val companyNum: Long = DatagenParams.numCompanies
-  private val mediumNum: Long = DatagenParams.numMediums
   private val blockSize: Int = DatagenParams.blockSize
-  private val activityGenerator = new ActivityGenerator(conf)
+
+  private val activityGenerator = new ActivityGenerator()
   private val activitySerializer = new ActivitySerializer(sink, options)
+
+  private val personNum: Long = DatagenParams.numPersons
   private val personPartitions = Some(Math.min(Math.ceil(personNum.toDouble / blockSize).toLong, parallelism).toInt)
-  private val personRdd: RDD[Person] = SparkPersonGenerator(conf, personNum, blockSize, personPartitions)
+  private val personRdd: RDD[Person] = SparkPersonGenerator(personNum, blockSize, personPartitions)
+
+  private val companyNum: Long = DatagenParams.numCompanies
   private val companyPartitions = Some(Math.min(Math.ceil(companyNum.toDouble / blockSize).toLong, parallelism).toInt)
-  private val companyRdd: RDD[Company] = SparkCompanyGenerator(conf, companyNum, blockSize, companyPartitions)
+  private val companyRdd: RDD[Company] = SparkCompanyGenerator(companyNum, blockSize, companyPartitions)
+
+  private val mediumNum: Long = DatagenParams.numMediums
   private val mediumPartitions = Some(Math.min(Math.ceil(mediumNum.toDouble / blockSize).toLong, parallelism).toInt)
-  private val mediumRdd: RDD[Medium] = SparkMediumGenerator(conf, mediumNum, blockSize, mediumPartitions)
+  private val mediumRdd: RDD[Medium] = SparkMediumGenerator(mediumNum, blockSize, mediumPartitions)
 
   def simulate(): Unit = {
     // simulate person register account event

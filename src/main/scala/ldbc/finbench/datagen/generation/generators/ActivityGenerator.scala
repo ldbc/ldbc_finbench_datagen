@@ -12,11 +12,12 @@ import java.util
 import scala.collection.JavaConverters._
 import scala.collection.SortedMap
 
-class ActivityGenerator(conf: GeneratorConfiguration) extends Serializable {
+class ActivityGenerator() extends Serializable {
   val blockSize = DatagenParams.blockSize
   // Use a common account generator to maintain the degree distribution of the generators
-  val accountGenerator = new AccountGenerator(conf)
-  val loanGenerator = new LoanGenerator(conf)
+  val accountGenerator = new AccountGenerator()
+  val loanGenerator = new LoanGenerator()
+  val subEventsGenerator = new SubEvents()
 
   def personRegisterEvent(personRDD: RDD[Person]): RDD[PersonOwnAccount] = {
     val blocks = personRDD.zipWithUniqueId().map { case (v, k) => (k / blockSize, (k, v)) }
@@ -35,7 +36,7 @@ class ActivityGenerator(conf: GeneratorConfiguration) extends Serializable {
             personList.add(p)
           }
 
-          personRegisterGen.personRegister(personList, accountGenerator, block.toInt, conf)
+          personRegisterGen.personRegister(personList, accountGenerator, block.toInt)
         }
 
         for {
@@ -67,7 +68,7 @@ class ActivityGenerator(conf: GeneratorConfiguration) extends Serializable {
             for (p <- companies.values) {
               companyList.add(p)
             }
-            companyRegisterGen.companyRegister(companyList, accountGenerator, block.toInt, conf)
+            companyRegisterGen.companyRegister(companyList, accountGenerator, block.toInt)
           }
 
           for {
@@ -150,7 +151,7 @@ class ActivityGenerator(conf: GeneratorConfiguration) extends Serializable {
       mediums.foreach(mediumList.add)
       val signGenerator = new SignInEvent()
       val part = TaskContext.getPartitionId()
-      val signInList = signGenerator.signIn(mediumList, accountSampleList.get(part), part, conf)
+      val signInList = signGenerator.signIn(mediumList, accountSampleList.get(part), part)
       for {
         signIn <- signInList.iterator().asScala
       } yield signIn
@@ -238,9 +239,8 @@ class ActivityGenerator(conf: GeneratorConfiguration) extends Serializable {
     val depositRels = loanRDD.mapPartitions(loans => {
       val loanList = new util.ArrayList[Loan]()
       loans.foreach(loanList.add)
-      val subEventsGenerator = new SubEvents()
-      val part = TaskContext.getPartitionId()
-      val depositList = subEventsGenerator.subEventDeposit(loanList, accountSampleList.get(part), part)
+      val partitionId = TaskContext.getPartitionId()
+      val depositList = subEventsGenerator.subEventDeposit(loanList, accountSampleList.get(partitionId), partitionId)
 
       for {
         deposit <- depositList.iterator().asScala
@@ -261,9 +261,8 @@ class ActivityGenerator(conf: GeneratorConfiguration) extends Serializable {
     val repayRels = accountRDD.mapPartitions(accounts => {
       val accountList = new util.ArrayList[Account]()
       accounts.foreach(accountList.add)
-      val subEventsGenerator = new SubEvents()
-      val part = TaskContext.getPartitionId()
-      val repayList = subEventsGenerator.subEventRepay(accountList, loanSampleList.get(part), part)
+      val partitionId = TaskContext.getPartitionId()
+      val repayList = subEventsGenerator.subEventRepay(accountList, loanSampleList.get(partitionId), partitionId)
       for {
         repay <- repayList.iterator().asScala
       } yield repay

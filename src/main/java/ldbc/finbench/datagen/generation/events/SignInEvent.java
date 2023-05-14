@@ -24,7 +24,7 @@ public class SignInEvent implements Serializable {
         randIndex.setSeed(seed);
     }
 
-    public List<SignIn> signIn(List<Medium> media, List<Account> accounts, int blockId, GeneratorConfiguration conf) {
+    public List<SignIn> signIn(List<Medium> media, List<Account> accounts, int blockId) {
         resetState(blockId);
         List<SignIn> signIns = new ArrayList<>();
 

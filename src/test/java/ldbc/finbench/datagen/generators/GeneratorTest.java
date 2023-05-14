@@ -20,7 +20,7 @@ public class GeneratorTest {
 
     @Test
     public void testPersonGenerator() {
-        PersonGenerator personGenerator = new PersonGenerator(new GeneratorConfiguration(config), "Facebook");
+        PersonGenerator personGenerator = new PersonGenerator();
         Person person = personGenerator.generatePerson();
         assert null != person;
     }

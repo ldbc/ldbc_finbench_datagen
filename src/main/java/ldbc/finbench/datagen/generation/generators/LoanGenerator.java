@@ -15,7 +15,7 @@ public class LoanGenerator implements Serializable {
     private final RandomGeneratorFarm randomFarm;
     private int nextId = 0;
 
-    public LoanGenerator(GeneratorConfiguration conf) {
+    public LoanGenerator() {
         this.loanAmountMin = 0; // TODO: set by config
         this.loanAmountMax = 1000000; // TODO: set by config
         this.randomFarm = new RandomGeneratorFarm();

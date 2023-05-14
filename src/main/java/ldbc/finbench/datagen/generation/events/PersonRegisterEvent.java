@@ -28,8 +28,7 @@ public class PersonRegisterEvent implements Serializable {
     }
 
     // TODO: person can own multiple accounts
-    public List<PersonOwnAccount> personRegister(List<Person> persons, AccountGenerator accountGenerator, int blockId,
-                                                 GeneratorConfiguration conf) {
+    public List<PersonOwnAccount> personRegister(List<Person> persons, AccountGenerator accountGenerator, int blockId) {
         resetState(accountGenerator, blockId);
         List<PersonOwnAccount> personOwnAccounts = new ArrayList<>();
 

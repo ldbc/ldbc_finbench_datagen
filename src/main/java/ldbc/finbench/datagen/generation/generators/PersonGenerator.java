@@ -10,7 +10,7 @@ public class PersonGenerator {
     private final RandomGeneratorFarm randomFarm;
     private int nextId = 0;
 
-    public PersonGenerator(GeneratorConfiguration conf, String degreeDistribution) {
+    public PersonGenerator() {
         this.randomFarm = new RandomGeneratorFarm();
     }
 
