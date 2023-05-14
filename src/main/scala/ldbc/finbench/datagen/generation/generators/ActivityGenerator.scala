@@ -17,10 +17,11 @@ class ActivityGenerator() extends Serializable {
   type EitherPersonInvestOrCompanyInvest = Either[PersonInvestCompany, CompanyInvestCompany]
 
   val blockSize: Int = DatagenParams.blockSize
-  // Use a common account generator to maintain the degree distribution of the generators
-  val accountGenerator = new AccountGenerator()
+  val sampleRandom = new scala.util.Random(DatagenParams.defaultSeed) // Use a common sample random to avoid identical samples
+  val accountGenerator = new AccountGenerator() // Use a common account generator to maintain the degree distribution
   val loanGenerator = new LoanGenerator()
   val subEventsGenerator = new SubEvents()
+
 
   def personRegisterEvent(personRDD: RDD[Person]): RDD[PersonOwnAccount] = {
     val blocks = personRDD.zipWithUniqueId().map { case (v, k) => (k / blockSize, (k, v)) }
@@ -69,12 +70,11 @@ class ActivityGenerator() extends Serializable {
   def investEvent(personRDD: RDD[Person], companyRDD: RDD[Company]): RDD[EitherPersonInvestOrCompanyInvest] = {
     val seedRandom = new scala.util.Random(DatagenParams.defaultSeed)
     val numInvestorsRandom = new scala.util.Random(DatagenParams.defaultSeed)
-    val sampleRandom = new scala.util.Random(DatagenParams.defaultSeed)
     val personInvestGenerator = new PersonInvestEvent()
     val companyInvestGenerator = new CompanyInvestEvent()
 
     // Sample some companies to be invested
-    val investedCompanyRDD = companyRDD.sample(withReplacement = false, DatagenParams.companyInvestedFraction, DatagenParams.defaultSeed)
+    val investedCompanyRDD = companyRDD.sample(withReplacement = false, DatagenParams.companyInvestedFraction, sampleRandom.nextLong())
     // Merge to either
     val personEitherRDD: RDD[EitherPersonOrCompany] = personRDD.map(person => Left(person))
     val companyEitherRDD: RDD[EitherPersonOrCompany] = companyRDD.map(company => Right(company))
@@ -130,11 +130,10 @@ class ActivityGenerator() extends Serializable {
   }
 
   def signInEvent(mediumRDD: RDD[Medium], accountRDD: RDD[Account]): RDD[SignIn] = {
-    val sampleRandom = new scala.util.Random(DatagenParams.defaultSeed)
     val mediumParts = mediumRDD.partitions.length
     val accountSampleList = new util.ArrayList[util.List[Account]](mediumParts)
     for (i <- 1 to mediumParts) {
-      val sampleAccounts = accountRDD.sample(withReplacement = false, DatagenParams.accountSignedInFraction/mediumParts, sampleRandom.nextLong())
+      val sampleAccounts = accountRDD.sample(withReplacement = false, DatagenParams.accountSignedInFraction / mediumParts, sampleRandom.nextLong())
       accountSampleList.add(sampleAccounts.collect().toList.asJava)
     }
 
@@ -152,7 +151,8 @@ class ActivityGenerator() extends Serializable {
 
   def personGuaranteeEvent(personRDD: RDD[Person]): RDD[PersonGuaranteePerson] = {
     val personGuaranteeEvent = new PersonGuaranteeEvent
-    personRDD.mapPartitions(persons => {
+    val personSample = personRDD.sample(withReplacement = false, DatagenParams.personGuaranteeFraction, sampleRandom.nextLong())
+    personSample.mapPartitions(persons => {
       val guaranteeList = personGuaranteeEvent.personGuarantee(persons.toList.asJava, TaskContext.getPartitionId())
       for {
         guarantee <- guaranteeList.iterator().asScala
@@ -162,7 +162,8 @@ class ActivityGenerator() extends Serializable {
 
   def companyGuaranteeEvent(companyRDD: RDD[Company]): RDD[CompanyGuaranteeCompany] = {
     val companyGuaranteeEvent = new CompanyGuaranteeEvent
-    companyRDD.mapPartitions(companies => {
+    val companySample = companyRDD.sample(withReplacement = false, DatagenParams.companyGuaranteeFraction, sampleRandom.nextLong())
+    companySample.mapPartitions(companies => {
       val guaranteeList = companyGuaranteeEvent.companyGuarantee(companies.toList.asJava, TaskContext.getPartitionId())
       for {
         guarantee <- guaranteeList.iterator().asScala
@@ -171,21 +172,19 @@ class ActivityGenerator() extends Serializable {
   }
 
   def personLoanEvent(personRDD: RDD[Person]): RDD[PersonApplyLoan] = {
-    personRDD.mapPartitions(persons => {
-      val personLoanEvent = new PersonLoanEvent
-      val personList = new util.ArrayList[Person]()
-      persons.foreach(personList.add)
-      val loanList = personLoanEvent.personLoan(personList, loanGenerator, TaskContext.getPartitionId())
+    val personLoanEvent = new PersonLoanEvent
+    val personSample = personRDD.sample(withReplacement = false, DatagenParams.personLoanFraction, sampleRandom.nextLong())
+    personSample.mapPartitions(persons => {
+      val loanList = personLoanEvent.personLoan(persons.toList.asJava, loanGenerator, TaskContext.getPartitionId())
       for {applyLoan <- loanList.iterator().asScala} yield applyLoan
     })
   }
 
   def companyLoanEvent(companyRDD: RDD[Company]): RDD[CompanyApplyLoan] = {
-    companyRDD.mapPartitions(companies => {
-      val companyLoanEvent = new CompanyLoanEvent
-      val companyList = new util.ArrayList[Company]()
-      companies.foreach(companyList.add)
-      val loanList = companyLoanEvent.companyLoan(companyList, loanGenerator, TaskContext.getPartitionId())
+    val companyLoanEvent = new CompanyLoanEvent
+    val companySample = companyRDD.sample(withReplacement = false, DatagenParams.companyLoanFraction, sampleRandom.nextLong())
+    companySample.mapPartitions(companies => {
+      val loanList = companyLoanEvent.companyLoan(companies.toList.asJava, loanGenerator, TaskContext.getPartitionId())
       for {
         applyLoan <- loanList.iterator().asScala
       } yield applyLoan

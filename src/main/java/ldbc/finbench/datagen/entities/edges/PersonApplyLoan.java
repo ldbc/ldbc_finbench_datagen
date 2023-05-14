@@ -4,6 +4,7 @@ import java.io.Serializable;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 import ldbc.finbench.datagen.entities.nodes.Loan;
 import ldbc.finbench.datagen.entities.nodes.Person;
+import ldbc.finbench.datagen.entities.nodes.PersonOrCompany;
 
 public class PersonApplyLoan implements DynamicActivity, Serializable {
     private Person person;
@@ -24,6 +25,8 @@ public class PersonApplyLoan implements DynamicActivity, Serializable {
     public static PersonApplyLoan createPersonApplyLoan(long creationDate, Person person, Loan loan) {
         PersonApplyLoan personApplyLoan = new PersonApplyLoan(person, loan, creationDate, 0, false);
         person.getPersonApplyLoans().add(personApplyLoan);
+        loan.setOwnerType(PersonOrCompany.PERSON);
+        loan.setOwnerPerson(person);
 
         return personApplyLoan;
     }

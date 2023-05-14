@@ -44,6 +44,13 @@ public class DatagenParams {
     public static double companyHasWorkerFraction = 0.0;
     public static double accountSignedInFraction = 0.0;
     public static int maxSignInPerPair = 0;
+    public static double personGuaranteeFraction = 0.0;
+    public static double companyGuaranteeFraction = 0.0;
+    public static double personLoanFraction = 0.0;
+    public static double companyLoanFraction = 0.0;
+    public static int maxLoans = 0;
+    public static long minLoanAmount = 0;
+    public static long maxLoanAmount = 0;
     public static double baseProbCorrelated = 0.0;
     public static double limitProCorrelated = 0.0;
 
@@ -72,13 +79,23 @@ public class DatagenParams {
             baseProbCorrelated = doubleConf(conf, "transfer.baseProbCorrelated");
             limitProCorrelated = doubleConf(conf, "transfer.limitProCorrelated");
 
+            accountSignedInFraction = doubleConf(conf, "signIn.accountSignedInFraction");
+            maxSignInPerPair = intConf(conf, "signIn.maxMultiplicity");
+
+            personGuaranteeFraction = doubleConf(conf, "guarantee.personGuaranteeFraction");
+            companyGuaranteeFraction = doubleConf(conf, "guarantee.companyGuaranteeFraction");
+
+            personLoanFraction = doubleConf(conf, "loan.personLoanFraction");
+            companyLoanFraction = doubleConf(conf, "loan.companyLoanFraction");
+            maxLoans = intConf(conf, "loan.maxLoans");
+            minLoanAmount = longConf(conf, "loan.minLoanAmount");
+            maxLoanAmount = longConf(conf, "loan.maxLoanAmount");
+
             companyInvestedFraction = doubleConf(conf, "invest.companyInvestedFraction");
             minInvestors = intConf(conf, "invest.minInvestors");
             maxInvestors = intConf(conf, "invest.maxInvestors");
 
             companyHasWorkerFraction = doubleConf(conf, "workIn.companyHasWorkerFraction");
-            accountSignedInFraction = doubleConf(conf, "signIn.accountSignedInFraction");
-            maxSignInPerPair = intConf(conf, "signIn.maxMultiplicity");
 
             System.out.println(" ... Num Accounts " + (numPersons + numCompanies));
             System.out.println(" ... Start Year " + startYear);

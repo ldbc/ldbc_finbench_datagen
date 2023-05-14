@@ -17,7 +17,7 @@ public class Account implements Serializable {
     private long maxInDegree;
     private long maxOutDegree;
     private boolean isBlocked;
-    private AccountOwnerEnum accountOwnerEnum;
+    private PersonOrCompany ownerType;
     private Person personOwner;
     private Company companyOwner;
     private boolean isExplicitlyDeleted;
@@ -132,12 +132,12 @@ public class Account implements Serializable {
     }
 
 
-    public AccountOwnerEnum getAccountOwnerEnum() {
-        return accountOwnerEnum;
+    public PersonOrCompany getOwnerType() {
+        return ownerType;
     }
 
-    public void setAccountOwnerEnum(AccountOwnerEnum accountOwnerEnum) {
-        this.accountOwnerEnum = accountOwnerEnum;
+    public void setOwnerType(PersonOrCompany personOrCompany) {
+        this.ownerType = personOrCompany;
     }
 
     public boolean isExplicitlyDeleted() {

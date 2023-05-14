@@ -6,11 +6,10 @@ import java.util.List;
 import java.util.Random;
 import ldbc.finbench.datagen.entities.edges.PersonOwnAccount;
 import ldbc.finbench.datagen.entities.nodes.Account;
-import ldbc.finbench.datagen.entities.nodes.AccountOwnerEnum;
+import ldbc.finbench.datagen.entities.nodes.PersonOrCompany;
 import ldbc.finbench.datagen.entities.nodes.Person;
 import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.generation.generators.AccountGenerator;
-import ldbc.finbench.datagen.util.GeneratorConfiguration;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class PersonRegisterEvent implements Serializable {
@@ -35,7 +34,7 @@ public class PersonRegisterEvent implements Serializable {
 
         for (Person p : persons) {
             Account account = accountGenerator.generateAccount();
-            account.setAccountOwnerEnum(AccountOwnerEnum.PERSON);
+            account.setOwnerType(PersonOrCompany.PERSON);
             account.setPersonOwner(p);
             PersonOwnAccount personOwnAccount = PersonOwnAccount.createPersonOwnAccount(
                 randomFarm.get(RandomGeneratorFarm.Aspect.DATE),

@@ -5,7 +5,6 @@ import ldbc.finbench.datagen.entities.nodes.Loan;
 import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.generation.distribution.DegreeDistribution;
-import ldbc.finbench.datagen.util.GeneratorConfiguration;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class LoanGenerator implements Serializable {
@@ -16,8 +15,8 @@ public class LoanGenerator implements Serializable {
     private int nextId = 0;
 
     public LoanGenerator() {
-        this.loanAmountMin = 0; // TODO: set by config
-        this.loanAmountMax = 1000000; // TODO: set by config
+        this.loanAmountMin = DatagenParams.minLoanAmount;
+        this.loanAmountMax = DatagenParams.maxLoanAmount;
         this.randomFarm = new RandomGeneratorFarm();
         this.degreeDistribution = DatagenParams.getInDegreeDistribution();
         this.degreeDistribution.initialize();
