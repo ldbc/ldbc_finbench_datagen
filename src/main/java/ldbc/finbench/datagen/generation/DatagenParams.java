@@ -71,7 +71,7 @@ public class DatagenParams {
 
             blockedAccountRatio = doubleConf(conf, "account.blockedAccountRatio");
 
-            blockedMediumRatio = doubleConf(conf, "medium.blockedAccountRatio");
+            blockedMediumRatio = doubleConf(conf, "medium.blockedMediumRatio");
 
             maxAccountsPerOwner = intConf(conf, "own.maxAccounts");
 
