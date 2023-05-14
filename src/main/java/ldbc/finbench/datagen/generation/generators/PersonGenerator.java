@@ -3,7 +3,6 @@ package ldbc.finbench.datagen.generation.generators;
 import java.util.Iterator;
 import ldbc.finbench.datagen.entities.nodes.Person;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
-import ldbc.finbench.datagen.util.GeneratorConfiguration;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class PersonGenerator {
@@ -25,19 +24,16 @@ public class PersonGenerator {
     public Person generatePerson() {
         Person person = new Person();
 
-        long creationDate = Dictionaries.dates.randomPersonCreationDate(
-            randomFarm.get(RandomGeneratorFarm.Aspect.DATE));
+        long creationDate =
+            Dictionaries.dates.randomPersonCreationDate(randomFarm.get(RandomGeneratorFarm.Aspect.DATE));
         person.setCreationDate(creationDate);
 
         long personId = composePersonId(nextId++, creationDate);
         person.setPersonId(personId);
 
-        String personSurname =
+        String personname =
             Dictionaries.personNames.getUniformDistRandName(randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_NAME));
-        person.setPersonName(personSurname);
-
-        byte gender = (randomFarm.get(RandomGeneratorFarm.Aspect.GENDER)).nextDouble() > 0.5 ? (byte) 1 : (byte) 0;
-        person.setGender(gender);
+        person.setPersonName(personname);
 
         // Set blocked to false by default
         person.setBlocked(false);
