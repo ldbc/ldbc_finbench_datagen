@@ -18,8 +18,8 @@ object SparkMediumGenerator {
       for {
         i <- blocks
         size = Math.min(mediumNums - blockSize * i, blockSize)
-        company <- mediumGenerator.generateMediumBlock(i.toInt, blockSize).asScala.take(size.toInt)
-      } yield company
+        medium <- mediumGenerator.generateMediumBlock(i.toInt, blockSize).asScala.take(size.toInt)
+      } yield medium
     }
 
     val partitions = numPartitions.getOrElse(spark.sparkContext.defaultParallelism)

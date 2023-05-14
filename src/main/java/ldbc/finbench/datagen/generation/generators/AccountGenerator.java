@@ -93,6 +93,7 @@ public class AccountGenerator implements Serializable {
     public void resetState(long seed) {
         degreeDistribution.reset(seed);
         randFarm.resetRandomGenerators(seed);
+        blockRandom.setSeed(seed);
     }
 
     public Iterator<Account> generateAccountBlock(int blockId, int blockSize) {

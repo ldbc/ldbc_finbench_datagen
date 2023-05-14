@@ -34,6 +34,7 @@ public class DatagenParams {
     public static int tsfMinMultiplicity = 0;
     public static int tsfMaxMultiplicity = 0;
     public static double blockedAccountRatio = 0.0;
+    public static double blockedMediumRatio = 0.0;
     public static int numUpdateStreams = 0;
     public static long numPersons = 0;
     public static long numCompanies = 0;
@@ -69,6 +70,8 @@ public class DatagenParams {
             delta = intConf(conf, "generator.deleteDelta");
 
             blockedAccountRatio = doubleConf(conf, "account.blockedAccountRatio");
+
+            blockedMediumRatio = doubleConf(conf, "medium.blockedAccountRatio");
 
             maxAccountsPerOwner = intConf(conf, "own.maxAccounts");
 
