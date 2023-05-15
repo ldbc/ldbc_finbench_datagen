@@ -61,6 +61,9 @@ def draw_degree(inDegrees, outDegrees):
 if __name__ == "__main__":
     allTransferEdges = readAllEdges("../out/transfer/*.csv")
 
+    # Check whether deleted before creation
+    allTransferEdges.filter(allTransferEdges["isExplicitDeleted"] == True).filter(allTransferEdges["createTime"] > allTransferEdges["deleteTime"]).show()
+
     in_degrees = allTransferEdges.groupBy("toId").count().withColumnRenamed("count", "in_degree")
     out_degrees = allTransferEdges.groupBy("fromId").count().withColumnRenamed("count", "out_degree")
     multiplicity = allTransferEdges.groupBy("fromId", "toId").agg(countDistinct("multiplicityId").alias("multiplicity"))

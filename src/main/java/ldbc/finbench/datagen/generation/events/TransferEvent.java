@@ -55,21 +55,21 @@ public class TransferEvent implements Serializable {
         setOutDegreeWithShuffle(accounts);
 
         List<Transfer> allTransfers = new ArrayList<>();
+        Random dateRandom = randomFarm.get(RandomGeneratorFarm.Aspect.DATE);
 
         for (int i = 0; i < accounts.size(); i++) {
             Account from = accounts.get(i);
             while (from.getAvaialbleOutDegree() != 0) {
                 // i!=j: Transfer to self is not allowed
                 for (int j = 0; j < accounts.size(); j++) {
-                    if (i == j) {
+                    Account to = accounts.get(j);
+                    if (i == j || cannotTransfer(from, to)) {
                         continue;
                     }
-                    Account to = accounts.get(j);
                     long numTransfers = Math.min(multiplicityDistribution.nextDegree(), from.getAvaialbleOutDegree());
                     if (numTransfers <= to.getAvaialbleInDegree() && distanceProbOK(j - i)) {
                         for (int mindex = 0; mindex < numTransfers; mindex++) {
                             // Note: nearly impossible to generate same date
-                            Random dateRandom = randomFarm.get(RandomGeneratorFarm.Aspect.DATE);
                             Transfer transfer = Transfer.createTransfer(dateRandom, from, to, mindex);
                             allTransfers.add(transfer);
                         }
@@ -78,5 +78,10 @@ public class TransferEvent implements Serializable {
             }
         }
         return allTransfers;
+    }
+
+    public boolean cannotTransfer(Account from, Account to) {
+        return from.getDeletionDate() < to.getCreationDate() + DatagenParams.activityDelta
+            || from.getCreationDate() + DatagenParams.activityDelta > to.getDeletionDate();
     }
 }

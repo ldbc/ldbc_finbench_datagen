@@ -111,12 +111,14 @@ public class DateGenerator {
     // The minute and second is generated randomly.
     public long randomAccountToAccountDate(Random random, Account from, Account to, long deletionDate) {
         long fromDate = Math.max(from.getCreationDate(), to.getCreationDate()) + DatagenParams.activityDelta;
-        // TODO: the date here is not rounded
-        long randDate = randomDate(random, fromDate, Math.min(deletionDate, simulationEnd));
-        long randHour = timeDistribution.nextHour(random);
-        long randMinute = timeDistribution.nextMinute(random);
-        long randSecond = timeDistribution.nextSecond(random);
-        return randDate + randHour * ONE_HOUR + randMinute * ONE_MINUTE + randSecond * ONE_SECOND;
+
+        return randomDate(random, fromDate, Math.min(deletionDate, simulationEnd));
+        // TODO: the frequent hour distribution is not applied here, which may cause deletion before creation.
+        //       To support this, need to generate the time only on days.
+        // long randHour = timeDistribution.nextHour(random);
+        // long randMinute = timeDistribution.nextMinute(random);
+        // long randSecond = timeDistribution.nextSecond(random);
+        // return randDate + randHour * ONE_HOUR + randMinute * ONE_MINUTE + randSecond * ONE_SECOND;
     }
 
     public long randomLoanToAccountDate(Random random, Loan loan, Account account) {

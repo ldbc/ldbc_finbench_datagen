@@ -72,12 +72,12 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
 
     // simulate withdraw event
     // TODO: refine
-    val withdrawRdd = activityGenerator.withdrawEvent(accountRdd)
+//    val withdrawRdd = activityGenerator.withdrawEvent(accountRdd)
 
     // simulate deposit and repay event
     // TODO: refine
-    val depositRdd = activityGenerator.depositEvent(loanRdd, accountRdd)
-    val repayRdd = activityGenerator.repayEvent(accountRdd, loanRdd)
+//    val depositRdd = activityGenerator.depositEvent(loanRdd, accountRdd)
+//    val repayRdd = activityGenerator.repayEvent(accountRdd, loanRdd)
 
     // TODO: use some syntax to implement serializer less verbose like GraphDef
     activitySerializer.writePerson(personRdd)
@@ -94,8 +94,8 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     activitySerializer.writeCompanyLoan(companyLoanRdd)
     activitySerializer.writeLoan(loanRdd)
     activitySerializer.writeTransfer(transferRdd)
-    activitySerializer.writeWithdraw(withdrawRdd)
-    activitySerializer.writeDeposit(depositRdd)
-    activitySerializer.writeRepay(repayRdd)
+//    activitySerializer.writeWithdraw(withdrawRdd)
+//    activitySerializer.writeDeposit(depositRdd)
+//    activitySerializer.writeRepay(repayRdd)
   }
 }
