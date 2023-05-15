@@ -106,8 +106,6 @@ public class DatagenParams {
             minInvestors = intConf(conf, "invest.minInvestors");
             maxInvestors = intConf(conf, "invest.maxInvestors");
 
-            companyHasWorkerFraction = doubleConf(conf, "workIn.companyHasWorkerFraction");
-
             System.out.println(" ... Num Accounts " + (numPersons + numCompanies));
             System.out.println(" ... Start Year " + startYear);
             System.out.println(" ... Num Years " + numYears);

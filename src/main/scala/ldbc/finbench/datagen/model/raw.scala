@@ -67,13 +67,6 @@ object raw {
       createTime: Long
   )
 
-  // define WorkIn relationship
-  case class WorkInRaw(
-      `personId`: Long,
-      `companyId`: Long,
-      createTime: Long
-  )
-
   // define PersonInvestCompany relationship
   case class PersonInvestCompanyRaw(
       investorId: Long,

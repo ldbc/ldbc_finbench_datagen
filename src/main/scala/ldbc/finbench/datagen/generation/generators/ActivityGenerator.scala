@@ -106,25 +106,6 @@ class ActivityGenerator() extends Serializable {
     ).flatMap(investRels => investRels)
   }
 
-  def workInEvent(personRDD: RDD[Person], companyRDD: RDD[Company]): RDD[WorkIn] = {
-    val fraction = DatagenParams.companyHasWorkerFraction
-    val personParts = personRDD.partitions.length
-    val companySampleList = new util.ArrayList[util.List[Company]](personParts)
-    for (i <- 1 to personParts) {
-      // TODO: consider sample
-      companySampleList.add(companyRDD.collect().toList.asJava)
-    }
-
-    val workInEvent = new WorkInEvent
-    val personWorkInRels = personRDD.mapPartitions(persons => {
-      val part = TaskContext.getPartitionId()
-      val personWorkInList = workInEvent.workIn(persons.toList.asJava, companySampleList.get(part), part)
-      for {personWorkIn <- personWorkInList.iterator().asScala} yield personWorkIn
-    })
-
-    personWorkInRels
-  }
-
   def signInEvent(mediumRDD: RDD[Medium], accountRDD: RDD[Account]): RDD[SignIn] = {
     val mediumParts = mediumRDD.partitions.length
     val accountSampleList = new util.ArrayList[util.List[Account]](mediumParts)
