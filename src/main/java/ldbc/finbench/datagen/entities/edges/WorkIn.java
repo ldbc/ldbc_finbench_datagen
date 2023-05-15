@@ -24,10 +24,7 @@ public class WorkIn implements DynamicActivity, Serializable {
 
     public static WorkIn createWorkIn(Random random, Person person, Company company) {
         long creationDate = Dictionaries.dates.randomPersonToCompanyDate(random, person, company);
-        WorkIn workIn = new WorkIn(person, company, creationDate, 0, false);
-        person.setWorkIn(workIn);
-
-        return workIn;
+        return new WorkIn(person, company, creationDate, 0, false);
     }
 
     public Person getPerson() {
