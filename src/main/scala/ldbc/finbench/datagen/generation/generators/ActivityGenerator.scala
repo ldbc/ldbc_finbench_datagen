@@ -107,12 +107,11 @@ class ActivityGenerator() extends Serializable {
   }
 
   def workInEvent(personRDD: RDD[Person], companyRDD: RDD[Company]): RDD[WorkIn] = {
-    val fraction = DatagenParams.companyHasWorkerFraction
     val personParts = personRDD.partitions.length
     val companySampleList = new util.ArrayList[util.List[Company]](personParts)
     for (i <- 1 to personParts) {
-      // TODO: consider sample
-      companySampleList.add(companyRDD.collect().toList.asJava)
+      val sampleCompanies = companyRDD.sample(withReplacement = false, DatagenParams.companyHasWorkerFraction / personParts, sampleRandom.nextLong())
+      companySampleList.add(sampleCompanies.collect().toList.asJava)
     }
 
     val workInEvent = new WorkInEvent
