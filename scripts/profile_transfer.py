@@ -64,25 +64,25 @@ if __name__ == "__main__":
     # Check whether deleted before creation
     allTransferEdges.filter(allTransferEdges["isExplicitDeleted"] == True).filter(allTransferEdges["createTime"] > allTransferEdges["deleteTime"]).show()
 
-    # in_degrees = allTransferEdges.groupBy("toId").count().withColumnRenamed("count", "in_degree")
-    # out_degrees = allTransferEdges.groupBy("fromId").count().withColumnRenamed("count", "out_degree")
-    # multiplicity = allTransferEdges.groupBy("fromId", "toId").agg(countDistinct("multiplicityId").alias("multiplicity"))
-    #
-    # # Show top 20
-    # in_degrees.orderBy(desc("in_degree")).show(10)
-    # out_degrees.orderBy(desc("out_degree")).show(10)
-    # multiplicity.orderBy(desc("multiplicity")).show(10)
-    #
-    # # Calculate and print metrics
-    # numAccounts = allTransferEdges.select("fromId").union(allTransferEdges.select("toId")).distinct().count()
-    # numTransfers = allTransferEdges.count()
-    # demultipled = multiplicity.count()
-    # print("Num of accounts: {}".format(numAccounts))
-    # print("Num of transfer edges: {}".format(numTransfers))
-    # print("Average Degree: {}".format(numTransfers * 1.0 / numAccounts))
-    # print("Average Multiplicity: {}".format(numTransfers * 1.0 / demultipled))
-    #
-    # # Draw powerlaw distribution of the degrees
-    # inDegrees = [row["in_degree"] for row in in_degrees.select("in_degree").collect()]
-    # outDegrees = [row["out_degree"] for row in out_degrees.select("out_degree").collect()]
-    # draw_degree(inDegrees, outDegrees)
+    in_degrees = allTransferEdges.groupBy("toId").count().withColumnRenamed("count", "in_degree")
+    out_degrees = allTransferEdges.groupBy("fromId").count().withColumnRenamed("count", "out_degree")
+    multiplicity = allTransferEdges.groupBy("fromId", "toId").agg(countDistinct("multiplicityId").alias("multiplicity"))
+
+    # Show top 20
+    in_degrees.orderBy(desc("in_degree")).show(10)
+    out_degrees.orderBy(desc("out_degree")).show(10)
+    multiplicity.orderBy(desc("multiplicity")).show(10)
+
+    # Calculate and print metrics
+    numAccounts = allTransferEdges.select("fromId").union(allTransferEdges.select("toId")).distinct().count()
+    numTransfers = allTransferEdges.count()
+    demultipled = multiplicity.count()
+    print("Num of accounts: {}".format(numAccounts))
+    print("Num of transfer edges: {}".format(numTransfers))
+    print("Average Degree: {}".format(numTransfers * 1.0 / numAccounts))
+    print("Average Multiplicity: {}".format(numTransfers * 1.0 / demultipled))
+
+    # Draw powerlaw distribution of the degrees
+    inDegrees = [row["in_degree"] for row in in_degrees.select("in_degree").collect()]
+    outDegrees = [row["out_degree"] for row in out_degrees.select("out_degree").collect()]
+    draw_degree(inDegrees, outDegrees)
