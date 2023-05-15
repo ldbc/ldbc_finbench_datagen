@@ -14,7 +14,6 @@ public class Person implements Serializable {
     private String personName;
     private long creationDate;
     private boolean isBlocked;
-    private WorkIn workIn;
     private List<PersonOwnAccount> personOwnAccounts;
     private List<PersonInvestCompany> personInvestCompanies;
     private List<PersonGuaranteePerson> guaranteeSrc;
@@ -62,14 +61,6 @@ public class Person implements Serializable {
 
     public void setPersonName(String personName) {
         this.personName = personName;
-    }
-
-    public WorkIn getWorkIn() {
-        return workIn;
-    }
-
-    public void setWorkIn(WorkIn workIn) {
-        this.workIn = workIn;
     }
 
     public List<PersonOwnAccount> getPersonOwnAccounts() {

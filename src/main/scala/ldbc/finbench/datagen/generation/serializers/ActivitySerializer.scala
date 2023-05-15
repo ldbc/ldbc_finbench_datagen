@@ -61,13 +61,6 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
     }).write.format(sink.format.toString).options(options).save(sink.outputDir + "/companyInvest")
   }
 
-  def writeWorkIn(self: RDD[WorkIn]): Unit = {
-    val df = spark.createDataFrame(self.map { workIn =>
-      WorkInRaw(workIn.getPerson.getPersonId, workIn.getCompany.getCompanyId, workIn.getCreationDate)
-    })
-    df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/workIn")
-  }
-
   def writeSignIn(self: RDD[SignIn]): Unit = {
     val df = spark.createDataFrame(self.map { signIn =>
       SignInRaw(signIn.getMedium.getMediumId, signIn.getAccount.getAccountId, signIn.getMultiplicityId, signIn.getCreationDate, signIn.getDeletionDate, signIn.isExplicitlyDeleted)
