@@ -1,12 +1,16 @@
 package ldbc.finbench.datagen.entities.edges;
 
 import java.io.Serializable;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 import ldbc.finbench.datagen.entities.nodes.Account;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 
 public class Transfer implements DynamicActivity, Serializable {
+    private static final Map<String, AtomicLong> multiplicityMap = new ConcurrentHashMap<>();
     private Account fromAccount;
     private Account toAccount;
     private double amount;
@@ -15,25 +19,34 @@ public class Transfer implements DynamicActivity, Serializable {
     private long multiplicityId;
     private boolean isExplicitlyDeleted;
 
-    public Transfer(Account fromAccount, Account toAccount, long creationDate, long deletionDate, long multiplicityId,
+    public Transfer(Account fromAccount, Account toAccount, double amount, long creationDate, long deletionDate,
+                    long multiplicityId,
                     boolean isExplicitlyDeleted) {
         this.fromAccount = fromAccount;
         this.toAccount = toAccount;
+        this.amount = amount;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.multiplicityId = multiplicityId;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static Transfer createTransfer(Random random, Account from, Account to, long multiplicityId) {
+    public static Transfer createTransfer(Random random, Account from, Account to, double amount) {
         long deleteDate = Math.min(from.getDeletionDate(), to.getDeletionDate());
         long creationDate = Dictionaries.dates.randomAccountToAccountDate(random, from, to, deleteDate);
         boolean willDelete = from.isExplicitlyDeleted() && to.isExplicitlyDeleted();
-        Transfer transfer = new Transfer(from, to, creationDate, deleteDate, multiplicityId, willDelete);
+        long multiplicityId = getMultiplicityIdAndInc(from, to);
+        Transfer transfer = new Transfer(from, to, amount, creationDate, deleteDate, multiplicityId, willDelete);
         from.getTransferOuts().add(transfer);
         to.getTransferIns().add(transfer);
 
         return transfer;
+    }
+
+    public static long getMultiplicityIdAndInc(Account from, Account to) {
+        String key = from.getAccountId() + "-" + to.getAccountId();
+        AtomicLong atomicInt = multiplicityMap.computeIfAbsent(key, k -> new AtomicLong());
+        return atomicInt.getAndIncrement();
     }
 
     public double getAmount() {

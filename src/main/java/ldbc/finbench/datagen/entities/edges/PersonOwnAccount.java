@@ -30,6 +30,7 @@ public class PersonOwnAccount implements DynamicActivity, Serializable {
         PersonOwnAccount personOwnAccount = new PersonOwnAccount(person, account, creationDate,
                                                                  account.getDeletionDate(),
                                                                  account.isExplicitlyDeleted());
+        person.getAccounts().add(account);
         person.getPersonOwnAccounts().add(personOwnAccount);
         account.setOwnerType(PersonOrCompany.PERSON);
         account.setPersonOwner(person);

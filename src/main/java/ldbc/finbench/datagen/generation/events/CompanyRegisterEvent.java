@@ -37,7 +37,7 @@ public class CompanyRegisterEvent implements Serializable {
         List<CompanyOwnAccount> companyOwnAccounts = new ArrayList<>();
 
         for (Company company : companies) {
-            for (int i = 0; i < numAccountsRandom.nextInt(DatagenParams.maxAccountsPerOwner); i++) {
+            for (int i = 0; i < Math.max(1, numAccountsRandom.nextInt(DatagenParams.maxAccountsPerOwner)); i++) {
                 Account account = accountGenerator.generateAccount();
                 CompanyOwnAccount companyOwnAccount =
                     CompanyOwnAccount.createCompanyOwnAccount(randomFarm.get(RandomGeneratorFarm.Aspect.DATE), company,

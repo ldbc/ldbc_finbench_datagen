@@ -8,6 +8,7 @@ import ldbc.finbench.datagen.io.raw.RawSink
 import ldbc.finbench.datagen.util.GeneratorConfiguration
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
+import scala.collection.JavaConverters._
 
 // TODO:
 //  - re-implement the code in more elegant and less verbose way
@@ -36,10 +37,22 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     // simulate person register account event
     val personRdd: RDD[Person] = SparkPersonGenerator(personNum, blockSize, personPartitions)
     val personOwnAccountInfo = activityGenerator.personRegisterEvent(personRdd)
+    // Add the ownAccount info back to the person vertices
+    val poas = personOwnAccountInfo.collect()
+    val personWithAccountRdd = personRdd.map(person => {
+      person.getPersonOwnAccounts.addAll(poas.filter(_.getPerson.equals(person)).toList.asJava)
+      person
+    })
 
     // simulate company register account event
     val companyRdd: RDD[Company] = SparkCompanyGenerator(companyNum, blockSize, companyPartitions)
     val companyOwnAccountInfo = activityGenerator.companyRegisterEvent(companyRdd)
+    // Add the ownAccount info back to the company vertices
+    val coas = companyOwnAccountInfo.collect()
+    val companyWithAccountRdd = companyRdd.map(company => {
+      company.getCompanyOwnAccounts.addAll(coas.filter(_.getCompany.equals(company)).toList.asJava)
+      company
+    })
 
     // Merge accounts vertices registered by persons and companies
     // TODO: can not coalesce when large scale data generated in cluster
@@ -48,54 +61,52 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
       .coalesce(1)
 
     // simulate person signIn medium event
-    val mediumRdd: RDD[Medium] = SparkMediumGenerator(mediumNum, blockSize, mediumPartitions)
-    val signInRdd = activityGenerator.signInEvent(mediumRdd, accountRdd)
-
-    // simulate person or company invest company event
-    val investRdd = activityGenerator.investEvent(personRdd, companyRdd)
-
-    // simulate person guarantee person event and company guarantee company event
-    val personGuaranteeRdd = activityGenerator.personGuaranteeEvent(personRdd)
-    val companyGuaranteeRdd = activityGenerator.companyGuaranteeEvent(companyRdd)
-
-    // simulate person apply loans event and company apply loans event
-    val personLoanRdd = activityGenerator.personLoanEvent(personRdd)
-    val companyLoanRdd = activityGenerator.companyLoanEvent(companyRdd)
-
-    // Merge accounts vertices registered by persons and companies
+//    val mediumRdd: RDD[Medium] = SparkMediumGenerator(mediumNum, blockSize, mediumPartitions)
+//    val signInRdd = activityGenerator.signInEvent(mediumRdd, accountRdd)
+//
+//    // simulate person or company invest company event
+//    val investRdd = activityGenerator.investEvent(personRdd, companyRdd)
+//
+//    // simulate person guarantee person event and company guarantee company event
+//    val personGuaranteeRdd = activityGenerator.personGuaranteeEvent(personRdd)
+//    val companyGuaranteeRdd = activityGenerator.companyGuaranteeEvent(companyRdd)
+//
+//    // simulate person apply loans event and company apply loans event
+    val personLoanRdd = activityGenerator.personLoanEvent(personWithAccountRdd)
+    val companyLoanRdd = activityGenerator.companyLoanEvent(companyWithAccountRdd)
+//
+//    // Merge accounts vertices registered by persons and companies
     val loanRdd = personLoanRdd.map(personLoan => personLoan.getLoan)
       .union(companyLoanRdd.map(companyLoan => companyLoan.getLoan))
       .coalesce(1)
+//
+//    // simulate deposit and repay event
+    val depositAndRepays = activityGenerator.depositAndRepayEvent(loanRdd, accountRdd)
 
     // simulate transfer event
-    val transferRdd = activityGenerator.transferEvent(accountRdd)
+//    val transferRdd = activityGenerator.transferEvent(accountRdd)
 
-    // simulate withdraw event
-    // TODO: refine
+    // simulate withdraw event TODO: refine
 //    val withdrawRdd = activityGenerator.withdrawEvent(accountRdd)
-
-    // simulate deposit and repay event
-    // TODO: refine
-//    val depositRdd = activityGenerator.depositEvent(loanRdd, accountRdd)
-//    val repayRdd = activityGenerator.repayEvent(accountRdd, loanRdd)
 
     // TODO: use some syntax to implement serializer less verbose like GraphDef
     activitySerializer.writePerson(personRdd)
-    activitySerializer.writeCompany(companyRdd)
-    activitySerializer.writeMedium(mediumRdd)
+//    activitySerializer.writeCompany(companyRdd)
+//    activitySerializer.writeMedium(mediumRdd)
     activitySerializer.writePersonOwnAccount(personOwnAccountInfo)
     activitySerializer.writeCompanyOwnAccount(companyOwnAccountInfo)
     activitySerializer.writeAccount(accountRdd)
-    activitySerializer.writeInvest(investRdd)
-    activitySerializer.writeSignIn(signInRdd)
-    activitySerializer.writePersonGuarantee(personGuaranteeRdd)
-    activitySerializer.writeCompanyGuarantee(companyGuaranteeRdd)
-    activitySerializer.writePersonLoan(personLoanRdd)
-    activitySerializer.writeCompanyLoan(companyLoanRdd)
+//    activitySerializer.writeInvest(investRdd)
+//    activitySerializer.writeSignIn(signInRdd)
+//    activitySerializer.writePersonGuarantee(personGuaranteeRdd)
+//    activitySerializer.writeCompanyGuarantee(companyGuaranteeRdd)
+//    activitySerializer.writePersonLoan(personLoanRdd)
+//    activitySerializer.writeCompanyLoan(companyLoanRdd)
     activitySerializer.writeLoan(loanRdd)
-    activitySerializer.writeTransfer(transferRdd)
-//    activitySerializer.writeWithdraw(withdrawRdd)
-//    activitySerializer.writeDeposit(depositRdd)
-//    activitySerializer.writeRepay(repayRdd)
+    activitySerializer.writeDeposit(depositAndRepays._1)
+    activitySerializer.writeRepay(depositAndRepays._2)
+    activitySerializer.writeLoanTransfer(depositAndRepays._3)
+//    activitySerializer.writeTransfer(transferRdd)
+    //    activitySerializer.writeWithdraw(withdrawRdd)
   }
 }

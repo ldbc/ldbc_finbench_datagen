@@ -34,6 +34,7 @@ public class DatagenParams {
     public static long tsfMaxNumDegree = 0;
     public static int tsfMinMultiplicity = 0;
     public static int tsfMaxMultiplicity = 0;
+    public static long transferMaxAmount = 0;
     public static double blockedAccountRatio = 0.0;
     public static double blockedMediumRatio = 0.0;
     public static int numUpdateStreams = 0;
@@ -43,7 +44,6 @@ public class DatagenParams {
     public static double companyInvestedFraction = 0.0;
     public static int minInvestors = 0;
     public static int maxInvestors = 0;
-    public static double companyHasWorkerFraction = 0.0;
     public static double accountSignedInFraction = 0.0;
     public static int maxSignInPerPair = 0;
     public static int maxAccountToSignIn = 0;
@@ -52,9 +52,11 @@ public class DatagenParams {
     public static int maxTargetsToGuarantee = 0;
     public static double personLoanFraction = 0.0;
     public static double companyLoanFraction = 0.0;
+    public static double loanInvolvedAccountsFraction = 0.0;
     public static int maxLoans = 0;
     public static long minLoanAmount = 0;
     public static long maxLoanAmount = 0;
+    public static int numLoanActions = 0;
     public static double baseProbCorrelated = 0.0;
     public static double limitProCorrelated = 0.0;
 
@@ -87,6 +89,7 @@ public class DatagenParams {
             tsfMaxMultiplicity = intConf(conf, "transfer.maxMultiplicity");
             baseProbCorrelated = doubleConf(conf, "transfer.baseProbCorrelated");
             limitProCorrelated = doubleConf(conf, "transfer.limitProCorrelated");
+            transferMaxAmount = longConf(conf, "transfer.maxAmount");
 
             accountSignedInFraction = doubleConf(conf, "signIn.accountSignedInFraction");
             maxSignInPerPair = intConf(conf, "signIn.maxMultiplicity");
@@ -98,9 +101,11 @@ public class DatagenParams {
 
             personLoanFraction = doubleConf(conf, "loan.personLoanFraction");
             companyLoanFraction = doubleConf(conf, "loan.companyLoanFraction");
+            loanInvolvedAccountsFraction = doubleConf(conf, "loan.involvedAccountsFraction");
             maxLoans = intConf(conf, "loan.maxLoans");
             minLoanAmount = longConf(conf, "loan.minLoanAmount");
             maxLoanAmount = longConf(conf, "loan.maxLoanAmount");
+            numLoanActions = intConf(conf, "loan.numActions");
 
             companyInvestedFraction = doubleConf(conf, "invest.companyInvestedFraction");
             minInvestors = intConf(conf, "invest.minInvestors");

@@ -15,17 +15,21 @@ public class Repay implements DynamicActivity, Serializable {
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public Repay(Account account, Loan loan, long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
+    public Repay(Account account, Loan loan, double amount, long creationDate, long deletionDate,
+                 boolean isExplicitlyDeleted) {
         this.account = account;
         this.loan = loan;
+        this.amount = amount;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static Repay createRepay(Random random, Account account, Loan loan) {
+    public static Repay createRepay(Random random, Account account, Loan loan, double amount) {
         long creationDate = Dictionaries.dates.randomAccountToLoanDate(random, account, loan);
-        Repay repay = new Repay(account, loan, creationDate, 0, false);
+        Repay repay = new Repay(account, loan, amount, creationDate, account.getDeletionDate(),
+                                account.isExplicitlyDeleted());
+        loan.addRepay(repay);
         account.getRepays().add(repay);
 
         return repay;

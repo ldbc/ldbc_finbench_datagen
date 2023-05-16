@@ -15,6 +15,7 @@ public class Person implements Serializable {
     private long creationDate;
     private boolean isBlocked;
     private List<PersonOwnAccount> personOwnAccounts;
+    private List<Account> accounts;
     private List<PersonInvestCompany> personInvestCompanies;
     private List<PersonGuaranteePerson> guaranteeSrc;
     private List<PersonGuaranteePerson> guaranteeDst;
@@ -22,10 +23,20 @@ public class Person implements Serializable {
 
     public Person() {
         personOwnAccounts = new ArrayList<>();
+        accounts = new ArrayList<>();
         personInvestCompanies = new ArrayList<>();
         guaranteeSrc = new ArrayList<>();
         guaranteeDst = new ArrayList<>();
         personApplyLoans = new ArrayList<>();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Person) {
+            Person person = (Person) obj;
+            return person.getPersonId() == this.getPersonId();
+        }
+        return false;
     }
 
     public boolean canGuarantee(Person to) {
@@ -117,6 +128,14 @@ public class Person implements Serializable {
 
     public void setBlocked(boolean blocked) {
         isBlocked = blocked;
+    }
+
+    public List<Account> getAccounts() {
+        return accounts;
+    }
+
+    public void setAccounts(List<Account> accounts) {
+        this.accounts = accounts;
     }
 
 }

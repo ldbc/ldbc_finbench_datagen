@@ -15,12 +15,14 @@ public class TransferEvent implements Serializable {
     private final RandomGeneratorFarm randomFarm;
     private final Random randIndex;
     private final Random shuffleRandom;
+    private final Random amountRandom;
     private final DegreeDistribution multiplicityDistribution;
 
     public TransferEvent() {
         randomFarm = new RandomGeneratorFarm();
         randIndex = new Random(DatagenParams.defaultSeed);
         shuffleRandom = new Random(DatagenParams.defaultSeed);
+        amountRandom = new Random(DatagenParams.defaultSeed);
         multiplicityDistribution = DatagenParams.getTsfMultiplicityDistribution();
         multiplicityDistribution.initialize();
     }
@@ -29,6 +31,7 @@ public class TransferEvent implements Serializable {
         randomFarm.resetRandomGenerators(seed);
         randIndex.setSeed(seed);
         shuffleRandom.setSeed(seed);
+        amountRandom.setSeed(seed);
         multiplicityDistribution.reset(seed);
     }
 
@@ -70,8 +73,9 @@ public class TransferEvent implements Serializable {
                     if (numTransfers <= to.getAvaialbleInDegree() && distanceProbOK(j - i)) {
                         for (int mindex = 0; mindex < numTransfers; mindex++) {
                             // Note: nearly impossible to generate same date
-                            Transfer transfer = Transfer.createTransfer(dateRandom, from, to, mindex);
-                            allTransfers.add(transfer);
+                            allTransfers.add(Transfer.createTransfer(dateRandom, from, to,
+                                                                     amountRandom.nextDouble()
+                                                                         * DatagenParams.transferMaxAmount));
                         }
                     }
                 }

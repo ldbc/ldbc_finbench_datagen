@@ -103,6 +103,14 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
     df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/loan")
   }
 
+
+  def writeLoanTransfer(self: RDD[Transfer]): Unit = {
+    val df = spark.createDataFrame(self.map { t =>
+      TransferRaw(t.getFromAccount.getAccountId, t.getToAccount.getAccountId, t.getMultiplicityId, t.getCreationDate, t.getDeletionDate, t.getAmount, t.isExplicitlyDeleted)
+    })
+    df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/loantransfer")
+  }
+
   def writeTransfer(self: RDD[Transfer]): Unit = {
     val df = spark.createDataFrame(self.map { t =>
       TransferRaw(t.getFromAccount.getAccountId, t.getToAccount.getAccountId, t.getMultiplicityId, t.getCreationDate, t.getDeletionDate, t.getAmount, t.isExplicitlyDeleted)
