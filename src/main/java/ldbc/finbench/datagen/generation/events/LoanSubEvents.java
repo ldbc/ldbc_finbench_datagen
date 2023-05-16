@@ -96,8 +96,8 @@ public class LoanSubEvents implements Serializable {
         Account account = getAccount(loan);
         Account target = targetAccounts.get(indexRandom.nextInt(targetAccounts.size()));
         double transferAmount = amountRandom.nextDouble() * DatagenParams.transferMaxAmount;
-        Transfer transfer = actionRandom.nextDouble() < 0.5 ?
-            Transfer.createTransfer(randomFarm.get(RandomGeneratorFarm.Aspect.DATE), account, target, transferAmount)
+        Transfer transfer = actionRandom.nextDouble() < 0.5
+            ? Transfer.createTransfer(randomFarm.get(RandomGeneratorFarm.Aspect.DATE), account, target, transferAmount)
             : Transfer.createTransfer(randomFarm.get(RandomGeneratorFarm.Aspect.DATE), target, account, transferAmount);
         transfers.add(transfer);
     }
