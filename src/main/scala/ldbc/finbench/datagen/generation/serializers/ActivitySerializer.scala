@@ -4,13 +4,14 @@ import ldbc.finbench.datagen.entities.edges._
 import ldbc.finbench.datagen.entities.nodes._
 import ldbc.finbench.datagen.io.raw.RawSink
 import ldbc.finbench.datagen.model.raw._
+import ldbc.finbench.datagen.util.Logging
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
 /**
  * generate person and company activities
  * */
-class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit spark: SparkSession) extends Serializable {
+class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit spark: SparkSession) extends Serializable with Logging {
   def writePerson(self: RDD[Person]): Unit = {
     val rawPersons = self.map { p: Person => PersonRaw(p.getPersonId, p.getCreationDate, p.getPersonName, p.isBlocked) }
     val df = spark.createDataFrame(rawPersons)
@@ -106,8 +107,11 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
 
   def writeLoanTransfer(self: RDD[Transfer]): Unit = {
     val df = spark.createDataFrame(self.map { t =>
+      log.info(s"loan transfer multiplicityId: ${t.getMultiplicityId}")
       TransferRaw(t.getFromAccount.getAccountId, t.getToAccount.getAccountId, t.getMultiplicityId, t.getCreationDate, t.getDeletionDate, t.getAmount, t.isExplicitlyDeleted)
     })
+    log.info(s"Raw loan transfer count: ${self.count()}")
+    log.info(s"number of elements after map operation: ${df.count()}")
     df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/loantransfer")
   }
 

@@ -73,7 +73,7 @@ public class TransferEvent implements Serializable {
                     if (numTransfers <= to.getAvaialbleInDegree() && distanceProbOK(j - i)) {
                         for (int mindex = 0; mindex < numTransfers; mindex++) {
                             // Note: nearly impossible to generate same date
-                            allTransfers.add(Transfer.createTransfer(dateRandom, from, to,
+                            allTransfers.add(Transfer.createTransfer(dateRandom, from, to, mindex,
                                                                      amountRandom.nextDouble()
                                                                          * DatagenParams.transferMaxAmount));
                         }

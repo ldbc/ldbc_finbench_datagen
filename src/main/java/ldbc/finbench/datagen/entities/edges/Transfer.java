@@ -10,7 +10,6 @@ import ldbc.finbench.datagen.entities.nodes.Account;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 
 public class Transfer implements DynamicActivity, Serializable {
-    private static final Map<String, AtomicLong> multiplicityMap = new ConcurrentHashMap<>();
     private Account fromAccount;
     private Account toAccount;
     private double amount;
@@ -31,22 +30,15 @@ public class Transfer implements DynamicActivity, Serializable {
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static Transfer createTransfer(Random random, Account from, Account to, double amount) {
+    public static Transfer createTransfer(Random random, Account from, Account to, long multiplicityId, double amount) {
         long deleteDate = Math.min(from.getDeletionDate(), to.getDeletionDate());
         long creationDate = Dictionaries.dates.randomAccountToAccountDate(random, from, to, deleteDate);
         boolean willDelete = from.isExplicitlyDeleted() && to.isExplicitlyDeleted();
-        long multiplicityId = getMultiplicityIdAndInc(from, to);
         Transfer transfer = new Transfer(from, to, amount, creationDate, deleteDate, multiplicityId, willDelete);
         from.getTransferOuts().add(transfer);
         to.getTransferIns().add(transfer);
 
         return transfer;
-    }
-
-    public static long getMultiplicityIdAndInc(Account from, Account to) {
-        String key = from.getAccountId() + "-" + to.getAccountId();
-        AtomicLong atomicInt = multiplicityMap.computeIfAbsent(key, k -> new AtomicLong());
-        return atomicInt.getAndIncrement();
     }
 
     public double getAmount() {
@@ -106,5 +98,18 @@ public class Transfer implements DynamicActivity, Serializable {
 
     public void setExplicitlyDeleted(boolean explicitlyDeleted) {
         isExplicitlyDeleted = explicitlyDeleted;
+    }
+
+    @Override
+    public String toString() {
+        return "Transfer{" +
+                "fromAccount=" + fromAccount +
+                ", toAccount=" + toAccount +
+                ", amount=" + amount +
+                ", creationDate=" + creationDate +
+                ", deletionDate=" + deletionDate +
+                ", multiplicityId=" + multiplicityId +
+                ", isExplicitlyDeleted=" + isExplicitlyDeleted +
+                '}';
     }
 }

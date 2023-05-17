@@ -4,7 +4,10 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import ldbc.finbench.datagen.entities.edges.CompanyOwnAccount;
 import ldbc.finbench.datagen.entities.edges.Deposit;
@@ -22,14 +25,15 @@ public class LoanSubEvents implements Serializable {
     private final Random indexRandom;
     private final Random actionRandom;
     private final Random amountRandom;
-    private final List<Consumer<Loan>> subeventConsumers;
+    private final List<Consumer<Loan>> consumers;
     private final List<Account> targetAccounts;
     private final List<Deposit> deposits;
     private final List<Repay> repays;
-
     private final List<Transfer> transfers;
+    private final Map<String, AtomicLong> multiplicityMap;
 
     public LoanSubEvents(List<Account> targets) {
+        multiplicityMap = new ConcurrentHashMap<>();
         randomFarm = new RandomGeneratorFarm();
         indexRandom = new Random(DatagenParams.defaultSeed);
         actionRandom = new Random(DatagenParams.defaultSeed);
@@ -38,7 +42,8 @@ public class LoanSubEvents implements Serializable {
         deposits = new ArrayList<>();
         repays = new ArrayList<>();
         transfers = new ArrayList<>();
-        subeventConsumers = Arrays.asList(this::depositSubEvent, this::repaySubEvent, this::transferSubEvent);
+        // Add all defined subevents to the consumers list
+        consumers = Arrays.asList(this::depositSubEvent, this::repaySubEvent, this::transferSubEvent);
     }
 
     public void resetState(int seed) {
@@ -65,8 +70,8 @@ public class LoanSubEvents implements Serializable {
         for (Loan loan : loans) {
             int count = 0;
             while (count++ < DatagenParams.numLoanActions) {
-                int actionIndex = actionRandom.nextInt(subeventConsumers.size());
-                subeventConsumers.get(actionIndex).accept(loan);
+                Consumer<Loan> consumer = consumers.get(actionRandom.nextInt(consumers.size()));
+                consumer.accept(loan);
             }
         }
     }
@@ -92,14 +97,32 @@ public class LoanSubEvents implements Serializable {
         repays.add(repay);
     }
 
+    public long getMultiplicityIdAndInc(Account from, Account to) {
+        String key = from.getAccountId() + "-" + to.getAccountId();
+        AtomicLong atomicInt = multiplicityMap.computeIfAbsent(key, k -> new AtomicLong());
+        return atomicInt.getAndIncrement();
+    }
+
+
     private void transferSubEvent(Loan loan) {
         Account account = getAccount(loan);
         Account target = targetAccounts.get(indexRandom.nextInt(targetAccounts.size()));
         double transferAmount = amountRandom.nextDouble() * DatagenParams.transferMaxAmount;
-        Transfer transfer = actionRandom.nextDouble() < 0.5
-            ? Transfer.createTransfer(randomFarm.get(RandomGeneratorFarm.Aspect.DATE), account, target, transferAmount)
-            : Transfer.createTransfer(randomFarm.get(RandomGeneratorFarm.Aspect.DATE), target, account, transferAmount);
-        transfers.add(transfer);
+
+        if (actionRandom.nextDouble() < 0.5) {
+            long multiplicityId = getMultiplicityIdAndInc(account, target);
+            Transfer transfer =
+                Transfer.createTransfer(randomFarm.get(RandomGeneratorFarm.Aspect.DATE), account, target,
+                                        multiplicityId, transferAmount);
+            transfers.add(transfer);
+        } else {
+            long multiplicityId = getMultiplicityIdAndInc(target, account);
+            Transfer transfer =
+                Transfer.createTransfer(randomFarm.get(RandomGeneratorFarm.Aspect.DATE), target, account,
+                                        multiplicityId, transferAmount);
+            transfers.add(transfer);
+        }
+
     }
 
     private Account getAccount(Loan loan) {

@@ -4,6 +4,7 @@ import ldbc.finbench.datagen.entities.edges._
 import ldbc.finbench.datagen.entities.nodes._
 import ldbc.finbench.datagen.generation.DatagenParams
 import ldbc.finbench.datagen.generation.events._
+import ldbc.finbench.datagen.util.Logging
 import org.apache.spark.TaskContext
 import org.apache.spark.rdd.RDD
 
@@ -11,7 +12,7 @@ import java.util
 import scala.collection.JavaConverters._
 import scala.collection.SortedMap
 
-class ActivityGenerator() extends Serializable {
+class ActivityGenerator() extends Serializable with Logging {
   // TODO: Move the type definitions to the some common place
   type EitherPersonOrCompany = Either[Person, Company]
   type EitherPersonInvestOrCompanyInvest = Either[PersonInvestCompany, CompanyInvestCompany]
@@ -20,29 +21,6 @@ class ActivityGenerator() extends Serializable {
   val sampleRandom = new scala.util.Random(DatagenParams.defaultSeed) // Use a common sample random to avoid identical samples
   val accountGenerator = new AccountGenerator() // Use a common account generator to maintain the degree distribution
   val loanGenerator = new LoanGenerator()
-
-
-  //  def personRegisterEvent(personRDD: RDD[Person]): RDD[PersonOwnAccount] = {
-  //    val blocks = personRDD.zipWithUniqueId().map { case (v, k) => (k / blockSize, (k, v)) }
-  //    val personRegisterGen = new PersonRegisterEvent
-  //
-  //    val personOwnAccount = blocks.combineByKeyWithClassTag(
-  //      personByRank => SortedMap(personByRank),
-  //      (map: SortedMap[Long, Person], personByRank) => map + personByRank,
-  //      (a: SortedMap[Long, Person], b: SortedMap[Long, Person]) => a ++ b
-  //    )
-  //      .mapPartitions(groups => {
-  //        val personRegisterGroups = for {(block, persons) <- groups} yield {
-  //          personRegisterGen.personRegisterIter(persons.values.toList, accountGenerator, block.toInt)
-  //        }
-  //
-  //        for {
-  //          personOwnAccounts <- personRegisterGroups
-  //          personOwnAccount <- personOwnAccounts.iterator().asScala
-  //        } yield personOwnAccount
-  //      })
-  //    personOwnAccount
-  //  }
 
   def personRegisterEvent(personRDD: RDD[Person]): RDD[PersonOwnAccount] = {
     val blocks = personRDD.zipWithUniqueId().map(row => (row._2, row._1)).map { case (k, v) => (k / blockSize, (k, v)) }
@@ -168,6 +146,7 @@ class ActivityGenerator() extends Serializable {
   }
 
   def personLoanEvent(personRDD: RDD[Person]): RDD[PersonApplyLoan] = {
+    log.info(s"personLoanEvent start. NumPartitions: ${personRDD.getNumPartitions}")
     val personLoanEvent = new PersonLoanEvent
     val personSample = personRDD.sample(withReplacement = false, DatagenParams.personLoanFraction, sampleRandom.nextLong())
     personSample.mapPartitions(persons => {
@@ -209,21 +188,25 @@ class ActivityGenerator() extends Serializable {
       val sampleAccounts = accountRDD.sample(withReplacement = false, fraction / loanParts, sampleRandom.nextLong())
       accountSampleList.add(sampleAccounts.collect().toList.asJava)
     }
+
+    log.info(s"depositAndRepayEvent start. NumPartitions: ${loanRDD.getNumPartitions}")
     // TODO: optimize the java-scala cross part
     val depositsAndRepays = loanRDD.mapPartitions(loans => {
       val partitionId = TaskContext.getPartitionId()
       val loanSubEvents = new LoanSubEvents(accountSampleList.get(partitionId))
       loanSubEvents.afterLoanApplied(loans.toList.asJava, partitionId)
-      Iterator(
-        (loanSubEvents.getDeposits.asScala,
-          loanSubEvents.getRepays.asScala,
-          loanSubEvents.getTransfers.asScala)
-      )
+      Iterator((loanSubEvents.getDeposits.asScala,
+        loanSubEvents.getRepays.asScala,
+        loanSubEvents.getTransfers.asScala))
     })
 
     val deposits = depositsAndRepays.map(_._1).flatMap(deposits => deposits)
     val repays = depositsAndRepays.map(_._2).flatMap(repays => repays)
     val transfers = depositsAndRepays.map(_._3).flatMap(transfers => transfers)
+
+    log.info(s"count of deposits in loan: ${deposits.count()}")
+    log.info(s"count of repays in loan: ${repays.count()}")
+    log.info(s"count of transfers in loan: ${transfers.count()}")
     (deposits, repays, transfers)
   }
 
