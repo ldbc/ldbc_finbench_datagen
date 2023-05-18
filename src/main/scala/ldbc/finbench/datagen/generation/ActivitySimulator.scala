@@ -1,7 +1,7 @@
 package ldbc.finbench.datagen.generation
 
 import ldbc.finbench.datagen.entities.nodes._
-import ldbc.finbench.datagen.generation.generators.{ActivityGenerator, SparkCompanyGenerator, SparkPersonGenerator}
+import ldbc.finbench.datagen.generation.generators.{ActivityGenerator, SparkCompanyGenerator, SparkMediumGenerator, SparkPersonGenerator}
 import ldbc.finbench.datagen.generation.serializers.ActivitySerializer
 import ldbc.finbench.datagen.io.Writer
 import ldbc.finbench.datagen.io.raw.RawSink
@@ -62,55 +62,53 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
       .coalesce(1)
 
     // simulate person signIn medium event
-    //    val mediumRdd: RDD[Medium] = SparkMediumGenerator(mediumNum, blockSize, mediumPartitions)
-    //    val signInRdd = activityGenerator.signInEvent(mediumRdd, accountRdd)
-    //
-    //    // simulate person or company invest company event
-    //    val investRdd = activityGenerator.investEvent(personRdd, companyRdd)
-    //
-    //    // simulate person guarantee person event and company guarantee company event
-    //    val personGuaranteeRdd = activityGenerator.personGuaranteeEvent(personRdd)
-    //    val companyGuaranteeRdd = activityGenerator.companyGuaranteeEvent(companyRdd)
-    //
-    //    // simulate person apply loans event and company apply loans event
+    val mediumRdd: RDD[Medium] = SparkMediumGenerator(mediumNum, blockSize, mediumPartitions)
+    val signInRdd = activityGenerator.signInEvent(mediumRdd, accountRdd)
+
+    // simulate person or company invest company event
+    val investRdd = activityGenerator.investEvent(personRdd, companyRdd)
+
+    // simulate person guarantee person event and company guarantee company event
+    val personGuaranteeRdd = activityGenerator.personGuaranteeEvent(personRdd)
+    val companyGuaranteeRdd = activityGenerator.companyGuaranteeEvent(companyRdd)
+
+    // simulate person apply loans event and company apply loans event
     val personLoanRdd = activityGenerator.personLoanEvent(personWithAccountRdd)
     val companyLoanRdd = activityGenerator.companyLoanEvent(companyWithAccountRdd)
-    //
-    //    // Merge accounts vertices registered by persons and companies
+
+    // Merge accounts vertices registered by persons and companies
     val loanRdd = personLoanRdd.map(personLoan => personLoan.getLoan)
       .union(companyLoanRdd.map(companyLoan => companyLoan.getLoan))
       .coalesce(1)
     log.info(s"[Simulation] loanRdd partitions: ${loanRdd.getNumPartitions}, loanRdd count: ${loanRdd.count()}")
 
-    //
-    //    // simulate deposit and repay event
-    val (deposits, repays, loanTrasfers) = activityGenerator.depositAndRepayEvent(loanRdd, accountRdd)
-//    val loanTrasfers = activityGenerator.depositAndRepayEvent(loanRdd, accountRdd)
+    // simulate loan subevents including deposit, repay and transfer
+    val (depositsRdd, repaysRdd, loanTrasfersRdd) = activityGenerator.afterLoanSubEvents(loanRdd, accountRdd)
 
     // simulate transfer event
-//        val transferRdd = activityGenerator.transferEvent(accountRdd)
+    val transferRdd = activityGenerator.transferEvent(accountRdd)
 
     // simulate withdraw event TODO: refine
     //    val withdrawRdd = activityGenerator.withdrawEvent(accountRdd)
 
     // TODO: use some syntax to implement serializer less verbose like GraphDef
     activitySerializer.writePerson(personRdd)
-    //    activitySerializer.writeCompany(companyRdd)
-    //    activitySerializer.writeMedium(mediumRdd)
+    activitySerializer.writeCompany(companyRdd)
+    activitySerializer.writeMedium(mediumRdd)
     activitySerializer.writePersonOwnAccount(personOwnAccountInfo)
     activitySerializer.writeCompanyOwnAccount(companyOwnAccountInfo)
     activitySerializer.writeAccount(accountRdd)
-    //    activitySerializer.writeInvest(investRdd)
-    //    activitySerializer.writeSignIn(signInRdd)
-    //    activitySerializer.writePersonGuarantee(personGuaranteeRdd)
-    //    activitySerializer.writeCompanyGuarantee(companyGuaranteeRdd)
-    //    activitySerializer.writePersonLoan(personLoanRdd)
-    //    activitySerializer.writeCompanyLoan(companyLoanRdd)
+    activitySerializer.writeInvest(investRdd)
+    activitySerializer.writeSignIn(signInRdd)
+    activitySerializer.writePersonGuarantee(personGuaranteeRdd)
+    activitySerializer.writeCompanyGuarantee(companyGuaranteeRdd)
+    activitySerializer.writePersonLoan(personLoanRdd)
+    activitySerializer.writeCompanyLoan(companyLoanRdd)
     activitySerializer.writeLoan(loanRdd)
-    activitySerializer.writeDeposit(deposits)
-    activitySerializer.writeRepay(repays)
-    activitySerializer.writeLoanTransfer(loanTrasfers)
-//        activitySerializer.writeTransfer(transferRdd)
+    activitySerializer.writeDeposit(depositsRdd)
+    activitySerializer.writeRepay(repaysRdd)
+    activitySerializer.writeLoanTransfer(loanTrasfersRdd)
+    activitySerializer.writeTransfer(transferRdd)
     //    activitySerializer.writeWithdraw(withdrawRdd)
   }
 }

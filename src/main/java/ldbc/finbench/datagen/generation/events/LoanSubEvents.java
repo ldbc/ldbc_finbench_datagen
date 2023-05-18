@@ -30,6 +30,8 @@ public class LoanSubEvents implements Serializable {
     private final List<Deposit> deposits;
     private final List<Repay> repays;
     private final List<Transfer> transfers;
+    // Note: Don't make it static. It will be accessed by different Spark workers, which makes the multiplicity
+    // wrong.
     private final Map<String, AtomicLong> multiplicityMap;
 
     public LoanSubEvents(List<Account> targets) {

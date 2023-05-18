@@ -37,6 +37,7 @@ public class CompanyRegisterEvent implements Serializable {
         List<CompanyOwnAccount> companyOwnAccounts = new ArrayList<>();
 
         for (Company company : companies) {
+            // Each company has at least one account
             for (int i = 0; i < Math.max(1, numAccountsRandom.nextInt(DatagenParams.maxAccountsPerOwner)); i++) {
                 Account account = accountGenerator.generateAccount();
                 CompanyOwnAccount companyOwnAccount =

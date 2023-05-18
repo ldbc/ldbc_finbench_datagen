@@ -1,10 +1,7 @@
 package ldbc.finbench.datagen.entities.edges;
 
 import java.io.Serializable;
-import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 import ldbc.finbench.datagen.entities.nodes.Account;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
@@ -19,8 +16,7 @@ public class Transfer implements DynamicActivity, Serializable {
     private boolean isExplicitlyDeleted;
 
     public Transfer(Account fromAccount, Account toAccount, double amount, long creationDate, long deletionDate,
-                    long multiplicityId,
-                    boolean isExplicitlyDeleted) {
+                    long multiplicityId, boolean isExplicitlyDeleted) {
         this.fromAccount = fromAccount;
         this.toAccount = toAccount;
         this.amount = amount;
@@ -102,14 +98,8 @@ public class Transfer implements DynamicActivity, Serializable {
 
     @Override
     public String toString() {
-        return "Transfer{" +
-                "fromAccount=" + fromAccount +
-                ", toAccount=" + toAccount +
-                ", amount=" + amount +
-                ", creationDate=" + creationDate +
-                ", deletionDate=" + deletionDate +
-                ", multiplicityId=" + multiplicityId +
-                ", isExplicitlyDeleted=" + isExplicitlyDeleted +
-                '}';
+        return "Transfer{" + "fromAccount=" + fromAccount + ", toAccount=" + toAccount + ", amount=" + amount
+            + ", creationDate=" + creationDate + ", deletionDate=" + deletionDate + ", multiplicityId=" + multiplicityId
+            + ", isExplicitlyDeleted=" + isExplicitlyDeleted + '}';
     }
 }

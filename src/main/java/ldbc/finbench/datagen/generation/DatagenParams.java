@@ -105,7 +105,7 @@ public class DatagenParams {
             maxLoans = intConf(conf, "loan.maxLoans");
             minLoanAmount = longConf(conf, "loan.minLoanAmount");
             maxLoanAmount = longConf(conf, "loan.maxLoanAmount");
-            numLoanActions = intConf(conf, "loan.numActions");
+            numLoanActions = intConf(conf, "loan.numSubEvents");
 
             companyInvestedFraction = doubleConf(conf, "invest.companyInvestedFraction");
             minInvestors = intConf(conf, "invest.minInvestors");

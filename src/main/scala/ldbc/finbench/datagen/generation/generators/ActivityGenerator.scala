@@ -28,16 +28,12 @@ class ActivityGenerator() extends Serializable with Logging {
 
     val personOwnAccount = blocks.combineByKeyWithClassTag(
       personByRank => SortedMap(personByRank),
-      (map: SortedMap[Long, Person], companyById) => map + companyById,
+      (map: SortedMap[Long, Person], personByRank) => map + personByRank,
       (a: SortedMap[Long, Person], b: SortedMap[Long, Person]) => a ++ b
     )
       .mapPartitions(groups => {
         val personRegisterGroups = for {(block, persons) <- groups} yield {
-          val personList = new util.ArrayList[Person](persons.size)
-          for (p <- persons.values) {
-            personList.add(p)
-          }
-          personRegisterGen.personRegister(personList, accountGenerator, block.toInt)
+          personRegisterGen.personRegister(persons.values.toList.asJava, accountGenerator, block.toInt)
         }
 
         for {
@@ -180,7 +176,7 @@ class ActivityGenerator() extends Serializable with Logging {
     })
   }
 
-  def depositAndRepayEvent(loanRDD: RDD[Loan], accountRDD: RDD[Account]): (RDD[Deposit], RDD[Repay], RDD[Transfer]) = {
+  def afterLoanSubEvents(loanRDD: RDD[Loan], accountRDD: RDD[Account]): (RDD[Deposit], RDD[Repay], RDD[Transfer]) = {
     val fraction = DatagenParams.loanInvolvedAccountsFraction
     val loanParts = loanRDD.partitions.length
     val accountSampleList = new util.ArrayList[util.List[Account]](loanParts)
@@ -190,8 +186,9 @@ class ActivityGenerator() extends Serializable with Logging {
     }
 
     log.info(s"depositAndRepayEvent start. NumPartitions: ${loanRDD.getNumPartitions}")
-    // TODO: optimize the java-scala cross part
-    val depositsAndRepays = loanRDD.mapPartitions(loans => {
+
+    // TODO: optimize the map function with the Java-Scala part.
+    val afterLoanActions = loanRDD.mapPartitions(loans => {
       val partitionId = TaskContext.getPartitionId()
       val loanSubEvents = new LoanSubEvents(accountSampleList.get(partitionId))
       loanSubEvents.afterLoanApplied(loans.toList.asJava, partitionId)
@@ -200,9 +197,9 @@ class ActivityGenerator() extends Serializable with Logging {
         loanSubEvents.getTransfers.asScala))
     })
 
-    val deposits = depositsAndRepays.map(_._1).flatMap(deposits => deposits)
-    val repays = depositsAndRepays.map(_._2).flatMap(repays => repays)
-    val transfers = depositsAndRepays.map(_._3).flatMap(transfers => transfers)
+    val deposits = afterLoanActions.map(_._1).flatMap(deposits => deposits)
+    val repays = afterLoanActions.map(_._2).flatMap(repays => repays)
+    val transfers = afterLoanActions.map(_._3).flatMap(transfers => transfers)
 
     log.info(s"count of deposits in loan: ${deposits.count()}")
     log.info(s"count of repays in loan: ${repays.count()}")
