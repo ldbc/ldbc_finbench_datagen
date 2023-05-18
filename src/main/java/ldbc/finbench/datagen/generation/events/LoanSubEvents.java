@@ -79,21 +79,21 @@ public class LoanSubEvents implements Serializable {
     }
 
     private void depositSubEvent(Loan loan) {
-        if (loan.getBalance() == 0) {
+        Account account = getAccount(loan);
+        if (loan.getBalance() == 0 || cannotDeposit(loan, account)) {
             return;
         }
-        Account account = getAccount(loan);
         double amount = amountRandom.nextDouble() * loan.getBalance();
         Deposit deposit = Deposit.createDeposit(randomFarm.get(RandomGeneratorFarm.Aspect.DATE), loan, account, amount);
         deposits.add(deposit);
     }
 
     private void repaySubEvent(Loan loan) {
-        if (loan.getLoanAmount() == loan.getBalance()) {
+        Account account = getAccount(loan);
+        if (loan.getLoanAmount() == loan.getBalance() || cannotRepay(account, loan)) {
             return;
         }
 
-        Account account = getAccount(loan);
         double amount = amountRandom.nextDouble() * (loan.getLoanAmount() - loan.getBalance());
         Repay repay = Repay.createRepay(randomFarm.get(RandomGeneratorFarm.Aspect.DATE), account, loan, amount);
         repays.add(repay);
@@ -109,22 +109,32 @@ public class LoanSubEvents implements Serializable {
     private void transferSubEvent(Loan loan) {
         Account account = getAccount(loan);
         Account target = targetAccounts.get(indexRandom.nextInt(targetAccounts.size()));
-        double transferAmount = amountRandom.nextDouble() * DatagenParams.transferMaxAmount;
-
         if (actionRandom.nextDouble() < 0.5) {
-            long multiplicityId = getMultiplicityIdAndInc(account, target);
-            Transfer transfer =
-                Transfer.createTransfer(randomFarm.get(RandomGeneratorFarm.Aspect.DATE), account, target,
-                                        multiplicityId, transferAmount);
-            transfers.add(transfer);
+            if (!cannotTransfer(account, target)) {
+                transfers.add(Transfer.createTransfer(randomFarm.get(RandomGeneratorFarm.Aspect.DATE), account, target,
+                                                      getMultiplicityIdAndInc(account, target),
+                                                      amountRandom.nextDouble() * DatagenParams.transferMaxAmount));
+            }
         } else {
-            long multiplicityId = getMultiplicityIdAndInc(target, account);
-            Transfer transfer =
-                Transfer.createTransfer(randomFarm.get(RandomGeneratorFarm.Aspect.DATE), target, account,
-                                        multiplicityId, transferAmount);
-            transfers.add(transfer);
+            if (!cannotTransfer(target, account)) {
+                transfers.add(Transfer.createTransfer(randomFarm.get(RandomGeneratorFarm.Aspect.DATE), target, account,
+                                                      getMultiplicityIdAndInc(target, account),
+                                                      amountRandom.nextDouble() * DatagenParams.transferMaxAmount));
+            }
         }
+    }
 
+    public boolean cannotTransfer(Account from, Account to) {
+        return from.getDeletionDate() < to.getCreationDate() + DatagenParams.activityDelta
+            || from.getCreationDate() + DatagenParams.activityDelta > to.getDeletionDate();
+    }
+
+    public boolean cannotDeposit(Loan from, Account to) {
+        return from.getCreationDate() + DatagenParams.activityDelta > to.getDeletionDate();
+    }
+
+    public boolean cannotRepay(Account from, Loan to) {
+        return from.getDeletionDate() < to.getCreationDate() + DatagenParams.activityDelta;
     }
 
     private Account getAccount(Loan loan) {

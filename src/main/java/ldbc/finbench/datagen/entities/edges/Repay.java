@@ -26,7 +26,8 @@ public class Repay implements DynamicActivity, Serializable {
     }
 
     public static Repay createRepay(Random random, Account account, Loan loan, double amount) {
-        long creationDate = Dictionaries.dates.randomAccountToLoanDate(random, account, loan);
+        long creationDate =
+            Dictionaries.dates.randomAccountToLoanDate(random, account, loan, account.getDeletionDate());
         Repay repay = new Repay(account, loan, amount, creationDate, account.getDeletionDate(),
                                 account.isExplicitlyDeleted());
         loan.addRepay(repay);

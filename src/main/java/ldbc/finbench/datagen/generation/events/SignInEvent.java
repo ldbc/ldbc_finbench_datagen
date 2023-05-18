@@ -35,16 +35,25 @@ public class SignInEvent implements Serializable {
         List<SignIn> signIns = new ArrayList<>();
         for (Medium medium : media) {
             int numAccountsToSign = accountsToSignRandom.nextInt(DatagenParams.maxAccountToSignIn);
-            for (int i = 0; i < numAccountsToSign; i++) {
+            int signedCount = 0;
+            while (signedCount < numAccountsToSign) {
                 Account accountToSign = accounts.get(randIndex.nextInt(accounts.size()));
+                if (cannotSignIn(medium, accountToSign)) {
+                    continue;
+                }
                 int numSignIn = multiplicityRandom.nextInt(DatagenParams.maxSignInPerPair);
                 for (int mid = 0; mid < numSignIn; mid++) {
                     SignIn signIn = SignIn.createSignIn(mid, randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
                                                         medium, accountToSign);
                     signIns.add(signIn);
                 }
+                signedCount++;
             }
         }
         return signIns;
+    }
+
+    public boolean cannotSignIn(Medium from, Account to) {
+        return from.getCreationDate() + DatagenParams.activityDelta > to.getDeletionDate();
     }
 }

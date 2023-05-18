@@ -26,7 +26,8 @@ public class Deposit implements DynamicActivity, Serializable {
     }
 
     public static Deposit createDeposit(Random random, Loan loan, Account account, double amount) {
-        long creationDate = Dictionaries.dates.randomLoanToAccountDate(random, loan, account);
+        long creationDate =
+            Dictionaries.dates.randomLoanToAccountDate(random, loan, account, account.getDeletionDate());
         Deposit deposit =
             new Deposit(loan, account, amount, creationDate, account.getDeletionDate(), account.isExplicitlyDeleted());
         loan.addDeposit(deposit);

@@ -140,6 +140,7 @@ object raw {
       `accountId`: Long,
       `loanId`: Long,
       createTime: Long,
+      deleteTime: Long,
       amount: Double,
       isExplicitDeleted: Boolean
   )
@@ -149,6 +150,7 @@ object raw {
       `loanId`: Long,
       `accountId`: Long,
       createTime: Long,
+      deleteTime: Long,
       amount: Double,
       isExplicitDeleted: Boolean
   )

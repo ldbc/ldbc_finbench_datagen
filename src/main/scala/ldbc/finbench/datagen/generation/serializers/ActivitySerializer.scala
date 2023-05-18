@@ -131,14 +131,14 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
 
   def writeDeposit(self: RDD[Deposit]): Unit = {
     val df = spark.createDataFrame(self.map { d =>
-      DepositRaw(d.getLoan.getLoanId, d.getAccount.getAccountId, d.getCreationDate, d.getAmount, d.isExplicitlyDeleted)
+      DepositRaw(d.getLoan.getLoanId, d.getAccount.getAccountId, d.getCreationDate, d.getDeletionDate, d.getAmount, d.isExplicitlyDeleted)
     })
     df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/deposit")
   }
 
   def writeRepay(self: RDD[Repay]): Unit = {
     val df = spark.createDataFrame(self.map { r =>
-      RepayRaw(r.getAccount.getAccountId, r.getLoan.getLoanId, r.getCreationDate, r.getAmount, r.isExplicitlyDeleted)
+      RepayRaw(r.getAccount.getAccountId, r.getLoan.getLoanId, r.getCreationDate, r.getDeletionDate, r.getAmount, r.isExplicitlyDeleted)
     })
     df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/repay")
   }

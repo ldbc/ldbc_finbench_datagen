@@ -63,10 +63,9 @@ public class TransferEvent implements Serializable {
         for (int i = 0; i < accounts.size(); i++) {
             Account from = accounts.get(i);
             while (from.getAvaialbleOutDegree() != 0) {
-                // i!=j: Transfer to self is not allowed
                 for (int j = 0; j < accounts.size(); j++) {
                     Account to = accounts.get(j);
-                    if (i == j || cannotTransfer(from, to)) {
+                    if (cannotTransfer(from, to)) {
                         continue;
                     }
                     long numTransfers = Math.min(multiplicityDistribution.nextDegree(), from.getAvaialbleOutDegree());
@@ -84,8 +83,10 @@ public class TransferEvent implements Serializable {
         return allTransfers;
     }
 
+    // Transfer to self is not allowed
     public boolean cannotTransfer(Account from, Account to) {
         return from.getDeletionDate() < to.getCreationDate() + DatagenParams.activityDelta
-            || from.getCreationDate() + DatagenParams.activityDelta > to.getDeletionDate();
+            || from.getCreationDate() + DatagenParams.activityDelta > to.getDeletionDate()
+            || from.equals(to);
     }
 }
