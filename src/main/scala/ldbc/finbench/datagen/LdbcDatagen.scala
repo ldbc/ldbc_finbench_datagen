@@ -17,15 +17,11 @@ object LdbcDatagen extends SparkApp {
       paramFile: Option[String] = None,
       outputDir: String = "out",
       bulkloadPortion: Double = 0.97,
-      explodeEdges: Boolean = false,
-      explodeAttrs: Boolean = false,
       keepImplicitDeletes: Boolean = false,
-      mode: String = "raw",
       batchPeriod: String = "day",
       numPartitions: Option[Int] = None,
       format: String = "csv",
       formatOptions: Map[String, String] = Map.empty,
-      oversizeFactor: Option[Double] = None,
       epochMillis: Boolean = false,
       generateFactors: Boolean = false,
       factorFormat: String = "parquet"
@@ -63,32 +59,9 @@ object LdbcDatagen extends SparkApp {
         .action((x, c) => args.numPartitions.set(c)(Some(x)))
         .text("Controls parallelization and number of files written.")
 
-      opt[String]('m', "mode")
-        .validate(s =>
-          s.toLowerCase match {
-            case "raw" | "bi" | "interactive" => Right(())
-            case _                            => Left("Invalid value. Must be one of raw, bi, interactive")
-        })
-        .action((x, c) => args.mode.set(c)(x))
-        .text("Generation mode. Options: raw, bi, interactive. Default: raw")
-
-      opt[Double]("oversize-factor")
-        .action((x, c) => args.oversizeFactor.set(c)(Some(x)))
-        .text(
-          "Controls size of files relative to Persons. " +
-            "Values larger than 1 will result in less but larger files. " +
-            "Smaller values result in more, smaller files"
-        )
-
       opt[Double]("bulkload-portion")
         .action((x, c) => args.bulkloadPortion.set(c)(x))
         .text("Bulkload portion. Only applicable to BI and interactive modes")
-
-      opt[Unit]('e', "explode-edges")
-        .action((x, c) => args.explodeEdges.set(c)(true))
-
-      opt[Unit]('a', "explode-attrs")
-        .action((x, c) => args.explodeAttrs.set(c)(true))
 
       opt[String]("batch-period")
         .action((x, c) => args.batchPeriod.set(c)(x))
@@ -142,8 +115,7 @@ object LdbcDatagen extends SparkApp {
       paramFile = args.paramFile,
       outputDir = args.outputDir,
       partitionsOpt = args.numPartitions,
-      format = args.format,
-      oversizeFactor = args.oversizeFactor
+      format = args.format
     )
 
     GenerationStage.run(generatorArgs)

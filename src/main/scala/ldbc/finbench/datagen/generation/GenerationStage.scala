@@ -12,11 +12,13 @@ import scala.reflect.ClassTag
 
 object GenerationStage extends DatagenStage with Logging {
 
-  case class Args(scaleFactor: String = "0.1", partitionsOpt: Option[Int] = None, params: Map[String, String] = Map.empty, paramFile: Option[String] = None, outputDir: String = "out", format: String = "csv", oversizeFactor: Option[Double] = None)
+  case class Args(scaleFactor: String = "0.1", partitionsOpt: Option[Int] = None, params: Map[String, String] = Map.empty, paramFile: Option[String] = None, outputDir: String = "out", format: String = "csv")
 
   override type ArgsType = Args
 
   override def run(args: Args): Unit = {
+    log.info(s"Starting Finbench data generation of scale factor ${args.scaleFactor} to directory ${args.outputDir}.")
+
     // build and initialize the configs
     val config = buildConfig(args)
     DatagenContext.initialize(config)
@@ -40,11 +42,7 @@ object GenerationStage extends DatagenStage with Logging {
     }
   }
 
-  /**
-   * build GeneratorConfiguration from user args
-   *
-   * @param args user params
-   * @return {@link GeneratorConfiguration} */
+  // build GeneratorConfiguration from user args
   private def buildConfig(args: Args): GeneratorConfiguration = {
     val conf = new java.util.HashMap[String, String]
     val props = new Properties() // Read default values at first
@@ -63,8 +61,7 @@ object GenerationStage extends DatagenStage with Logging {
     new GeneratorConfiguration(conf)
   }
 
-  /**
-   * read hdfs uri to get FSDataInputStream */
+  //  read hdfs uri to get FSDataInputStream
   private def openPropFileStream(uri: URI): FSDataInputStream = {
     val fs = FileSystem.get(uri, spark.sparkContext.hadoopConfiguration)
     fs.open(new Path(uri.getPath))

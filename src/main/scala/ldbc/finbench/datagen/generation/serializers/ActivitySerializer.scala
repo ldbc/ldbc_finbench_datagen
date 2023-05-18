@@ -107,11 +107,8 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
 
   def writeLoanTransfer(self: RDD[Transfer]): Unit = {
     val df = spark.createDataFrame(self.map { t =>
-      log.info(s"loan transfer multiplicityId: ${t.getMultiplicityId}")
       TransferRaw(t.getFromAccount.getAccountId, t.getToAccount.getAccountId, t.getMultiplicityId, t.getCreationDate, t.getDeletionDate, t.getAmount, t.isExplicitlyDeleted)
     })
-    log.info(s"Raw loan transfer count: ${self.count()}")
-    log.info(s"number of elements after map operation: ${df.count()}")
     df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/loantransfer")
   }
 
