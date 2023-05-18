@@ -47,8 +47,8 @@ public class TransferEvent implements Serializable {
 
     private boolean distanceProbOK(int distance) {
         double randProb = randomFarm.get(RandomGeneratorFarm.Aspect.UNIFORM).nextDouble();
-        double prob = Math.pow(DatagenParams.baseProbCorrelated, Math.abs(distance));
-        return ((randProb < prob) || (randProb < DatagenParams.limitProCorrelated));
+        double prob = Math.pow(DatagenParams.tsfBaseProbCorrelated, Math.abs(distance));
+        return ((randProb < prob) || (randProb < DatagenParams.tsfLimitProCorrelated));
     }
 
     // TODO: can not coalesce when large scale data generated in cluster
@@ -74,7 +74,7 @@ public class TransferEvent implements Serializable {
                             // Note: nearly impossible to generate same date
                             allTransfers.add(Transfer.createTransfer(dateRandom, from, to, mindex,
                                                                      amountRandom.nextDouble()
-                                                                         * DatagenParams.transferMaxAmount));
+                                                                         * DatagenParams.tsfMaxAmount));
                         }
                     }
                 }

@@ -12,22 +12,25 @@ public class Withdraw implements DynamicActivity, Serializable {
     private double amount;
     private long creationDate;
     private long deletionDate;
+    private long multiplicityId;
     private boolean isExplicitlyDeleted;
 
-    public Withdraw(Account fromAccount, Account toAccount,
-                    long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
+    public Withdraw(Account fromAccount, Account toAccount, double amount, long creationDate, long deletionDate,
+                    long multiplicityId, boolean isExplicitlyDeleted) {
         this.fromAccount = fromAccount;
         this.toAccount = toAccount;
+        this.amount = amount;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
+        this.multiplicityId = multiplicityId;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static Withdraw createWithdraw(Random random, Account from, Account to) {
+    public static Withdraw createWithdraw(Random random, Account from, Account to, long multiplicityId, double amount) {
         long deleteDate = Math.min(from.getDeletionDate(), to.getDeletionDate());
         long creationDate = Dictionaries.dates.randomAccountToAccountDate(random, from, to, deleteDate);
         boolean willDelete = from.isExplicitlyDeleted() && to.isExplicitlyDeleted();
-        Withdraw withdraw = new Withdraw(from, to, creationDate, deleteDate, willDelete);
+        Withdraw withdraw = new Withdraw(from, to, amount, creationDate, deleteDate, multiplicityId, willDelete);
         from.getWithdraws().add(withdraw);
 
         return withdraw;
@@ -82,5 +85,13 @@ public class Withdraw implements DynamicActivity, Serializable {
 
     public void setExplicitlyDeleted(boolean explicitlyDeleted) {
         isExplicitlyDeleted = explicitlyDeleted;
+    }
+
+    public long getMultiplicityId() {
+        return multiplicityId;
+    }
+
+    public void setMultiplicityId(long multiplicityId) {
+        this.multiplicityId = multiplicityId;
     }
 }

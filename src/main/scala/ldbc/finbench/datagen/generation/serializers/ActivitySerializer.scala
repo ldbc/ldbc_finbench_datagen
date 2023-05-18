@@ -124,7 +124,9 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
 
   def writeWithdraw(self: RDD[Withdraw]): Unit = {
     val df = spark.createDataFrame(self.map { w =>
-      WithdrawRaw(w.getFromAccount.getAccountId, w.getToAccount.getAccountId, w.getCreationDate, w.getAmount, w.isExplicitlyDeleted)
+      WithdrawRaw(w.getFromAccount.getAccountId, w.getToAccount.getAccountId,
+        w.getFromAccount.getType, w.getToAccount.getType, w.getMultiplicityId,
+        w.getCreationDate, w.getDeletionDate, w.getAmount, w.isExplicitlyDeleted)
     })
     df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/withdraw")
   }

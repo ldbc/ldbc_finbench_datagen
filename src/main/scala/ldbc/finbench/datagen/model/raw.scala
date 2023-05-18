@@ -128,9 +128,13 @@ object raw {
 
   // define Withdraw relationship
   case class WithdrawRaw(
-      `account1Id`: Long,
-      `account2Id`: Long,
+      `fromId`: Long,
+      `toId`: Long,
+      fromType: String,
+      toType: String,
+      multiplicityId: Long,
       createTime: Long,
+      deleteTime: Long,
       amount: Double,
       isExplicitDeleted: Boolean
   )

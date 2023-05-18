@@ -34,7 +34,12 @@ public class DatagenParams {
     public static long tsfMaxNumDegree = 0;
     public static int tsfMinMultiplicity = 0;
     public static int tsfMaxMultiplicity = 0;
-    public static long transferMaxAmount = 0;
+    public static double tsfBaseProbCorrelated = 0.0;
+    public static double tsfLimitProCorrelated = 0.0;
+    public static long tsfMaxAmount = 0;
+    public static double accountWithdrawFraction = 0.0;
+    public static int maxWithdrawals = 0;
+    public static long withdrawMaxAmount = 0;
     public static double blockedAccountRatio = 0.0;
     public static double blockedMediumRatio = 0.0;
     public static int numUpdateStreams = 0;
@@ -57,8 +62,6 @@ public class DatagenParams {
     public static long minLoanAmount = 0;
     public static long maxLoanAmount = 0;
     public static int numLoanActions = 0;
-    public static double baseProbCorrelated = 0.0;
-    public static double limitProCorrelated = 0.0;
 
 
     public static void readConf(GeneratorConfiguration conf) {
@@ -87,9 +90,13 @@ public class DatagenParams {
             tsfMultiplicityDistribution = stringConf(conf, "transfer.multiplicityDistribution");
             tsfMinMultiplicity = intConf(conf, "transfer.minMultiplicity");
             tsfMaxMultiplicity = intConf(conf, "transfer.maxMultiplicity");
-            baseProbCorrelated = doubleConf(conf, "transfer.baseProbCorrelated");
-            limitProCorrelated = doubleConf(conf, "transfer.limitProCorrelated");
-            transferMaxAmount = longConf(conf, "transfer.maxAmount");
+            tsfBaseProbCorrelated = doubleConf(conf, "transfer.baseProbCorrelated");
+            tsfLimitProCorrelated = doubleConf(conf, "transfer.limitProCorrelated");
+            tsfMaxAmount = longConf(conf, "transfer.maxAmount");
+
+            accountWithdrawFraction = doubleConf(conf, "withdraw.accountWithdrawFraction");
+            maxWithdrawals = intConf(conf, "withdraw.maxWithdrawals");
+            withdrawMaxAmount = longConf(conf, "withdraw.maxAmount");
 
             accountSignedInFraction = doubleConf(conf, "signIn.accountSignedInFraction");
             maxSignInPerPair = intConf(conf, "signIn.maxMultiplicity");

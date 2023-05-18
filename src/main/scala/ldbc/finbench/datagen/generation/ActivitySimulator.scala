@@ -85,11 +85,9 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     // simulate loan subevents including deposit, repay and transfer
     val (depositsRdd, repaysRdd, loanTrasfersRdd) = activityGenerator.afterLoanSubEvents(loanRdd, accountRdd)
 
-    // simulate transfer event
+    // simulate transfer and withdraw event
     val transferRdd = activityGenerator.transferEvent(accountRdd)
-
-    // simulate withdraw event TODO: refine
-    //    val withdrawRdd = activityGenerator.withdrawEvent(accountRdd)
+    val withdrawRdd = activityGenerator.withdrawEvent(accountRdd)
 
     // TODO: use some syntax to implement serializer less verbose like GraphDef
     activitySerializer.writePerson(personRdd)
@@ -109,6 +107,6 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     activitySerializer.writeRepay(repaysRdd)
     activitySerializer.writeLoanTransfer(loanTrasfersRdd)
     activitySerializer.writeTransfer(transferRdd)
-    //    activitySerializer.writeWithdraw(withdrawRdd)
+    activitySerializer.writeWithdraw(withdrawRdd)
   }
 }
