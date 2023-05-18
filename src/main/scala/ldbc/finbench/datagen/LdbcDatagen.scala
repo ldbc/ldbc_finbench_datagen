@@ -5,10 +5,10 @@ import ldbc.finbench.datagen.generation.GenerationStage
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries
 import ldbc.finbench.datagen.model.Mode
 import ldbc.finbench.datagen.transformation.TransformationStage
-import ldbc.finbench.datagen.util.SparkApp
+import ldbc.finbench.datagen.util.{Logging, SparkApp}
 import shapeless.lens
 
-object LdbcDatagen extends SparkApp {
+object LdbcDatagen extends SparkApp with Logging {
   val appName = "LDBC FinBench Datagen for Spark"
 
   case class Args(
@@ -17,10 +17,7 @@ object LdbcDatagen extends SparkApp {
       paramFile: Option[String] = None,
       outputDir: String = "out",
       bulkloadPortion: Double = 0.97,
-      explodeEdges: Boolean = false,
-      explodeAttrs: Boolean = false,
       keepImplicitDeletes: Boolean = false,
-      mode: String = "raw",
       batchPeriod: String = "day",
       numPartitions: Option[Int] = None,
       format: String = "csv",
@@ -142,8 +139,7 @@ object LdbcDatagen extends SparkApp {
       paramFile = args.paramFile,
       outputDir = args.outputDir,
       partitionsOpt = args.numPartitions,
-      format = args.format,
-      oversizeFactor = args.oversizeFactor
+      format = args.format
     )
 
     GenerationStage.run(generatorArgs)
