@@ -170,8 +170,10 @@ class ActivityGenerator() extends Serializable with Logging {
 
   def withdrawEvent(accountRDD: RDD[Account]): RDD[Withdraw] = {
     val withdrawEvent = new WithdrawEvent
-    accountRDD.mapPartitions(accounts => {
-      val withdrawList = withdrawEvent.withdraw(accounts.toList.asJava, TaskContext.getPartitionId())
+    val sourceSamples = accountRDD.filter(_.getType != "debit card").sample(withReplacement = false, DatagenParams.accountWithdrawFraction, sampleRandom.nextLong())
+    val cards = accountRDD.filter(_.getType == "debit card").collect().toList.asJava
+    sourceSamples.mapPartitions(sources => {
+      val withdrawList = withdrawEvent.withdraw(sources.toList.asJava, cards, TaskContext.getPartitionId())
       for {withdraw <- withdrawList.iterator().asScala} yield withdraw
     })
   }
