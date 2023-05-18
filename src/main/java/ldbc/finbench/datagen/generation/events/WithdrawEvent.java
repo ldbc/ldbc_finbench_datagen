@@ -43,7 +43,7 @@ public class WithdrawEvent implements Serializable {
 
         for (Account from : sources) {
             int count = 0;
-            while (count < DatagenParams.maxWithdrawals){
+            while (count < DatagenParams.maxWithdrawals) {
                 Account to = cards.get(randIndex.nextInt(cards.size()));
                 if (cannotWithdraw(from, to)) {
                     continue;
