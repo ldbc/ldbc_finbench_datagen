@@ -162,6 +162,13 @@
             <version>${shapeless.version}</version>
         </dependency>
 
+        <!-- log4j -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.17.1</version>
+        </dependency>
+
         <!-- scalatest -->
         <dependency>
             <groupId>org.scalatest</groupId>

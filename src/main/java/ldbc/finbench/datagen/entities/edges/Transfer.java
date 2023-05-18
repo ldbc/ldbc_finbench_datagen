@@ -15,21 +15,22 @@ public class Transfer implements DynamicActivity, Serializable {
     private long multiplicityId;
     private boolean isExplicitlyDeleted;
 
-    public Transfer(Account fromAccount, Account toAccount, long creationDate, long deletionDate, long multiplicityId,
-                    boolean isExplicitlyDeleted) {
+    public Transfer(Account fromAccount, Account toAccount, double amount, long creationDate, long deletionDate,
+                    long multiplicityId, boolean isExplicitlyDeleted) {
         this.fromAccount = fromAccount;
         this.toAccount = toAccount;
+        this.amount = amount;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.multiplicityId = multiplicityId;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static Transfer createTransfer(Random random, Account from, Account to, long multiplicityId) {
+    public static Transfer createTransfer(Random random, Account from, Account to, long multiplicityId, double amount) {
         long deleteDate = Math.min(from.getDeletionDate(), to.getDeletionDate());
         long creationDate = Dictionaries.dates.randomAccountToAccountDate(random, from, to, deleteDate);
         boolean willDelete = from.isExplicitlyDeleted() && to.isExplicitlyDeleted();
-        Transfer transfer = new Transfer(from, to, creationDate, deleteDate, multiplicityId, willDelete);
+        Transfer transfer = new Transfer(from, to, amount, creationDate, deleteDate, multiplicityId, willDelete);
         from.getTransferOuts().add(transfer);
         to.getTransferIns().add(transfer);
 
@@ -93,5 +94,12 @@ public class Transfer implements DynamicActivity, Serializable {
 
     public void setExplicitlyDeleted(boolean explicitlyDeleted) {
         isExplicitlyDeleted = explicitlyDeleted;
+    }
+
+    @Override
+    public String toString() {
+        return "Transfer{" + "fromAccount=" + fromAccount + ", toAccount=" + toAccount + ", amount=" + amount
+            + ", creationDate=" + creationDate + ", deletionDate=" + deletionDate + ", multiplicityId=" + multiplicityId
+            + ", isExplicitlyDeleted=" + isExplicitlyDeleted + '}';
     }
 }

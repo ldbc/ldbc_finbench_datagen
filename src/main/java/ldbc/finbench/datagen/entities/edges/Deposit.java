@@ -15,19 +15,22 @@ public class Deposit implements DynamicActivity, Serializable {
     private long deletionDate;
     private boolean isExplicitlyDeleted;
 
-    public Deposit(Loan loan, Account account, long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
+    public Deposit(Loan loan, Account account, double amount, long creationDate, long deletionDate,
+                   boolean isExplicitlyDeleted) {
         this.loan = loan;
         this.account = account;
+        this.amount = amount;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static Deposit createDeposit(Random random, Loan loan, Account account) {
+    public static Deposit createDeposit(Random random, Loan loan, Account account, double amount) {
         long creationDate = Dictionaries.dates.randomLoanToAccountDate(random, loan, account);
         Deposit deposit =
-            new Deposit(loan, account, creationDate, account.getDeletionDate(), account.isExplicitlyDeleted());
-        loan.getDeposits().add(deposit);
+            new Deposit(loan, account, amount, creationDate, account.getDeletionDate(), account.isExplicitlyDeleted());
+        loan.addDeposit(deposit);
+        account.getDeposits().add(deposit);
 
         return deposit;
     }

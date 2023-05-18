@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import ldbc.finbench.datagen.entities.edges.Deposit;
+import ldbc.finbench.datagen.entities.edges.Repay;
 
 public class Loan implements Serializable {
     private long loanId;
@@ -17,6 +18,7 @@ public class Loan implements Serializable {
     private Person ownerPerson;
     private Company ownerCompany;
     private List<Deposit> deposits;
+    private List<Repay> repays;
 
     public Loan(long loanId, double loanAmount, double balance, long creationDate, long maxDegree) {
         this.loanId = loanId;
@@ -25,6 +27,7 @@ public class Loan implements Serializable {
         this.creationDate = creationDate;
         this.maxDegree = maxDegree;
         deposits = new ArrayList<>();
+        repays = new ArrayList<>();
     }
 
     public long getLoanId() {
@@ -79,8 +82,26 @@ public class Loan implements Serializable {
         return deposits;
     }
 
+    public void addDeposit(Deposit deposit) {
+        balance -= deposit.getAmount();
+        deposits.add(deposit);
+    }
+
+    public void addRepay(Repay repay) {
+        balance += repay.getAmount();
+        repays.add(repay);
+    }
+
     public void setDeposits(List<Deposit> deposits) {
         this.deposits = deposits;
+    }
+
+    public List<Repay> getRepays() {
+        return repays;
+    }
+
+    public void setRepays(List<Repay> repays) {
+        this.repays = repays;
     }
 
 

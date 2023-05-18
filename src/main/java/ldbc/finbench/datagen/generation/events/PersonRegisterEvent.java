@@ -33,9 +33,9 @@ public class PersonRegisterEvent implements Serializable {
     public List<PersonOwnAccount> personRegister(List<Person> persons, AccountGenerator accountGenerator, int blockId) {
         resetState(accountGenerator, blockId);
         List<PersonOwnAccount> personOwnAccounts = new ArrayList<>();
-
         for (Person person : persons) {
-            for (int i = 0; i < numAccountsRandom.nextInt(DatagenParams.maxAccountsPerOwner); i++) {
+            // Each person has at least one account
+            for (int i = 0; i < Math.max(1, numAccountsRandom.nextInt(DatagenParams.maxAccountsPerOwner)); i++) {
                 Account account = accountGenerator.generateAccount();
                 PersonOwnAccount personOwnAccount =
                     PersonOwnAccount.createPersonOwnAccount(randomFarm.get(RandomGeneratorFarm.Aspect.DATE), person,

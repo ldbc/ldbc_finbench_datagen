@@ -29,6 +29,15 @@ public class Company implements Serializable {
         companyApplyLoans = new ArrayList<>();
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Company) {
+            Company company = (Company) obj;
+            return this.companyId == company.companyId;
+        }
+        return false;
+    }
+
     public boolean canGuarantee(Company to) {
         if (this.getCompanyId() == to.getCompanyId()) {
             return false;

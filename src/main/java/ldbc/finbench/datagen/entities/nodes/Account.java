@@ -3,6 +3,7 @@ package ldbc.finbench.datagen.entities.nodes;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import ldbc.finbench.datagen.entities.edges.Deposit;
 import ldbc.finbench.datagen.entities.edges.Repay;
 import ldbc.finbench.datagen.entities.edges.SignIn;
 import ldbc.finbench.datagen.entities.edges.Transfer;
@@ -24,6 +25,7 @@ public class Account implements Serializable {
     private List<Transfer> transferIns;
     private List<Transfer> transferOuts;
     private List<Withdraw> withdraws;
+    private List<Deposit> deposits;
     private List<Repay> repays;
     private List<SignIn> signIns;
 
@@ -32,6 +34,7 @@ public class Account implements Serializable {
         transferOuts = new ArrayList<>();
         withdraws = new ArrayList<>();
         repays = new ArrayList<>();
+        deposits = new ArrayList<>();
         signIns = new ArrayList<>();
     }
 
@@ -81,6 +84,14 @@ public class Account implements Serializable {
 
     public void setWithdraws(List<Withdraw> withdraws) {
         this.withdraws = withdraws;
+    }
+
+    public List<Deposit> getDeposits() {
+        return deposits;
+    }
+
+    public void setDeposits(List<Deposit> deposits) {
+        this.deposits = deposits;
     }
 
     public List<Repay> getRepays() {
