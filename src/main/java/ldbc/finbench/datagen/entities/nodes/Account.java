@@ -38,6 +38,15 @@ public class Account implements Serializable {
         signIns = new ArrayList<>();
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Account) {
+            Account other = (Account) obj;
+            return accountId == other.accountId;
+        }
+        return false;
+    }
+
     public long getAvaialbleInDegree() {
         return maxInDegree - transferIns.size();
     }

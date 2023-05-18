@@ -26,7 +26,8 @@ public class SignIn implements DynamicActivity, Serializable {
     }
 
     public static SignIn createSignIn(int mid, Random random, Medium medium, Account account) {
-        long creationDate = Dictionaries.dates.randomMediumToAccountDate(random, medium, account);
+        long creationDate =
+            Dictionaries.dates.randomMediumToAccountDate(random, medium, account, account.getDeletionDate());
         SignIn signIn = new SignIn(medium, account, mid, creationDate, account.getDeletionDate(),
                                    account.isExplicitlyDeleted());
         medium.getSignIns().add(signIn);

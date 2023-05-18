@@ -44,11 +44,12 @@ public class AccountGenerator implements Serializable {
     // - maxOutDegree is left as 0 to be assigned by shuffled maxInDegree later
     // - AccountOwnerEnum will be determined when person or company registers its own account
     // TODO: Use the bucket degree distribution instead of using formula and maxDegree in each scale
-    public Account generateAccount() {
+    public Account generateAccount(long minTime) {
         Account account = new Account();
 
         // Set creationDate
-        long creationDate = Dictionaries.dates.randomAccountCreationDate(randFarm.get(RandomGeneratorFarm.Aspect.DATE));
+        long creationDate =
+            Dictionaries.dates.randomAccountCreationDate(randFarm.get(RandomGeneratorFarm.Aspect.DATE), minTime);
         account.setCreationDate(creationDate);
 
         // Set accountId
@@ -110,7 +111,7 @@ public class AccountGenerator implements Serializable {
             @Override
             public Account next() {
                 ++accountNum;
-                return generateAccount();
+                return generateAccount(0);
             }
         };
     }

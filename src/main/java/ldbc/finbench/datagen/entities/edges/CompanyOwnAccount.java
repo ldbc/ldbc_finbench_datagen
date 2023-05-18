@@ -25,7 +25,8 @@ public class CompanyOwnAccount implements DynamicActivity, Serializable {
     }
 
     public static CompanyOwnAccount createCompanyOwnAccount(Random random, Company company, Account account) {
-        long creationDate = Dictionaries.dates.randomCompanyToAccountDate(random, company, account);
+        long creationDate =
+            Dictionaries.dates.randomCompanyToAccountDate(random, company, account, account.getDeletionDate());
         CompanyOwnAccount companyOwnAccount =
             new CompanyOwnAccount(company, account, creationDate, account.getDeletionDate(),
                                   account.isExplicitlyDeleted());

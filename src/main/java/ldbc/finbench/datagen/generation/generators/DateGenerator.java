@@ -53,8 +53,9 @@ public class DateGenerator {
         return randomDate(random, simulationStart, simulationEnd);
     }
 
-    public Long randomAccountCreationDate(Random random) {
-        return randomDate(random, simulationStart, simulationEnd);
+    public Long randomAccountCreationDate(Random random, long minTime) {
+        // the max creation date can not be greater than (end-deleteDelta) consider deletion
+        return randomDate(random, Math.max(minTime, simulationStart), simulationEnd - DatagenParams.deleteDelta);
     }
 
     public Long randomAccountDeletionDate(Random random, long creationDate, long maxDeletionDate) {
@@ -65,14 +66,14 @@ public class DateGenerator {
         return randomDate(random, simulationStart, simulationEnd);
     }
 
-    public long randomPersonToAccountDate(Random random, Person person, Account account) {
+    public long randomPersonToAccountDate(Random random, Person person, Account account, long deletionDate) {
         long fromDate = Math.max(person.getCreationDate(), account.getCreationDate()) + DatagenParams.activityDelta;
-        return randomDate(random, fromDate, simulationEnd);
+        return randomDate(random, fromDate, Math.min(deletionDate, simulationEnd));
     }
 
-    public long randomCompanyToAccountDate(Random random, Company company, Account account) {
+    public long randomCompanyToAccountDate(Random random, Company company, Account account, long deletionDate) {
         long fromDate = Math.max(company.getCreationDate(), account.getCreationDate()) + DatagenParams.activityDelta;
-        return randomDate(random, fromDate, simulationEnd);
+        return randomDate(random, fromDate, Math.min(deletionDate, simulationEnd));
     }
 
     public long randomPersonToCompanyDate(Random random, Person person, Company company) {
@@ -86,9 +87,9 @@ public class DateGenerator {
         return randomDate(random, fromDate, simulationEnd);
     }
 
-    public long randomMediumToAccountDate(Random random, Medium medium, Account account) {
+    public long randomMediumToAccountDate(Random random, Medium medium, Account account, long deletionDate) {
         long fromDate = Math.max(medium.getCreationDate(), account.getCreationDate()) + DatagenParams.activityDelta;
-        return randomDate(random, fromDate, simulationEnd);
+        return randomDate(random, fromDate, Math.min(deletionDate, simulationEnd));
     }
 
     public long randomPersonToPersonDate(Random random, Person fromPerson, Person toPerson) {
@@ -121,14 +122,14 @@ public class DateGenerator {
         // return randDate + randHour * ONE_HOUR + randMinute * ONE_MINUTE + randSecond * ONE_SECOND;
     }
 
-    public long randomLoanToAccountDate(Random random, Loan loan, Account account) {
+    public long randomLoanToAccountDate(Random random, Loan loan, Account account, long deletionDate) {
         long fromDate = Math.max(loan.getCreationDate(), account.getCreationDate()) + DatagenParams.activityDelta;
-        return randomDate(random, fromDate, simulationEnd);
+        return randomDate(random, fromDate, Math.min(deletionDate, simulationEnd));
     }
 
-    public long randomAccountToLoanDate(Random random, Account account, Loan loan) {
+    public long randomAccountToLoanDate(Random random, Account account, Loan loan, long deletionDate) {
         long fromDate = Math.max(account.getCreationDate(), loan.getCreationDate()) + DatagenParams.activityDelta;
-        return randomDate(random, fromDate, simulationEnd);
+        return randomDate(random, fromDate, Math.min(deletionDate, simulationEnd));
     }
 
     // Not used
