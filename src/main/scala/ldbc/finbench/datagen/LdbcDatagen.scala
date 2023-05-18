@@ -5,10 +5,10 @@ import ldbc.finbench.datagen.generation.GenerationStage
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries
 import ldbc.finbench.datagen.model.Mode
 import ldbc.finbench.datagen.transformation.TransformationStage
-import ldbc.finbench.datagen.util.{Logging, SparkApp}
+import ldbc.finbench.datagen.util.SparkApp
 import shapeless.lens
 
-object LdbcDatagen extends SparkApp with Logging {
+object LdbcDatagen extends SparkApp {
   val appName = "LDBC FinBench Datagen for Spark"
 
   case class Args(
@@ -22,7 +22,6 @@ object LdbcDatagen extends SparkApp with Logging {
       numPartitions: Option[Int] = None,
       format: String = "csv",
       formatOptions: Map[String, String] = Map.empty,
-      oversizeFactor: Option[Double] = None,
       epochMillis: Boolean = false,
       generateFactors: Boolean = false,
       factorFormat: String = "parquet"
@@ -60,32 +59,9 @@ object LdbcDatagen extends SparkApp with Logging {
         .action((x, c) => args.numPartitions.set(c)(Some(x)))
         .text("Controls parallelization and number of files written.")
 
-      opt[String]('m', "mode")
-        .validate(s =>
-          s.toLowerCase match {
-            case "raw" | "bi" | "interactive" => Right(())
-            case _                            => Left("Invalid value. Must be one of raw, bi, interactive")
-        })
-        .action((x, c) => args.mode.set(c)(x))
-        .text("Generation mode. Options: raw, bi, interactive. Default: raw")
-
-      opt[Double]("oversize-factor")
-        .action((x, c) => args.oversizeFactor.set(c)(Some(x)))
-        .text(
-          "Controls size of files relative to Persons. " +
-            "Values larger than 1 will result in less but larger files. " +
-            "Smaller values result in more, smaller files"
-        )
-
       opt[Double]("bulkload-portion")
         .action((x, c) => args.bulkloadPortion.set(c)(x))
         .text("Bulkload portion. Only applicable to BI and interactive modes")
-
-      opt[Unit]('e', "explode-edges")
-        .action((x, c) => args.explodeEdges.set(c)(true))
-
-      opt[Unit]('a', "explode-attrs")
-        .action((x, c) => args.explodeAttrs.set(c)(true))
 
       opt[String]("batch-period")
         .action((x, c) => args.batchPeriod.set(c)(x))

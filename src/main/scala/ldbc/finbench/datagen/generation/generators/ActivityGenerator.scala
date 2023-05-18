@@ -142,7 +142,6 @@ class ActivityGenerator() extends Serializable with Logging {
   }
 
   def personLoanEvent(personRDD: RDD[Person]): RDD[PersonApplyLoan] = {
-    log.info(s"personLoanEvent start. NumPartitions: ${personRDD.getNumPartitions}")
     val personLoanEvent = new PersonLoanEvent
     val personSample = personRDD.sample(withReplacement = false, DatagenParams.personLoanFraction, sampleRandom.nextLong())
     personSample.mapPartitions(persons => {
@@ -187,8 +186,6 @@ class ActivityGenerator() extends Serializable with Logging {
       accountSampleList.add(sampleAccounts.collect().toList.asJava)
     }
 
-    log.info(s"depositAndRepayEvent start. NumPartitions: ${loanRDD.getNumPartitions}")
-
     // TODO: optimize the map function with the Java-Scala part.
     val afterLoanActions = loanRDD.mapPartitions(loans => {
       val partitionId = TaskContext.getPartitionId()
@@ -203,9 +200,6 @@ class ActivityGenerator() extends Serializable with Logging {
     val repays = afterLoanActions.map(_._2).flatMap(repays => repays)
     val transfers = afterLoanActions.map(_._3).flatMap(transfers => transfers)
 
-    log.info(s"count of deposits in loan: ${deposits.count()}")
-    log.info(s"count of repays in loan: ${repays.count()}")
-    log.info(s"count of transfers in loan: ${transfers.count()}")
     (deposits, repays, transfers)
   }
 
