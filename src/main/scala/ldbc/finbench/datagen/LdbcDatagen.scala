@@ -1,9 +1,7 @@
 package ldbc.finbench.datagen
 
 import ldbc.finbench.datagen.config.{ConfigParser, DatagenConfiguration}
-import ldbc.finbench.datagen.generation.dictionary.Dictionaries
 import ldbc.finbench.datagen.generation.{DatagenContext, GenerationStage}
-import ldbc.finbench.datagen.transformation.TransformationStage
 import ldbc.finbench.datagen.util.SparkApp
 import org.apache.hadoop.fs.{FSDataInputStream, FileSystem, Path}
 import shapeless.lens
@@ -16,20 +14,20 @@ object LdbcDatagen extends SparkApp {
   val appName = "LDBC FinBench Datagen for Spark"
 
   case class Args(
-                   scaleFactor: String = "0.1",
-                   params: Map[String, String] = Map.empty,
-                   paramFile: Option[String] = None,
-                   outputDir: String = "out",
-                   bulkloadPortion: Double = 0.97,
-                   keepImplicitDeletes: Boolean = false,
-                   batchPeriod: String = "day",
-                   numPartitions: Option[Int] = None,
-                   format: String = "csv",
-                   formatOptions: Map[String, String] = Map.empty,
-                   epochMillis: Boolean = false,
-                   generateFactors: Boolean = false,
-                   factorFormat: String = "parquet"
-                 )
+     scaleFactor: String = "0.1",
+     params: Map[String, String] = Map.empty,
+     paramFile: Option[String] = None,
+     outputDir: String = "out",
+     bulkloadPortion: Double = 0.97,
+     keepImplicitDeletes: Boolean = false,
+     batchPeriod: String = "day",
+     numPartitions: Option[Int] = None,
+     format: String = "csv",
+     formatOptions: Map[String, String] = Map.empty,
+     epochMillis: Boolean = false,
+     generateFactors: Boolean = false,
+     factorFormat: String = "parquet"
+   )
 
   override type ArgsType = Args
 
@@ -135,15 +133,15 @@ object LdbcDatagen extends SparkApp {
     //      FactorGenerationStage.run(factorArgs)
     //    }
 
-//    TransformationStage.run(TransformationStage.Args(
-//      outputDir = args.outputDir,
-//      keepImplicitDeletes = args.keepImplicitDeletes,
-//      simulationStart = Dictionaries.dates.getSimulationStart,
-//      simulationEnd = Dictionaries.dates.getSimulationEnd,
-//      format = args.format,
-//      formatOptions = args.formatOptions,
-//      epochMillis = args.epochMillis
-//    ))
+    //    TransformationStage.run(TransformationStage.Args(
+    //      outputDir = args.outputDir,
+    //      keepImplicitDeletes = args.keepImplicitDeletes,
+    //      simulationStart = Dictionaries.dates.getSimulationStart,
+    //      simulationEnd = Dictionaries.dates.getSimulationEnd,
+    //      format = args.format,
+    //      formatOptions = args.formatOptions,
+    //      epochMillis = args.epochMillis
+    //    ))
   }
 
 
