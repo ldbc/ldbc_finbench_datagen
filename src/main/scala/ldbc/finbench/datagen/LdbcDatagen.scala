@@ -23,7 +23,7 @@ object LdbcDatagen extends SparkApp {
      outputDir: String = "out",
      bulkloadPortion: Double = 0.97,
      keepImplicitDeletes: Boolean = false,
-     batchPeriod: String = "day",
+     batchPeriod: String = "second",
      numPartitions: Option[Int] = None,
      irFormat: String = "csv",
      format: String = "csv",
@@ -126,7 +126,7 @@ object LdbcDatagen extends SparkApp {
       partitionsOpt = args.numPartitions,
       format = args.format
     )
-    GenerationStage.run(generationArgs)
+//    GenerationStage.run(generationArgs)
 
     if (args.generateFactors) {
       val factorArgs = FactorGenerationStage.Args(
@@ -138,13 +138,15 @@ object LdbcDatagen extends SparkApp {
 
     val transformArgs = TransformationStage.Args(
       outputDir = args.outputDir,
+      bulkloadPortion = args.bulkloadPortion,
       keepImplicitDeletes = args.keepImplicitDeletes,
       simulationStart = Dictionaries.dates.getSimulationStart,
       simulationEnd = Dictionaries.dates.getSimulationEnd,
       irFormat = args.irFormat,
       format = args.format,
       formatOptions = args.formatOptions,
-      epochMillis = args.epochMillis
+      epochMillis = args.epochMillis,
+      batchPeriod = args.batchPeriod
     )
     TransformationStage.run(transformArgs)
   }

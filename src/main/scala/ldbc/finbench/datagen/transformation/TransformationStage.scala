@@ -1,24 +1,30 @@
 package ldbc.finbench.datagen.transformation
 
-import ldbc.finbench.datagen.model.Mode
-import ldbc.finbench.datagen.util.DatagenStage
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.functions.{col, from_unixtime}
+import ldbc.finbench.datagen.generation.DatagenParams
+import ldbc.finbench.datagen.generation.dictionary.Dictionaries
+import ldbc.finbench.datagen.util.sql.qcol
+import ldbc.finbench.datagen.util.{DatagenStage, Logging}
+import ldbc.finbench.datagen.syntax._
+import org.apache.spark.sql.{Column, DataFrame, SparkSession}
+import org.apache.spark.sql.functions.{col, date_format, date_trunc, from_unixtime, lit, to_timestamp}
 import scopt.OptionParser
 import shapeless.lens
 
-object TransformationStage extends DatagenStage {
+object TransformationStage extends DatagenStage with Logging {
+  private val options: Map[String, String] =  Map("header" -> "true", "delimiter" -> "|")
 
   case class Args(
-      outputDir: String = "out",
-      keepImplicitDeletes: Boolean = false,
-      simulationStart: Long = 0,
-      simulationEnd: Long = 0,
-      irFormat: String = "csv",
-      format: String = "csv",
-      formatOptions: Map[String, String] = Map.empty,
-      epochMillis: Boolean = false
-  )
+     outputDir: String = "out",
+     bulkloadPortion: Double = 0.0,
+     keepImplicitDeletes: Boolean = false,
+     simulationStart: Long = 0,
+     simulationEnd: Long = 0,
+     irFormat: String = "csv",
+     format: String = "csv",
+     formatOptions: Map[String, String] = Map.empty,
+     epochMillis: Boolean = false,
+     batchPeriod: String = "day"
+   )
 
   override type ArgsType = Args
 
@@ -53,36 +59,102 @@ object TransformationStage extends DatagenStage {
 
   // execute the transform process
   override def run(args: Args): Unit = {
-    readSource
-  }
+    log.info("Starting transformation stage")
 
-  private def readSource(implicit spark: SparkSession) = {
-    val transferDf = spark.read.format("csv")
-      .option("header", "true")
-      .option("delimiter", "|")
-      .load("./out/transfer/part-00000-1e389087-a54f-45b3-8f39-5de008042f68-c000.csv")
+    val pathPrefix = args.outputDir / "history_data"
+
+    val simulationStart = Dictionaries.dates.getSimulationStart
+    val simulationEnd = Dictionaries.dates.getSimulationEnd
+
+    val bulkLoadThreshold = calculateBulkLoadThreshold(args.bulkloadPortion, simulationStart, simulationEnd)
+
+//    val batch_id = (col: Column) => date_format(date_trunc(args.batchPeriod, to_timestamp(col / lit(1000L))), batchPeriodFormat(args.batchPeriod))
+//
+//    def inBatch(col: Column, batchStart: Long, batchEnd: Long) =
+//      col >= lit(batchStart) && col < lit(batchEnd)
+//
+//    val batched = (df: DataFrame) =>
+//      df
+//        .select(
+//          df.columns.map(qcol) ++ Seq(
+//            batch_id($"creationDate").as("insert_batch_id"),
+//            batch_id($"deletionDate").as("delete_batch_id")
+//          ): _*
+//        )
+//
+//    val insertBatchPart = (tpe: EntityType, df: DataFrame, batchStart: Long, batchEnd: Long) => {
+//      df
+//        .filter(inBatch($"creationDate", batchStart, batchEnd))
+//        .pipe(batched)
+//        .select(
+//          Seq($"insert_batch_id".as("batch_id")) ++ columns(tpe, df.columns).map(qcol): _*
+//        )
+//    }
+//
+//    val deleteBatchPart = (tpe: EntityType, df: DataFrame, batchStart: Long, batchEnd: Long) => {
+//      val idColumns = tpe.primaryKey.map(qcol)
+//      df
+//        .filter(inBatch($"deletionDate", batchStart, batchEnd))
+//        .filter(if (df.columns.contains("explicitlyDeleted")) col("explicitlyDeleted") else lit(true))
+//        .pipe(batched)
+//        .select(Seq($"delete_batch_id".as("batch_id"), $"deletionDate") ++ idColumns: _*)
+//    }
+
+
+    val transferDf = spark.read.format("csv").options(options)
+      .load("./out/raw/transfer/part-00000-41b4c22f-2604-4cfb-b3a3-2c6a6b3527f3-c000.csv")
 
     val resRow = transferDf.select("fromId", "toId", "multiplicityId", "createTime", "deleteTime", "amount", "isExplicitDeleted")
-      .withColumn("createTime", from_unixtime(col("createTime") / 1000, "yyyy-MM-dd'T'HH:mm:ss.SSS+00:00"))
-      .withColumn("deleteTime", from_unixtime(col("deleteTime") / 1000, "yyyy-MM-dd'T'HH:mm:ss.SSS+00:00"))
-      //      .filter("isExplicitDeleted = 'true'")
+      .filter("isExplicitDeleted = 'true'")
+      .withColumn("createTime", from_unixtime(col("createTime") / 1000, batchPeriodFormat(args.batchPeriod)))
+      .withColumn("deleteTime", from_unixtime(col("deleteTime") / 1000, batchPeriodFormat(args.batchPeriod)))
       .orderBy("createTime", "deleteTime")
 
-    resRow.toDF().coalesce(1).write
-      .format("csv")
-      .option("header", value = true)
-      .option("delimiter", "|")
+    resRow.toDF().coalesce(1).write.format("csv").options(options)
       .option("encoding", "UTF-8")
       .mode("overwrite")
-      .save("./out1/transfer")
+      .save((pathPrefix / "transfer").toString)
 
-//    val accountDf = spark.read.format("csv")
-//      .option("header", "true")
-//      .option("delimiter", "|")
-//      .load("./out/account/part-00000-4b0e57cb-23bb-447f-89f1-e7e71a4ee017-c000.csv")
-//
-//    transferDf.join(accountDf, transferDf("fromId") === accountDf("id"), "left")
-//      .select()
+    //    val accountDf = spark.read.format("csv")
+    //      .option("header", "true")
+    //      .option("delimiter", "|")
+    //      .load("./out/account/part-00000-4b0e57cb-23bb-447f-89f1-e7e71a4ee017-c000.csv")
+    //
+    //    transferDf.join(accountDf, transferDf("fromId") === accountDf("id"), "left")
+    //      .select()
+  }
 
+//  def columns(tpe: EntityType, cols: Seq[String]) = tpe match {
+//    case tpe if tpe.isStatic => cols
+//    case Edge("Knows", PersonType, PersonType, NN, false, _, _) =>
+//      val rawCols = Set("deletionDate", "explicitlyDeleted", "weight")
+//      cols.filter(!rawCols.contains(_))
+//    case _ =>
+//      val rawCols = Set("deletionDate", "explicitlyDeleted")
+//      cols.filter(!rawCols.contains(_))
+//  }
+
+
+
+//  def extractSnapshot(tpe: EntityType, df: DataFrame, bulkLoadThreshold: Long, filterDeletion: Boolean) = {
+//      df.filter(
+//        $"creationDate" < lit(bulkLoadThreshold)
+//        && (!lit(filterDeletion) || $"deletionDate" >= lit(bulkLoadThreshold)))
+//        .select(_:_*)
+//  }
+
+
+  private def calculateBulkLoadThreshold(bulkLoadPortion: Double, simulationStart: Long, simulationEnd: Long) = {
+    (simulationEnd - ((simulationEnd - simulationStart) * (1 - bulkLoadPortion)).toLong)
+  }
+
+  private def batchPeriodFormat(batchPeriod: String) = batchPeriod match {
+    case "year" => "yyyy"
+    case "month" => "yyyy-MM"
+    case "day" => "yyyy-MM-dd"
+    case "hour" => "yyyy-MM-dd'T'hh"
+    case "minute" => "yyyy-MM-dd'T'hh:mm"
+    case "second" => "yyyy-MM-dd'T'hh:mm:ss"
+    case _ => throw new IllegalArgumentException("Unrecognized partition key")
   }
 }
