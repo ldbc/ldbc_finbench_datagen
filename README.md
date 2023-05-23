@@ -39,6 +39,7 @@ Note: SUT stands for System Under Test.
 ### Pre-requisites
 
 - Java 8 installed.
+- Scala 2.12, note that it will be integrated when maven builds.
 - Spark deployed. Spark 3.2.x is the recommended runtime to use. The rest of the instructions are provided assuming Spark 3.2.x.
 
 ### Build the project
