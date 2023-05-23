@@ -2,12 +2,12 @@ package ldbc.finbench.datagen.generators;
 
 import java.util.Map;
 import java.util.Random;
+import ldbc.finbench.datagen.config.ConfigParser;
+import ldbc.finbench.datagen.config.DatagenConfiguration;
 import ldbc.finbench.datagen.generation.DatagenContext;
 import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.generation.distribution.PowerLawFormulaDistribution;
 import ldbc.finbench.datagen.generation.distribution.TimeDistribution;
-import ldbc.finbench.datagen.config.ConfigParser;
-import ldbc.finbench.datagen.config.DatagenConfiguration;
 import org.junit.Test;
 
 public class DistributionTest {
