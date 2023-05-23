@@ -1,6 +1,6 @@
 package ldbc.finbench.datagen.generation.generators
 
-import ldbc.finbench.datagen.config.GeneratorConfiguration
+import ldbc.finbench.datagen.config.DatagenConfiguration
 import ldbc.finbench.datagen.entities.nodes.Company
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession

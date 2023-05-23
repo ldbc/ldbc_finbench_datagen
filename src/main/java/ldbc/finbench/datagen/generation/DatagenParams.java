@@ -3,7 +3,7 @@ package ldbc.finbench.datagen.generation;
 import ldbc.finbench.datagen.generation.distribution.DegreeDistribution;
 import ldbc.finbench.datagen.generation.distribution.PowerLawBucketsDistribution;
 import ldbc.finbench.datagen.generation.distribution.PowerLawFormulaDistribution;
-import ldbc.finbench.datagen.config.GeneratorConfiguration;
+import ldbc.finbench.datagen.config.DatagenConfiguration;
 
 public class DatagenParams {
     public static final String DICTIONARY_DIR = "/dictionaries/";
@@ -64,7 +64,7 @@ public class DatagenParams {
     public static int numLoanActions = 0;
 
 
-    public static void readConf(GeneratorConfiguration conf) {
+    public static void readConf(DatagenConfiguration conf) {
         try {
             blockSize = intConf(conf, "spark.blockSize");
             defaultSeed = intConf(conf, "generator.defaultSeed");
@@ -128,19 +128,19 @@ public class DatagenParams {
         }
     }
 
-    private static Integer intConf(GeneratorConfiguration conf, String param) {
+    private static Integer intConf(DatagenConfiguration conf, String param) {
         return Integer.parseInt(conf.get(param));
     }
 
-    private static Long longConf(GeneratorConfiguration conf, String param) {
+    private static Long longConf(DatagenConfiguration conf, String param) {
         return Long.parseLong(conf.get(param));
     }
 
-    private static Double doubleConf(GeneratorConfiguration conf, String param) {
+    private static Double doubleConf(DatagenConfiguration conf, String param) {
         return Double.parseDouble(conf.get(param));
     }
 
-    private static String stringConf(GeneratorConfiguration conf, String param) {
+    private static String stringConf(DatagenConfiguration conf, String param) {
         return conf.get(param);
     }
 

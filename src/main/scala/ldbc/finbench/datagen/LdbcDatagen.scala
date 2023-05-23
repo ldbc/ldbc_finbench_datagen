@@ -1,31 +1,35 @@
 package ldbc.finbench.datagen
 
-import ldbc.finbench.datagen.factors.FactorGenerationStage
-import ldbc.finbench.datagen.generation.GenerationStage
+import ldbc.finbench.datagen.config.{ConfigParser, DatagenConfiguration}
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries
-import ldbc.finbench.datagen.model.Mode
+import ldbc.finbench.datagen.generation.{DatagenContext, GenerationStage}
 import ldbc.finbench.datagen.transformation.TransformationStage
 import ldbc.finbench.datagen.util.SparkApp
+import org.apache.hadoop.fs.{FSDataInputStream, FileSystem, Path}
 import shapeless.lens
+
+import java.net.URI
+import java.util.Properties
+import scala.collection.JavaConverters._
 
 object LdbcDatagen extends SparkApp {
   val appName = "LDBC FinBench Datagen for Spark"
 
   case class Args(
-      scaleFactor: String = "0.1",
-      params: Map[String, String] = Map.empty,
-      paramFile: Option[String] = None,
-      outputDir: String = "out",
-      bulkloadPortion: Double = 0.97,
-      keepImplicitDeletes: Boolean = false,
-      batchPeriod: String = "day",
-      numPartitions: Option[Int] = None,
-      format: String = "csv",
-      formatOptions: Map[String, String] = Map.empty,
-      epochMillis: Boolean = false,
-      generateFactors: Boolean = false,
-      factorFormat: String = "parquet"
-  )
+                   scaleFactor: String = "0.1",
+                   params: Map[String, String] = Map.empty,
+                   paramFile: Option[String] = None,
+                   outputDir: String = "out",
+                   bulkloadPortion: Double = 0.97,
+                   keepImplicitDeletes: Boolean = false,
+                   batchPeriod: String = "day",
+                   numPartitions: Option[Int] = None,
+                   format: String = "csv",
+                   formatOptions: Map[String, String] = Map.empty,
+                   epochMillis: Boolean = false,
+                   generateFactors: Boolean = false,
+                   factorFormat: String = "parquet"
+                 )
 
   override type ArgsType = Args
 
@@ -109,38 +113,61 @@ object LdbcDatagen extends SparkApp {
   }
 
   override def run(args: ArgsType): Unit = {
-    val generatorArgs = GenerationStage.Args(
+    // build and initialize the configs
+    val config = buildConfig(args)
+    DatagenContext.initialize(config)
+
+    GenerationStage.run(GenerationStage.Args(
       scaleFactor = args.scaleFactor,
       params = args.params,
       paramFile = args.paramFile,
       outputDir = args.outputDir,
       partitionsOpt = args.numPartitions,
       format = args.format
-    )
-
-    GenerationStage.run(generatorArgs)
+    ))
 
     // TODO
-//    if (args.generateFactors) {
-//      val factorArgs = FactorGenerationStage.Args(
-//        outputDir = args.outputDir,
-//        format = args.factorFormat
-//      )
-//      FactorGenerationStage.run(factorArgs)
-//    }
+    //    if (args.generateFactors) {
+    //      val factorArgs = FactorGenerationStage.Args(
+    //        outputDir = args.outputDir,
+    //        format = args.factorFormat
+    //      )
+    //      FactorGenerationStage.run(factorArgs)
+    //    }
 
-
-//    Dictionaries.loadDictionaries()
-//    val transformArgs = TransformationStage.Args(
+//    TransformationStage.run(TransformationStage.Args(
 //      outputDir = args.outputDir,
 //      keepImplicitDeletes = args.keepImplicitDeletes,
 //      simulationStart = Dictionaries.dates.getSimulationStart,
 //      simulationEnd = Dictionaries.dates.getSimulationEnd,
-//      irFormat,
 //      format = args.format,
 //      formatOptions = args.formatOptions,
 //      epochMillis = args.epochMillis
-//    )
-//    TransformationStage.run(transformArgs)
+//    ))
+  }
+
+
+  private def buildConfig(args: Args): DatagenConfiguration = {
+    val conf = new java.util.HashMap[String, String]
+    val props = new Properties() // Read default values at first
+    props.load(getClass.getClassLoader.getResourceAsStream("params_default.ini"))
+    conf.putAll(props.asScala.asJava)
+
+    for {paramsFile <- args.paramFile} conf.putAll(ConfigParser.readConfig(openPropFileStream(URI.create(paramsFile))))
+
+    for {(k, v) <- args.params} conf.put(k, v)
+
+    for {partitions <- args.numPartitions} conf.put("spark.partitions", partitions.toString) // Following params will overwrite the values in params_default
+    conf.putAll(ConfigParser.scaleFactorConf(args.scaleFactor)) // put scale factor conf
+    conf.put("generator.outputDir", args.outputDir)
+    conf.put("generator.format", args.format)
+
+    new DatagenConfiguration(conf)
+  }
+
+  //  read hdfs uri to get FSDataInputStream
+  private def openPropFileStream(uri: URI): FSDataInputStream = {
+    val fs = FileSystem.get(uri, spark.sparkContext.hadoopConfiguration)
+    fs.open(new Path(uri.getPath))
   }
 }
