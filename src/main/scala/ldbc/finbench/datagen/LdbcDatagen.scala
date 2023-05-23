@@ -1,7 +1,10 @@
 package ldbc.finbench.datagen
 
 import ldbc.finbench.datagen.config.{ConfigParser, DatagenConfiguration}
+import ldbc.finbench.datagen.factors.FactorGenerationStage
+import ldbc.finbench.datagen.generation.dictionary.Dictionaries
 import ldbc.finbench.datagen.generation.{DatagenContext, GenerationStage}
+import ldbc.finbench.datagen.transformation.TransformationStage
 import ldbc.finbench.datagen.util.SparkApp
 import org.apache.hadoop.fs.{FSDataInputStream, FileSystem, Path}
 import shapeless.lens
@@ -22,6 +25,7 @@ object LdbcDatagen extends SparkApp {
      keepImplicitDeletes: Boolean = false,
      batchPeriod: String = "day",
      numPartitions: Option[Int] = None,
+     irFormat: String = "csv",
      format: String = "csv",
      formatOptions: Map[String, String] = Map.empty,
      epochMillis: Boolean = false,
@@ -104,8 +108,7 @@ object LdbcDatagen extends SparkApp {
         .text("Use longs with millis since Unix epoch instead of native dates")
     }
 
-    val parsedArgs =
-      parser.parse(args, Args()).getOrElse(throw new RuntimeException("Invalid arguments"))
+    val parsedArgs = parser.parse(args, Args()).getOrElse(throw new RuntimeException("Invalid arguments"))
 
     run(parsedArgs)
   }
@@ -115,33 +118,35 @@ object LdbcDatagen extends SparkApp {
     val config = buildConfig(args)
     DatagenContext.initialize(config)
 
-    GenerationStage.run(GenerationStage.Args(
+    val generationArgs = GenerationStage.Args(
       scaleFactor = args.scaleFactor,
       params = args.params,
       paramFile = args.paramFile,
       outputDir = args.outputDir,
       partitionsOpt = args.numPartitions,
       format = args.format
-    ))
+    )
+    GenerationStage.run(generationArgs)
 
-    // TODO
-    //    if (args.generateFactors) {
-    //      val factorArgs = FactorGenerationStage.Args(
-    //        outputDir = args.outputDir,
-    //        format = args.factorFormat
-    //      )
-    //      FactorGenerationStage.run(factorArgs)
-    //    }
+    if (args.generateFactors) {
+      val factorArgs = FactorGenerationStage.Args(
+        outputDir = args.outputDir,
+        format = args.factorFormat
+      )
+      FactorGenerationStage.run(factorArgs)
+    }
 
-    //    TransformationStage.run(TransformationStage.Args(
-    //      outputDir = args.outputDir,
-    //      keepImplicitDeletes = args.keepImplicitDeletes,
-    //      simulationStart = Dictionaries.dates.getSimulationStart,
-    //      simulationEnd = Dictionaries.dates.getSimulationEnd,
-    //      format = args.format,
-    //      formatOptions = args.formatOptions,
-    //      epochMillis = args.epochMillis
-    //    ))
+    val transformArgs = TransformationStage.Args(
+      outputDir = args.outputDir,
+      keepImplicitDeletes = args.keepImplicitDeletes,
+      simulationStart = Dictionaries.dates.getSimulationStart,
+      simulationEnd = Dictionaries.dates.getSimulationEnd,
+      irFormat = args.irFormat,
+      format = args.format,
+      formatOptions = args.formatOptions,
+      epochMillis = args.epochMillis
+    )
+    TransformationStage.run(transformArgs)
   }
 
 
@@ -163,7 +168,6 @@ object LdbcDatagen extends SparkApp {
     new DatagenConfiguration(conf)
   }
 
-  //  read hdfs uri to get FSDataInputStream
   private def openPropFileStream(uri: URI): FSDataInputStream = {
     val fs = FileSystem.get(uri, spark.sparkContext.hadoopConfiguration)
     fs.open(new Path(uri.getPath))

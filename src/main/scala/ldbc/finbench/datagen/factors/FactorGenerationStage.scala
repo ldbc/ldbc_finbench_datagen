@@ -21,9 +21,7 @@ object FactorGenerationStage extends DatagenStage {
 
   override type ArgsType = Args
 
-  /**
-    * execute the data generation process
-    */
+  // TODO: @yangbin
   override def run(args: Args): Unit = {}
 
   def main(args: Array[String]): Unit = {
