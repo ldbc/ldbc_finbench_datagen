@@ -1,12 +1,12 @@
 package ldbc.finbench.datagen.generators;
 
 import java.util.Map;
+import ldbc.finbench.datagen.config.ConfigParser;
+import ldbc.finbench.datagen.config.DatagenConfiguration;
 import ldbc.finbench.datagen.entities.nodes.Person;
 import ldbc.finbench.datagen.generation.DatagenContext;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.generation.generators.PersonGenerator;
-import ldbc.finbench.datagen.util.ConfigParser;
-import ldbc.finbench.datagen.util.GeneratorConfiguration;
 import org.junit.Test;
 
 public class GeneratorTest {
@@ -15,7 +15,7 @@ public class GeneratorTest {
     public GeneratorTest() {
         config = ConfigParser.readConfig("src/main/resources/params_default.ini");
         config.putAll(ConfigParser.scaleFactorConf("0.1")); // use scale factor 0.1
-        DatagenContext.initialize(new GeneratorConfiguration(config));
+        DatagenContext.initialize(new DatagenConfiguration(config));
     }
 
     @Test

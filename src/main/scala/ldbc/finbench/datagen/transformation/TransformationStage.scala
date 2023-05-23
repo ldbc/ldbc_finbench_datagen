@@ -11,13 +11,10 @@ object TransformationStage extends DatagenStage {
 
   case class Args(
       outputDir: String = "out",
-      explodeEdges: Boolean = false,
-      explodeAttrs: Boolean = false,
       keepImplicitDeletes: Boolean = false,
       simulationStart: Long = 0,
       simulationEnd: Long = 0,
-      mode: Mode = Mode.Raw,
-      irFormat: String = "parquet",
+      irFormat: String = "csv",
       format: String = "csv",
       formatOptions: Map[String, String] = Map.empty,
       epochMillis: Boolean = false

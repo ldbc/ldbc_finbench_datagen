@@ -1,4 +1,4 @@
-package ldbc.finbench.datagen.util;
+package ldbc.finbench.datagen.config;
 
 import java.io.IOException;
 import java.util.TreeMap;
