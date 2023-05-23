@@ -56,7 +56,7 @@ object TransformationStage extends DatagenStage {
     readSource
   }
 
-  def readSource(implicit spark: SparkSession) = {
+  private def readSource(implicit spark: SparkSession) = {
     val transferDf = spark.read.format("csv")
       .option("header", "true")
       .option("delimiter", "|")
