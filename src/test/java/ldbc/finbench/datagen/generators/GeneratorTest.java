@@ -5,8 +5,8 @@ import ldbc.finbench.datagen.entities.nodes.Person;
 import ldbc.finbench.datagen.generation.DatagenContext;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.generation.generators.PersonGenerator;
-import ldbc.finbench.datagen.util.ConfigParser;
-import ldbc.finbench.datagen.util.GeneratorConfiguration;
+import ldbc.finbench.datagen.config.ConfigParser;
+import ldbc.finbench.datagen.config.GeneratorConfiguration;
 import org.junit.Test;
 
 public class GeneratorTest {

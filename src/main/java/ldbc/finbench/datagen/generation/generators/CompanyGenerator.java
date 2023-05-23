@@ -3,7 +3,6 @@ package ldbc.finbench.datagen.generation.generators;
 import java.util.Iterator;
 import ldbc.finbench.datagen.entities.nodes.Company;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
-import ldbc.finbench.datagen.util.GeneratorConfiguration;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class CompanyGenerator {

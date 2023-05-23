@@ -5,7 +5,6 @@ import java.util.Random;
 import ldbc.finbench.datagen.entities.nodes.Medium;
 import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
-import ldbc.finbench.datagen.util.GeneratorConfiguration;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class MediumGenerator {

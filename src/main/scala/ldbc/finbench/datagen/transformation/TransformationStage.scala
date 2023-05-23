@@ -11,8 +11,6 @@ object TransformationStage extends DatagenStage {
 
   case class Args(
       outputDir: String = "out",
-      explodeEdges: Boolean = false,
-      explodeAttrs: Boolean = false,
       keepImplicitDeletes: Boolean = false,
       simulationStart: Long = 0,
       simulationEnd: Long = 0,

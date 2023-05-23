@@ -128,22 +128,14 @@ object LdbcDatagen extends SparkApp {
 //      )
 //      FactorGenerationStage.run(factorArgs)
 //    }
-//
-//
-//
+
+
 //    Dictionaries.loadDictionaries()
 //    val transformArgs = TransformationStage.Args(
 //      outputDir = args.outputDir,
-//      explodeEdges = args.explodeEdges,
-//      explodeAttrs = args.explodeAttrs,
 //      keepImplicitDeletes = args.keepImplicitDeletes,
 //      simulationStart = Dictionaries.dates.getSimulationStart,
 //      simulationEnd = Dictionaries.dates.getSimulationEnd,
-//      mode = args.mode match {
-//        case "raw"         => Mode.Raw
-//        case "bi"          => Mode.BI
-//        case "interactive" => Mode.Interactive
-//      },
 //      irFormat,
 //      format = args.format,
 //      formatOptions = args.formatOptions,

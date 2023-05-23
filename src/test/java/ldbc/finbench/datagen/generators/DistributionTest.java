@@ -6,8 +6,8 @@ import ldbc.finbench.datagen.generation.DatagenContext;
 import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.generation.distribution.PowerLawFormulaDistribution;
 import ldbc.finbench.datagen.generation.distribution.TimeDistribution;
-import ldbc.finbench.datagen.util.ConfigParser;
-import ldbc.finbench.datagen.util.GeneratorConfiguration;
+import ldbc.finbench.datagen.config.ConfigParser;
+import ldbc.finbench.datagen.config.GeneratorConfiguration;
 import org.junit.Test;
 
 public class DistributionTest {

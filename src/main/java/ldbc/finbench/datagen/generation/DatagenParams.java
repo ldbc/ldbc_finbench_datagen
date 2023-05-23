@@ -3,7 +3,7 @@ package ldbc.finbench.datagen.generation;
 import ldbc.finbench.datagen.generation.distribution.DegreeDistribution;
 import ldbc.finbench.datagen.generation.distribution.PowerLawBucketsDistribution;
 import ldbc.finbench.datagen.generation.distribution.PowerLawFormulaDistribution;
-import ldbc.finbench.datagen.util.GeneratorConfiguration;
+import ldbc.finbench.datagen.config.GeneratorConfiguration;
 
 public class DatagenParams {
     public static final String DICTIONARY_DIR = "/dictionaries/";

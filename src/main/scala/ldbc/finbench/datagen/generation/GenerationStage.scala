@@ -1,5 +1,6 @@
 package ldbc.finbench.datagen.generation
 
+import ldbc.finbench.datagen.config.{ConfigParser, GeneratorConfiguration}
 import ldbc.finbench.datagen.generation.generators.{SparkCompanyGenerator, SparkMediumGenerator, SparkPersonGenerator}
 import ldbc.finbench.datagen.io.raw.{Csv, Parquet, RawSink}
 import ldbc.finbench.datagen.util._
