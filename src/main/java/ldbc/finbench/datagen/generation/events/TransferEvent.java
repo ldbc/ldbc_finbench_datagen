@@ -65,7 +65,6 @@ public class TransferEvent implements Serializable {
             Account from = accounts.get(i);
             // int loopCount = 0;
             while (from.getAvaialbleOutDegree() != 0) {
-                // System.out.println("Loop for " + from.getAccountId() + " " + loopCount++);
                 int skippedCount = 0;
                 for (int j = 0; j < accounts.size(); j++) {
                     Account to = accounts.get(j);
@@ -86,8 +85,10 @@ public class TransferEvent implements Serializable {
                 }
                 if (skippedCount == accounts.size()) {
                     System.out.println("[Transfer] All accounts skipped for " + from.getAccountId());
-                    break;
+                    break; // end loop if all accounts are skipped
                 }
+                // System.out.println("Loop for " + from.getAccountId() + " " + loopCount++ +", skippedCount: "+
+                // skippedCount);
             }
         }
         return allTransfers;
@@ -97,6 +98,6 @@ public class TransferEvent implements Serializable {
     public boolean cannotTransfer(Account from, Account to) {
         return from.getDeletionDate() < to.getCreationDate() + DatagenParams.activityDelta
             || from.getCreationDate() + DatagenParams.activityDelta > to.getDeletionDate()
-            || from.equals(to);
+            || from.equals(to) || from.getAvaialbleOutDegree() == 0 || to.getAvaialbleInDegree() == 0;
     }
 }
