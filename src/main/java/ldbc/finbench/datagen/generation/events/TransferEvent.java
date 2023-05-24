@@ -85,7 +85,7 @@ public class TransferEvent implements Serializable {
                     }
                 }
                 if (skippedCount == accounts.size()) {
-                    System.out.println("All accounts skipped for " + from.getAccountId());
+                    System.out.println("[Transfer] All accounts skipped for " + from.getAccountId());
                     break;
                 }
             }
