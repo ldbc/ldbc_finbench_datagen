@@ -109,14 +109,14 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
     val df = spark.createDataFrame(self.map { t =>
       TransferRaw(t.getFromAccount.getAccountId, t.getToAccount.getAccountId, t.getMultiplicityId, t.getCreationDate, t.getDeletionDate, t.getAmount, t.isExplicitlyDeleted)
     })
-    df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/loantransfer")
+    df.repartition(1).write.format(sink.format.toString).options(options).save(sink.outputDir + "/loantransfer")
   }
 
   def writeTransfer(self: RDD[Transfer]): Unit = {
     val df = spark.createDataFrame(self.map { t =>
       TransferRaw(t.getFromAccount.getAccountId, t.getToAccount.getAccountId, t.getMultiplicityId, t.getCreationDate, t.getDeletionDate, t.getAmount, t.isExplicitlyDeleted)
     })
-    df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/transfer")
+    df.repartition(1).write.format(sink.format.toString).options(options).save(sink.outputDir + "/transfer")
   }
 
   def writeWithdraw(self: RDD[Withdraw]): Unit = {
@@ -132,13 +132,13 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
     val df = spark.createDataFrame(self.map { d =>
       DepositRaw(d.getLoan.getLoanId, d.getAccount.getAccountId, d.getCreationDate, d.getDeletionDate, d.getAmount, d.isExplicitlyDeleted)
     })
-    df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/deposit")
+    df.repartition(1).write.format(sink.format.toString).options(options).save(sink.outputDir + "/deposit")
   }
 
   def writeRepay(self: RDD[Repay]): Unit = {
     val df = spark.createDataFrame(self.map { r =>
       RepayRaw(r.getAccount.getAccountId, r.getLoan.getLoanId, r.getCreationDate, r.getDeletionDate, r.getAmount, r.isExplicitlyDeleted)
     })
-    df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/repay")
+    df.repartition(1).write.format(sink.format.toString).options(options).save(sink.outputDir + "/repay")
   }
 }
