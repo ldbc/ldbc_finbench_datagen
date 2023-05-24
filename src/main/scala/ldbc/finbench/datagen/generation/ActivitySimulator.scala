@@ -5,7 +5,7 @@ import ldbc.finbench.datagen.generation.generators.{ActivityGenerator, SparkComp
 import ldbc.finbench.datagen.generation.serializers.ActivitySerializer
 import ldbc.finbench.datagen.io.Writer
 import ldbc.finbench.datagen.io.raw.RawSink
-import ldbc.finbench.datagen.util.{Logging, lower}
+import ldbc.finbench.datagen.util.Logging
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
@@ -59,9 +59,9 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
 
     // Merge accounts vertices registered by persons and companies
     // TODO: can not coalesce when large scale data generated in cluster
-    val accountRdd = personOwnAccountInfo.map(personOwnAccount => personOwnAccount.getAccount)
-      .union(companyOwnAccountInfo.map(companyOwnAccount => companyOwnAccount.getAccount))
-      .coalesce(1)
+    val personAccounts = personOwnAccountInfo.map(personOwnAccount => personOwnAccount.getAccount)
+    val companyAccounts = companyOwnAccountInfo.map(companyOwnAccount => companyOwnAccount.getAccount)
+    val accountRdd = personAccounts.union(companyAccounts)
     log.info(s"[Simulation] Account RDD partitions: ${accountRdd.getNumPartitions}, count: ${accountRdd.count()}")
 
     // simulate person signIn medium event
@@ -89,7 +89,6 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     // Merge accounts vertices registered by persons and companies
     val loanRdd = personLoanRdd.map(personLoan => personLoan.getLoan)
       .union(companyLoanRdd.map(companyLoan => companyLoan.getLoan))
-      .coalesce(1)
     log.info(s"[Simulation] Loan RDD partitions: ${loanRdd.getNumPartitions}, count: ${loanRdd.count()}")
 
     // simulate loan subevents including deposit, repay and transfer
@@ -101,8 +100,8 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     // simulate transfer and withdraw event
     val transferRdd = activityGenerator.transferEvent(accountRdd)
     val withdrawRdd = activityGenerator.withdrawEvent(accountRdd)
-    log.info(s"[Simulation] transfer RDD partitions: ${transferRdd.getNumPartitions}, count: ${transferRdd.count()}")
-    log.info(s"[Simulation] withdraw RDD partitions: ${withdrawRdd.getNumPartitions}, count: ${withdrawRdd.count()}")
+//    log.info(s"[Simulation] transfer RDD partitions: ${transferRdd.getNumPartitions}, count: ${transferRdd.count()}")
+//    log.info(s"[Simulation] withdraw RDD partitions: ${withdrawRdd.getNumPartitions}, count: ${withdrawRdd.count()}")
 
     // TODO: use some syntax to implement serializer less verbose like GraphDef
     activitySerializer.writePerson(personRdd)

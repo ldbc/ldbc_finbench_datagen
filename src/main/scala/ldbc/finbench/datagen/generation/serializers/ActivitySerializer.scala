@@ -33,7 +33,7 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
   def writeAccount(self: RDD[Account]): Unit = {
     val rawAccount = self.map { a: Account => AccountRaw(a.getAccountId, a.getCreationDate, a.getDeletionDate, a.isBlocked, a.getType, a.getMaxInDegree, a.getMaxOutDegree, a.isExplicitlyDeleted, a.getOwnerType.toString) }
     val df = spark.createDataFrame(rawAccount)
-    df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/account")
+    df.repartition(1).write.format(sink.format.toString).options(options).save(sink.outputDir + "/account")
   }
 
   def writePersonOwnAccount(self: RDD[PersonOwnAccount]): Unit = {
@@ -101,7 +101,7 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
     val df = spark.createDataFrame(self.map { loan =>
       LoanRaw(loan.getLoanId, loan.getLoanAmount, loan.getBalance)
     })
-    df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/loan")
+    df.repartition(1).write.format(sink.format.toString).options(options).save(sink.outputDir + "/loan")
   }
 
 
