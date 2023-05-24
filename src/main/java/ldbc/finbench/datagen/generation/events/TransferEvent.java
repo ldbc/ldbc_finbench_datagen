@@ -60,21 +60,22 @@ public class TransferEvent implements Serializable {
         List<Transfer> allTransfers = new ArrayList<>();
         Random dateRandom = randomFarm.get(RandomGeneratorFarm.Aspect.DATE);
 
+        // Note: be careful that here may be a infinite loop with some special parameters
         for (int i = 0; i < accounts.size(); i++) {
             Account from = accounts.get(i);
-            int loopCount = 0;
+            // int loopCount = 0;
             while (from.getAvaialbleOutDegree() != 0) {
-                System.out.println("Loop for " + from.getAccountId() + " " + loopCount++);
+                // System.out.println("Loop for " + from.getAccountId() + " " + loopCount++);
+                int skippedCount = 0;
                 for (int j = 0; j < accounts.size(); j++) {
                     Account to = accounts.get(j);
-                    if (cannotTransfer(from, to) ) {
-//                    if (cannotTransfer(from, to) || !distanceProbOK(j - i)) {
+                    if (cannotTransfer(from, to) || !distanceProbOK(j - i)) {
+                        skippedCount++;
                         continue;
                     }
                     long numTransfers = Math.min(multiplicityDistribution.nextDegree(),
                                                  Math.min(from.getAvaialbleOutDegree(), to.getAvaialbleInDegree()));
                     for (int mindex = 0; mindex < numTransfers; mindex++) {
-                        // Note: nearly impossible to generate same date
                         allTransfers.add(Transfer.createTransfer(dateRandom, from, to, mindex,
                                                                  amountRandom.nextDouble()
                                                                      * DatagenParams.tsfMaxAmount));
@@ -82,6 +83,10 @@ public class TransferEvent implements Serializable {
                     if (from.getAvaialbleOutDegree() == 0) {
                         break;
                     }
+                }
+                if (skippedCount == accounts.size()) {
+                    System.out.println("All accounts skipped for " + from.getAccountId());
+                    break;
                 }
             }
         }
