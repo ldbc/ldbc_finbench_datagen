@@ -5,7 +5,8 @@ import ldbc.finbench.datagen.generation.dictionary.Dictionaries
 import ldbc.finbench.datagen.util.sql.qcol
 import ldbc.finbench.datagen.util.{DatagenStage, Logging}
 import ldbc.finbench.datagen.syntax._
-import org.apache.spark.sql.{Column, DataFrame, SparkSession}
+import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.{Column, DataFrame, Dataset, Row, SparkSession}
 import org.apache.spark.sql.functions.{col, date_format, date_trunc, from_unixtime, lit, to_timestamp}
 import scopt.OptionParser
 import shapeless.lens
@@ -61,11 +62,13 @@ object TransformationStage extends DatagenStage with Logging {
   override def run(args: Args): Unit = {
     log.info("Starting transformation stage")
 
-    val pathPrefix = args.outputDir / "history_data"
+    val rawPathPrefix = args.outputDir / "raw"
+    val outputPathPrefix = args.outputDir / "history_data"
+
+    val filterDeletion = false
 
     val simulationStart = Dictionaries.dates.getSimulationStart
     val simulationEnd = Dictionaries.dates.getSimulationEnd
-
     val bulkLoadThreshold = calculateBulkLoadThreshold(args.bulkloadPortion, simulationStart, simulationEnd)
 
 //    val batch_id = (col: Column) => date_format(date_trunc(args.batchPeriod, to_timestamp(col / lit(1000L))), batchPeriodFormat(args.batchPeriod))
@@ -100,20 +103,33 @@ object TransformationStage extends DatagenStage with Logging {
 //        .select(Seq($"delete_batch_id".as("batch_id"), $"deletionDate") ++ idColumns: _*)
 //    }
 
+    val readRaw = (target:String) => {
+      spark.read.format(args.irFormat)
+        .options(options)
+        .option("inferSchema", "true")
+        .load(s"$rawPathPrefix/$target/*.csv")
+    }
 
-    val transferDf = spark.read.format("csv").options(options)
-      .load("./out/raw/transfer/part-00000-41b4c22f-2604-4cfb-b3a3-2c6a6b3527f3-c000.csv")
+    val write = (data: DataFrame, target: String) => {
+      data.toDF().coalesce(1)
+        .write.format("csv").options(options).option("encoding", "UTF-8")
+        .mode("overwrite").save((outputPathPrefix / target).toString)
+    }
 
-    val resRow = transferDf.select("fromId", "toId", "multiplicityId", "createTime", "deleteTime", "amount", "isExplicitDeleted")
-      .filter("isExplicitDeleted = 'true'")
+
+    val extractSnapshot = (df: DataFrame) => {
+      df.filter($"creationDate" < lit(bulkLoadThreshold)
+          && (!lit(filterDeletion) || $"deletionDate" >= lit(bulkLoadThreshold)))
+        .select(_: _*)
+    }
+
+    val transferSnapshot = extractSnapshot(readRaw("transfer"))
+//      .select("fromId", "toId", "multiplicityId", "createTime", "deleteTime", "amount", "isExplicitDeleted")
+//      .map(extractSnapshot)
       .withColumn("createTime", from_unixtime(col("createTime") / 1000, batchPeriodFormat(args.batchPeriod)))
       .withColumn("deleteTime", from_unixtime(col("deleteTime") / 1000, batchPeriodFormat(args.batchPeriod)))
       .orderBy("createTime", "deleteTime")
-
-    resRow.toDF().coalesce(1).write.format("csv").options(options)
-      .option("encoding", "UTF-8")
-      .mode("overwrite")
-      .save((pathPrefix / "transfer").toString)
+    write(transferSnapshot, "transfer")
 
     //    val accountDf = spark.read.format("csv")
     //      .option("header", "true")
@@ -135,13 +151,6 @@ object TransformationStage extends DatagenStage with Logging {
 //  }
 
 
-
-//  def extractSnapshot(tpe: EntityType, df: DataFrame, bulkLoadThreshold: Long, filterDeletion: Boolean) = {
-//      df.filter(
-//        $"creationDate" < lit(bulkLoadThreshold)
-//        && (!lit(filterDeletion) || $"deletionDate" >= lit(bulkLoadThreshold)))
-//        .select(_:_*)
-//  }
 
 
   private def calculateBulkLoadThreshold(bulkLoadPortion: Double, simulationStart: Long, simulationEnd: Long) = {
