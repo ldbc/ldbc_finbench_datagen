@@ -33,7 +33,7 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
   def writeAccount(self: RDD[Account]): Unit = {
     val rawAccount = self.map { a: Account => AccountRaw(a.getAccountId, a.getCreationDate, a.getDeletionDate, a.isBlocked, a.getType, a.getMaxInDegree, a.getMaxOutDegree, a.isExplicitlyDeleted, a.getOwnerType.toString) }
     val df = spark.createDataFrame(rawAccount)
-    df.repartition(1).write.format(sink.format.toString).options(options).save(sink.outputDir + "/account")
+    df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/account")
   }
 
   def writePersonOwnAccount(self: RDD[PersonOwnAccount]): Unit = {
@@ -101,7 +101,7 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
     val df = spark.createDataFrame(self.map { loan =>
       LoanRaw(loan.getLoanId, loan.getLoanAmount, loan.getBalance)
     })
-    df.repartition(1).write.format(sink.format.toString).options(options).save(sink.outputDir + "/loan")
+    df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/loan")
   }
 
 
@@ -109,14 +109,14 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
     val df = spark.createDataFrame(self.map { t =>
       TransferRaw(t.getFromAccount.getAccountId, t.getToAccount.getAccountId, t.getMultiplicityId, t.getCreationDate, t.getDeletionDate, t.getAmount, t.isExplicitlyDeleted)
     })
-    df.repartition(1).write.format(sink.format.toString).options(options).save(sink.outputDir + "/loantransfer")
+    df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/loantransfer")
   }
 
   def writeTransfer(self: RDD[Transfer]): Unit = {
     val df = spark.createDataFrame(self.map { t =>
       TransferRaw(t.getFromAccount.getAccountId, t.getToAccount.getAccountId, t.getMultiplicityId, t.getCreationDate, t.getDeletionDate, t.getAmount, t.isExplicitlyDeleted)
     })
-    df.repartition(1).write.format(sink.format.toString).options(options).save(sink.outputDir + "/transfer")
+    df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/transfer")
   }
 
   def writeWithdraw(self: RDD[Withdraw]): Unit = {
@@ -132,13 +132,13 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
     val df = spark.createDataFrame(self.map { d =>
       DepositRaw(d.getLoan.getLoanId, d.getAccount.getAccountId, d.getCreationDate, d.getDeletionDate, d.getAmount, d.isExplicitlyDeleted)
     })
-    df.repartition(1).write.format(sink.format.toString).options(options).save(sink.outputDir + "/deposit")
+    df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/deposit")
   }
 
   def writeRepay(self: RDD[Repay]): Unit = {
     val df = spark.createDataFrame(self.map { r =>
       RepayRaw(r.getAccount.getAccountId, r.getLoan.getLoanId, r.getCreationDate, r.getDeletionDate, r.getAmount, r.isExplicitlyDeleted)
     })
-    df.repartition(1).write.format(sink.format.toString).options(options).save(sink.outputDir + "/repay")
+    df.write.format(sink.format.toString).options(options).save(sink.outputDir + "/repay")
   }
 }
