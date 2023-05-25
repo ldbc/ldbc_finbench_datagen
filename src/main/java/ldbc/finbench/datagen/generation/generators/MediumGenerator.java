@@ -29,7 +29,7 @@ public class MediumGenerator {
         Medium medium = new Medium();
 
         long creationDate = Dictionaries.dates.randomMediumCreationDate(
-            randomFarm.get(RandomGeneratorFarm.Aspect.DATE));
+            randomFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_CREATION_DATE));
         medium.setCreationDate(creationDate);
 
         long mediumId = composeMediumId(nextId++, creationDate);

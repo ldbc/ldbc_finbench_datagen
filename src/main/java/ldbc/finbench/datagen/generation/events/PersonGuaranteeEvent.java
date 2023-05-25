@@ -38,7 +38,7 @@ public class PersonGuaranteeEvent implements Serializable {
                 Person toPerson = persons.get(randIndex.nextInt(persons.size()));
                 if (person.canGuarantee(toPerson)) {
                     PersonGuaranteePerson personGuaranteePerson = PersonGuaranteePerson.createPersonGuaranteePerson(
-                        randomFarm.get(RandomGeneratorFarm.Aspect.DATE), person, toPerson);
+                        randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_GUARANTEE_DATE), person, toPerson);
                     personGuaranteePeople.add(personGuaranteePerson);
                 }
             }

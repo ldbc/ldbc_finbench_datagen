@@ -58,26 +58,37 @@ public class TransferEvent implements Serializable {
         setOutDegreeWithShuffle(accounts);
 
         List<Transfer> allTransfers = new ArrayList<>();
-        Random dateRandom = randomFarm.get(RandomGeneratorFarm.Aspect.DATE);
+        Random dateRandom = randomFarm.get(RandomGeneratorFarm.Aspect.TRANSFER_DATE);
 
+        // Note: be careful that here may be a infinite loop with some special parameters
         for (int i = 0; i < accounts.size(); i++) {
             Account from = accounts.get(i);
+            // int loopCount = 0;
             while (from.getAvaialbleOutDegree() != 0) {
+                int skippedCount = 0;
                 for (int j = 0; j < accounts.size(); j++) {
                     Account to = accounts.get(j);
-                    if (cannotTransfer(from, to)) {
+                    if (cannotTransfer(from, to) || !distanceProbOK(j - i)) {
+                        skippedCount++;
                         continue;
                     }
-                    long numTransfers = Math.min(multiplicityDistribution.nextDegree(), from.getAvaialbleOutDegree());
-                    if (numTransfers <= to.getAvaialbleInDegree() && distanceProbOK(j - i)) {
-                        for (int mindex = 0; mindex < numTransfers; mindex++) {
-                            // Note: nearly impossible to generate same date
-                            allTransfers.add(Transfer.createTransfer(dateRandom, from, to, mindex,
-                                                                     amountRandom.nextDouble()
-                                                                         * DatagenParams.tsfMaxAmount));
-                        }
+                    long numTransfers = Math.min(multiplicityDistribution.nextDegree(),
+                                                 Math.min(from.getAvaialbleOutDegree(), to.getAvaialbleInDegree()));
+                    for (int mindex = 0; mindex < numTransfers; mindex++) {
+                        allTransfers.add(Transfer.createTransfer(dateRandom, from, to, mindex,
+                                                                 amountRandom.nextDouble()
+                                                                     * DatagenParams.tsfMaxAmount));
+                    }
+                    if (from.getAvaialbleOutDegree() == 0) {
+                        break;
                     }
                 }
+                if (skippedCount == accounts.size()) {
+                    System.out.println("[Transfer] All accounts skipped for " + from.getAccountId());
+                    break; // end loop if all accounts are skipped
+                }
+                // System.out.println("Loop for " + from.getAccountId() + " " + loopCount++ +", skippedCount: "+
+                // skippedCount);
             }
         }
         return allTransfers;
@@ -87,6 +98,6 @@ public class TransferEvent implements Serializable {
     public boolean cannotTransfer(Account from, Account to) {
         return from.getDeletionDate() < to.getCreationDate() + DatagenParams.activityDelta
             || from.getCreationDate() + DatagenParams.activityDelta > to.getDeletionDate()
-            || from.equals(to);
+            || from.equals(to) || from.getAvaialbleOutDegree() == 0 || to.getAvaialbleInDegree() == 0;
     }
 }

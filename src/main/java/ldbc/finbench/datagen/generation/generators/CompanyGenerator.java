@@ -1,7 +1,9 @@
 package ldbc.finbench.datagen.generation.generators;
 
 import java.util.Iterator;
+import java.util.Random;
 import ldbc.finbench.datagen.entities.nodes.Company;
+import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
@@ -25,7 +27,7 @@ public class CompanyGenerator {
         Company company = new Company();
 
         long creationDate = Dictionaries.dates.randomCompanyCreationDate(
-            randomFarm.get(RandomGeneratorFarm.Aspect.DATE));
+            randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_DATE));
         company.setCreationDate(creationDate);
 
         long companyId = composeCompanyId(nextId++, creationDate);

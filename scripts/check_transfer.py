@@ -59,7 +59,7 @@ def draw_degree(inDegrees, outDegrees):
 
 # You can use this script to check if the in-degree and out-degree of each account is correct
 if __name__ == "__main__":
-    allTransferEdges = readAllEdges("../out/transfer/*.csv")
+    allTransferEdges = readAllEdges("./out/transfer/*.csv")
 
     # Check whether deleted before creation
     allTransferEdges.filter(allTransferEdges["isExplicitDeleted"] == True).filter(allTransferEdges["createTime"] > allTransferEdges["deleteTime"]).show()

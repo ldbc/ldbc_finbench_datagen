@@ -1,11 +1,12 @@
 package ldbc.finbench.datagen.generation
 
+import ldbc.finbench.datagen.entities.edges.{CompanyApplyLoan, PersonApplyLoan}
 import ldbc.finbench.datagen.entities.nodes._
 import ldbc.finbench.datagen.generation.generators.{ActivityGenerator, SparkCompanyGenerator, SparkMediumGenerator, SparkPersonGenerator}
 import ldbc.finbench.datagen.generation.serializers.ActivitySerializer
 import ldbc.finbench.datagen.io.Writer
 import ldbc.finbench.datagen.io.raw.RawSink
-import ldbc.finbench.datagen.util.{Logging, lower}
+import ldbc.finbench.datagen.util.Logging
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
@@ -59,10 +60,13 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
 
     // Merge accounts vertices registered by persons and companies
     // TODO: can not coalesce when large scale data generated in cluster
-    val accountRdd = personOwnAccountInfo.map(personOwnAccount => personOwnAccount.getAccount)
-      .union(companyOwnAccountInfo.map(companyOwnAccount => companyOwnAccount.getAccount))
-      .coalesce(1)
+    val personAccounts = personOwnAccountInfo.map(personOwnAccount => personOwnAccount.getAccount)
+    assert(personAccounts.count() == personOwnAccountInfo.count())
+    val companyAccounts = companyOwnAccountInfo.map(companyOwnAccount => companyOwnAccount.getAccount)
+    assert(companyAccounts.count() == companyOwnAccountInfo.count())
+    val accountRdd = personAccounts.union(companyAccounts)
     log.info(s"[Simulation] Account RDD partitions: ${accountRdd.getNumPartitions}, count: ${accountRdd.count()}")
+    assert((personAccounts.count() + companyAccounts.count()) == accountRdd.count())
 
     // simulate person signIn medium event
     val mediumRdd: RDD[Medium] = SparkMediumGenerator(mediumNum, blockSize, mediumPartitions)
@@ -82,15 +86,20 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
 
     // simulate person apply loans event and company apply loans event
     val personLoanRdd = activityGenerator.personLoanEvent(personWithAccountRdd)
-    val companyLoanRdd = activityGenerator.companyLoanEvent(companyWithAccountRdd)
+    val companyLoanRdd = activityGenerator.companyLoanEvent(companyWithAccountRdd).cache()
     log.info(s"[Simulation] personApplyLoan RDD partitions: ${personLoanRdd.getNumPartitions}, count: ${personLoanRdd.count()}")
     log.info(s"[Simulation] companyApplyLoan RDD partitions: ${companyLoanRdd.getNumPartitions}, count: ${companyLoanRdd.count()}")
 
     // Merge accounts vertices registered by persons and companies
-    val loanRdd = personLoanRdd.map(personLoan => personLoan.getLoan)
-      .union(companyLoanRdd.map(companyLoan => companyLoan.getLoan))
-      .coalesce(1)
+    val personLoans = personLoanRdd.map(personLoan => personLoan.getLoan)
+    assert(personLoans.count() == personLoanRdd.count())
+    // Don't why the loanRdd lost values if don't cache companyLoans
+    val companyLoans = companyLoanRdd.map(companyLoan => companyLoan.getLoan).cache()
+    assert(companyLoans.count() == companyLoanRdd.count())
+
+    val loanRdd = personLoans.union(companyLoans)
     log.info(s"[Simulation] Loan RDD partitions: ${loanRdd.getNumPartitions}, count: ${loanRdd.count()}")
+    assert((personLoans.count() + companyLoans.count()) == loanRdd.count())
 
     // simulate loan subevents including deposit, repay and transfer
     val (depositsRdd, repaysRdd, loanTrasfersRdd) = activityGenerator.afterLoanSubEvents(loanRdd, accountRdd)
@@ -100,8 +109,8 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
 
     // simulate transfer and withdraw event
     val transferRdd = activityGenerator.transferEvent(accountRdd)
-    val withdrawRdd = activityGenerator.withdrawEvent(accountRdd)
     log.info(s"[Simulation] transfer RDD partitions: ${transferRdd.getNumPartitions}, count: ${transferRdd.count()}")
+    val withdrawRdd = activityGenerator.withdrawEvent(accountRdd)
     log.info(s"[Simulation] withdraw RDD partitions: ${withdrawRdd.getNumPartitions}, count: ${withdrawRdd.count()}")
 
     // TODO: use some syntax to implement serializer less verbose like GraphDef

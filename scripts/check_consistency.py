@@ -15,7 +15,7 @@ def check_consistency(dir1, dir2, prefix):
     max_len0 = max(max([len(prefix + "/" + d) for d in common_subdirs]), len(headers[0]))
     max_len1 = max(len(dir1), len(headers[1]))
     max_len2 = max(len(dir2), len(headers[2]))
-    max_len3 = max(len("same"), len(headers[3]))
+    max_len3 = max(len("same"), len("different"), len("skipped for more than one file"), len(headers[3]))
 
     def align_print(col0: str, col1: str, col2: str, col3: str):
         print(print_templ.format(col0.center(max_len0), col1.center(max_len1), col2.center(max_len2),

@@ -47,7 +47,7 @@ object raw {
   case class MediumRaw(
       id: Long,
       createTime: Long,
-      name: String,
+      `type`: String,
       isBlocked: Boolean
   )
 
