@@ -49,7 +49,7 @@ public class AccountGenerator implements Serializable {
 
         // Set creationDate
         long creationDate =
-            Dictionaries.dates.randomAccountCreationDate(randFarm.get(RandomGeneratorFarm.Aspect.DATE), minTime);
+            Dictionaries.dates.randomAccountCreationDate(randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_CREATION_DATE), minTime);
         account.setCreationDate(creationDate);
 
         // Set accountId
@@ -80,7 +80,7 @@ public class AccountGenerator implements Serializable {
         if (accountDeleteDistribution.isDeleted(randFarm.get(RandomGeneratorFarm.Aspect.DELETE_ACCOUNT), maxInDegree)) {
             account.setExplicitlyDeleted(true);
             long maxDeletionDate = Dictionaries.dates.getSimulationEnd();
-            deletionDate = Dictionaries.dates.randomAccountDeletionDate(randFarm.get(RandomGeneratorFarm.Aspect.DATE),
+            deletionDate = Dictionaries.dates.randomAccountDeletionDate(randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_DELETE_DATE),
                                                                         creationDate, maxDeletionDate);
         } else {
             account.setExplicitlyDeleted(false);

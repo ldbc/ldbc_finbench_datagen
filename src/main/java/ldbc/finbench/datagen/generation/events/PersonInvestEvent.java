@@ -25,7 +25,7 @@ public class PersonInvestEvent implements Serializable {
     }
 
     public PersonInvestCompany personInvest(Person person, Company company) {
-        return PersonInvestCompany.createPersonInvestCompany(randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
+        return PersonInvestCompany.createPersonInvestCompany(randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_INVEST_DATE),
                                                              randomFarm.get(RandomGeneratorFarm.Aspect.INVEST_RATIO),
                                                              person, company);
     }

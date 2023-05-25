@@ -58,7 +58,7 @@ public class TransferEvent implements Serializable {
         setOutDegreeWithShuffle(accounts);
 
         List<Transfer> allTransfers = new ArrayList<>();
-        Random dateRandom = randomFarm.get(RandomGeneratorFarm.Aspect.DATE);
+        Random dateRandom = randomFarm.get(RandomGeneratorFarm.Aspect.TRANSFER_DATE);
 
         // Note: be careful that here may be a infinite loop with some special parameters
         for (int i = 0; i < accounts.size(); i++) {

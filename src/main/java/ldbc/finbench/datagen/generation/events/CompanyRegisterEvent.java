@@ -13,36 +13,30 @@ import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class CompanyRegisterEvent implements Serializable {
     private final RandomGeneratorFarm randomFarm;
-    private final Random random; // first random long is for personRegister, second for companyRegister
     private final Random numAccountsRandom;
 
     public CompanyRegisterEvent() {
         randomFarm = new RandomGeneratorFarm();
-        random = new Random(DatagenParams.defaultSeed);
         numAccountsRandom = new Random(DatagenParams.defaultSeed);
     }
 
     private void resetState(AccountGenerator accountGenerator, int seed) {
         randomFarm.resetRandomGenerators(seed);
-        random.setSeed(7654321L + 1234567 * seed);
-        random.nextLong(); // Skip first random number for personRegister
-        long newSeed = random.nextLong();
-        accountGenerator.resetState(newSeed);
-        numAccountsRandom.setSeed(newSeed);
+        accountGenerator.resetState(seed);
+        numAccountsRandom.setSeed(seed);
     }
 
     public List<CompanyOwnAccount> companyRegister(List<Company> companies, AccountGenerator accountGenerator,
                                                    int blockId) {
         resetState(accountGenerator, blockId);
         List<CompanyOwnAccount> companyOwnAccounts = new ArrayList<>();
-
         for (Company company : companies) {
             // Each company has at least one account
             for (int i = 0; i < Math.max(1, numAccountsRandom.nextInt(DatagenParams.maxAccountsPerOwner)); i++) {
                 // Account created after company creation date
                 Account account = accountGenerator.generateAccount(company.getCreationDate());
                 CompanyOwnAccount companyOwnAccount =
-                    CompanyOwnAccount.createCompanyOwnAccount(randomFarm.get(RandomGeneratorFarm.Aspect.DATE), company,
+                    CompanyOwnAccount.createCompanyOwnAccount(randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_OWN_ACCOUNT_DATE), company,
                                                               account);
                 companyOwnAccounts.add(companyOwnAccount);
             }

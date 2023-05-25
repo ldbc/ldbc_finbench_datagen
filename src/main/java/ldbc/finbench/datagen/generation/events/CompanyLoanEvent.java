@@ -39,7 +39,7 @@ public class CompanyLoanEvent implements Serializable {
         for (Company company : companies) {
             for (int i = 0; i < numLoanRandom.nextInt(DatagenParams.maxLoans); i++) {
                 long applyDate =
-                    Dictionaries.dates.randomCompanyToLoanDate(randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
+                    Dictionaries.dates.randomCompanyToLoanDate(randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_APPLY_LOAN_DATE),
                                                                company);
                 Loan loan = loanGenerator.generateLoan(applyDate, "company");
                 CompanyApplyLoan companyApplyLoan = CompanyApplyLoan.createCompanyApplyLoan(applyDate, company, loan);

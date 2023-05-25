@@ -84,7 +84,7 @@ public class LoanSubEvents implements Serializable {
             return;
         }
         double amount = amountRandom.nextDouble() * loan.getBalance();
-        Deposit deposit = Deposit.createDeposit(randomFarm.get(RandomGeneratorFarm.Aspect.DATE), loan, account, amount);
+        Deposit deposit = Deposit.createDeposit(randomFarm.get(RandomGeneratorFarm.Aspect.LOAN_SUBEVENTS_DATE), loan, account, amount);
         deposits.add(deposit);
     }
 
@@ -95,7 +95,7 @@ public class LoanSubEvents implements Serializable {
         }
 
         double amount = amountRandom.nextDouble() * (loan.getLoanAmount() - loan.getBalance());
-        Repay repay = Repay.createRepay(randomFarm.get(RandomGeneratorFarm.Aspect.DATE), account, loan, amount);
+        Repay repay = Repay.createRepay(randomFarm.get(RandomGeneratorFarm.Aspect.LOAN_SUBEVENTS_DATE), account, loan, amount);
         repays.add(repay);
     }
 
@@ -111,13 +111,13 @@ public class LoanSubEvents implements Serializable {
         Account target = targetAccounts.get(indexRandom.nextInt(targetAccounts.size()));
         if (actionRandom.nextDouble() < 0.5) {
             if (!cannotTransfer(account, target)) {
-                transfers.add(Transfer.createTransfer(randomFarm.get(RandomGeneratorFarm.Aspect.DATE), account, target,
+                transfers.add(Transfer.createTransfer(randomFarm.get(RandomGeneratorFarm.Aspect.LOAN_SUBEVENTS_DATE), account, target,
                                                       getMultiplicityIdAndInc(account, target),
                                                       amountRandom.nextDouble() * DatagenParams.tsfMaxAmount));
             }
         } else {
             if (!cannotTransfer(target, account)) {
-                transfers.add(Transfer.createTransfer(randomFarm.get(RandomGeneratorFarm.Aspect.DATE), target, account,
+                transfers.add(Transfer.createTransfer(randomFarm.get(RandomGeneratorFarm.Aspect.LOAN_SUBEVENTS_DATE), target, account,
                                                       getMultiplicityIdAndInc(target, account),
                                                       amountRandom.nextDouble() * DatagenParams.tsfMaxAmount));
             }

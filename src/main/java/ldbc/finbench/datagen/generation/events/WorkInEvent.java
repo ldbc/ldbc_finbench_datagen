@@ -31,7 +31,7 @@ public class WorkInEvent implements Serializable {
         for (Person p : persons) {
             int companyIndex = randIndex.nextInt(companies.size());
             WorkIn workIn = WorkIn.createWorkIn(
-                randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
+                randomFarm.get(RandomGeneratorFarm.Aspect.WORKIN_DATE),
                 p,
                 companies.get(companyIndex));
             workIns.add(workIn);

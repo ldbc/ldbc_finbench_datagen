@@ -29,7 +29,7 @@ public class CompanyGenerator {
         Company company = new Company();
 
         long creationDate = Dictionaries.dates.randomCompanyCreationDate(
-            randomFarm.get(RandomGeneratorFarm.Aspect.DATE));
+            randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_DATE));
         company.setCreationDate(creationDate);
 
         long companyId = composeCompanyId(nextId++, creationDate);

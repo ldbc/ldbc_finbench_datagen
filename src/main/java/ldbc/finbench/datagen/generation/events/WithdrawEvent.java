@@ -48,7 +48,7 @@ public class WithdrawEvent implements Serializable {
                 if (cannotWithdraw(from, to)) {
                     continue;
                 }
-                Withdraw withdraw = Withdraw.createWithdraw(randomFarm.get(RandomGeneratorFarm.Aspect.DATE), from, to,
+                Withdraw withdraw = Withdraw.createWithdraw(randomFarm.get(RandomGeneratorFarm.Aspect.WITHDRAW_DATE), from, to,
                                                             getMultiplicityIdAndInc(from, to), amountRandom.nextDouble()
                                                                 * DatagenParams.withdrawMaxAmount);
                 count++;
