@@ -6,7 +6,8 @@ import java.util.List;
 import ldbc.finbench.datagen.entities.edges.Deposit;
 import ldbc.finbench.datagen.entities.edges.Repay;
 
-public class Loan implements Serializable {
+public class Loan implements Serializable, Comparable<Loan> {
+    private static final long serialVersionUID = -2685444218382696366L;
     private long loanId;
     private double loanAmount;
     private double balance;
@@ -28,6 +29,20 @@ public class Loan implements Serializable {
         this.maxDegree = maxDegree;
         deposits = new ArrayList<>();
         repays = new ArrayList<>();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Loan) {
+            Loan loan = (Loan) obj;
+            return loanId == loan.getLoanId();
+        }
+        return false;
+    }
+
+    @Override
+    public int compareTo(Loan o) {
+        return Long.compare(loanId, o.getLoanId());
     }
 
     public long getLoanId() {

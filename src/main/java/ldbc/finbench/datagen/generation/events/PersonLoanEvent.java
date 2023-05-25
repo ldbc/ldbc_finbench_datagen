@@ -27,7 +27,7 @@ public class PersonLoanEvent implements Serializable {
         randomFarm.resetRandomGenerators(seed);
         random.setSeed(7654321L + 1234567 * seed);
         long newSeed = random.nextLong();
-        loanGenerator.resetState(newSeed);
+//        loanGenerator.resetState(newSeed);
         numLoanRandom.setSeed(newSeed);
     }
 
@@ -39,7 +39,7 @@ public class PersonLoanEvent implements Serializable {
             for (int i = 0; i < numLoanRandom.nextInt(DatagenParams.maxLoans); i++) {
                 long applyDate =
                     Dictionaries.dates.randomPersonToLoanDate(randomFarm.get(RandomGeneratorFarm.Aspect.DATE), person);
-                Loan loan = loanGenerator.generateLoan(applyDate);
+                Loan loan = loanGenerator.generateLoan(applyDate, "person");
                 PersonApplyLoan personApplyLoan = PersonApplyLoan.createPersonApplyLoan(applyDate, person, loan);
                 personApplyLoans.add(personApplyLoan);
             }

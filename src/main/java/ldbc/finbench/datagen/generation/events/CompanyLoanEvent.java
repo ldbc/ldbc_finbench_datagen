@@ -28,7 +28,7 @@ public class CompanyLoanEvent implements Serializable {
         random.setSeed(7654321L + 1234567 * seed);
         random.nextLong(); // Skip first random number for personApply
         long newSeed = random.nextLong();
-        loanGenerator.resetState(newSeed);
+//        loanGenerator.resetState(newSeed);
         numLoanRandom.setSeed(newSeed);
     }
 
@@ -41,7 +41,7 @@ public class CompanyLoanEvent implements Serializable {
                 long applyDate =
                     Dictionaries.dates.randomCompanyToLoanDate(randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
                                                                company);
-                Loan loan = loanGenerator.generateLoan(applyDate);
+                Loan loan = loanGenerator.generateLoan(applyDate, "company");
                 CompanyApplyLoan companyApplyLoan = CompanyApplyLoan.createCompanyApplyLoan(applyDate, company, loan);
                 companyApplyLoans.add(companyApplyLoan);
             }
