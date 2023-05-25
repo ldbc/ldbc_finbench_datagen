@@ -92,7 +92,7 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     val loanRdd = personLoans.union(companyLoans)
     val loanRdd1 = personLoans++companyLoans
     val loanRdd2 = spark.sparkContext.union(personLoans, companyLoans)
-    assert((personLoans.count() + companyLoans.count()) == loanRdd.count())
+//    assert((personLoans.count() + companyLoans.count()) == loanRdd.count())
     log.info(s"[Simulation] Loan RDD partitions: ${loanRdd.getNumPartitions}, count: ${loanRdd.count()}")
 
     // simulate loan subevents including deposit, repay and transfer

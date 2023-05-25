@@ -1,16 +1,20 @@
 package ldbc.finbench.datagen.generation.generators;
 
 import java.util.Iterator;
+import java.util.Random;
 import ldbc.finbench.datagen.entities.nodes.Person;
+import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class PersonGenerator {
     private final RandomGeneratorFarm randomFarm;
     private int nextId = 0;
+    private final Random random; // first random long for person, second for company
 
     public PersonGenerator() {
         this.randomFarm = new RandomGeneratorFarm();
+        this.random = new Random(DatagenParams.defaultSeed);
     }
 
     private long composePersonId(long id, long date) {
@@ -42,7 +46,9 @@ public class PersonGenerator {
     }
 
     private void resetState(int seed) {
-        randomFarm.resetRandomGenerators(seed);
+        random.setSeed(7654321L + 1234567L * seed);
+        long newSeed = random.nextLong();
+        randomFarm.resetRandomGenerators(newSeed);
     }
 
     public Iterator<Person> generatePersonBlock(int blockId, int blockSize) {

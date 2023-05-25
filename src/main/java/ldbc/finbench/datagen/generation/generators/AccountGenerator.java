@@ -34,10 +34,10 @@ public class AccountGenerator implements Serializable {
     }
 
     private long composeAccountId(long id, long date) {
-        long idMask = ~(0xFFFFFFFFFFFFFFFFL << 43);
+        long idMask = ~(0xFFFFFFFFFFFFFFFFL << 44);
         long bucket = (long) (256 * (date - Dictionaries.dates.getSimulationStart())
             / (double) Dictionaries.dates.getSimulationEnd());
-        return (bucket << 43) | ((id & idMask));
+        return (bucket << 44) | ((id & idMask));
     }
 
     // Note:

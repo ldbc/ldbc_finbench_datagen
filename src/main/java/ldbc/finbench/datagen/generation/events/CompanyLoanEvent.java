@@ -25,10 +25,10 @@ public class CompanyLoanEvent implements Serializable {
 
     private void resetState(LoanGenerator loanGenerator, int seed) {
         randomFarm.resetRandomGenerators(seed);
-        random.setSeed(7654321L + 1234567 * seed);
+        random.setSeed(7654321L + 1234567L * seed);
         random.nextLong(); // Skip first random number for personApply
         long newSeed = random.nextLong();
-//        loanGenerator.resetState(newSeed);
+        loanGenerator.resetState(newSeed);
         numLoanRandom.setSeed(newSeed);
     }
 
