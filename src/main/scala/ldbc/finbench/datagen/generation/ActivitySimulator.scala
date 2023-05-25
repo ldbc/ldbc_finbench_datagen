@@ -61,7 +61,9 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     // Merge accounts vertices registered by persons and companies
     // TODO: can not coalesce when large scale data generated in cluster
     val personAccounts = personOwnAccountInfo.map(personOwnAccount => personOwnAccount.getAccount)
+    assert(personAccounts.count() == personOwnAccountInfo.count())
     val companyAccounts = companyOwnAccountInfo.map(companyOwnAccount => companyOwnAccount.getAccount)
+    assert(companyAccounts.count() == companyOwnAccountInfo.count())
     val accountRdd = personAccounts.union(companyAccounts)
     log.info(s"[Simulation] Account RDD partitions: ${accountRdd.getNumPartitions}, count: ${accountRdd.count()}")
     assert((personAccounts.count() + companyAccounts.count()) == accountRdd.count())
@@ -84,14 +86,17 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
 
     // simulate person apply loans event and company apply loans event
     val personLoanRdd = activityGenerator.personLoanEvent(personWithAccountRdd)
-    val companyLoanRdd = activityGenerator.companyLoanEvent(companyWithAccountRdd)
+    val companyLoanRdd = activityGenerator.companyLoanEvent(companyWithAccountRdd).cache()
     log.info(s"[Simulation] personApplyLoan RDD partitions: ${personLoanRdd.getNumPartitions}, count: ${personLoanRdd.count()}")
     log.info(s"[Simulation] companyApplyLoan RDD partitions: ${companyLoanRdd.getNumPartitions}, count: ${companyLoanRdd.count()}")
 
     // Merge accounts vertices registered by persons and companies
     val personLoans = personLoanRdd.map(personLoan => personLoan.getLoan)
+    assert(personLoans.count() == personLoanRdd.count())
     // Don't why the loanRdd lost values if don't cache companyLoans
     val companyLoans = companyLoanRdd.map(companyLoan => companyLoan.getLoan).cache()
+    assert(companyLoans.count() == companyLoanRdd.count())
+
     val loanRdd = personLoans.union(companyLoans)
     log.info(s"[Simulation] Loan RDD partitions: ${loanRdd.getNumPartitions}, count: ${loanRdd.count()}")
     assert((personLoans.count() + companyLoans.count()) == loanRdd.count())
