@@ -1,7 +1,6 @@
 package ldbc.finbench.datagen.generation.generators;
 
 import java.io.Serializable;
-import java.util.Objects;
 import ldbc.finbench.datagen.entities.nodes.Loan;
 import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
@@ -23,18 +22,19 @@ public class LoanGenerator implements Serializable {
         this.degreeDistribution.initialize();
     }
 
-    private long composeLoanIdForCompany(long id, long date) {
-        long idMask = ~(0xFFFFFFFFFFFFFFFFL << 44);
-        long bucket = (long) (256 * (date - Dictionaries.dates.getSimulationStart()) / (double) Dictionaries.dates
-            .getSimulationEnd());
-        return (bucket << 44) | ((id & idMask));
-    }
-
-    private long composeLoanIdForPerson(long id, long date) {
-        long idMask = ~(0xFFFFFFFFFFFFFFFFL << 36);
-        long bucket = (long) (256 * (date - Dictionaries.dates.getSimulationStart()) / (double) Dictionaries.dates
-            .getSimulationEnd());
-        return (bucket << 36) | ((id & idMask));
+    private long composeLoanId(long id, long date, String personOrCompany, int blockId) {
+        // the bits are composed as follows from left to right:
+        // 1 bit for sign, 1 bit for type, 14 bits for bucket ranging from 0 to 365 * numYears, 10 bits for blockId,
+        // 38 bits for id
+        long idMask = ~(0xFFFFFFFFFFFFFFFFL << 38);
+        // each bucket is 1 day, range from 0 to 365 * numYears
+        long bucket = (long) (365 * DatagenParams.numYears * (date - Dictionaries.dates.getSimulationStart())
+            / (double) (Dictionaries.dates.getSimulationEnd() - Dictionaries.dates.getSimulationStart()));
+        if (personOrCompany.equals("company")) {
+            return (bucket << 48) | (long) blockId << 38 | ((id & idMask));
+        } else {
+            return 0x1L << 62 | (bucket << 48) | (long) blockId << 38 | ((id & idMask));
+        }
     }
 
     public void resetState(long seed) {
@@ -43,13 +43,8 @@ public class LoanGenerator implements Serializable {
     }
 
     // Loan createDate is set when applying for a loan
-    public Loan generateLoan(long creationDate, String type) {
-        long loanId;
-        if (type.equals("company")) {
-            loanId = composeLoanIdForCompany(nextId++, creationDate);
-        } else {
-            loanId = composeLoanIdForPerson(nextId++, creationDate);
-        }
+    public Loan generateLoan(long creationDate, String type, int blockId) {
+        long loanId= composeLoanId(nextId++, creationDate, type, blockId);
         double loanAmount =
             randomFarm.get(RandomGeneratorFarm.Aspect.LOAN_AMOUNT).nextDouble() * (loanAmountMax - loanAmountMin)
                 + loanAmountMin;

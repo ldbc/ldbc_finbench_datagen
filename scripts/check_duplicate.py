@@ -15,10 +15,14 @@ def check_dup(subdir, key):
         merged = merged.unionAll(df)
 
     dups = merged.groupBy(key).count().filter("count > 1")
-    print("Total rows: {}, duplicated {}".format(merged.count(), dups.count()) )
+    print("{}: Total rows: {}, duplicated {}".format(subdir, merged.count(), dups.count()) )
     dups.show(5)
 
 
 
 if __name__ == "__main__":
     check_dup("out/account", "id")
+    check_dup("out/loan", "id")
+    check_dup("out/company", "id")
+    check_dup("out/person", "id")
+    check_dup("out/medium", "id")
