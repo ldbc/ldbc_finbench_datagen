@@ -1,5 +1,6 @@
 package ldbc.finbench.datagen.generation
 
+import ldbc.finbench.datagen.entities.edges.{CompanyApplyLoan, PersonApplyLoan}
 import ldbc.finbench.datagen.entities.nodes._
 import ldbc.finbench.datagen.generation.generators.{ActivityGenerator, SparkCompanyGenerator, SparkMediumGenerator, SparkPersonGenerator}
 import ldbc.finbench.datagen.generation.serializers.ActivitySerializer
@@ -63,6 +64,7 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     val companyAccounts = companyOwnAccountInfo.map(companyOwnAccount => companyOwnAccount.getAccount)
     val accountRdd = personAccounts.union(companyAccounts)
     log.info(s"[Simulation] Account RDD partitions: ${accountRdd.getNumPartitions}, count: ${accountRdd.count()}")
+    assert((personAccounts.count() + companyAccounts.count()) == accountRdd.count())
 
     // simulate person signIn medium event
     val mediumRdd: RDD[Medium] = SparkMediumGenerator(mediumNum, blockSize, mediumPartitions)
@@ -88,12 +90,11 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
 
     // Merge accounts vertices registered by persons and companies
     val personLoans = personLoanRdd.map(personLoan => personLoan.getLoan)
-    val companyLoans = companyLoanRdd.map(companyLoan => companyLoan.getLoan)
+    // Don't why the loanRdd lost values if don't cache companyLoans
+    val companyLoans = companyLoanRdd.map(companyLoan => companyLoan.getLoan).cache()
     val loanRdd = personLoans.union(companyLoans)
-//    val loanRdd1 = personLoans++companyLoans
-//    val loanRdd2 = spark.sparkContext.union(personLoans, companyLoans)
-//    assert((personLoans.count() + companyLoans.count()) == loanRdd.count())
     log.info(s"[Simulation] Loan RDD partitions: ${loanRdd.getNumPartitions}, count: ${loanRdd.count()}")
+    assert((personLoans.count() + companyLoans.count()) == loanRdd.count())
 
     // simulate loan subevents including deposit, repay and transfer
     val (depositsRdd, repaysRdd, loanTrasfersRdd) = activityGenerator.afterLoanSubEvents(loanRdd, accountRdd)
