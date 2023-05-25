@@ -90,8 +90,8 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     val personLoans = personLoanRdd.map(personLoan => personLoan.getLoan)
     val companyLoans = companyLoanRdd.map(companyLoan => companyLoan.getLoan)
     val loanRdd = personLoans.union(companyLoans)
-    val loanRdd1 = personLoans++companyLoans
-    val loanRdd2 = spark.sparkContext.union(personLoans, companyLoans)
+//    val loanRdd1 = personLoans++companyLoans
+//    val loanRdd2 = spark.sparkContext.union(personLoans, companyLoans)
 //    assert((personLoans.count() + companyLoans.count()) == loanRdd.count())
     log.info(s"[Simulation] Loan RDD partitions: ${loanRdd.getNumPartitions}, count: ${loanRdd.count()}")
 
@@ -102,8 +102,8 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     log.info(s"[Simulation] loanTrasfers RDD partitions: ${loanTrasfersRdd.getNumPartitions}, count: ${loanTrasfersRdd.count()}")
 
     // simulate transfer and withdraw event
-//    val transferRdd = activityGenerator.transferEvent(accountRdd)
-//    log.info(s"[Simulation] transfer RDD partitions: ${transferRdd.getNumPartitions}, count: ${transferRdd.count()}")
+    val transferRdd = activityGenerator.transferEvent(accountRdd)
+    log.info(s"[Simulation] transfer RDD partitions: ${transferRdd.getNumPartitions}, count: ${transferRdd.count()}")
     val withdrawRdd = activityGenerator.withdrawEvent(accountRdd)
     log.info(s"[Simulation] withdraw RDD partitions: ${withdrawRdd.getNumPartitions}, count: ${withdrawRdd.count()}")
 
@@ -124,7 +124,7 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     activitySerializer.writeDeposit(depositsRdd)
     activitySerializer.writeRepay(repaysRdd)
     activitySerializer.writeLoanTransfer(loanTrasfersRdd)
-//    activitySerializer.writeTransfer(transferRdd)
+    activitySerializer.writeTransfer(transferRdd)
     activitySerializer.writeWithdraw(withdrawRdd)
   }
 }
