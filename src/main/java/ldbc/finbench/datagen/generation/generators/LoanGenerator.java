@@ -44,7 +44,7 @@ public class LoanGenerator implements Serializable {
 
     // Loan createDate is set when applying for a loan
     public Loan generateLoan(long creationDate, String type, int blockId) {
-        long loanId= composeLoanId(nextId++, creationDate, type, blockId);
+        long loanId = composeLoanId(nextId++, creationDate, type, blockId);
         double loanAmount =
             randomFarm.get(RandomGeneratorFarm.Aspect.LOAN_AMOUNT).nextDouble() * (loanAmountMax - loanAmountMin)
                 + loanAmountMin;

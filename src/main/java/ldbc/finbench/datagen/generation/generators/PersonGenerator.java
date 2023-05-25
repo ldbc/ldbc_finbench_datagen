@@ -28,7 +28,8 @@ public class PersonGenerator {
     public Person generatePerson() {
         Person person = new Person();
 
-        long creationDate = Dictionaries.dates.randomPersonCreationDate(randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_DATE));
+        long creationDate =
+            Dictionaries.dates.randomPersonCreationDate(randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_DATE));
         person.setCreationDate(creationDate);
 
         long personId = composePersonId(nextId++, creationDate);

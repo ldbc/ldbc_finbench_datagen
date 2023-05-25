@@ -7,7 +7,6 @@ import ldbc.finbench.datagen.entities.edges.Deposit;
 import ldbc.finbench.datagen.entities.edges.Repay;
 
 public class Loan implements Serializable, Comparable<Loan> {
-    private static final long serialVersionUID = -2685444218382696366L;
     private long loanId;
     private double loanAmount;
     private double balance;
