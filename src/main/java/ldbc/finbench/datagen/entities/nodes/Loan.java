@@ -12,9 +12,7 @@ public class Loan implements Serializable, Comparable<Loan> {
     private double balance;
     private long creationDate;
     private long maxDegree;
-
     private PersonOrCompany ownerType;
-
     private Person ownerPerson;
     private Company ownerCompany;
     private List<Deposit> deposits;
