@@ -102,9 +102,9 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     log.info(s"[Simulation] loanTrasfers RDD partitions: ${loanTrasfersRdd.getNumPartitions}, count: ${loanTrasfersRdd.count()}")
 
     // simulate transfer and withdraw event
-    val transferRdd = activityGenerator.transferEvent(accountRdd)
+//    val transferRdd = activityGenerator.transferEvent(accountRdd)
+//    log.info(s"[Simulation] transfer RDD partitions: ${transferRdd.getNumPartitions}, count: ${transferRdd.count()}")
     val withdrawRdd = activityGenerator.withdrawEvent(accountRdd)
-    log.info(s"[Simulation] transfer RDD partitions: ${transferRdd.getNumPartitions}, count: ${transferRdd.count()}")
     log.info(s"[Simulation] withdraw RDD partitions: ${withdrawRdd.getNumPartitions}, count: ${withdrawRdd.count()}")
 
     // TODO: use some syntax to implement serializer less verbose like GraphDef
@@ -124,7 +124,7 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     activitySerializer.writeDeposit(depositsRdd)
     activitySerializer.writeRepay(repaysRdd)
     activitySerializer.writeLoanTransfer(loanTrasfersRdd)
-    activitySerializer.writeTransfer(transferRdd)
+//    activitySerializer.writeTransfer(transferRdd)
     activitySerializer.writeWithdraw(withdrawRdd)
   }
 }

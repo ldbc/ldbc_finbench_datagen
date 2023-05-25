@@ -1,7 +1,6 @@
 package ldbc.finbench.datagen.generation.generators;
 
 import java.io.Serializable;
-import java.util.Iterator;
 import java.util.Random;
 import ldbc.finbench.datagen.entities.nodes.Account;
 import ldbc.finbench.datagen.generation.DatagenParams;
@@ -21,7 +20,6 @@ public class AccountGenerator implements Serializable {
     private final AccountTypeDictionary accountTypeDictionary;
     private final RandomGeneratorFarm randFarm;
     private final Random blockRandom;
-    private int nextId = 0;
 
     public AccountGenerator() {
         this.randFarm = new RandomGeneratorFarm();
@@ -33,27 +31,38 @@ public class AccountGenerator implements Serializable {
         this.blockRandom = new Random(DatagenParams.defaultSeed);
     }
 
-    private long composeAccountId(long id, long date) {
-        long idMask = ~(0xFFFFFFFFFFFFFFFFL << 44);
-        long bucket = (long) (256 * (date - Dictionaries.dates.getSimulationStart())
-            / (double) Dictionaries.dates.getSimulationEnd());
-        return (bucket << 44) | ((id & idMask));
+    private int nextId = 0;
+
+    private long composeAccountId(long id, long date, String type, int blockId) {
+        // the bits are composed as follows from left to right:
+        // 1 bit for sign, 1 bit for type, 14 bits for bucket ranging from 0 to 365 * numYears, 10 bits for blockId,
+        // 38 bits for id
+        long idMask = ~(0xFFFFFFFFFFFFFFFFL << 38);
+        // each bucket is 1 day, range from 0 to 365 * numYears
+        long bucket = (long) (365 * DatagenParams.numYears * (date - Dictionaries.dates.getSimulationStart())
+            / (double) (Dictionaries.dates.getSimulationEnd() - Dictionaries.dates.getSimulationStart()));
+        if (type.equals("company")) {
+            return (bucket << 48) | (long) blockId << 38 | ((id & idMask));
+        } else {
+            return 0x1L << 62 | (bucket << 48) | (long) blockId << 38 | ((id & idMask));
+        }
     }
 
     // Note:
     // - maxOutDegree is left as 0 to be assigned by shuffled maxInDegree later
     // - AccountOwnerEnum will be determined when person or company registers its own account
     // TODO: Use the bucket degree distribution instead of using formula and maxDegree in each scale
-    public Account generateAccount(long minTime) {
+    public Account generateAccount(long minTime, String personOrCompany, int blockId) {
         Account account = new Account();
 
         // Set creationDate
         long creationDate =
-            Dictionaries.dates.randomAccountCreationDate(randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_CREATION_DATE), minTime);
+            Dictionaries.dates.randomAccountCreationDate(randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_CREATION_DATE),
+                                                         minTime);
         account.setCreationDate(creationDate);
 
         // Set accountId
-        long accountId = composeAccountId(nextId++, creationDate);
+        long accountId = composeAccountId(nextId++, creationDate, personOrCompany, blockId);
         account.setAccountId(accountId);
 
         // Set inDegree
@@ -80,8 +89,9 @@ public class AccountGenerator implements Serializable {
         if (accountDeleteDistribution.isDeleted(randFarm.get(RandomGeneratorFarm.Aspect.DELETE_ACCOUNT), maxInDegree)) {
             account.setExplicitlyDeleted(true);
             long maxDeletionDate = Dictionaries.dates.getSimulationEnd();
-            deletionDate = Dictionaries.dates.randomAccountDeletionDate(randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_DELETE_DATE),
-                                                                        creationDate, maxDeletionDate);
+            deletionDate = Dictionaries.dates.randomAccountDeletionDate(
+                randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_DELETE_DATE),
+                creationDate, maxDeletionDate);
         } else {
             account.setExplicitlyDeleted(false);
             deletionDate = Dictionaries.dates.getNetworkCollapse();
@@ -95,24 +105,5 @@ public class AccountGenerator implements Serializable {
         degreeDistribution.reset(seed);
         randFarm.resetRandomGenerators(seed);
         blockRandom.setSeed(seed);
-    }
-
-    public Iterator<Account> generateAccountBlock(int blockId, int blockSize) {
-        resetState(blockId);
-        nextId = blockId * blockSize;
-        return new Iterator<Account>() {
-            private int accountNum = 0;
-
-            @Override
-            public boolean hasNext() {
-                return accountNum < blockSize;
-            }
-
-            @Override
-            public Account next() {
-                ++accountNum;
-                return generateAccount(0);
-            }
-        };
     }
 }

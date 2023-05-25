@@ -14,8 +14,9 @@ def check_dup(subdir, key):
     for df in datas[1:]:
         merged = merged.unionAll(df)
 
-    print("Total rows: ", merged.count())
-    merged.groupBy(key).count().filter("count > 1").show(5)
+    dups = merged.groupBy(key).count().filter("count > 1")
+    print("Total rows: {}, duplicated {}".format(merged.count(), dups.count()) )
+    dups.show(5)
 
 
 
