@@ -87,8 +87,12 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     log.info(s"[Simulation] companyApplyLoan RDD partitions: ${companyLoanRdd.getNumPartitions}, count: ${companyLoanRdd.count()}")
 
     // Merge accounts vertices registered by persons and companies
-    val loanRdd = personLoanRdd.map(personLoan => personLoan.getLoan)
-      .union(companyLoanRdd.map(companyLoan => companyLoan.getLoan))
+    val personLoans = personLoanRdd.map(personLoan => personLoan.getLoan)
+    val companyLoans = companyLoanRdd.map(companyLoan => companyLoan.getLoan)
+    val loanRdd = personLoans.union(companyLoans)
+//    val loanRdd1 = personLoans++companyLoans
+//    val loanRdd2 = spark.sparkContext.union(personLoans, companyLoans)
+//    assert((personLoans.count() + companyLoans.count()) == loanRdd.count())
     log.info(s"[Simulation] Loan RDD partitions: ${loanRdd.getNumPartitions}, count: ${loanRdd.count()}")
 
     // simulate loan subevents including deposit, repay and transfer
@@ -99,8 +103,8 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
 
     // simulate transfer and withdraw event
     val transferRdd = activityGenerator.transferEvent(accountRdd)
-    val withdrawRdd = activityGenerator.withdrawEvent(accountRdd)
     log.info(s"[Simulation] transfer RDD partitions: ${transferRdd.getNumPartitions}, count: ${transferRdd.count()}")
+    val withdrawRdd = activityGenerator.withdrawEvent(accountRdd)
     log.info(s"[Simulation] withdraw RDD partitions: ${withdrawRdd.getNumPartitions}, count: ${withdrawRdd.count()}")
 
     // TODO: use some syntax to implement serializer less verbose like GraphDef

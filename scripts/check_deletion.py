@@ -21,12 +21,13 @@ def read_data(path):
 
 
 if __name__ == "__main__":
+    prefix = "./out/"
     for subdir in subdirs:
         print("Checking {} if deletion before creation......".format(subdir))
-        if not os.path.exists("../out/" + subdir):
+        if not os.path.exists(prefix + subdir):
             print("No {} data exists!\n".format(subdir))
             continue
-        data = read_data("../out/" + subdir + "/*.csv")
+        data = read_data(prefix + subdir + "/*.csv")
         wrong = data.filter(data["createTime"] >= data["deleteTime"])
         if wrong.count() > 0:
             print("{} invalid! Having {} rows with wrong time\n".format(subdir, wrong.count()))

@@ -3,7 +3,6 @@ package ldbc.finbench.datagen.generation.events;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import ldbc.finbench.datagen.entities.edges.CompanyOwnAccount;
 import ldbc.finbench.datagen.entities.nodes.Account;
 import ldbc.finbench.datagen.entities.nodes.Company;
@@ -13,37 +12,31 @@ import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class CompanyRegisterEvent implements Serializable {
     private final RandomGeneratorFarm randomFarm;
-    private final Random random; // first random long is for personRegister, second for companyRegister
-    private final Random numAccountsRandom;
 
     public CompanyRegisterEvent() {
         randomFarm = new RandomGeneratorFarm();
-        random = new Random(DatagenParams.defaultSeed);
-        numAccountsRandom = new Random(DatagenParams.defaultSeed);
     }
 
-    private void resetState(AccountGenerator accountGenerator, int seed) {
+    private void resetState(int seed) {
         randomFarm.resetRandomGenerators(seed);
-        random.setSeed(7654321L + 1234567 * seed);
-        random.nextLong(); // Skip first random number for personRegister
-        long newSeed = random.nextLong();
-        accountGenerator.resetState(newSeed);
-        numAccountsRandom.setSeed(newSeed);
     }
 
     public List<CompanyOwnAccount> companyRegister(List<Company> companies, AccountGenerator accountGenerator,
                                                    int blockId) {
-        resetState(accountGenerator, blockId);
+        resetState(blockId);
+        accountGenerator.resetState(blockId);
         List<CompanyOwnAccount> companyOwnAccounts = new ArrayList<>();
-
         for (Company company : companies) {
+            int numAccounts = randomFarm.get(RandomGeneratorFarm.Aspect.NUM_ACCOUNTS_PER_COMPANY)
+                                        .nextInt(DatagenParams.maxAccountsPerOwner);
             // Each company has at least one account
-            for (int i = 0; i < Math.max(1, numAccountsRandom.nextInt(DatagenParams.maxAccountsPerOwner)); i++) {
+            for (int i = 0; i < Math.max(1, numAccounts); i++) {
                 // Account created after company creation date
-                Account account = accountGenerator.generateAccount(company.getCreationDate());
+                Account account = accountGenerator.generateAccount(company.getCreationDate(), "company", blockId);
                 CompanyOwnAccount companyOwnAccount =
-                    CompanyOwnAccount.createCompanyOwnAccount(randomFarm.get(RandomGeneratorFarm.Aspect.DATE), company,
-                                                              account);
+                    CompanyOwnAccount.createCompanyOwnAccount(
+                        randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_OWN_ACCOUNT_DATE), company,
+                        account);
                 companyOwnAccounts.add(companyOwnAccount);
             }
         }
