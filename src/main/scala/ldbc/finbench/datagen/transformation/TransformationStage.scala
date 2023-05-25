@@ -76,13 +76,5 @@ object TransformationStage extends DatagenStage {
       .mode("overwrite")
       .save("./out1/transfer")
 
-//    val accountDf = spark.read.format("csv")
-//      .option("header", "true")
-//      .option("delimiter", "|")
-//      .load("./out/account/part-00000-4b0e57cb-23bb-447f-89f1-e7e71a4ee017-c000.csv")
-//
-//    transferDf.join(accountDf, transferDf("fromId") === accountDf("id"), "left")
-//      .select()
-
   }
 }
