@@ -37,6 +37,7 @@ public class DatagenParams {
     public static double tsfBaseProbCorrelated = 0.0;
     public static double tsfLimitProCorrelated = 0.0;
     public static long tsfMaxAmount = 0;
+    public static String tsfGenerationMode;
     public static double accountWithdrawFraction = 0.0;
     public static int maxWithdrawals = 0;
     public static long withdrawMaxAmount = 0;
@@ -93,6 +94,7 @@ public class DatagenParams {
             tsfBaseProbCorrelated = doubleConf(conf, "transfer.baseProbCorrelated");
             tsfLimitProCorrelated = doubleConf(conf, "transfer.limitProCorrelated");
             tsfMaxAmount = longConf(conf, "transfer.maxAmount");
+            tsfGenerationMode = stringConf(conf, "transfer.generationMode");
 
             accountWithdrawFraction = doubleConf(conf, "withdraw.accountWithdrawFraction");
             maxWithdrawals = intConf(conf, "withdraw.maxWithdrawals");
