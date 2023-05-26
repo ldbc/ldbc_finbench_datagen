@@ -16,15 +16,15 @@ public class TransferEvent implements Serializable {
     private final Random randIndex;
     private final Random shuffleRandom;
     private final Random amountRandom;
-    private final DegreeDistribution multiplicityDistribution;
+    private final DegreeDistribution multiplicityDist;
 
     public TransferEvent() {
         randomFarm = new RandomGeneratorFarm();
         randIndex = new Random(DatagenParams.defaultSeed);
         shuffleRandom = new Random(DatagenParams.defaultSeed);
         amountRandom = new Random(DatagenParams.defaultSeed);
-        multiplicityDistribution = DatagenParams.getTsfMultiplicityDistribution();
-        multiplicityDistribution.initialize();
+        multiplicityDist = DatagenParams.getTsfMultiplicityDistribution();
+        multiplicityDist.initialize();
     }
 
     private void resetState(int seed) {
@@ -32,7 +32,7 @@ public class TransferEvent implements Serializable {
         randIndex.setSeed(seed);
         shuffleRandom.setSeed(seed);
         amountRandom.setSeed(seed);
-        multiplicityDistribution.reset(seed);
+        multiplicityDist.reset(seed);
     }
 
     // OutDegrees is shuffled with InDegrees
@@ -45,59 +45,70 @@ public class TransferEvent implements Serializable {
         }
     }
 
-    private boolean distanceProbOK(int distance) {
-        double randProb = randomFarm.get(RandomGeneratorFarm.Aspect.UNIFORM).nextDouble();
-        double prob = Math.pow(DatagenParams.tsfBaseProbCorrelated, Math.abs(distance));
-        return ((randProb < prob) || (randProb < DatagenParams.tsfLimitProCorrelated));
-    }
-
-    // TODO: can not coalesce when large scale data generated in cluster
+    // TODO: move shuffle to the main simulation process
     public List<Transfer> transfer(List<Account> accounts, int blockId) {
         resetState(blockId);
-        // TODO: move shuffle to the main simulation process
         setOutDegreeWithShuffle(accounts);
 
         List<Transfer> allTransfers = new ArrayList<>();
         Random dateRandom = randomFarm.get(RandomGeneratorFarm.Aspect.TRANSFER_DATE);
 
-        // Note: be careful that here may be a infinite loop with some special parameters
+        // initial available transfer to account ids
+        List<Integer> availableToAccountIds = new ArrayList<>();
+        for (int index = 0; index < accounts.size(); index++) {
+            availableToAccountIds.add(index);
+        }
+
         for (int i = 0; i < accounts.size(); i++) {
             Account from = accounts.get(i);
-            // int loopCount = 0;
-            while (from.getAvaialbleOutDegree() != 0) {
+            while (from.getAvailableOutDegree() != 0) {
                 int skippedCount = 0;
-                for (int j = 0; j < accounts.size(); j++) {
-                    Account to = accounts.get(j);
-                    if (cannotTransfer(from, to) || !distanceProbOK(j - i)) {
+                for (int j = 0; j < availableToAccountIds.size(); j++) {
+                    int toIndex = availableToAccountIds.get(j);
+                    Account to = accounts.get(toIndex);
+                    if (toIndex == i || cannotTransfer(from, to) || !distanceProbOK(j - i)) {
                         skippedCount++;
                         continue;
                     }
-                    long numTransfers = Math.min(multiplicityDistribution.nextDegree(),
-                                                 Math.min(from.getAvaialbleOutDegree(), to.getAvaialbleInDegree()));
+                    long numTransfers = Math.min(multiplicityDist.nextDegree(),
+                                                 Math.min(from.getAvailableOutDegree(), to.getAvailableInDegree()));
                     for (int mindex = 0; mindex < numTransfers; mindex++) {
                         allTransfers.add(Transfer.createTransfer(dateRandom, from, to, mindex,
                                                                  amountRandom.nextDouble()
                                                                      * DatagenParams.tsfMaxAmount));
                     }
-                    if (from.getAvaialbleOutDegree() == 0) {
+                    if (to.getAvailableInDegree() == 0) {
+                        availableToAccountIds.remove(j);
+                        j--;
+                    }
+                    if (from.getAvailableOutDegree() == 0) {
                         break;
                     }
                 }
-                if (skippedCount == accounts.size()) {
+                if (skippedCount == availableToAccountIds.size()) {
                     System.out.println("[Transfer] All accounts skipped for " + from.getAccountId());
                     break; // end loop if all accounts are skipped
                 }
-                // System.out.println("Loop for " + from.getAccountId() + " " + loopCount++ +", skippedCount: "+
-                // skippedCount);
+                System.out.println("Loop for " + from.getAccountId() + ", skippedCount: " + skippedCount + ", "
+                                       + "availableToAccountIds " + availableToAccountIds.size());
             }
         }
         return allTransfers;
     }
 
+    private boolean distanceProbOK(int distance) {
+        if (DatagenParams.tsfGenerationMode.equals("loose")) {
+            return true;
+        }
+        double randProb = randomFarm.get(RandomGeneratorFarm.Aspect.UNIFORM).nextDouble();
+        double prob = Math.pow(DatagenParams.tsfBaseProbCorrelated, Math.abs(distance));
+        return ((randProb < prob) || (randProb < DatagenParams.tsfLimitProCorrelated));
+    }
+
     // Transfer to self is not allowed
-    public boolean cannotTransfer(Account from, Account to) {
+    private boolean cannotTransfer(Account from, Account to) {
         return from.getDeletionDate() < to.getCreationDate() + DatagenParams.activityDelta
             || from.getCreationDate() + DatagenParams.activityDelta > to.getDeletionDate()
-            || from.equals(to) || from.getAvaialbleOutDegree() == 0 || to.getAvaialbleInDegree() == 0;
+            || from.equals(to) || from.getAvailableOutDegree() == 0 || to.getAvailableInDegree() == 0;
     }
 }

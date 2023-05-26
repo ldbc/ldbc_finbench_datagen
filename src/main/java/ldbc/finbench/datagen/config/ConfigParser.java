@@ -34,14 +34,16 @@ public class ConfigParser {
         }
     }
 
-    public static Map<String, String> scaleFactorConf(String scaleFactorId) {
+    public static Map<String, String> scaleFactorConf(String scaleFactorXml, String scaleFactorId) {
         Map<String, String> conf = new HashMap<>();
         ScaleFactors scaleFactors = ScaleFactors.INSTANCE;
+        scaleFactors.initialize(scaleFactorXml); // use default if empty
         if (!scaleFactors.value.containsKey(scaleFactorId)) {
             throw new IllegalArgumentException("Scale factor " + scaleFactorId + " does not exist");
         }
         ScaleFactor scaleFactor = scaleFactors.value.get(scaleFactorId);
-        System.out.println("Applied configuration of scale factor " + scaleFactorId);
+        System.out.println("Applied configuration from " + (scaleFactorXml.isEmpty() ? "default" : scaleFactorXml)
+                               + " of scale factor " + scaleFactorId);
         for (Map.Entry<String, String> e : scaleFactor.properties.entrySet()) {
             conf.put(e.getKey(), e.getValue());
         }

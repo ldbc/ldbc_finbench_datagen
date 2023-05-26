@@ -76,6 +76,11 @@ public class AccountDeleteDistribution implements Serializable {
     }
 
     public boolean isDeleted(Random random, long maxDegree) {
-        return random.nextDouble() < distribution[(int) maxDegree];
+        if (maxDegree < distribution.length) {
+            return random.nextDouble() < distribution[(int) maxDegree];
+        } else {
+            // support degree more than 1000
+            return random.nextDouble() < Math.pow(0.99, maxDegree);
+        }
     }
 }

@@ -5,3 +5,5 @@ target/
 .vscode/
 out*/
 out*.tar.gz
+tune/
+tune.log
