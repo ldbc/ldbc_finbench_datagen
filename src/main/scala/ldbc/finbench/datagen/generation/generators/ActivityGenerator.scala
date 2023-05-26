@@ -162,7 +162,9 @@ class ActivityGenerator() extends Serializable with Logging {
   def transferEvent(accountRDD: RDD[Account]): RDD[Transfer] = {
     val transferEvent = new TransferEvent
     accountRDD.mapPartitions(accounts => {
-      val transferList = transferEvent.transfer(accounts.toList.asJava, TaskContext.getPartitionId())
+      val accountList = new util.ArrayList[Account](accounts.size)
+      accounts.foreach(account => accountList.add(account))
+      val transferList = transferEvent.transfer(accountList, TaskContext.getPartitionId())
       for {transfer <- transferList.iterator().asScala} yield transfer
     })
   }
