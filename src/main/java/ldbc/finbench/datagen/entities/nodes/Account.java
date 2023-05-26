@@ -47,11 +47,11 @@ public class Account implements Serializable {
         return false;
     }
 
-    public long getAvaialbleInDegree() {
+    public long getAvailableInDegree() {
         return maxInDegree - transferIns.size();
     }
 
-    public long getAvaialbleOutDegree() {
+    public long getAvailableOutDegree() {
         return maxOutDegree - transferOuts.size();
     }
 

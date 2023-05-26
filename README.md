@@ -14,10 +14,6 @@ This data generator produces labelled directred property graphs based on the sim
 
 ![Schema](https://github.com/ldbc/ldbc_finbench_docs/blob/fd326ec51ef4b3aa8ab5034f54013db18384f3c1/figures/data-schema.png)
 
-### Cardinality and Multiplicity
-
-TODO
-
 ### Implementation
 
 #### Generation
@@ -43,22 +39,34 @@ Note: SUT stands for System Under Test.
 - Spark deployed. Spark 3.2.x is the recommended runtime to use. The rest of the instructions are provided assuming Spark 3.2.x.
 
 ### Build the project
-TODO
+
+``` bash
+mvn clean package -DskipTests
+```
 
 ### Run locally with scripts
-TODO
+
+See scripts/run.sh for details. It uses spark-submit to run the data generator.
+Please make sure you have the pre-requisites installed and the build is successful.
+
+``` bash
+# Set the variables in scripts/run.sh
+bash scripts/run.sh
+```
 
 ### Run in cloud
 
-Will support in the future
+To be supported.
 
 ## TroubleShooting
-TODO
+
+N/A yet
 
 # Related Work
 
 - FinBench Specification: https://github.com/ldbc/ldbc_finbench_docs
 - FinBench Driver: https://github.com/ldbc/ldbc_finbench_driver
 - FinBench Reference Implementation: https://github.com/ldbc/ldbc_finbench_transaction_impls
+- FinBench ACID Suite: https://github.com/ldbc/finbench-acid
 
  

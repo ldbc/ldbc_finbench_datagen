@@ -1,7 +1,9 @@
 package ldbc.finbench.datagen.generation.generators;
 
 import java.util.Iterator;
+import java.util.Random;
 import ldbc.finbench.datagen.entities.nodes.Person;
+import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
@@ -25,7 +27,7 @@ public class PersonGenerator {
         Person person = new Person();
 
         long creationDate =
-            Dictionaries.dates.randomPersonCreationDate(randomFarm.get(RandomGeneratorFarm.Aspect.DATE));
+            Dictionaries.dates.randomPersonCreationDate(randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_DATE));
         person.setCreationDate(creationDate);
 
         long personId = composePersonId(nextId++, creationDate);

@@ -13,7 +13,7 @@ def check_consistency(dir1, dir2):
     max_len0 = max(max([len(d) for d in common_subdirs]), len(headers[0]))
     max_len1 = max(len(dir1), len(headers[1]))
     max_len2 = max(len(dir2), len(headers[2]))
-    max_len3 = max(len("same"), len(headers[3]))
+    max_len3 = max(len("same"), len("different"), len("skipped for more than one file"), len(headers[3]))
 
     def align_print(col0: str, col1: str, col2: str, col3: str):
         print(print_templ.format(col0.center(max_len0), col1.center(max_len1), col2.center(max_len2),
@@ -23,7 +23,9 @@ def check_consistency(dir1, dir2):
     for subdir in common_subdirs:
         files1 = [f for f in os.listdir(os.path.join(dir1, subdir)) if f.endswith('.csv')]
         files2 = [f for f in os.listdir(os.path.join(dir2, subdir)) if f.endswith('.csv')]
-        assert (len(files1) == len(files2) and len(files1) == 1)
+        if not (len(files1) == len(files2) and len(files1) == 1):
+            align_print(subdir, dir1, dir2, "skipped for more than one file")
+            continue
         path1 = os.path.join(dir1, subdir, files1[0])
         path2 = os.path.join(dir2, subdir, files2[0])
         with open(path1, 'rb') as f1, open(path2, 'rb') as f2:

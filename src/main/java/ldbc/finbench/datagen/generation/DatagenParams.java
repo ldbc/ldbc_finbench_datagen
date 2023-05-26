@@ -37,6 +37,7 @@ public class DatagenParams {
     public static double tsfBaseProbCorrelated = 0.0;
     public static double tsfLimitProCorrelated = 0.0;
     public static long tsfMaxAmount = 0;
+    public static String tsfGenerationMode;
     public static double accountWithdrawFraction = 0.0;
     public static int maxWithdrawals = 0;
     public static long withdrawMaxAmount = 0;
@@ -93,6 +94,7 @@ public class DatagenParams {
             tsfBaseProbCorrelated = doubleConf(conf, "transfer.baseProbCorrelated");
             tsfLimitProCorrelated = doubleConf(conf, "transfer.limitProCorrelated");
             tsfMaxAmount = longConf(conf, "transfer.maxAmount");
+            tsfGenerationMode = stringConf(conf, "transfer.generationMode");
 
             accountWithdrawFraction = doubleConf(conf, "withdraw.accountWithdrawFraction");
             maxWithdrawals = intConf(conf, "withdraw.maxWithdrawals");
@@ -118,9 +120,11 @@ public class DatagenParams {
             minInvestors = intConf(conf, "invest.minInvestors");
             maxInvestors = intConf(conf, "invest.maxInvestors");
 
-            System.out.println(" ... Num Accounts " + (numPersons + numCompanies));
+            System.out.println(" ... Num Persons " + numPersons);
+            System.out.println(" ... Num Companies " + numCompanies);
             System.out.println(" ... Start Year " + startYear);
             System.out.println(" ... Num Years " + numYears);
+            System.out.println(" ... Max degree of Powerlaw " + tsfMaxNumDegree);
         } catch (Exception e) {
             System.out.println("Error reading scale factors or conf");
             System.err.println(e.getMessage());
