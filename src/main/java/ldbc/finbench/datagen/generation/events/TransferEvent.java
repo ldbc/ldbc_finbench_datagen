@@ -77,6 +77,7 @@ public class TransferEvent implements Serializable {
             availableToAccountIds.add(index);
         }
 
+        // Note: be careful that here may be a infinite loop with some special parameters
         for (int i = 0; i < accounts.size(); i++) {
             Account from = accounts.get(i);
             while (from.getAvailableOutDegree() != 0) {
