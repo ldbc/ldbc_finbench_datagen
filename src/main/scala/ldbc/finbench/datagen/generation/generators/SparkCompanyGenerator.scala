@@ -24,9 +24,8 @@ object SparkCompanyGenerator {
 
     val partitions = numPartitions.getOrElse(spark.sparkContext.defaultParallelism)
 
-    val companyRdd = spark.sparkContext
+    spark.sparkContext
       .range(0, numBlocks, step = 1, numSlices = partitions)
       .mapPartitions(companyPartitionGenerator)
-    companyRdd
   }
 }

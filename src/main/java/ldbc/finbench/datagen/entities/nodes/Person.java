@@ -14,16 +14,18 @@ public class Person implements Serializable {
     private String personName;
     private long creationDate;
     private boolean isBlocked;
-    private List<PersonOwnAccount> personOwnAccounts;
     private List<Account> accounts;
+    private List<Loan> loans;
+    private List<PersonOwnAccount> personOwnAccounts;
     private List<PersonInvestCompany> personInvestCompanies;
     private List<PersonGuaranteePerson> guaranteeSrc;
     private List<PersonGuaranteePerson> guaranteeDst;
     private List<PersonApplyLoan> personApplyLoans;
 
     public Person() {
-        personOwnAccounts = new ArrayList<>();
         accounts = new ArrayList<>();
+        loans = new ArrayList<>();
+        personOwnAccounts = new ArrayList<>();
         personInvestCompanies = new ArrayList<>();
         guaranteeSrc = new ArrayList<>();
         guaranteeDst = new ArrayList<>();
@@ -136,6 +138,16 @@ public class Person implements Serializable {
 
     public void setAccounts(List<Account> accounts) {
         this.accounts = accounts;
+    }
+
+
+
+    public List<Loan> getLoans() {
+        return loans;
+    }
+
+    public void setLoans(List<Loan> loans) {
+        this.loans = loans;
     }
 
 }
