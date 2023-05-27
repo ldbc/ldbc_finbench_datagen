@@ -7,7 +7,6 @@ import ldbc.finbench.datagen.entities.edges.CompanyApplyLoan;
 import ldbc.finbench.datagen.entities.edges.CompanyGuaranteeCompany;
 import ldbc.finbench.datagen.entities.edges.CompanyInvestCompany;
 import ldbc.finbench.datagen.entities.edges.CompanyOwnAccount;
-import ldbc.finbench.datagen.entities.edges.PersonGuaranteePerson;
 
 public class Company implements Serializable {
     private long companyId;
@@ -15,6 +14,10 @@ public class Company implements Serializable {
     private long creationDate;
     //    private long maxDegree;
     private boolean isBlocked;
+
+    private List<Account> accounts;
+
+    private List<Loan> loans;
     private List<CompanyOwnAccount> companyOwnAccounts;
     private List<CompanyInvestCompany> companyInvestCompanies;
     private List<CompanyGuaranteeCompany> guaranteeSrc;
@@ -22,6 +25,8 @@ public class Company implements Serializable {
     private List<CompanyApplyLoan> companyApplyLoans;
 
     public Company() {
+        accounts = new ArrayList<>();
+        loans = new ArrayList<>();
         companyOwnAccounts = new ArrayList<>();
         companyInvestCompanies = new ArrayList<>();
         guaranteeSrc = new ArrayList<>();
@@ -127,5 +132,22 @@ public class Company implements Serializable {
 
     public void setBlocked(boolean blocked) {
         isBlocked = blocked;
+    }
+
+
+    public List<Account> getAccounts() {
+        return accounts;
+    }
+
+    public void setAccounts(List<Account> accounts) {
+        this.accounts = accounts;
+    }
+
+    public List<Loan> getLoans() {
+        return loans;
+    }
+
+    public void setLoans(List<Loan> loans) {
+        this.loans = loans;
     }
 }

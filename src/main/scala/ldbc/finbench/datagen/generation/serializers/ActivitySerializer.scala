@@ -32,6 +32,13 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
         }
       }
       spark.createDataFrame(rawPersonGuarantee).write.format(sink.format.toString).options(options).save(sink.outputDir + "/personGuarantee")
+
+      val rawPersonLoan = self.flatMap { p =>
+        p.getPersonApplyLoans.asScala.map {
+          pal: PersonApplyLoan => PersonApplyLoanRaw(pal.getPerson.getPersonId, pal.getLoan.getLoanId, pal.getLoan.getLoanAmount, pal.getCreationDate)
+        }
+      }
+      spark.createDataFrame(rawPersonLoan).write.format(sink.format.toString).options(options).save(sink.outputDir + "/personLoan")
     }
   }
 
@@ -53,6 +60,13 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
         }
       }
       spark.createDataFrame(rawCompanyGuarantee).write.format(sink.format.toString).options(options).save(sink.outputDir + "/companyGuarantee")
+
+      val rawCompanyLoan = self.flatMap { c =>
+        c.getCompanyApplyLoans.asScala.map {
+          cal: CompanyApplyLoan => CompanyApplyLoanRaw(cal.getCompany.getCompanyId, cal.getLoan.getLoanId, cal.getLoan.getLoanAmount, cal.getCreationDate)
+        }
+      }
+      spark.createDataFrame(rawCompanyLoan).write.format(sink.format.toString).options(options).save(sink.outputDir + "/companyLoan")
     }
   }
 
@@ -60,6 +74,9 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
     SparkUI.jobAsync("Write", "Write Medium") {
       val rawMedium = media.map { m: Medium => MediumRaw(m.getMediumId, m.getCreationDate, m.getMediumName, m.isBlocked) }
       spark.createDataFrame(rawMedium).write.format(sink.format.toString).options(options).save(sink.outputDir + "/medium")
+
+      val rawSignIn = signIns.map { si: SignIn => SignInRaw(si.getMedium.getMediumId, si.getAccount.getAccountId, si.getMultiplicityId, si.getCreationDate, si.getDeletionDate, si.isExplicitlyDeleted) }
+      spark.createDataFrame(rawSignIn).write.format(sink.format.toString).options(options).save(sink.outputDir + "/signIn")
     }
   }
 
@@ -83,27 +100,6 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
       spark.createDataFrame(companyInvest.map { cic =>
         CompanyInvestCompanyRaw(cic.getFromCompany.getCompanyId, cic.getToCompany.getCompanyId, cic.getCreationDate, cic.getRatio)
       }).write.format(sink.format.toString).options(options).save(sink.outputDir + "/companyInvest")
-    }
-  }
-
-  def writeSignIn(self: RDD[SignIn]): Unit = {
-    SparkUI.jobAsync("Write", "Write SignIn") {
-      val rawSignIn = self.map { si: SignIn => SignInRaw(si.getMedium.getMediumId, si.getAccount.getAccountId, si.getMultiplicityId, si.getCreationDate, si.getDeletionDate, si.isExplicitlyDeleted) }
-      spark.createDataFrame(rawSignIn).write.format(sink.format.toString).options(options).save(sink.outputDir + "/signIn")
-    }
-  }
-
-  def writePersonLoan(self: RDD[PersonApplyLoan]): Unit = {
-    SparkUI.jobAsync("Write", "Write PersonLoan") {
-      val rawPersonLoan = self.map { pal: PersonApplyLoan => PersonApplyLoanRaw(pal.getPerson.getPersonId, pal.getLoan.getLoanId, pal.getLoan.getLoanAmount, pal.getCreationDate) }
-      spark.createDataFrame(rawPersonLoan).write.format(sink.format.toString).options(options).save(sink.outputDir + "/personLoan")
-    }
-  }
-
-  def writeCompanyLoan(self: RDD[CompanyApplyLoan]): Unit = {
-    SparkUI.jobAsync("Write", "Write CompanyLoan") {
-      val rawCompanyLoan = self.map { cal: CompanyApplyLoan => CompanyApplyLoanRaw(cal.getCompany.getCompanyId, cal.getLoan.getLoanId, cal.getLoan.getLoanAmount, cal.getCreationDate) }
-      spark.createDataFrame(rawCompanyLoan).write.format(sink.format.toString).options(options).save(sink.outputDir + "/companyLoan")
     }
   }
 

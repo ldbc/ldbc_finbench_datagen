@@ -139,19 +139,17 @@ class ActivityGenerator() extends Serializable with Logging {
     })
   }
 
-  def personLoanEvent(personRDD: RDD[Person]): RDD[PersonApplyLoan] = {
-    val personLoanEvent = new PersonLoanEvent
-    val personSample = personRDD.sample(withReplacement = false, DatagenParams.personLoanFraction, sampleRandom.nextLong())
-    personSample.mapPartitions(persons => {
+  def personLoanEvent(personRDD: RDD[Person]): RDD[Person] = {
+    val personLoanEvent = new PersonLoanEvent(DatagenParams.personLoanFraction)
+    personRDD.mapPartitions(persons => {
       val loanList = personLoanEvent.personLoan(persons.toList.asJava, loanGenerator, TaskContext.getPartitionId())
       for {applyLoan <- loanList.iterator().asScala} yield applyLoan
     })
   }
 
-  def companyLoanEvent(companyRDD: RDD[Company]): RDD[CompanyApplyLoan] = {
-    val companyLoanEvent = new CompanyLoanEvent
-    val companySample = companyRDD.sample(withReplacement = false, DatagenParams.companyLoanFraction, sampleRandom.nextLong())
-    companySample.mapPartitions(companies => {
+  def companyLoanEvent(companyRDD: RDD[Company]): RDD[Company] = {
+    val companyLoanEvent = new CompanyLoanEvent(DatagenParams.companyLoanFraction)
+    companyRDD.mapPartitions(companies => {
       val loanList = companyLoanEvent.companyLoan(companies.toList.asJava, loanGenerator, TaskContext.getPartitionId())
       for {applyLoan <- loanList.iterator().asScala} yield applyLoan
     })

@@ -44,6 +44,8 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     // simulate person and company register account event
     val personWithAccounts = activityGenerator.personRegisterEvent(personRdd)
     val companyWithAccounts = activityGenerator.companyRegisterEvent(companyRdd)
+    assert(personWithAccounts.count() == personRdd.count())
+    assert(companyWithAccounts.count() == companyRdd.count())
     val accountRdd = mergeAccounts(personWithAccounts, companyWithAccounts) // merge
     log.info(s"[Simulation] Account RDD partitions: ${accountRdd.getNumPartitions}")
 
@@ -62,23 +64,16 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
       s"companyGuarantee RDD partitions: ${companyWitAccGua.getNumPartitions}")
 
     // simulate person apply loans event and company apply loans event
-    val personLoanRdd = activityGenerator.personLoanEvent(personWithAccGua)
-    val companyLoanRdd = activityGenerator.companyLoanEvent(companyWitAccGua).cache()
-    log.info(s"[Simulation] personApplyLoan RDD partitions: ${personLoanRdd.getNumPartitions}, " +
-      s"companyApplyLoan RDD partitions: ${companyLoanRdd.getNumPartitions}")
-
-    // Merge accounts vertices registered by persons and companies
-    val personLoans = personLoanRdd.map(personLoan => personLoan.getLoan)
-    assert(personLoans.count() == personLoanRdd.count())
-    // Don't why the loanRdd lost values if don't cache companyLoans
-    val companyLoans = companyLoanRdd.map(companyLoan => companyLoan.getLoan).cache()
-    assert(companyLoans.count() == companyLoanRdd.count())
-
-    // simulate loan subevents including deposit, repay and transfer
-    val loanRdd = personLoans.union(companyLoans)
-    assert((personLoans.count() + companyLoans.count()) == loanRdd.count())
-    val (depositsRdd, repaysRdd, loanTrasfersRdd) = activityGenerator.afterLoanSubEvents(loanRdd, accountRdd)
+    val personWithAccGuaLoan = activityGenerator.personLoanEvent(personWithAccGua).cache()
+    val companyWithAccGuaLoan = activityGenerator.companyLoanEvent(companyWitAccGua).cache()
+    assert(personWithAccGuaLoan.count() == personRdd.count())
+    assert(companyWithAccGuaLoan.count() == companyRdd.count())
+    val loanRdd = mergeLoans(personWithAccGuaLoan, companyWithAccGuaLoan) // merge
+    log.info(s"[Simulation] personApplyLoan RDD partitions: ${personWithAccGuaLoan.getNumPartitions}, " +
+      s"companyApplyLoan RDD partitions: ${companyWithAccGuaLoan.getNumPartitions}")
     log.info(s"[Simulation] Loan RDD partitions: ${loanRdd.getNumPartitions}")
+
+    val (depositsRdd, repaysRdd, loanTrasfersRdd) = activityGenerator.afterLoanSubEvents(loanRdd, accountRdd)
     log.info(s"[Simulation] deposits RDD partitions: ${depositsRdd.getNumPartitions}, " +
       s"repays RDD partitions: ${repaysRdd.getNumPartitions}, " +
       s"loanTrasfers RDD partitions: ${loanTrasfersRdd.getNumPartitions}")
@@ -89,22 +84,25 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     log.info(s"[Simulation] transfer RDD partitions: ${transferRdd.getNumPartitions}, " +
       s"withdraw RDD partitions: ${withdrawRdd.getNumPartitions}")
 
-    activitySerializer.writePersonWithActivities(personWithAccGua)
-    activitySerializer.writeCompanyWithActivities(companyWitAccGua)
+    activitySerializer.writePersonWithActivities(personWithAccGuaLoan)
+    activitySerializer.writeCompanyWithActivities(companyWithAccGuaLoan)
     activitySerializer.writeMediumWithActivities(mediumRdd, signInRdd)
     activitySerializer.writeAccount(accountRdd)
     activitySerializer.writeInvest(investRdd)
-    activitySerializer.writeSignIn(signInRdd)
-    activitySerializer.writePersonLoan(personLoanRdd)
-    activitySerializer.writeCompanyLoan(companyLoanRdd)
-    activitySerializer.writeLoanActivities(loanRdd, depositsRdd, repaysRdd, loanTrasfersRdd)
     activitySerializer.writeTransfer(transferRdd)
     activitySerializer.writeWithdraw(withdrawRdd)
+    activitySerializer.writeLoanActivities(loanRdd, depositsRdd, repaysRdd, loanTrasfersRdd)
   }
 
   private def mergeAccounts(persons: RDD[Person], companies: RDD[Company]): RDD[Account] = {
     val personAccounts = persons.flatMap(person => person.getPersonOwnAccounts.asScala.map(_.getAccount))
     val companyAccounts = companies.flatMap(company => company.getCompanyOwnAccounts.asScala.map(_.getAccount))
     personAccounts.union(companyAccounts)
+  }
+
+  private def mergeLoans(persons: RDD[Person], companies: RDD[Company]): RDD[Loan] = {
+    val personLoans = persons.flatMap(person => person.getLoans.asScala)
+    val companyLoans = companies.flatMap(company => company.getLoans.asScala)
+    personLoans.union(companyLoans)
   }
 }
