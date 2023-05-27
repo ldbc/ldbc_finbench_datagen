@@ -123,7 +123,6 @@ class ActivityGenerator() extends Serializable with Logging {
     signRels
   }
 
-
   def personGuaranteeEvent(personRDD: RDD[Person]): RDD[Person] = {
     val personGuaranteeEvent = new PersonGuaranteeEvent(DatagenParams.personGuaranteeFraction)
     personRDD.mapPartitions(persons => {
@@ -132,13 +131,11 @@ class ActivityGenerator() extends Serializable with Logging {
     })
   }
 
-  // TODO: DITTO
-  def companyGuaranteeEvent(companyRDD: RDD[Company]): RDD[CompanyGuaranteeCompany] = {
-    val companyGuaranteeEvent = new CompanyGuaranteeEvent
-    val companySample = companyRDD.sample(withReplacement = false, DatagenParams.companyGuaranteeFraction, sampleRandom.nextLong())
-    companySample.mapPartitions(companies => {
-      val guaranteeList = companyGuaranteeEvent.companyGuarantee(companies.toList.asJava, TaskContext.getPartitionId())
-      for {guarantee <- guaranteeList.iterator().asScala} yield guarantee
+  def companyGuaranteeEvent(companyRDD: RDD[Company]): RDD[Company] = {
+    val companyGuaranteeEvent = new CompanyGuaranteeEvent(DatagenParams.companyGuaranteeFraction)
+    companyRDD.mapPartitions(companies => {
+      val companyWithGua = companyGuaranteeEvent.companyGuarantee(companies.toList.asJava, TaskContext.getPartitionId())
+      for {guarantee <- companyWithGua.iterator().asScala} yield guarantee
     })
   }
 

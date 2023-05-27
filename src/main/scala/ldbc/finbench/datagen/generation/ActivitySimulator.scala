@@ -1,6 +1,5 @@
 package ldbc.finbench.datagen.generation
 
-import ldbc.finbench.datagen.entities.edges.{CompanyApplyLoan, PersonApplyLoan}
 import ldbc.finbench.datagen.entities.nodes._
 import ldbc.finbench.datagen.generation.generators.{ActivityGenerator, SparkCompanyGenerator, SparkMediumGenerator, SparkPersonGenerator}
 import ldbc.finbench.datagen.generation.serializers.ActivitySerializer
@@ -42,12 +41,9 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     log.info(s"[Simulation] Company RDD partitions: ${companyRdd.getNumPartitions}")
     log.info(s"[Simulation] Medium RDD partitions: ${mediumRdd.getNumPartitions}")
 
-    // simulate person register account event
+    // simulate person and company register account event
     val personWithAccounts = activityGenerator.personRegisterEvent(personRdd)
-
-    // simulate company register account event
     val companyWithAccounts = activityGenerator.companyRegisterEvent(companyRdd)
-
     val accountRdd = mergeAccounts(personWithAccounts, companyWithAccounts) // merge
     log.info(s"[Simulation] Account RDD partitions: ${accountRdd.getNumPartitions}")
 
@@ -61,15 +57,15 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
 
     // simulate person guarantee person event and company guarantee company event
     val personWithAccGua = activityGenerator.personGuaranteeEvent(personWithAccounts)
-    val companyGuaranteeRdd = activityGenerator.companyGuaranteeEvent(companyWithAccounts)
-    log.info(s"[Simulation] personGuarantee RDD partitions: ${personWithAccGua.getNumPartitions}")
-    log.info(s"[Simulation] companyGuarantee RDD partitions: ${companyGuaranteeRdd.getNumPartitions}")
+    val companyWitAccGua = activityGenerator.companyGuaranteeEvent(companyWithAccounts)
+    log.info(s"[Simulation] personGuarantee RDD partitions: ${personWithAccGua.getNumPartitions}, " +
+      s"companyGuarantee RDD partitions: ${companyWitAccGua.getNumPartitions}")
 
     // simulate person apply loans event and company apply loans event
-    val personLoanRdd = activityGenerator.personLoanEvent(personWithAccounts)
-    val companyLoanRdd = activityGenerator.companyLoanEvent(companyWithAccounts).cache()
-    log.info(s"[Simulation] personApplyLoan RDD partitions: ${personLoanRdd.getNumPartitions}")
-    log.info(s"[Simulation] companyApplyLoan RDD partitions: ${companyLoanRdd.getNumPartitions}")
+    val personLoanRdd = activityGenerator.personLoanEvent(personWithAccGua)
+    val companyLoanRdd = activityGenerator.companyLoanEvent(companyWitAccGua).cache()
+    log.info(s"[Simulation] personApplyLoan RDD partitions: ${personLoanRdd.getNumPartitions}, " +
+      s"companyApplyLoan RDD partitions: ${companyLoanRdd.getNumPartitions}")
 
     // Merge accounts vertices registered by persons and companies
     val personLoans = personLoanRdd.map(personLoan => personLoan.getLoan)
@@ -78,37 +74,35 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     val companyLoans = companyLoanRdd.map(companyLoan => companyLoan.getLoan).cache()
     assert(companyLoans.count() == companyLoanRdd.count())
 
-    val loanRdd = personLoans.union(companyLoans)
-    log.info(s"[Simulation] Loan RDD partitions: ${loanRdd.getNumPartitions}")
-    assert((personLoans.count() + companyLoans.count()) == loanRdd.count())
-
     // simulate loan subevents including deposit, repay and transfer
+    val loanRdd = personLoans.union(companyLoans)
+    assert((personLoans.count() + companyLoans.count()) == loanRdd.count())
     val (depositsRdd, repaysRdd, loanTrasfersRdd) = activityGenerator.afterLoanSubEvents(loanRdd, accountRdd)
-    log.info(s"[Simulation] deposits RDD partitions: ${depositsRdd.getNumPartitions}")
-    log.info(s"[Simulation] repays RDD partitions: ${repaysRdd.getNumPartitions}")
-    log.info(s"[Simulation] loanTrasfers RDD partitions: ${loanTrasfersRdd.getNumPartitions}")
+    log.info(s"[Simulation] Loan RDD partitions: ${loanRdd.getNumPartitions}")
+    log.info(s"[Simulation] deposits RDD partitions: ${depositsRdd.getNumPartitions}, " +
+      s"repays RDD partitions: ${repaysRdd.getNumPartitions}, " +
+      s"loanTrasfers RDD partitions: ${loanTrasfersRdd.getNumPartitions}")
 
     // simulate transfer and withdraw event
     val transferRdd = activityGenerator.transferEvent(accountRdd)
-    log.info(s"[Simulation] transfer RDD partitions: ${transferRdd.getNumPartitions}")
     val withdrawRdd = activityGenerator.withdrawEvent(accountRdd)
-    log.info(s"[Simulation] withdraw RDD partitions: ${withdrawRdd.getNumPartitions}")
+    log.info(s"[Simulation] transfer RDD partitions: ${transferRdd.getNumPartitions}, " +
+      s"withdraw RDD partitions: ${withdrawRdd.getNumPartitions}")
 
     activitySerializer.writePersonWithActivities(personWithAccGua)
-    activitySerializer.writeCompanyWithActivities(companyWithAccounts)
+    activitySerializer.writeCompanyWithActivities(companyWitAccGua)
     activitySerializer.writeMediumWithActivities(mediumRdd, signInRdd)
     activitySerializer.writeAccount(accountRdd)
     activitySerializer.writeInvest(investRdd)
     activitySerializer.writeSignIn(signInRdd)
-    activitySerializer.writeCompanyGuarantee(companyGuaranteeRdd)
     activitySerializer.writePersonLoan(personLoanRdd)
     activitySerializer.writeCompanyLoan(companyLoanRdd)
-    activitySerializer.writeLoanActivities(loanRdd,depositsRdd,repaysRdd,loanTrasfersRdd)
+    activitySerializer.writeLoanActivities(loanRdd, depositsRdd, repaysRdd, loanTrasfersRdd)
     activitySerializer.writeTransfer(transferRdd)
     activitySerializer.writeWithdraw(withdrawRdd)
   }
 
-  private def mergeAccounts(persons:RDD[Person], companies:RDD[Company]):RDD[Account] = {
+  private def mergeAccounts(persons: RDD[Person], companies: RDD[Company]): RDD[Account] = {
     val personAccounts = persons.flatMap(person => person.getPersonOwnAccounts.asScala.map(_.getAccount))
     val companyAccounts = companies.flatMap(company => company.getCompanyOwnAccounts.asScala.map(_.getAccount))
     personAccounts.union(companyAccounts)

@@ -18,16 +18,14 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
     SparkUI.jobAsync("Write", "Write Person") {
       val rawPersons = self.map { p: Person => PersonRaw(p.getPersonId, p.getCreationDate, p.getPersonName, p.isBlocked) }
       spark.createDataFrame(rawPersons).write.format(sink.format.toString).options(options).save(sink.outputDir + "/person")
-    }
-    SparkUI.jobAsync("Write", "Write PersonOwnAccount") {
+
       val rawPersonOwnAccount = self.flatMap { p =>
         p.getPersonOwnAccounts.asScala.map { poa =>
           PersonOwnAccountRaw(p.getPersonId, poa.getAccount.getAccountId, poa.getCreationDate, poa.getDeletionDate, poa.isExplicitlyDeleted)
         }
       }
       spark.createDataFrame(rawPersonOwnAccount).write.format(sink.format.toString).options(options).save(sink.outputDir + "/personOwnAccount")
-    }
-    SparkUI.jobAsync("Write", "Write PersonGuarantee") {
+
       val rawPersonGuarantee = self.flatMap { p =>
         p.getGuaranteeSrc.asScala.map {
           pgp: PersonGuaranteePerson => PersonGuaranteePersonRaw(pgp.getFromPerson.getPersonId, pgp.getToPerson.getPersonId, pgp.getCreationDate)
@@ -41,14 +39,20 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
     SparkUI.jobAsync("Write", "Write Company") {
       val rawCompanies = self.map { c: Company => CompanyRaw(c.getCompanyId, c.getCreationDate, c.getCompanyName, c.isBlocked) }
       spark.createDataFrame(rawCompanies).write.format(sink.format.toString).options(options).save(sink.outputDir + "/company")
-    }
-    SparkUI.jobAsync("Write", "Write CompanyOwnAccount") {
+
       val rawCompanyOwnAccount = self.flatMap { c =>
         c.getCompanyOwnAccounts.asScala.map { coa =>
           CompanyOwnAccountRaw(c.getCompanyId, coa.getAccount.getAccountId, coa.getCreationDate, coa.getDeletionDate, coa.isExplicitlyDeleted)
         }
       }
       spark.createDataFrame(rawCompanyOwnAccount).write.format(sink.format.toString).options(options).save(sink.outputDir + "/companyOwnAccount")
+
+      val rawCompanyGuarantee = self.flatMap { c =>
+        c.getGuaranteeSrc.asScala.map {
+          cgc: CompanyGuaranteeCompany => CompanyGuaranteeCompanyRaw(cgc.getFromCompany.getCompanyId, cgc.getToCompany.getCompanyId, cgc.getCreationDate)
+        }
+      }
+      spark.createDataFrame(rawCompanyGuarantee).write.format(sink.format.toString).options(options).save(sink.outputDir + "/companyGuarantee")
     }
   }
 
@@ -86,13 +90,6 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
     SparkUI.jobAsync("Write", "Write SignIn") {
       val rawSignIn = self.map { si: SignIn => SignInRaw(si.getMedium.getMediumId, si.getAccount.getAccountId, si.getMultiplicityId, si.getCreationDate, si.getDeletionDate, si.isExplicitlyDeleted) }
       spark.createDataFrame(rawSignIn).write.format(sink.format.toString).options(options).save(sink.outputDir + "/signIn")
-    }
-  }
-
-  def writeCompanyGuarantee(self: RDD[CompanyGuaranteeCompany]): Unit = {
-    SparkUI.jobAsync("Write", "Write CompanyGuarantee") {
-      val rawCompanyGuarantee = self.map { cgc: CompanyGuaranteeCompany => CompanyGuaranteeCompanyRaw(cgc.getFromCompany.getCompanyId, cgc.getToCompany.getCompanyId, cgc.getCreationDate) }
-      spark.createDataFrame(rawCompanyGuarantee).write.format(sink.format.toString).options(options).save(sink.outputDir + "/companyGuarantee")
     }
   }
 
