@@ -24,9 +24,8 @@ object SparkMediumGenerator {
 
     val partitions = numPartitions.getOrElse(spark.sparkContext.defaultParallelism)
 
-    val mediumRdd = spark.sparkContext
+    spark.sparkContext
       .range(0, numBlocks, step = 1, numSlices = partitions)
       .mapPartitions(mediumPartitionGenerator)
-    mediumRdd
   }
 }

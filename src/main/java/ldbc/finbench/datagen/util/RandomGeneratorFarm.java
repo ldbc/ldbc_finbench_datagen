@@ -39,6 +39,8 @@ public class RandomGeneratorFarm implements Serializable {
         WORKIN_DATE,
         UNIFORM,
         INVEST_RATIO,
+        PERSON_WHETHER_GURANTEE,
+        COMPANY_WHETHER_GURANTEE,
         NUM_ASPECT                  // This must be always the last one.
     }
 

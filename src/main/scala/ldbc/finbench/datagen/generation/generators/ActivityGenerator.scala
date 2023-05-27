@@ -22,18 +22,18 @@ class ActivityGenerator() extends Serializable with Logging {
   val accountGenerator = new AccountGenerator() // Use a common account generator to maintain the degree distribution
   val loanGenerator = new LoanGenerator()
 
-  def personRegisterEvent(personRDD: RDD[Person]): RDD[PersonOwnAccount] = {
+  def personRegisterEvent(personRDD: RDD[Person]): RDD[Person] = {
     val blocks = personRDD.zipWithUniqueId().map(row => (row._2, row._1)).map { case (k, v) => (k / blockSize, (k, v)) }
-    val personRegisterGen = new PersonRegisterEvent
+    val personRegisterEvent = new PersonRegisterEvent
 
-    val personOwnAccount = blocks.combineByKeyWithClassTag(
+    val personWithAccount = blocks.combineByKeyWithClassTag(
       personByRank => SortedMap(personByRank),
       (map: SortedMap[Long, Person], personByRank) => map + personByRank,
       (a: SortedMap[Long, Person], b: SortedMap[Long, Person]) => a ++ b
     )
       .mapPartitions(groups => {
         val personRegisterGroups = for {(block, persons) <- groups} yield {
-          personRegisterGen.personRegister(persons.values.toList.asJava, accountGenerator, block.toInt)
+          personRegisterEvent.personRegister(persons.values.toList.asJava, accountGenerator, block.toInt)
         }
 
         for {
@@ -41,14 +41,14 @@ class ActivityGenerator() extends Serializable with Logging {
           personOwnAccount <- personOwnAccounts.iterator().asScala
         } yield personOwnAccount
       })
-    personOwnAccount
+    personWithAccount
   }
 
-  def companyRegisterEvent(companyRDD: RDD[Company]): RDD[CompanyOwnAccount] = {
+  def companyRegisterEvent(companyRDD: RDD[Company]): RDD[Company] = {
     val blocks = companyRDD.zipWithUniqueId().map(row => (row._2, row._1)).map { case (k, v) => (k / blockSize, (k, v)) }
     val companyRegisterGen = new CompanyRegisterEvent
 
-    val companyOwnAccount = blocks.combineByKeyWithClassTag(
+    val companyWithAccount = blocks.combineByKeyWithClassTag(
       companyById => SortedMap(companyById),
       (map: SortedMap[Long, Company], companyById) => map + companyById,
       (a: SortedMap[Long, Company], b: SortedMap[Long, Company]) => a ++ b
@@ -63,7 +63,7 @@ class ActivityGenerator() extends Serializable with Logging {
           companyOwnAccount <- companyOwnAccounts.iterator().asScala
         } yield companyOwnAccount
       })
-    companyOwnAccount
+    companyWithAccount
   }
 
   def investEvent(personRDD: RDD[Person], companyRDD: RDD[Company]): RDD[EitherPersonInvestOrCompanyInvest] = {
@@ -123,15 +123,16 @@ class ActivityGenerator() extends Serializable with Logging {
     signRels
   }
 
-  def personGuaranteeEvent(personRDD: RDD[Person]): RDD[PersonGuaranteePerson] = {
-    val personGuaranteeEvent = new PersonGuaranteeEvent
-    val personSample = personRDD.sample(withReplacement = false, DatagenParams.personGuaranteeFraction, sampleRandom.nextLong())
-    personSample.mapPartitions(persons => {
-      val guaranteeList = personGuaranteeEvent.personGuarantee(persons.toList.asJava, TaskContext.getPartitionId())
-      for {guarantee <- guaranteeList.iterator().asScala} yield guarantee
+
+  def personGuaranteeEvent(personRDD: RDD[Person]): RDD[Person] = {
+    val personGuaranteeEvent = new PersonGuaranteeEvent(DatagenParams.personGuaranteeFraction)
+    personRDD.mapPartitions(persons => {
+      val personsWithGua = personGuaranteeEvent.personGuarantee(persons.toList.asJava, TaskContext.getPartitionId())
+      for {guarantee <- personsWithGua.iterator().asScala} yield guarantee
     })
   }
 
+  // TODO: DITTO
   def companyGuaranteeEvent(companyRDD: RDD[Company]): RDD[CompanyGuaranteeCompany] = {
     val companyGuaranteeEvent = new CompanyGuaranteeEvent
     val companySample = companyRDD.sample(withReplacement = false, DatagenParams.companyGuaranteeFraction, sampleRandom.nextLong())

@@ -3,8 +3,11 @@ package ldbc.finbench.datagen.generation.events;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import ldbc.finbench.datagen.entities.edges.Transfer;
 import ldbc.finbench.datagen.entities.nodes.Account;
 import ldbc.finbench.datagen.generation.DatagenParams;
@@ -37,12 +40,9 @@ public class TransferEvent implements Serializable {
 
     // OutDegrees is shuffled with InDegrees
     private void setOutDegreeWithShuffle(List<Account> accounts) {
-        List<Long> degrees = new ArrayList<>();
-        accounts.forEach(a -> degrees.add(a.getMaxInDegree()));
+        List<Long> degrees = accounts.parallelStream().map(Account::getMaxInDegree).collect(Collectors.toList());
         Collections.shuffle(degrees, shuffleRandom);
-        for (int i = 0; i < accounts.size(); i++) {
-            accounts.get(i).setMaxOutDegree(degrees.get(i));
-        }
+        IntStream.range(0, accounts.size()).parallel().forEach(i -> accounts.get(i).setMaxOutDegree(degrees.get(i)));
     }
 
     // TODO: move shuffle to the main simulation process
@@ -54,7 +54,7 @@ public class TransferEvent implements Serializable {
         Random dateRandom = randomFarm.get(RandomGeneratorFarm.Aspect.TRANSFER_DATE);
 
         // initial available transfer to account ids
-        List<Integer> availableToAccountIds = new ArrayList<>();
+        List<Integer> availableToAccountIds = new LinkedList<>();
         for (int index = 0; index < accounts.size(); index++) {
             availableToAccountIds.add(index);
         }

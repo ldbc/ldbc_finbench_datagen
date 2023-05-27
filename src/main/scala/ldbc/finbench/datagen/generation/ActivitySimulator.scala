@@ -18,7 +18,7 @@ import scala.collection.JavaConverters._
 class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Writer[RawSink] with Serializable with Logging {
 
   private val options: Map[String, String] = sink.formatOptions ++ Map("header" -> "true", "delimiter" -> "|")
-  private val parallelism = spark.sparkContext.defaultParallelism // TODO: compute parallelism
+  private val parallelism = spark.sparkContext.defaultParallelism
   private val blockSize: Int = DatagenParams.blockSize
 
   private val activityGenerator = new ActivityGenerator()
@@ -35,41 +35,24 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
 
 
   def simulate(): Unit = {
-    // simulate person register account event
     val personRdd: RDD[Person] = SparkPersonGenerator(personNum, blockSize, personPartitions)
-    val personOwnAccountInfo = activityGenerator.personRegisterEvent(personRdd)
-    // Add the ownAccount info back to the person vertices
-    val poas = personOwnAccountInfo.collect()
-    val personWithAccountRdd = personRdd.map(person => {
-      person.getPersonOwnAccounts.addAll(poas.filter(_.getPerson.equals(person)).toList.asJava)
-      person
-    })
+    val companyRdd: RDD[Company] = SparkCompanyGenerator(companyNum, blockSize, companyPartitions)
+    val mediumRdd: RDD[Medium] = SparkMediumGenerator(mediumNum, blockSize, mediumPartitions)
     log.info(s"[Simulation] Person RDD partitions: ${personRdd.getNumPartitions}")
+    log.info(s"[Simulation] Company RDD partitions: ${companyRdd.getNumPartitions}")
+    log.info(s"[Simulation] Medium RDD partitions: ${mediumRdd.getNumPartitions}")
+
+    // simulate person register account event
+    val personWithAccounts = activityGenerator.personRegisterEvent(personRdd)
 
     // simulate company register account event
-    val companyRdd: RDD[Company] = SparkCompanyGenerator(companyNum, blockSize, companyPartitions)
-    val companyOwnAccountInfo = activityGenerator.companyRegisterEvent(companyRdd)
-    // Add the ownAccount info back to the company vertices
-    val coas = companyOwnAccountInfo.collect()
-    val companyWithAccountRdd = companyRdd.map(company => {
-      company.getCompanyOwnAccounts.addAll(coas.filter(_.getCompany.equals(company)).toList.asJava)
-      company
-    })
-    log.info(s"[Simulation] Company RDD partitions: ${companyRdd.getNumPartitions}")
+    val companyWithAccounts = activityGenerator.companyRegisterEvent(companyRdd)
 
-    // Merge accounts vertices registered by persons and companies
-    val personAccounts = personOwnAccountInfo.map(personOwnAccount => personOwnAccount.getAccount)
-    assert(personAccounts.count() == personOwnAccountInfo.count())
-    val companyAccounts = companyOwnAccountInfo.map(companyOwnAccount => companyOwnAccount.getAccount)
-    assert(companyAccounts.count() == companyOwnAccountInfo.count())
-    val accountRdd = personAccounts.union(companyAccounts)
+    val accountRdd = mergeAccounts(personWithAccounts, companyWithAccounts) // merge
     log.info(s"[Simulation] Account RDD partitions: ${accountRdd.getNumPartitions}")
-    assert((personAccounts.count() + companyAccounts.count()) == accountRdd.count())
 
     // simulate person signIn medium event
-    val mediumRdd: RDD[Medium] = SparkMediumGenerator(mediumNum, blockSize, mediumPartitions)
     val signInRdd = activityGenerator.signInEvent(mediumRdd, accountRdd)
-    log.info(s"[Simulation] Medium RDD partitions: ${mediumRdd.getNumPartitions}")
     log.info(s"[Simulation] signIn RDD partitions: ${signInRdd.getNumPartitions}")
 
     // simulate person or company invest company event
@@ -77,14 +60,14 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     log.info(s"[Simulation] invest RDD partitions: ${investRdd.getNumPartitions}")
 
     // simulate person guarantee person event and company guarantee company event
-    val personGuaranteeRdd = activityGenerator.personGuaranteeEvent(personRdd)
-    val companyGuaranteeRdd = activityGenerator.companyGuaranteeEvent(companyRdd)
+    val personGuaranteeRdd = activityGenerator.personGuaranteeEvent(personWithAccounts)
+    val companyGuaranteeRdd = activityGenerator.companyGuaranteeEvent(companyWithAccounts)
     log.info(s"[Simulation] personGuarantee RDD partitions: ${personGuaranteeRdd.getNumPartitions}")
     log.info(s"[Simulation] companyGuarantee RDD partitions: ${companyGuaranteeRdd.getNumPartitions}")
 
     // simulate person apply loans event and company apply loans event
-    val personLoanRdd = activityGenerator.personLoanEvent(personWithAccountRdd)
-    val companyLoanRdd = activityGenerator.companyLoanEvent(companyWithAccountRdd).cache()
+    val personLoanRdd = activityGenerator.personLoanEvent(personWithAccounts)
+    val companyLoanRdd = activityGenerator.companyLoanEvent(companyWithAccounts).cache()
     log.info(s"[Simulation] personApplyLoan RDD partitions: ${personLoanRdd.getNumPartitions}")
     log.info(s"[Simulation] companyApplyLoan RDD partitions: ${companyLoanRdd.getNumPartitions}")
 
@@ -111,23 +94,22 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     val withdrawRdd = activityGenerator.withdrawEvent(accountRdd)
     log.info(s"[Simulation] withdraw RDD partitions: ${withdrawRdd.getNumPartitions}")
 
-    activitySerializer.writePerson(personRdd)
-    activitySerializer.writeCompany(companyRdd)
-    activitySerializer.writeMedium(mediumRdd)
-    activitySerializer.writePersonOwnAccount(personOwnAccountInfo)
-    activitySerializer.writeCompanyOwnAccount(companyOwnAccountInfo)
+    activitySerializer.writePersonWithActivities(personWithAccounts)
+    activitySerializer.writePersonLoan(personLoanRdd)
+    activitySerializer.writeCompanyWithActivities(companyWithAccounts)
+    activitySerializer.writeCompanyGuarantee(companyGuaranteeRdd)
+    activitySerializer.writeCompanyLoan(companyLoanRdd)
+    activitySerializer.writeMediumWithActivities(mediumRdd, signInRdd)
     activitySerializer.writeAccount(accountRdd)
     activitySerializer.writeInvest(investRdd)
-    activitySerializer.writeSignIn(signInRdd)
-    activitySerializer.writePersonGuarantee(personGuaranteeRdd)
-    activitySerializer.writeCompanyGuarantee(companyGuaranteeRdd)
-    activitySerializer.writePersonLoan(personLoanRdd)
-    activitySerializer.writeCompanyLoan(companyLoanRdd)
-    activitySerializer.writeLoan(loanRdd)
-    activitySerializer.writeDeposit(depositsRdd)
-    activitySerializer.writeRepay(repaysRdd)
-    activitySerializer.writeLoanTransfer(loanTrasfersRdd)
+    activitySerializer.writeLoan(loanRdd, loanTrasfersRdd, depositsRdd, repaysRdd)
     activitySerializer.writeTransfer(transferRdd)
     activitySerializer.writeWithdraw(withdrawRdd)
+  }
+
+  private def mergeAccounts(persons:RDD[Person], companies:RDD[Company]):RDD[Account] = {
+    val personAccounts = persons.flatMap(person => person.getPersonOwnAccounts.asScala.map(_.getAccount))
+    val companyAccounts = companies.flatMap(company => company.getCompanyOwnAccounts.asScala.map(_.getAccount))
+    personAccounts.union(companyAccounts)
   }
 }
