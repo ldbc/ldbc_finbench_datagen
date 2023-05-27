@@ -10,7 +10,9 @@ import org.apache.spark.sql.SparkSession
 
 import scala.collection.JavaConverters._
 
-
+/**
+ * generate person and company activities
+ * */
 class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit spark: SparkSession) extends Serializable with Logging {
   def writePersonWithActivities(self: RDD[Person]): Unit = {
     SparkUI.jobAsync("Write", "Write Person") {
@@ -27,8 +29,8 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
     }
     SparkUI.jobAsync("Write", "Write PersonGuarantee") {
       val rawPersonGuarantee = self.flatMap { p =>
-        p.getGuaranteeSrc.asScala.map { pgp =>
-          PersonGuaranteePersonRaw(pgp.getFromPerson.getPersonId, pgp.getToPerson.getPersonId, pgp.getCreationDate)
+        p.getGuaranteeSrc.asScala.map {
+          pgp: PersonGuaranteePerson => PersonGuaranteePersonRaw(pgp.getFromPerson.getPersonId, pgp.getToPerson.getPersonId, pgp.getCreationDate)
         }
       }
       spark.createDataFrame(rawPersonGuarantee).write.format(sink.format.toString).options(options).save(sink.outputDir + "/personGuarantee")
@@ -55,10 +57,6 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
       val rawMedium = media.map { m: Medium => MediumRaw(m.getMediumId, m.getCreationDate, m.getMediumName, m.isBlocked) }
       spark.createDataFrame(rawMedium).write.format(sink.format.toString).options(options).save(sink.outputDir + "/medium")
     }
-    SparkUI.jobAsync("Write", "Write SignIn") {
-      val rawSignIn = signIns.map { si: SignIn => SignInRaw(si.getMedium.getMediumId, si.getAccount.getAccountId, si.getMultiplicityId, si.getCreationDate, si.getDeletionDate, si.isExplicitlyDeleted) }
-      spark.createDataFrame(rawSignIn).write.format(sink.format.toString).options(options).save(sink.outputDir + "/signIn")
-    }
   }
 
   def writeAccount(self: RDD[Account]): Unit = {
@@ -81,6 +79,13 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
       spark.createDataFrame(companyInvest.map { cic =>
         CompanyInvestCompanyRaw(cic.getFromCompany.getCompanyId, cic.getToCompany.getCompanyId, cic.getCreationDate, cic.getRatio)
       }).write.format(sink.format.toString).options(options).save(sink.outputDir + "/companyInvest")
+    }
+  }
+
+  def writeSignIn(self: RDD[SignIn]): Unit = {
+    SparkUI.jobAsync("Write", "Write SignIn") {
+      val rawSignIn = self.map { si: SignIn => SignInRaw(si.getMedium.getMediumId, si.getAccount.getAccountId, si.getMultiplicityId, si.getCreationDate, si.getDeletionDate, si.isExplicitlyDeleted) }
+      spark.createDataFrame(rawSignIn).write.format(sink.format.toString).options(options).save(sink.outputDir + "/signIn")
     }
   }
 

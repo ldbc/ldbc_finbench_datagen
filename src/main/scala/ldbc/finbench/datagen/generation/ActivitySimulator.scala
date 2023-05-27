@@ -60,9 +60,9 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     log.info(s"[Simulation] invest RDD partitions: ${investRdd.getNumPartitions}")
 
     // simulate person guarantee person event and company guarantee company event
-    val personGuaranteeRdd = activityGenerator.personGuaranteeEvent(personWithAccounts)
+    val personWithAccGua = activityGenerator.personGuaranteeEvent(personWithAccounts)
     val companyGuaranteeRdd = activityGenerator.companyGuaranteeEvent(companyWithAccounts)
-    log.info(s"[Simulation] personGuarantee RDD partitions: ${personGuaranteeRdd.getNumPartitions}")
+    log.info(s"[Simulation] personGuarantee RDD partitions: ${personWithAccGua.getNumPartitions}")
     log.info(s"[Simulation] companyGuarantee RDD partitions: ${companyGuaranteeRdd.getNumPartitions}")
 
     // simulate person apply loans event and company apply loans event
@@ -94,14 +94,15 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     val withdrawRdd = activityGenerator.withdrawEvent(accountRdd)
     log.info(s"[Simulation] withdraw RDD partitions: ${withdrawRdd.getNumPartitions}")
 
-    activitySerializer.writePersonWithActivities(personWithAccounts)
-    activitySerializer.writePersonLoan(personLoanRdd)
+    activitySerializer.writePersonWithActivities(personWithAccGua)
     activitySerializer.writeCompanyWithActivities(companyWithAccounts)
-    activitySerializer.writeCompanyGuarantee(companyGuaranteeRdd)
-    activitySerializer.writeCompanyLoan(companyLoanRdd)
     activitySerializer.writeMediumWithActivities(mediumRdd, signInRdd)
     activitySerializer.writeAccount(accountRdd)
     activitySerializer.writeInvest(investRdd)
+    activitySerializer.writeSignIn(signInRdd)
+    activitySerializer.writeCompanyGuarantee(companyGuaranteeRdd)
+    activitySerializer.writePersonLoan(personLoanRdd)
+    activitySerializer.writeCompanyLoan(companyLoanRdd)
     activitySerializer.writeLoan(loanRdd)
     activitySerializer.writeDeposit(depositsRdd)
     activitySerializer.writeRepay(repaysRdd)
