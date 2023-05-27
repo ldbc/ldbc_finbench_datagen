@@ -80,7 +80,7 @@ class ActivityGenerator() extends Serializable with Logging {
     val mergedEither = personEitherRDD.union(companyEitherRDD).collect().toList
 
     // TODO: optimize the Spark process when large scale
-    investedCompanyRDD.map(investedCompany => {
+    investedCompanyRDD.flatMap(investedCompany => {
       numInvestorsRandom.setSeed(seedRandom.nextInt())
       sampleRandom.setSeed(seedRandom.nextInt())
       personInvestEvent.resetState(seedRandom.nextInt())
@@ -101,8 +101,7 @@ class ActivityGenerator() extends Serializable with Logging {
         case Right(companyInvest) => companyInvest.scaleRatio(ratioSum)
       }
       investRels
-    }
-    ).flatMap(investRels => investRels)
+    })
   }
 
   def signInEvent(mediumRDD: RDD[Medium], accountRDD: RDD[Account]): RDD[SignIn] = {
@@ -127,7 +126,7 @@ class ActivityGenerator() extends Serializable with Logging {
     val personGuaranteeEvent = new PersonGuaranteeEvent(DatagenParams.personGuaranteeFraction)
     personRDD.mapPartitions(persons => {
       val personsWithGua = personGuaranteeEvent.personGuarantee(persons.toList.asJava, TaskContext.getPartitionId())
-      for {guarantee <- personsWithGua.iterator().asScala} yield guarantee
+      for {person <- personsWithGua.iterator().asScala} yield person
     })
   }
 
@@ -135,23 +134,23 @@ class ActivityGenerator() extends Serializable with Logging {
     val companyGuaranteeEvent = new CompanyGuaranteeEvent(DatagenParams.companyGuaranteeFraction)
     companyRDD.mapPartitions(companies => {
       val companyWithGua = companyGuaranteeEvent.companyGuarantee(companies.toList.asJava, TaskContext.getPartitionId())
-      for {guarantee <- companyWithGua.iterator().asScala} yield guarantee
+      for {company <- companyWithGua.iterator().asScala} yield company
     })
   }
 
   def personLoanEvent(personRDD: RDD[Person]): RDD[Person] = {
     val personLoanEvent = new PersonLoanEvent(DatagenParams.personLoanFraction)
     personRDD.mapPartitions(persons => {
-      val loanList = personLoanEvent.personLoan(persons.toList.asJava, loanGenerator, TaskContext.getPartitionId())
-      for {applyLoan <- loanList.iterator().asScala} yield applyLoan
+      val personsWithLoan = personLoanEvent.personLoan(persons.toList.asJava, loanGenerator, TaskContext.getPartitionId())
+      for {person <- personsWithLoan.iterator().asScala} yield person
     })
   }
 
   def companyLoanEvent(companyRDD: RDD[Company]): RDD[Company] = {
     val companyLoanEvent = new CompanyLoanEvent(DatagenParams.companyLoanFraction)
     companyRDD.mapPartitions(companies => {
-      val loanList = companyLoanEvent.companyLoan(companies.toList.asJava, loanGenerator, TaskContext.getPartitionId())
-      for {applyLoan <- loanList.iterator().asScala} yield applyLoan
+      val companyWithLoan = companyLoanEvent.companyLoan(companies.toList.asJava, loanGenerator, TaskContext.getPartitionId())
+      for {company <- companyWithLoan.iterator().asScala} yield company
     })
   }
 
@@ -192,7 +191,7 @@ class ActivityGenerator() extends Serializable with Logging {
         loanSubEvents.getTransfers.asScala))
     })
 
-    val deposits = afterLoanActions.map(_._1).flatMap(deposits => deposits)
+    val deposits = afterLoanActions. (_._1).flatMap(deposits => deposits)
     val repays = afterLoanActions.map(_._2).flatMap(repays => repays)
     val transfers = afterLoanActions.map(_._3).flatMap(transfers => transfers)
 

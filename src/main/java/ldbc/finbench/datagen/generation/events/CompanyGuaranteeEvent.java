@@ -34,9 +34,8 @@ public class CompanyGuaranteeEvent implements Serializable {
     public List<Company> companyGuarantee(List<Company> companies, int blockId) {
         resetState(blockId);
 
-        Random random = randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_WHETHER_GURANTEE);
         companies.forEach(company -> {
-            if (random.nextDouble() < probGuarantee) {
+            if (randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_WHETHER_GURANTEE).nextDouble() < probGuarantee) {
                 int targetsToGuarantee = targetsToGuaranteeRandom.nextInt(DatagenParams.maxTargetsToGuarantee);
                 for (int j = 0; j < targetsToGuarantee; j++) {
                     Company toCompany = companies.get(randIndex.nextInt(companies.size())); // Choose a random company

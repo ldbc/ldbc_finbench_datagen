@@ -32,9 +32,8 @@ public class PersonGuaranteeEvent implements Serializable {
     public List<Person> personGuarantee(List<Person> persons, int blockId) {
         resetState(blockId);
 
-        Random random = randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_WHETHER_GURANTEE);
         persons.forEach(person -> {
-            if (random.nextDouble() < probGuarantee) {
+            if (randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_WHETHER_GURANTEE).nextDouble() < probGuarantee) {
                 int targetsToGuarantee = targetsToGuaranteeRandom.nextInt(DatagenParams.maxTargetsToGuarantee);
                 for (int j = 0; j < targetsToGuarantee; j++) {
                     Person toPerson = persons.get(randIndex.nextInt(persons.size())); // Choose a random person

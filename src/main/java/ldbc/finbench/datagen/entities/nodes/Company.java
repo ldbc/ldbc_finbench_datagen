@@ -14,9 +14,7 @@ public class Company implements Serializable {
     private long creationDate;
     //    private long maxDegree;
     private boolean isBlocked;
-
     private List<Account> accounts;
-
     private List<Loan> loans;
     private List<CompanyOwnAccount> companyOwnAccounts;
     private List<CompanyInvestCompany> companyInvestCompanies;
