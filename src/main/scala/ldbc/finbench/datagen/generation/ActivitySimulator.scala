@@ -13,9 +13,8 @@ import org.apache.spark.sql.SparkSession
 import scala.collection.JavaConverters._
 
 // TODO:
-//  - re-implement the code in more elegant and less verbose way
+//  - refactor using common GraphDef to make the code less verbose
 //  - repartition with the partition option
-//  - config the paramMap (including header, mode, dateFormat and so on)
 class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Writer[RawSink] with Serializable with Logging {
 
   private val options: Map[String, String] = sink.formatOptions ++ Map("header" -> "true", "delimiter" -> "|")
@@ -45,7 +44,7 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
       person.getPersonOwnAccounts.addAll(poas.filter(_.getPerson.equals(person)).toList.asJava)
       person
     })
-    log.info(s"[Simulation] Person RDD partitions: ${personRdd.getNumPartitions}, count: ${personRdd.count()}")
+    log.info(s"[Simulation] Person RDD partitions: ${personRdd.getNumPartitions}")
 
     // simulate company register account event
     val companyRdd: RDD[Company] = SparkCompanyGenerator(companyNum, blockSize, companyPartitions)
@@ -56,39 +55,38 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
       company.getCompanyOwnAccounts.addAll(coas.filter(_.getCompany.equals(company)).toList.asJava)
       company
     })
-    log.info(s"[Simulation] Company RDD partitions: ${companyRdd.getNumPartitions}, count: ${companyRdd.count()}")
+    log.info(s"[Simulation] Company RDD partitions: ${companyRdd.getNumPartitions}")
 
     // Merge accounts vertices registered by persons and companies
-    // TODO: can not coalesce when large scale data generated in cluster
     val personAccounts = personOwnAccountInfo.map(personOwnAccount => personOwnAccount.getAccount)
     assert(personAccounts.count() == personOwnAccountInfo.count())
     val companyAccounts = companyOwnAccountInfo.map(companyOwnAccount => companyOwnAccount.getAccount)
     assert(companyAccounts.count() == companyOwnAccountInfo.count())
     val accountRdd = personAccounts.union(companyAccounts)
-    log.info(s"[Simulation] Account RDD partitions: ${accountRdd.getNumPartitions}, count: ${accountRdd.count()}")
+    log.info(s"[Simulation] Account RDD partitions: ${accountRdd.getNumPartitions}")
     assert((personAccounts.count() + companyAccounts.count()) == accountRdd.count())
 
     // simulate person signIn medium event
     val mediumRdd: RDD[Medium] = SparkMediumGenerator(mediumNum, blockSize, mediumPartitions)
     val signInRdd = activityGenerator.signInEvent(mediumRdd, accountRdd)
-    log.info(s"[Simulation] Medium RDD partitions: ${mediumRdd.getNumPartitions}, count: ${mediumRdd.count()}")
-    log.info(s"[Simulation] signIn RDD partitions: ${signInRdd.getNumPartitions}, count: ${signInRdd.count()}")
+    log.info(s"[Simulation] Medium RDD partitions: ${mediumRdd.getNumPartitions}")
+    log.info(s"[Simulation] signIn RDD partitions: ${signInRdd.getNumPartitions}")
 
     // simulate person or company invest company event
     val investRdd = activityGenerator.investEvent(personRdd, companyRdd)
-    log.info(s"[Simulation] invest RDD partitions: ${investRdd.getNumPartitions}, count: ${investRdd.count()}")
+    log.info(s"[Simulation] invest RDD partitions: ${investRdd.getNumPartitions}")
 
     // simulate person guarantee person event and company guarantee company event
     val personGuaranteeRdd = activityGenerator.personGuaranteeEvent(personRdd)
     val companyGuaranteeRdd = activityGenerator.companyGuaranteeEvent(companyRdd)
-    log.info(s"[Simulation] personGuarantee RDD partitions: ${personGuaranteeRdd.getNumPartitions}, count: ${personGuaranteeRdd.count()}")
-    log.info(s"[Simulation] companyGuarantee RDD partitions: ${companyGuaranteeRdd.getNumPartitions}, count: ${companyGuaranteeRdd.count()}")
+    log.info(s"[Simulation] personGuarantee RDD partitions: ${personGuaranteeRdd.getNumPartitions}")
+    log.info(s"[Simulation] companyGuarantee RDD partitions: ${companyGuaranteeRdd.getNumPartitions}")
 
     // simulate person apply loans event and company apply loans event
     val personLoanRdd = activityGenerator.personLoanEvent(personWithAccountRdd)
     val companyLoanRdd = activityGenerator.companyLoanEvent(companyWithAccountRdd).cache()
-    log.info(s"[Simulation] personApplyLoan RDD partitions: ${personLoanRdd.getNumPartitions}, count: ${personLoanRdd.count()}")
-    log.info(s"[Simulation] companyApplyLoan RDD partitions: ${companyLoanRdd.getNumPartitions}, count: ${companyLoanRdd.count()}")
+    log.info(s"[Simulation] personApplyLoan RDD partitions: ${personLoanRdd.getNumPartitions}")
+    log.info(s"[Simulation] companyApplyLoan RDD partitions: ${companyLoanRdd.getNumPartitions}")
 
     // Merge accounts vertices registered by persons and companies
     val personLoans = personLoanRdd.map(personLoan => personLoan.getLoan)
@@ -98,22 +96,21 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     assert(companyLoans.count() == companyLoanRdd.count())
 
     val loanRdd = personLoans.union(companyLoans)
-    log.info(s"[Simulation] Loan RDD partitions: ${loanRdd.getNumPartitions}, count: ${loanRdd.count()}")
+    log.info(s"[Simulation] Loan RDD partitions: ${loanRdd.getNumPartitions}")
     assert((personLoans.count() + companyLoans.count()) == loanRdd.count())
 
     // simulate loan subevents including deposit, repay and transfer
     val (depositsRdd, repaysRdd, loanTrasfersRdd) = activityGenerator.afterLoanSubEvents(loanRdd, accountRdd)
-    log.info(s"[Simulation] deposits RDD partitions: ${depositsRdd.getNumPartitions}, count: ${depositsRdd.count()}")
-    log.info(s"[Simulation] repays RDD partitions: ${repaysRdd.getNumPartitions}, count: ${repaysRdd.count()}")
-    log.info(s"[Simulation] loanTrasfers RDD partitions: ${loanTrasfersRdd.getNumPartitions}, count: ${loanTrasfersRdd.count()}")
+    log.info(s"[Simulation] deposits RDD partitions: ${depositsRdd.getNumPartitions}")
+    log.info(s"[Simulation] repays RDD partitions: ${repaysRdd.getNumPartitions}")
+    log.info(s"[Simulation] loanTrasfers RDD partitions: ${loanTrasfersRdd.getNumPartitions}")
 
     // simulate transfer and withdraw event
     val transferRdd = activityGenerator.transferEvent(accountRdd)
-    log.info(s"[Simulation] transfer RDD partitions: ${transferRdd.getNumPartitions}, count: ${transferRdd.count()}")
+    log.info(s"[Simulation] transfer RDD partitions: ${transferRdd.getNumPartitions}")
     val withdrawRdd = activityGenerator.withdrawEvent(accountRdd)
-    log.info(s"[Simulation] withdraw RDD partitions: ${withdrawRdd.getNumPartitions}, count: ${withdrawRdd.count()}")
+    log.info(s"[Simulation] withdraw RDD partitions: ${withdrawRdd.getNumPartitions}")
 
-    // TODO: use some syntax to implement serializer less verbose like GraphDef
     activitySerializer.writePerson(personRdd)
     activitySerializer.writeCompany(companyRdd)
     activitySerializer.writeMedium(mediumRdd)
