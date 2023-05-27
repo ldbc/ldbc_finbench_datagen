@@ -1,7 +1,6 @@
 package ldbc.finbench.datagen.generation.events;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -45,19 +44,20 @@ public class TransferEvent implements Serializable {
         IntStream.range(0, accounts.size()).parallel().forEach(i -> accounts.get(i).setMaxOutDegree(degrees.get(i)));
     }
 
+    private List<Integer> getIndexList(int size) {
+        List<Integer> indexList = new LinkedList<>();
+        for (int i = 0; i < size; i++) {
+            indexList.add(i);
+        }
+        return indexList;
+    }
+
     // TODO: move shuffle to the main simulation process
-    public List<Transfer> transfer(List<Account> accounts, int blockId) {
+    public List<Account> transfer(List<Account> accounts, int blockId) {
         resetState(blockId);
         setOutDegreeWithShuffle(accounts);
-
-        List<Transfer> allTransfers = new ArrayList<>();
+        List<Integer> availableToAccountIds = getIndexList(accounts.size()); // available transferTo accountIds
         Random dateRandom = randomFarm.get(RandomGeneratorFarm.Aspect.TRANSFER_DATE);
-
-        // initial available transfer to account ids
-        List<Integer> availableToAccountIds = new LinkedList<>();
-        for (int index = 0; index < accounts.size(); index++) {
-            availableToAccountIds.add(index);
-        }
 
         for (int i = 0; i < accounts.size(); i++) {
             Account from = accounts.get(i);
@@ -73,9 +73,8 @@ public class TransferEvent implements Serializable {
                     long numTransfers = Math.min(multiplicityDist.nextDegree(),
                                                  Math.min(from.getAvailableOutDegree(), to.getAvailableInDegree()));
                     for (int mindex = 0; mindex < numTransfers; mindex++) {
-                        allTransfers.add(Transfer.createTransfer(dateRandom, from, to, mindex,
-                                                                 amountRandom.nextDouble()
-                                                                     * DatagenParams.tsfMaxAmount));
+                        Transfer.createTransfer(dateRandom, from, to, mindex,
+                                                amountRandom.nextDouble() * DatagenParams.tsfMaxAmount);
                     }
                     if (to.getAvailableInDegree() == 0) {
                         availableToAccountIds.remove(j);
@@ -93,7 +92,7 @@ public class TransferEvent implements Serializable {
                                        + "availableToAccountIds " + availableToAccountIds.size());
             }
         }
-        return allTransfers;
+        return accounts;
     }
 
     private boolean distanceProbOK(int distance) {

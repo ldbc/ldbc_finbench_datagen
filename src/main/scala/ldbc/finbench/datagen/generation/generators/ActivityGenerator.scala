@@ -66,6 +66,7 @@ class ActivityGenerator() extends Serializable with Logging {
     companyWithAccount
   }
 
+  // TODO: rewrite it with company centric
   def investEvent(personRDD: RDD[Person], companyRDD: RDD[Company]): RDD[EitherPersonInvestOrCompanyInvest] = {
     val seedRandom = new scala.util.Random(DatagenParams.defaultSeed)
     val numInvestorsRandom = new scala.util.Random(DatagenParams.defaultSeed)
@@ -154,7 +155,7 @@ class ActivityGenerator() extends Serializable with Logging {
     })
   }
 
-  def transferEvent(accountRDD: RDD[Account]): RDD[Transfer] = {
+  def transferEvent(accountRDD: RDD[Account]): RDD[Account] = {
 //    val percent = 1.0 / DatagenParams.tsfShuffleTimes
     val transferEvent = new TransferEvent
     accountRDD.mapPartitions(accounts => {
@@ -163,16 +164,17 @@ class ActivityGenerator() extends Serializable with Logging {
     })
   }
 
+  // TODO: rewrite it with account centric
   def withdrawEvent(accountRDD: RDD[Account]): RDD[Withdraw] = {
-    val withdrawEvent = new WithdrawEvent
-    val sourceSamples = accountRDD.filter(_.getType != "debit card").sample(withReplacement = false, DatagenParams.accountWithdrawFraction, sampleRandom.nextLong())
+    val withdrawEvent = new WithdrawEvent(DatagenParams.accountWithdrawFraction)
     val cards = accountRDD.filter(_.getType == "debit card").collect().toList.asJava
-    sourceSamples.mapPartitions(sources => {
+    accountRDD.mapPartitions(sources => {
       val withdrawList = withdrawEvent.withdraw(sources.toList.asJava, cards, TaskContext.getPartitionId())
       for {withdraw <- withdrawList.iterator().asScala} yield withdraw
     })
   }
 
+  // TODO: rewrite it with loan centric
   def afterLoanSubEvents(loanRDD: RDD[Loan], accountRDD: RDD[Account]): (RDD[Deposit], RDD[Repay], RDD[Transfer]) = {
     val fraction = DatagenParams.loanInvolvedAccountsFraction
     val loanParts = loanRDD.partitions.length

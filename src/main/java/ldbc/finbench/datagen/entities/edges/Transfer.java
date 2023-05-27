@@ -26,15 +26,20 @@ public class Transfer implements DynamicActivity, Serializable {
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static Transfer createTransfer(Random random, Account from, Account to, long multiplicityId, double amount) {
+    public static void createTransfer(Random random, Account from, Account to, long multiplicityId, double amount) {
         long deleteDate = Math.min(from.getDeletionDate(), to.getDeletionDate());
         long creationDate = Dictionaries.dates.randomAccountToAccountDate(random, from, to, deleteDate);
         boolean willDelete = from.isExplicitlyDeleted() && to.isExplicitlyDeleted();
         Transfer transfer = new Transfer(from, to, amount, creationDate, deleteDate, multiplicityId, willDelete);
         from.getTransferOuts().add(transfer);
         to.getTransferIns().add(transfer);
+    }
 
-        return transfer;
+    public static Transfer createLoanTransfer(Random random, Account from, Account to, long multiplicityId, double amount) {
+        long deleteDate = Math.min(from.getDeletionDate(), to.getDeletionDate());
+        long creationDate = Dictionaries.dates.randomAccountToAccountDate(random, from, to, deleteDate);
+        boolean willDelete = from.isExplicitlyDeleted() && to.isExplicitlyDeleted();
+        return new Transfer(from, to, amount, creationDate, deleteDate, multiplicityId, willDelete);
     }
 
     public double getAmount() {

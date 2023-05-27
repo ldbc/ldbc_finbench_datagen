@@ -24,6 +24,7 @@ public class Account implements Serializable {
     private boolean isExplicitlyDeleted;
     private List<Transfer> transferIns;
     private List<Transfer> transferOuts;
+    private List<Transfer> loanTransfers;
     private List<Withdraw> withdraws;
     private List<Deposit> deposits;
     private List<Repay> repays;
@@ -32,6 +33,7 @@ public class Account implements Serializable {
     public Account() {
         transferIns = new ArrayList<>();
         transferOuts = new ArrayList<>();
+        loanTransfers = new ArrayList<>();
         withdraws = new ArrayList<>();
         repays = new ArrayList<>();
         deposits = new ArrayList<>();
@@ -85,6 +87,14 @@ public class Account implements Serializable {
 
     public void setTransferOuts(List<Transfer> transferIns) {
         this.transferOuts = transferIns;
+    }
+
+    public List<Transfer> getLoanTransfers() {
+        return loanTransfers;
+    }
+
+    public void setLoanTransfers(List<Transfer> loanTransfers) {
+        this.loanTransfers = loanTransfers;
     }
 
     public List<Withdraw> getWithdraws() {

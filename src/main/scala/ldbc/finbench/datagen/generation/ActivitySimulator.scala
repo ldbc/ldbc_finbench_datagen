@@ -50,7 +50,6 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     log.info(s"[Simulation] companyWithAccounts partitions: ${companyWithAccounts.getNumPartitions}")
 
     // simulate person or company invest company event
-    // TODO: modify to company centric
     val investRdd = activityGenerator.investEvent(personRdd, companyRdd)
     log.info(s"[Simulation] invest RDD partitions: ${investRdd.getNumPartitions}")
 
@@ -74,10 +73,10 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     val accountRdd = mergeAccounts(personWithAccounts, companyWithAccounts) // merge
     log.info(s"[Simulation] Account RDD partitions: ${accountRdd.getNumPartitions}")
     val signInRdd = activityGenerator.signInEvent(mediumRdd, accountRdd) // simulate signIn
-    val transferRdd = activityGenerator.transferEvent(accountRdd) // simulate transfer
+    val accountWithTransfer = activityGenerator.transferEvent(accountRdd) // simulate transfer
     val withdrawRdd = activityGenerator.withdrawEvent(accountRdd) // simulate withdraw
     log.info(s"[Simulation] signIn RDD partitions: ${signInRdd.getNumPartitions}")
-    log.info(s"[Simulation] transfer RDD partitions: ${transferRdd.getNumPartitions}")
+    log.info(s"[Simulation] transfer RDD partitions: ${accountWithTransfer.getNumPartitions}")
     log.info(s"[Simulation] withdraw RDD partitions: ${withdrawRdd.getNumPartitions}")
 
     // =========================================
@@ -96,10 +95,9 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     activitySerializer.writePersonWithActivities(personWithAccGuaLoan)
     activitySerializer.writeCompanyWithActivities(companyWithAccGuaLoan)
     activitySerializer.writeMediumWithActivities(mediumRdd, signInRdd)
-    activitySerializer.writeAccount(accountRdd)
-    activitySerializer.writeInvest(investRdd)
-    activitySerializer.writeTransfer(transferRdd)
+    activitySerializer.writeAccountWithActivities(accountWithTransfer)
     activitySerializer.writeWithdraw(withdrawRdd)
+    activitySerializer.writeInvest(investRdd)
     activitySerializer.writeLoanActivities(loanRdd, depositsRdd, repaysRdd, loanTrasfersRdd)
   }
 

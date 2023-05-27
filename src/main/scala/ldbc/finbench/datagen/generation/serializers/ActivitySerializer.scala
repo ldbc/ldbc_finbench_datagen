@@ -80,10 +80,26 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
     }
   }
 
-  def writeAccount(self: RDD[Account]): Unit = {
+  def writeAccountWithActivities(self: RDD[Account]): Unit = {
     SparkUI.jobAsync("Write", "Write Account") {
       val rawAccount = self.map { a: Account => AccountRaw(a.getAccountId, a.getCreationDate, a.getDeletionDate, a.isBlocked, a.getType, a.getMaxInDegree, a.getMaxOutDegree, a.isExplicitlyDeleted, a.getOwnerType.toString) }
       spark.createDataFrame(rawAccount).write.format(sink.format.toString).options(options).save(sink.outputDir + "/account")
+
+      val rawTransfer = self.flatMap { acc =>
+        acc.getTransferOuts.asScala.map {
+          t: Transfer => TransferRaw(t.getFromAccount.getAccountId, t.getToAccount.getAccountId, t.getMultiplicityId, t.getCreationDate, t.getDeletionDate, t.getAmount, t.isExplicitlyDeleted)
+        }
+      }
+      spark.createDataFrame(rawTransfer).write.format(sink.format.toString).options(options).save(sink.outputDir + "/transfer")
+    }
+  }
+
+  def writeWithdraw(self: RDD[Withdraw]): Unit = {
+    SparkUI.jobAsync("Write", "Write Withdraw") {
+      val rawWithdraw = self.map {
+        w => WithdrawRaw(w.getFromAccount.getAccountId, w.getToAccount.getAccountId, w.getFromAccount.getType, w.getToAccount.getType, w.getMultiplicityId, w.getCreationDate, w.getDeletionDate, w.getAmount, w.isExplicitlyDeleted)
+      }
+      spark.createDataFrame(rawWithdraw).write.format(sink.format.toString).options(options).save(sink.outputDir + "/withdraw")
     }
   }
 
@@ -93,9 +109,7 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
       spark.createDataFrame(personInvest.map { pic =>
         PersonInvestCompanyRaw(pic.getPerson.getPersonId, pic.getCompany.getCompanyId, pic.getCreationDate, pic.getRatio)
       }).write.format(sink.format.toString).options(options).save(sink.outputDir + "/personInvest")
-    }
 
-    SparkUI.jobAsync("Write", "Write Company Invest") {
       val companyInvest = self.filter(_.isRight).map(_.right.get)
       spark.createDataFrame(companyInvest.map { cic =>
         CompanyInvestCompanyRaw(cic.getFromCompany.getCompanyId, cic.getToCompany.getCompanyId, cic.getCreationDate, cic.getRatio)
@@ -116,20 +130,6 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
 
       val rawLoanTransfer = loantransfers.map { t: Transfer => TransferRaw(t.getFromAccount.getAccountId, t.getToAccount.getAccountId, t.getMultiplicityId, t.getCreationDate, t.getDeletionDate, t.getAmount, t.isExplicitlyDeleted) }
       spark.createDataFrame(rawLoanTransfer).write.format(sink.format.toString).options(options).save(sink.outputDir + "/loantransfer")
-    }
-  }
-
-  def writeTransfer(self: RDD[Transfer]): Unit = {
-    SparkUI.jobAsync("Write", "Write Transfer") {
-      val rawTransfer = self.map { t: Transfer => TransferRaw(t.getFromAccount.getAccountId, t.getToAccount.getAccountId, t.getMultiplicityId, t.getCreationDate, t.getDeletionDate, t.getAmount, t.isExplicitlyDeleted) }
-      spark.createDataFrame(rawTransfer).write.format(sink.format.toString).options(options).save(sink.outputDir + "/transfer")
-    }
-  }
-
-  def writeWithdraw(self: RDD[Withdraw]): Unit = {
-    SparkUI.jobAsync("Write", "Write Withdraw") {
-      val rawWithdraw = self.map { w: Withdraw => WithdrawRaw(w.getFromAccount.getAccountId, w.getToAccount.getAccountId, w.getFromAccount.getType, w.getToAccount.getType, w.getMultiplicityId, w.getCreationDate, w.getDeletionDate, w.getAmount, w.isExplicitlyDeleted) }
-      spark.createDataFrame(rawWithdraw).write.format(sink.format.toString).options(options).save(sink.outputDir + "/withdraw")
     }
   }
 }
