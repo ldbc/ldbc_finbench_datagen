@@ -38,7 +38,7 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
           pal: PersonApplyLoan => PersonApplyLoanRaw(pal.getPerson.getPersonId, pal.getLoan.getLoanId, pal.getLoan.getLoanAmount, pal.getCreationDate)
         }
       }
-      spark.createDataFrame(rawPersonLoan).write.format(sink.format.toString).options(options).save(sink.outputDir + "/personLoan")
+      spark.createDataFrame(rawPersonLoan).write.format(sink.format.toString).options(options).save(sink.outputDir + "/personApplyLoan")
     }
   }
 
@@ -66,7 +66,7 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
           cal: CompanyApplyLoan => CompanyApplyLoanRaw(cal.getCompany.getCompanyId, cal.getLoan.getLoanId, cal.getLoan.getLoanAmount, cal.getCreationDate)
         }
       }
-      spark.createDataFrame(rawCompanyLoan).write.format(sink.format.toString).options(options).save(sink.outputDir + "/companyLoan")
+      spark.createDataFrame(rawCompanyLoan).write.format(sink.format.toString).options(options).save(sink.outputDir + "/companyApplyLoan")
     }
   }
 
@@ -115,7 +115,7 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
       spark.createDataFrame(rawRepay).write.format(sink.format.toString).options(options).save(sink.outputDir + "/repay")
 
       val rawLoanTransfer = loantransfers.map { t: Transfer => TransferRaw(t.getFromAccount.getAccountId, t.getToAccount.getAccountId, t.getMultiplicityId, t.getCreationDate, t.getDeletionDate, t.getAmount, t.isExplicitlyDeleted) }
-      spark.createDataFrame(rawLoanTransfer).write.format(sink.format.toString).options(options).save(sink.outputDir + "/loanTransfer")
+      spark.createDataFrame(rawLoanTransfer).write.format(sink.format.toString).options(options).save(sink.outputDir + "/loantransfer")
     }
   }
 
