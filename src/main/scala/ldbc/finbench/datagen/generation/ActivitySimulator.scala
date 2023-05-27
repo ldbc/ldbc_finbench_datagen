@@ -41,49 +41,58 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     log.info(s"[Simulation] Company RDD partitions: ${companyRdd.getNumPartitions}")
     log.info(s"[Simulation] Medium RDD partitions: ${mediumRdd.getNumPartitions}")
 
-    // simulate person and company register account event
-    val personWithAccounts = activityGenerator.personRegisterEvent(personRdd)
-    val companyWithAccounts = activityGenerator.companyRegisterEvent(companyRdd)
-    assert(personWithAccounts.count() == personRdd.count())
-    assert(companyWithAccounts.count() == companyRdd.count())
-    val accountRdd = mergeAccounts(personWithAccounts, companyWithAccounts) // merge
-    log.info(s"[Simulation] Account RDD partitions: ${accountRdd.getNumPartitions}")
-
-    // simulate person signIn medium event
-    val signInRdd = activityGenerator.signInEvent(mediumRdd, accountRdd)
-    log.info(s"[Simulation] signIn RDD partitions: ${signInRdd.getNumPartitions}")
+    // =========================================
+    // Person and company related activities
+    // =========================================
+    val personWithAccounts = activityGenerator.personRegisterEvent(personRdd) // simulate person register event
+    log.info(s"[Simulation] personWithAccounts partitions: ${personWithAccounts.getNumPartitions}")
+    val companyWithAccounts = activityGenerator.companyRegisterEvent(companyRdd) // simulate company register event
+    log.info(s"[Simulation] companyWithAccounts partitions: ${companyWithAccounts.getNumPartitions}")
 
     // simulate person or company invest company event
+    // TODO: modify to company centric
     val investRdd = activityGenerator.investEvent(personRdd, companyRdd)
     log.info(s"[Simulation] invest RDD partitions: ${investRdd.getNumPartitions}")
 
     // simulate person guarantee person event and company guarantee company event
     val personWithAccGua = activityGenerator.personGuaranteeEvent(personWithAccounts)
     val companyWitAccGua = activityGenerator.companyGuaranteeEvent(companyWithAccounts)
-    log.info(s"[Simulation] personGuarantee RDD partitions: ${personWithAccGua.getNumPartitions}, " +
-      s"companyGuarantee RDD partitions: ${companyWitAccGua.getNumPartitions}")
+    log.info(s"[Simulation] personWithAccGua partitions: ${personWithAccGua.getNumPartitions}")
+    log.info(s"[Simulation] companyWitAccGua partitions: ${companyWitAccGua.getNumPartitions}")
 
     // simulate person apply loans event and company apply loans event
     val personWithAccGuaLoan = activityGenerator.personLoanEvent(personWithAccGua).cache()
     val companyWithAccGuaLoan = activityGenerator.companyLoanEvent(companyWitAccGua).cache()
     assert(personWithAccGuaLoan.count() == personRdd.count())
     assert(companyWithAccGuaLoan.count() == companyRdd.count())
-    val loanRdd = mergeLoans(personWithAccGuaLoan, companyWithAccGuaLoan) // merge
-    log.info(s"[Simulation] personApplyLoan RDD partitions: ${personWithAccGuaLoan.getNumPartitions}, " +
-      s"companyApplyLoan RDD partitions: ${companyWithAccGuaLoan.getNumPartitions}")
-    log.info(s"[Simulation] Loan RDD partitions: ${loanRdd.getNumPartitions}")
+    log.info(s"[Simulation] personWithAccGuaLoan partitions: ${personWithAccGuaLoan.getNumPartitions}")
+    log.info(s"[Simulation] companyWithAccGuaLoan partitions: ${companyWithAccGuaLoan.getNumPartitions}")
 
+    // =========================================
+    // Account related activities
+    // =========================================
+    val accountRdd = mergeAccounts(personWithAccounts, companyWithAccounts) // merge
+    log.info(s"[Simulation] Account RDD partitions: ${accountRdd.getNumPartitions}")
+    val signInRdd = activityGenerator.signInEvent(mediumRdd, accountRdd) // simulate signIn
+    val transferRdd = activityGenerator.transferEvent(accountRdd) // simulate transfer
+    val withdrawRdd = activityGenerator.withdrawEvent(accountRdd) // simulate withdraw
+    log.info(s"[Simulation] signIn RDD partitions: ${signInRdd.getNumPartitions}")
+    log.info(s"[Simulation] transfer RDD partitions: ${transferRdd.getNumPartitions}")
+    log.info(s"[Simulation] withdraw RDD partitions: ${withdrawRdd.getNumPartitions}")
+
+    // =========================================
+    // Loan related activities
+    // =========================================
+    val loanRdd = mergeLoans(personWithAccGuaLoan, companyWithAccGuaLoan) // merge
+    log.info(s"[Simulation] Loan RDD partitions: ${loanRdd.getNumPartitions}")
     val (depositsRdd, repaysRdd, loanTrasfersRdd) = activityGenerator.afterLoanSubEvents(loanRdd, accountRdd)
     log.info(s"[Simulation] deposits RDD partitions: ${depositsRdd.getNumPartitions}, " +
       s"repays RDD partitions: ${repaysRdd.getNumPartitions}, " +
       s"loanTrasfers RDD partitions: ${loanTrasfersRdd.getNumPartitions}")
 
-    // simulate transfer and withdraw event
-    val transferRdd = activityGenerator.transferEvent(accountRdd)
-    val withdrawRdd = activityGenerator.withdrawEvent(accountRdd)
-    log.info(s"[Simulation] transfer RDD partitions: ${transferRdd.getNumPartitions}, " +
-      s"withdraw RDD partitions: ${withdrawRdd.getNumPartitions}")
-
+    // =========================================
+    // Serialize
+    // =========================================
     activitySerializer.writePersonWithActivities(personWithAccGuaLoan)
     activitySerializer.writeCompanyWithActivities(companyWithAccGuaLoan)
     activitySerializer.writeMediumWithActivities(mediumRdd, signInRdd)

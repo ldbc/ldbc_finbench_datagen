@@ -155,6 +155,7 @@ class ActivityGenerator() extends Serializable with Logging {
   }
 
   def transferEvent(accountRDD: RDD[Account]): RDD[Transfer] = {
+//    val percent = 1.0 / DatagenParams.tsfShuffleTimes
     val transferEvent = new TransferEvent
     accountRDD.mapPartitions(accounts => {
       val transferList = transferEvent.transfer(accounts.toList.asJava, TaskContext.getPartitionId())
