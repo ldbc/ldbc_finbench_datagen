@@ -21,6 +21,7 @@ object GenerationStage extends DatagenStage with Logging {
       case a => throw new IllegalArgumentException(s"Format `${a}` is not supported by the generator.")
     }
 
+    // TODO: It's better to define multiple jobs.
     SparkUI.job(implicitly[ClassTag[ActivitySimulator]].runtimeClass.getSimpleName, "serialize Finbench data") {
       val simulator = new ActivitySimulator(RawSink(args.outputDir, format, args.partitionsOpt))
       simulator.simulate()
