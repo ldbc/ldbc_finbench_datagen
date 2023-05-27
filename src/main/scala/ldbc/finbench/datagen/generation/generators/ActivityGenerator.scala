@@ -191,7 +191,7 @@ class ActivityGenerator() extends Serializable with Logging {
         loanSubEvents.getTransfers.asScala))
     })
 
-    val deposits = afterLoanActions. (_._1).flatMap(deposits => deposits)
+    val deposits = afterLoanActions.map(_._1).flatMap(deposits => deposits)
     val repays = afterLoanActions.map(_._2).flatMap(repays => repays)
     val transfers = afterLoanActions.map(_._3).flatMap(transfers => transfers)
 
