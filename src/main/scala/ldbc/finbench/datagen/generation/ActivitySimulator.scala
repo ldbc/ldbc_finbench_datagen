@@ -103,10 +103,7 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     activitySerializer.writeCompanyGuarantee(companyGuaranteeRdd)
     activitySerializer.writePersonLoan(personLoanRdd)
     activitySerializer.writeCompanyLoan(companyLoanRdd)
-    activitySerializer.writeLoan(loanRdd)
-    activitySerializer.writeDeposit(depositsRdd)
-    activitySerializer.writeRepay(repaysRdd)
-    activitySerializer.writeLoanTransfer(loanTrasfersRdd)
+    activitySerializer.writeLoanActivities(loanRdd,depositsRdd,repaysRdd,loanTrasfersRdd)
     activitySerializer.writeTransfer(transferRdd)
     activitySerializer.writeWithdraw(withdrawRdd)
   }
