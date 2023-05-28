@@ -39,8 +39,7 @@ public class TransferEvent implements Serializable {
         multiplicityDist.reset(seed);
     }
 
-    // Deprecated: OutDegrees is shuffled with InDegrees.
-    // Note: has moved to the scala layer
+    // Deprecated: OutDegrees is shuffled with InDegrees. It has been moved to the scala layer
     private void setOutDegreeWithShuffle(List<Account> accounts) {
         List<Long> degrees = accounts.parallelStream().map(Account::getMaxInDegree).collect(Collectors.toList());
         Collections.shuffle(degrees, shuffleRandom);
