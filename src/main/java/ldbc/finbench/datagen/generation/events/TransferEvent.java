@@ -56,6 +56,8 @@ public class TransferEvent implements Serializable {
     }
 
     // Generation to parts will mess up the average degree(make it bigger than expected) caused by ceiling operations.
+    // Also, it will mess up the long tail range of powerlaw distribution of degrees caused by 1 rounded to 2.
+    // See the plot drawn by check_transfer.py for more details.
     public List<Transfer> transferPart(List<Account> accounts, int blockId) {
         resetState(blockId);
 
