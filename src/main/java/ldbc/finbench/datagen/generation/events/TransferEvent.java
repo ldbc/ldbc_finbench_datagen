@@ -19,8 +19,10 @@ public class TransferEvent implements Serializable {
     private final Random shuffleRandom;
     private final Random amountRandom;
     private final DegreeDistribution multiplicityDist;
+    private double partRatio;
 
-    public TransferEvent() {
+    public TransferEvent(double partRatio) {
+        this.partRatio = partRatio;
         randomFarm = new RandomGeneratorFarm();
         randIndex = new Random(DatagenParams.defaultSeed);
         shuffleRandom = new Random(DatagenParams.defaultSeed);
@@ -37,7 +39,8 @@ public class TransferEvent implements Serializable {
         multiplicityDist.reset(seed);
     }
 
-    // OutDegrees is shuffled with InDegrees
+    // Deprecated: OutDegrees is shuffled with InDegrees.
+    // Note: has moved to the scala layer
     private void setOutDegreeWithShuffle(List<Account> accounts) {
         List<Long> degrees = accounts.parallelStream().map(Account::getMaxInDegree).collect(Collectors.toList());
         Collections.shuffle(degrees, shuffleRandom);
@@ -52,12 +55,22 @@ public class TransferEvent implements Serializable {
         return indexList;
     }
 
-    // TODO: move shuffle to the main simulation process
-    public List<Account> transfer(List<Account> accounts, int blockId) {
+    // Generation to parts will mess up the average degree(make it bigger than expected) caused by ceiling operations.
+    public List<Transfer> transferPart(List<Account> accounts, int blockId) {
         resetState(blockId);
-        setOutDegreeWithShuffle(accounts);
+
         List<Integer> availableToAccountIds = getIndexList(accounts.size()); // available transferTo accountIds
         Random dateRandom = randomFarm.get(RandomGeneratorFarm.Aspect.TRANSFER_DATE);
+
+        // scale to percentage
+        accounts.forEach(
+            account -> {
+                account.setMaxOutDegree((long) Math.ceil(account.getRawMaxOutDegree() * partRatio));
+                account.setMaxInDegree((long) Math.ceil(account.getRawMaxInDegree() * partRatio));
+            }
+        );
+
+        List<Transfer> transfers = new LinkedList<>();
 
         for (int i = 0; i < accounts.size(); i++) {
             Account from = accounts.get(i);
@@ -73,8 +86,8 @@ public class TransferEvent implements Serializable {
                     long numTransfers = Math.min(multiplicityDist.nextDegree(),
                                                  Math.min(from.getAvailableOutDegree(), to.getAvailableInDegree()));
                     for (int mindex = 0; mindex < numTransfers; mindex++) {
-                        Transfer.createTransfer(dateRandom, from, to, mindex,
-                                                amountRandom.nextDouble() * DatagenParams.tsfMaxAmount);
+                        transfers.add(Transfer.createTransferAndReturn(dateRandom, from, to, mindex,
+                                                amountRandom.nextDouble() * DatagenParams.tsfMaxAmount));
                     }
                     if (to.getAvailableInDegree() == 0) {
                         availableToAccountIds.remove(j);
@@ -88,11 +101,11 @@ public class TransferEvent implements Serializable {
                     System.out.println("[Transfer] All accounts skipped for " + from.getAccountId());
                     break; // end loop if all accounts are skipped
                 }
-                System.out.println("Loop for " + from.getAccountId() + ", skippedCount: " + skippedCount + ", "
-                                       + "availableToAccountIds " + availableToAccountIds.size());
+                // System.out.println("Loop for " + from.getAccountId() + ", skippedCount: " + skippedCount + ", "
+                //                       + "availableToAccountIds " + availableToAccountIds.size());
             }
         }
-        return accounts;
+        return transfers;
     }
 
     private boolean distanceProbOK(int distance) {

@@ -6,6 +6,7 @@ import ldbc.finbench.datagen.generation.serializers.ActivitySerializer
 import ldbc.finbench.datagen.io.Writer
 import ldbc.finbench.datagen.io.raw.RawSink
 import ldbc.finbench.datagen.util.Logging
+import org.apache.spark.TaskContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
@@ -73,10 +74,10 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     val accountRdd = mergeAccounts(personWithAccounts, companyWithAccounts) // merge
     log.info(s"[Simulation] Account RDD partitions: ${accountRdd.getNumPartitions}")
     val signInRdd = activityGenerator.signInEvent(mediumRdd, accountRdd) // simulate signIn
-    val accountWithTransfer = activityGenerator.transferEvent(accountRdd) // simulate transfer
+    val mergedTransfers = activityGenerator.transferEvent(accountRdd) // simulate transfer
     val withdrawRdd = activityGenerator.withdrawEvent(accountRdd) // simulate withdraw
     log.info(s"[Simulation] signIn RDD partitions: ${signInRdd.getNumPartitions}")
-    log.info(s"[Simulation] transfer RDD partitions: ${accountWithTransfer.getNumPartitions}")
+    log.info(s"[Simulation] transfer RDD partitions: ${mergedTransfers.getNumPartitions}")
     log.info(s"[Simulation] withdraw RDD partitions: ${withdrawRdd.getNumPartitions}")
 
     // =========================================
@@ -95,7 +96,7 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     activitySerializer.writePersonWithActivities(personWithAccGuaLoan)
     activitySerializer.writeCompanyWithActivities(companyWithAccGuaLoan)
     activitySerializer.writeMediumWithActivities(mediumRdd, signInRdd)
-    activitySerializer.writeAccountWithActivities(accountWithTransfer)
+    activitySerializer.writeAccountWithActivities(accountRdd, mergedTransfers)
     activitySerializer.writeWithdraw(withdrawRdd)
     activitySerializer.writeInvest(investRdd)
     activitySerializer.writeLoanActivities(loanRdd, depositsRdd, repaysRdd, loanTrasfersRdd)
@@ -104,7 +105,19 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
   private def mergeAccounts(persons: RDD[Person], companies: RDD[Company]): RDD[Account] = {
     val personAccounts = persons.flatMap(person => person.getPersonOwnAccounts.asScala.map(_.getAccount))
     val companyAccounts = companies.flatMap(company => company.getCompanyOwnAccounts.asScala.map(_.getAccount))
-    personAccounts.union(companyAccounts)
+    val allAccounts = personAccounts.union(companyAccounts).mapPartitions(iter => shuffleDegrees(iter.toList).iterator)
+    allAccounts
+  }
+
+  private def shuffleDegrees(accounts: List[Account]): List[Account] = {
+    val indegrees = accounts.map(_.getMaxInDegree)
+    val shuffled = new scala.util.Random(TaskContext.getPartitionId()).shuffle(indegrees)
+    accounts.zip(shuffled).foreach {
+      case (account, shuffled) =>
+        account.setMaxOutDegree(shuffled)
+        account.setRawMaxOutDegree(shuffled)
+    }
+    accounts
   }
 
   private def mergeLoans(persons: RDD[Person], companies: RDD[Company]): RDD[Loan] = {

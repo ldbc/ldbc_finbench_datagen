@@ -90,17 +90,13 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
     }
   }
 
-  def writeAccountWithActivities(self: RDD[Account]): Unit = {
+  def writeAccountWithActivities(self: RDD[Account], transfers: RDD[Transfer]): Unit = {
     SparkUI.jobAsync("Write Account", "Write Account") {
       val rawAccount = self.map { a: Account => AccountRaw(a.getAccountId, a.getCreationDate, a.getDeletionDate, a.isBlocked, a.getType, a.getMaxInDegree, a.getMaxOutDegree, a.isExplicitlyDeleted, a.getOwnerType.toString) }
       spark.createDataFrame(rawAccount).write.format(sink.format.toString).options(options).save(sink.outputDir + "/account")
-    }
 
-    SparkUI.jobAsync("Write Account", "Write Account transfer") {
-      val rawTransfer = self.flatMap { acc =>
-        acc.getTransferOuts.asScala.map {
-          t: Transfer => TransferRaw(t.getFromAccount.getAccountId, t.getToAccount.getAccountId, t.getMultiplicityId, t.getCreationDate, t.getDeletionDate, t.getAmount, t.isExplicitlyDeleted)
-        }
+      val rawTransfer = transfers.map { t =>
+        TransferRaw(t.getFromAccount.getAccountId, t.getToAccount.getAccountId, t.getMultiplicityId, t.getCreationDate, t.getDeletionDate, t.getAmount, t.isExplicitlyDeleted)
       }
       spark.createDataFrame(rawTransfer).write.format(sink.format.toString).options(options).save(sink.outputDir + "/transfer")
     }
