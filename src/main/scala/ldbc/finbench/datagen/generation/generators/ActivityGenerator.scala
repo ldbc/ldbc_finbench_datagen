@@ -7,12 +7,13 @@ import ldbc.finbench.datagen.generation.events._
 import ldbc.finbench.datagen.util.Logging
 import org.apache.spark.TaskContext
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.SparkSession
 
 import java.util
 import scala.collection.JavaConverters._
 import scala.collection.SortedMap
 
-class ActivityGenerator() extends Serializable with Logging {
+class ActivityGenerator()(implicit spark: SparkSession) extends Serializable with Logging {
   // TODO: Move the type definitions to the some common place
   type EitherPersonOrCompany = Either[Person, Company]
   type EitherPersonInvestOrCompanyInvest = Either[PersonInvestCompany, CompanyInvestCompany]
@@ -66,6 +67,7 @@ class ActivityGenerator() extends Serializable with Logging {
     companyWithAccount
   }
 
+  // TODO: rewrite it with company centric
   def investEvent(personRDD: RDD[Person], companyRDD: RDD[Company]): RDD[EitherPersonInvestOrCompanyInvest] = {
     val seedRandom = new scala.util.Random(DatagenParams.defaultSeed)
     val numInvestorsRandom = new scala.util.Random(DatagenParams.defaultSeed)
@@ -154,24 +156,42 @@ class ActivityGenerator() extends Serializable with Logging {
     })
   }
 
+  // Tries: StackOverflowError caused when merging accounts RDD causes, maybe due to deep RDD lineage
+  // TODO: rewrite it with account centric and figure out the StackOverflowError
   def transferEvent(accountRDD: RDD[Account]): RDD[Transfer] = {
-    val transferEvent = new TransferEvent
-    accountRDD.mapPartitions(accounts => {
-      val transferList = transferEvent.transfer(accounts.toList.asJava, TaskContext.getPartitionId())
+    val transferEvent = new TransferEvent(1.0 / DatagenParams.tsfShuffleTimes)
+
+    def generateTransferParts(accounts: Iterator[Account], blockId: Int): Iterator[Transfer] = {
+      val transferList = transferEvent.transferPart(accounts.toList.asJava, blockId)
       for {transfer <- transferList.iterator().asScala} yield transfer
-    })
+    }
+
+    if (DatagenParams.tsfShuffleTimes == 1) {
+      accountRDD.mapPartitions(generateTransferParts(_, TaskContext.getPartitionId())).cache()
+    } else {
+      val transferParts = new Array[RDD[Transfer]](DatagenParams.tsfShuffleTimes)
+      transferParts(0) = accountRDD.mapPartitions(generateTransferParts(_, 0)).cache()
+      for {i <- 1 until DatagenParams.tsfShuffleTimes} {
+        // shuffle and generate new transfer parts
+        transferParts(i) = accountRDD.repartition(accountRDD.getNumPartitions).mapPartitions(generateTransferParts(_, i + TaskContext.getPartitionId()))
+      }
+      transferParts.foldLeft(spark.sparkContext.emptyRDD[Transfer]) {
+        _ union _
+      }
+    }
   }
 
+  // TODO: rewrite it with account centric
   def withdrawEvent(accountRDD: RDD[Account]): RDD[Withdraw] = {
-    val withdrawEvent = new WithdrawEvent
-    val sourceSamples = accountRDD.filter(_.getType != "debit card").sample(withReplacement = false, DatagenParams.accountWithdrawFraction, sampleRandom.nextLong())
+    val withdrawEvent = new WithdrawEvent(DatagenParams.accountWithdrawFraction)
     val cards = accountRDD.filter(_.getType == "debit card").collect().toList.asJava
-    sourceSamples.mapPartitions(sources => {
+    accountRDD.mapPartitions(sources => {
       val withdrawList = withdrawEvent.withdraw(sources.toList.asJava, cards, TaskContext.getPartitionId())
       for {withdraw <- withdrawList.iterator().asScala} yield withdraw
     })
   }
 
+  // TODO: rewrite it with loan centric
   def afterLoanSubEvents(loanRDD: RDD[Loan], accountRDD: RDD[Account]): (RDD[Deposit], RDD[Repay], RDD[Transfer]) = {
     val fraction = DatagenParams.loanInvolvedAccountsFraction
     val loanParts = loanRDD.partitions.length
@@ -197,5 +217,4 @@ class ActivityGenerator() extends Serializable with Logging {
 
     (deposits, repays, transfers)
   }
-
 }

@@ -1,7 +1,6 @@
 package ldbc.finbench.datagen.generation.events;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -20,8 +19,10 @@ public class TransferEvent implements Serializable {
     private final Random shuffleRandom;
     private final Random amountRandom;
     private final DegreeDistribution multiplicityDist;
+    private double partRatio;
 
-    public TransferEvent() {
+    public TransferEvent(double partRatio) {
+        this.partRatio = partRatio;
         randomFarm = new RandomGeneratorFarm();
         randIndex = new Random(DatagenParams.defaultSeed);
         shuffleRandom = new Random(DatagenParams.defaultSeed);
@@ -38,26 +39,39 @@ public class TransferEvent implements Serializable {
         multiplicityDist.reset(seed);
     }
 
-    // OutDegrees is shuffled with InDegrees
+    // Deprecated: OutDegrees is shuffled with InDegrees. It has been moved to the scala layer
     private void setOutDegreeWithShuffle(List<Account> accounts) {
         List<Long> degrees = accounts.parallelStream().map(Account::getMaxInDegree).collect(Collectors.toList());
         Collections.shuffle(degrees, shuffleRandom);
         IntStream.range(0, accounts.size()).parallel().forEach(i -> accounts.get(i).setMaxOutDegree(degrees.get(i)));
     }
 
-    // TODO: move shuffle to the main simulation process
-    public List<Transfer> transfer(List<Account> accounts, int blockId) {
-        resetState(blockId);
-        setOutDegreeWithShuffle(accounts);
+    private List<Integer> getIndexList(int size) {
+        List<Integer> indexList = new LinkedList<>();
+        for (int i = 0; i < size; i++) {
+            indexList.add(i);
+        }
+        return indexList;
+    }
 
-        List<Transfer> allTransfers = new ArrayList<>();
+    // Generation to parts will mess up the average degree(make it bigger than expected) caused by ceiling operations.
+    // Also, it will mess up the long tail range of powerlaw distribution of degrees caused by 1 rounded to 2.
+    // See the plot drawn by check_transfer.py for more details.
+    public List<Transfer> transferPart(List<Account> accounts, int blockId) {
+        resetState(blockId);
+
+        List<Integer> availableToAccountIds = getIndexList(accounts.size()); // available transferTo accountIds
         Random dateRandom = randomFarm.get(RandomGeneratorFarm.Aspect.TRANSFER_DATE);
 
-        // initial available transfer to account ids
-        List<Integer> availableToAccountIds = new LinkedList<>();
-        for (int index = 0; index < accounts.size(); index++) {
-            availableToAccountIds.add(index);
-        }
+        // scale to percentage
+        accounts.forEach(
+            account -> {
+                account.setMaxOutDegree((long) Math.ceil(account.getRawMaxOutDegree() * partRatio));
+                account.setMaxInDegree((long) Math.ceil(account.getRawMaxInDegree() * partRatio));
+            }
+        );
+
+        List<Transfer> transfers = new LinkedList<>();
 
         for (int i = 0; i < accounts.size(); i++) {
             Account from = accounts.get(i);
@@ -73,9 +87,8 @@ public class TransferEvent implements Serializable {
                     long numTransfers = Math.min(multiplicityDist.nextDegree(),
                                                  Math.min(from.getAvailableOutDegree(), to.getAvailableInDegree()));
                     for (int mindex = 0; mindex < numTransfers; mindex++) {
-                        allTransfers.add(Transfer.createTransfer(dateRandom, from, to, mindex,
-                                                                 amountRandom.nextDouble()
-                                                                     * DatagenParams.tsfMaxAmount));
+                        transfers.add(Transfer.createTransferAndReturn(dateRandom, from, to, mindex,
+                                                amountRandom.nextDouble() * DatagenParams.tsfMaxAmount));
                     }
                     if (to.getAvailableInDegree() == 0) {
                         availableToAccountIds.remove(j);
@@ -89,11 +102,11 @@ public class TransferEvent implements Serializable {
                     System.out.println("[Transfer] All accounts skipped for " + from.getAccountId());
                     break; // end loop if all accounts are skipped
                 }
-                System.out.println("Loop for " + from.getAccountId() + ", skippedCount: " + skippedCount + ", "
-                                       + "availableToAccountIds " + availableToAccountIds.size());
+                // System.out.println("Loop for " + from.getAccountId() + ", skippedCount: " + skippedCount + ", "
+                //                       + "availableToAccountIds " + availableToAccountIds.size());
             }
         }
-        return allTransfers;
+        return transfers;
     }
 
     private boolean distanceProbOK(int distance) {

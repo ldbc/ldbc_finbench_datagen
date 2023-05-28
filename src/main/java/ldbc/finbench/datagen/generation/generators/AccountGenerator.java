@@ -68,11 +68,11 @@ public class AccountGenerator implements Serializable {
         // Set inDegree
         long maxInDegree = Math.min(degreeDistribution.nextDegree(), DatagenParams.tsfMaxNumDegree);
         account.setMaxInDegree(maxInDegree);
+        account.setRawMaxInDegree(maxInDegree);
 
-        // Set outDegree.
-        // Note: Leave outDegree as 0 for shuffle later
-        long maxOutDegree = 0;
-        account.setMaxOutDegree(maxOutDegree);
+        // Set outDegree. Note: Leave outDegree as 0 for shuffle later
+        account.setMaxOutDegree(0);
+        account.setRawMaxOutDegree(0);
 
         // Set type
         // TODO: the account type should be determined by the type of account owner. Design a ranking function
