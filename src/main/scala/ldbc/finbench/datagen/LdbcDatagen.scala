@@ -17,22 +17,22 @@ object LdbcDatagen extends SparkApp {
   val appName = "LDBC FinBench Datagen for Spark"
 
   case class Args(
-     scaleFactor: String = "0.01",
-     scaleFactorXml: String = "",
-     params: Map[String, String] = Map.empty,
-     paramFile: Option[String] = None,
-     outputDir: String = "out",
-     bulkloadPortion: Double = 0.97,
-     keepImplicitDeletes: Boolean = false,
-     batchPeriod: String = "second",
-     numPartitions: Option[Int] = None,
-     irFormat: String = "csv",
-     format: String = "csv",
-     formatOptions: Map[String, String] = Map.empty,
-     epochMillis: Boolean = false,
-     generateFactors: Boolean = false,
-     factorFormat: String = "parquet"
-   )
+                   scaleFactor: String = "0.01",
+                   scaleFactorXml: String = "",
+                   params: Map[String, String] = Map.empty,
+                   paramFile: Option[String] = None,
+                   outputDir: String = "out",
+                   bulkloadPortion: Double = 0.97,
+                   keepImplicitDeletes: Boolean = false,
+                   batchPeriod: String = "second",
+                   numPartitions: Option[Int] = None,
+                   irFormat: String = "csv",
+                   format: String = "csv",
+                   formatOptions: Map[String, String] = Map.empty,
+                   epochMillis: Boolean = false,
+                   generateFactors: Boolean = false,
+                   factorFormat: String = "parquet"
+                 )
 
   override type ArgsType = Args
 
@@ -130,8 +130,7 @@ object LdbcDatagen extends SparkApp {
       format = args.format,
       partitionsOpt = args.numPartitions
     )
-    GenerationStage.run(generationArgs)
-    return
+    //    GenerationStage.run(generationArgs)
 
     if (args.generateFactors) {
       val factorArgs = FactorGenerationStage.Args(
