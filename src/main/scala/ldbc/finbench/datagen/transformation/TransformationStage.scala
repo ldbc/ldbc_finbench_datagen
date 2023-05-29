@@ -120,7 +120,7 @@ object TransformationStage extends DatagenStage with Logging {
     val extractSnapshot = (df: DataFrame) => {
       df.filter($"creationDate" < lit(bulkLoadThreshold)
           && (!lit(filterDeletion) || $"deletionDate" >= lit(bulkLoadThreshold)))
-        .select(_: _*)
+//        .select(_: _*)
     }
 
     val transferSnapshot = extractSnapshot(readRaw("transfer"))
