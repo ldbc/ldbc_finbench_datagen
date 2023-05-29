@@ -46,4 +46,4 @@ def check_consistency(dir1, dir2):
 if __name__ == '__main__':
     dir1 = sys.argv[1]
     dir2 = sys.argv[2]
-    check_consistency(dir1, dir2)
+    check_consistency(dir1+"/raw", dir2+"/raw")

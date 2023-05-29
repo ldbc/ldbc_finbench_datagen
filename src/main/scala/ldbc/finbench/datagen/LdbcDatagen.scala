@@ -130,7 +130,8 @@ object LdbcDatagen extends SparkApp {
       format = args.format,
       partitionsOpt = args.numPartitions
     )
-//    GenerationStage.run(generationArgs)
+    GenerationStage.run(generationArgs)
+    return
 
     if (args.generateFactors) {
       val factorArgs = FactorGenerationStage.Args(
