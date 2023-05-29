@@ -5,7 +5,7 @@ import ldbc.finbench.datagen.factors.FactorGenerationStage
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries
 import ldbc.finbench.datagen.generation.{DatagenContext, GenerationStage}
 import ldbc.finbench.datagen.transformation.TransformationStage
-import ldbc.finbench.datagen.util.SparkApp
+import ldbc.finbench.datagen.util.{Logging, SparkApp}
 import org.apache.hadoop.fs.{FSDataInputStream, FileSystem, Path}
 import shapeless.lens
 
@@ -13,7 +13,7 @@ import java.net.URI
 import java.util.Properties
 import scala.collection.JavaConverters._
 
-object LdbcDatagen extends SparkApp {
+object LdbcDatagen extends SparkApp with Logging {
   val appName = "LDBC FinBench Datagen for Spark"
 
   case class Args(
@@ -130,6 +130,7 @@ object LdbcDatagen extends SparkApp {
       format = args.format,
       partitionsOpt = args.numPartitions
     )
+    log.info("[Main] Starting generation stage")
     //    GenerationStage.run(generationArgs)
 
     if (args.generateFactors) {
@@ -137,6 +138,7 @@ object LdbcDatagen extends SparkApp {
         outputDir = args.outputDir,
         format = args.factorFormat
       )
+      log.info("[Main] Starting factoring stage")
       FactorGenerationStage.run(factorArgs)
     }
 
@@ -152,6 +154,8 @@ object LdbcDatagen extends SparkApp {
       epochMillis = args.epochMillis,
       batchPeriod = args.batchPeriod
     )
+
+    log.info("[Main] Starting transformation stage")
     TransformationStage.run(transformArgs)
   }
 

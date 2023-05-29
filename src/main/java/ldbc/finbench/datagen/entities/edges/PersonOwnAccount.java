@@ -24,9 +24,7 @@ public class PersonOwnAccount implements DynamicActivity, Serializable {
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static void createPersonOwnAccount(Random random, Person person, Account account) {
-        long creationDate =
-            Dictionaries.dates.randomPersonToAccountDate(random, person, account, account.getDeletionDate());
+    public static void createPersonOwnAccount(Person person, Account account, long creationDate) {
         // Delete when account is deleted
         PersonOwnAccount personOwnAccount = new PersonOwnAccount(person, account, creationDate,
                                                                  account.getDeletionDate(),

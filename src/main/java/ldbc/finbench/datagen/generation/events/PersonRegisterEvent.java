@@ -29,8 +29,7 @@ public class PersonRegisterEvent implements Serializable {
             // Each person has at least one account
             for (int i = 0; i < Math.max(1, numAccounts); i++) {
                 Account account = accountGenerator.generateAccount(person.getCreationDate(), "person", blockId);
-                PersonOwnAccount.createPersonOwnAccount(
-                    randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_OWN_ACCOUNT_DATE), person, account);
+                PersonOwnAccount.createPersonOwnAccount(person, account, account.getCreationDate());
             }
         });
 

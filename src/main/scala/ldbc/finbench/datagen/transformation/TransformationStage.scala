@@ -12,20 +12,20 @@ import scopt.OptionParser
 import shapeless.lens
 
 object TransformationStage extends DatagenStage with Logging {
-  private val options: Map[String, String] =  Map("header" -> "true", "delimiter" -> "|")
+  private val options: Map[String, String] = Map("header" -> "true", "delimiter" -> "|")
 
   case class Args(
-     outputDir: String = "out",
-     bulkloadPortion: Double = 0.0,
-     keepImplicitDeletes: Boolean = false,
-     simulationStart: Long = 0,
-     simulationEnd: Long = 0,
-     irFormat: String = "csv",
-     format: String = "csv",
-     formatOptions: Map[String, String] = Map.empty,
-     epochMillis: Boolean = false,
-     batchPeriod: String = "day"
-   )
+                   outputDir: String = "out",
+                   bulkloadPortion: Double = 0.0,
+                   keepImplicitDeletes: Boolean = false,
+                   simulationStart: Long = 0,
+                   simulationEnd: Long = 0,
+                   irFormat: String = "csv",
+                   format: String = "csv",
+                   formatOptions: Map[String, String] = Map.empty,
+                   epochMillis: Boolean = false,
+                   batchPeriod: String = "day"
+                 )
 
   override type ArgsType = Args
 
@@ -60,7 +60,6 @@ object TransformationStage extends DatagenStage with Logging {
 
   // execute the transform process
   override def run(args: Args): Unit = {
-    log.info("Starting transformation stage")
 
     val rawPathPrefix = args.outputDir / "raw"
     val outputPathPrefix = args.outputDir / "history_data"
@@ -71,65 +70,59 @@ object TransformationStage extends DatagenStage with Logging {
     val simulationEnd = Dictionaries.dates.getSimulationEnd
     val bulkLoadThreshold = calculateBulkLoadThreshold(args.bulkloadPortion, simulationStart, simulationEnd)
 
-//    val batch_id = (col: Column) => date_format(date_trunc(args.batchPeriod, to_timestamp(col / lit(1000L))), batchPeriodFormat(args.batchPeriod))
-//
-//    def inBatch(col: Column, batchStart: Long, batchEnd: Long) =
-//      col >= lit(batchStart) && col < lit(batchEnd)
-//
-//    val batched = (df: DataFrame) =>
-//      df
-//        .select(
-//          df.columns.map(qcol) ++ Seq(
-//            batch_id($"creationDate").as("insert_batch_id"),
-//            batch_id($"deletionDate").as("delete_batch_id")
-//          ): _*
-//        )
-//
-//    val insertBatchPart = (tpe: EntityType, df: DataFrame, batchStart: Long, batchEnd: Long) => {
-//      df
-//        .filter(inBatch($"creationDate", batchStart, batchEnd))
-//        .pipe(batched)
-//        .select(
-//          Seq($"insert_batch_id".as("batch_id")) ++ columns(tpe, df.columns).map(qcol): _*
-//        )
-//    }
-//
-//    val deleteBatchPart = (tpe: EntityType, df: DataFrame, batchStart: Long, batchEnd: Long) => {
-//      val idColumns = tpe.primaryKey.map(qcol)
-//      df
-//        .filter(inBatch($"deletionDate", batchStart, batchEnd))
-//        .filter(if (df.columns.contains("explicitlyDeleted")) col("explicitlyDeleted") else lit(true))
-//        .pipe(batched)
-//        .select(Seq($"delete_batch_id".as("batch_id"), $"deletionDate") ++ idColumns: _*)
-//    }
+    //    val batch_id = (col: Column) => date_format(date_trunc(args.batchPeriod, to_timestamp(col / lit(1000L))), batchPeriodFormat(args.batchPeriod))
+    //
+    //    def inBatch(col: Column, batchStart: Long, batchEnd: Long) =
+    //      col >= lit(batchStart) && col < lit(batchEnd)
+    //
+    //    val batched = (df: DataFrame) =>
+    //      df
+    //        .select(
+    //          df.columns.map(qcol) ++ Seq(
+    //            batch_id($"creationDate").as("insert_batch_id"),
+    //            batch_id($"deletionDate").as("delete_batch_id")
+    //          ): _*
+    //        )
+    //
+    //    val insertBatchPart = (tpe: EntityType, df: DataFrame, batchStart: Long, batchEnd: Long) => {
+    //      df
+    //        .filter(inBatch($"creationDate", batchStart, batchEnd))
+    //        .pipe(batched)
+    //        .select(
+    //          Seq($"insert_batch_id".as("batch_id")) ++ columns(tpe, df.columns).map(qcol): _*
+    //        )
+    //    }
+    //
+    //    val deleteBatchPart = (tpe: EntityType, df: DataFrame, batchStart: Long, batchEnd: Long) => {
+    //      val idColumns = tpe.primaryKey.map(qcol)
+    //      df
+    //        .filter(inBatch($"deletionDate", batchStart, batchEnd))
+    //        .filter(if (df.columns.contains("explicitlyDeleted")) col("explicitlyDeleted") else lit(true))
+    //        .pipe(batched)
+    //        .select(Seq($"delete_batch_id".as("batch_id"), $"deletionDate") ++ idColumns: _*)
+    //    }
 
-    val readRaw = (target:String) => {
+    val readRaw = (target: String) => {
       spark.read.format(args.irFormat)
         .options(options)
         .option("inferSchema", "true")
         .load(s"$rawPathPrefix/$target/*.csv")
     }
 
-    val write = (data: DataFrame, target: String) => {
-      data.toDF().coalesce(1)
-        .write.format("csv").options(options).option("encoding", "UTF-8")
-        .mode("overwrite").save((outputPathPrefix / target).toString)
-    }
-
 
     val extractSnapshot = (df: DataFrame) => {
       df.filter($"creationDate" < lit(bulkLoadThreshold)
-          && (!lit(filterDeletion) || $"deletionDate" >= lit(bulkLoadThreshold)))
-//        .select(_: _*)
+        && (!lit(filterDeletion) || $"deletionDate" >= lit(bulkLoadThreshold)))
+      //        .select(_: _*)
     }
 
     val transferSnapshot = extractSnapshot(readRaw("transfer"))
-//      .select("fromId", "toId", "multiplicityId", "createTime", "deleteTime", "amount", "isExplicitDeleted")
-//      .map(extractSnapshot)
+      //      .select("fromId", "toId", "multiplicityId", "createTime", "deleteTime", "amount", "isExplicitDeleted")
+      //      .map(extractSnapshot)
       .withColumn("createTime", from_unixtime(col("createTime") / 1000, batchPeriodFormat(args.batchPeriod)))
       .withColumn("deleteTime", from_unixtime(col("deleteTime") / 1000, batchPeriodFormat(args.batchPeriod)))
       .orderBy("createTime", "deleteTime")
-    write(transferSnapshot, "transfer")
+    write(transferSnapshot, (outputPathPrefix / "transfer").toString)
 
     //    val accountDf = spark.read.format("csv")
     //      .option("header", "true")
@@ -140,18 +133,20 @@ object TransformationStage extends DatagenStage with Logging {
     //      .select()
   }
 
-//  def columns(tpe: EntityType, cols: Seq[String]) = tpe match {
-//    case tpe if tpe.isStatic => cols
-//    case Edge("Knows", PersonType, PersonType, NN, false, _, _) =>
-//      val rawCols = Set("deletionDate", "explicitlyDeleted", "weight")
-//      cols.filter(!rawCols.contains(_))
-//    case _ =>
-//      val rawCols = Set("deletionDate", "explicitlyDeleted")
-//      cols.filter(!rawCols.contains(_))
-//  }
-
-
-
+  //  def columns(tpe: EntityType, cols: Seq[String]) = tpe match {
+  //    case tpe if tpe.isStatic => cols
+  //    case Edge("Knows", PersonType, PersonType, NN, false, _, _) =>
+  //      val rawCols = Set("deletionDate", "explicitlyDeleted", "weight")
+  //      cols.filter(!rawCols.contains(_))
+  //    case _ =>
+  //      val rawCols = Set("deletionDate", "explicitlyDeleted")
+  //      cols.filter(!rawCols.contains(_))
+  //  }
+  private def write(data: DataFrame, path: String): Unit = {
+    data.toDF().coalesce(1)
+      .write.format("csv").options(options).option("encoding", "UTF-8")
+      .mode("overwrite").save(path)
+  }
 
   private def calculateBulkLoadThreshold(bulkLoadPortion: Double, simulationStart: Long, simulationEnd: Long) = {
     (simulationEnd - ((simulationEnd - simulationStart) * (1 - bulkLoadPortion)).toLong)
@@ -164,6 +159,7 @@ object TransformationStage extends DatagenStage with Logging {
     case "hour" => "yyyy-MM-dd'T'hh"
     case "minute" => "yyyy-MM-dd'T'hh:mm"
     case "second" => "yyyy-MM-dd'T'hh:mm:ss"
+    case "millisecond" => "yyyy-MM-dd'T'hh:mm:ss.SSS"
     case _ => throw new IllegalArgumentException("Unrecognized partition key")
   }
 }

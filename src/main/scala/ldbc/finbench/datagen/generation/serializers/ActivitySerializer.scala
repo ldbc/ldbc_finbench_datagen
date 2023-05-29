@@ -133,7 +133,7 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
 
   def writeLoanActivities(self: RDD[Loan], deposits: RDD[Deposit], repays: RDD[Repay], loantransfers: RDD[Transfer]): Unit = {
     SparkUI.jobAsync("Write loan", "Write Loan") {
-      val rawLoan = self.map { l: Loan => LoanRaw(l.getLoanId, l.getLoanAmount, l.getBalance) }
+      val rawLoan = self.map { l: Loan => LoanRaw(l.getLoanId, l.getCreationDate, l.getLoanAmount, l.getBalance) }
       spark.createDataFrame(rawLoan).write.format(sink.format.toString).options(options).save((pathPrefix / "loan").toString)
 
       val rawDeposit = deposits.map { d: Deposit => DepositRaw(d.getLoan.getLoanId, d.getAccount.getAccountId, d.getCreationDate, d.getDeletionDate, d.getAmount, d.isExplicitlyDeleted) }

@@ -39,6 +39,7 @@ object raw {
   // define Loan entity
   case class LoanRaw(
       id: Long,
+      createTime: Long,
       loanAmount: Double,
       balance: Double
   )
