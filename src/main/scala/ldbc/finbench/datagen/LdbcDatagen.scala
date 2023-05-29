@@ -131,7 +131,7 @@ object LdbcDatagen extends SparkApp with Logging {
       partitionsOpt = args.numPartitions
     )
     log.info("[Main] Starting generation stage")
-    //    GenerationStage.run(generationArgs)
+    GenerationStage.run(generationArgs)
 
     if (args.generateFactors) {
       val factorArgs = FactorGenerationStage.Args(
@@ -154,9 +154,6 @@ object LdbcDatagen extends SparkApp with Logging {
       epochMillis = args.epochMillis,
       batchPeriod = args.batchPeriod
     )
-
-    log.info("[Main] Starting transformation stage")
-    TransformationStage.run(transformArgs)
   }
 
 

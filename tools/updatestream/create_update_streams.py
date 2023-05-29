@@ -30,6 +30,9 @@ class UpdateStreamCreator:
         """
         self.raw_format = raw_format
         self.raw_dir = raw_dir
+        if not Path(f"{self.raw_dir}/raw").exists():
+            raise ValueError(f"Provided directory does not contain expected folder. Got: {self.raw_dir}")
+
         self.output_dir = output_dir
         self.start_date = start_date
         self.end_date = end_date
@@ -41,14 +44,9 @@ class UpdateStreamCreator:
         Path(self.database_name).unlink(missing_ok=True)  # Remove original file
         self.cursor = duckdb.connect(database=self.database_name)
 
-    def execute(self):
-        print(f"===== Creating update streams =====")
-        Path(f"{self.output_dir}/inserts").mkdir(parents=True, exist_ok=True)
-        Path(f"{self.output_dir}/deletes").mkdir(parents=True, exist_ok=True)
+        self.load_raw_data()
 
-        if not Path(f"{self.raw_dir}/raw").exists():
-            raise ValueError(f"Provided directory does not contain expected folder. Got: {self.raw_dir}")
-
+    def load_raw_data(self):
         # Get folders
         for folder in glob.glob(f"{self.raw_dir}/raw/*"):
             if (os.path.isdir(folder)):
@@ -62,9 +60,37 @@ class UpdateStreamCreator:
                 self.cursor.execute(f"CREATE OR REPLACE VIEW {entity} AS SELECT * FROM {loader_function};")
                 print(f"VIEW FOR {entity} CREATED")
 
+    def create_snapshot(self):
+        print(f"===== Creating snapshot =====")
+        Path(f"{self.output_dir}/snapshot").mkdir(parents=True, exist_ok=True)
+
+        start_date_long = self.start_date.timestamp() * 1000
+        with open("snapshot.sql", "r") as f:
+            queries_file = f.read()
+            queries_file = queries_file.replace(':start_date_long', str(int(start_date_long)))
+            queries_file = queries_file.replace(':output_dir', self.output_dir)
+            queries_file = re.sub(r"\n--.*", "", queries_file)
+            queries = queries_file.split(';\n')  # split on semicolon-newline sequences
+
+            for query in queries:
+                if not query or query.isspace():
+                    continue
+
+                print(query)
+                start = time.time()
+                self.cursor.execute(query)
+                end = time.time()
+                duration = end - start
+                print(f"-> {duration:.4f} seconds")
+
+    def create_upstream(self):
+        print(f"===== Creating update streams =====")
+        Path(f"{self.output_dir}/inserts").mkdir(parents=True, exist_ok=True)
+        Path(f"{self.output_dir}/deletes").mkdir(parents=True, exist_ok=True)
+
         start_date_long = self.start_date.timestamp() * 1000
 
-        with open("dependant_time_queries.sql", "r") as f:
+        with open("updateStream.sql", "r") as f:
             queries_file = f.read()
             queries_file = queries_file.replace(':start_date_long', str(int(start_date_long)))
             queries_file = queries_file.replace(':output_dir', self.output_dir)
@@ -119,17 +145,17 @@ if __name__ == "__main__":
     end_date = datetime(year=2023, month=1, day=1, hour=0, minute=0, second=0, tzinfo=ZoneInfo('GMT'))
     bulk_load_portion = 0.97
 
-    threshold = datetime.fromtimestamp(
-        end_date.timestamp() - ((end_date.timestamp() - start_date) * (1 - bulk_load_portion)), tz=ZoneInfo('GMT'))
+    threshold = datetime.fromtimestamp(start_date + ((end_date.timestamp() - start_date) * bulk_load_portion),
+                                       tz=ZoneInfo('GMT'))
 
-    directory = Path(args.raw_dir)
-    if not directory.exists():
+    if not Path(args.raw_dir).exists():
         raise ValueError(f"raw data dir does not exist. Got: {args.raw_dir}")
 
     start = time.time()
     USC = UpdateStreamCreator(args.raw_format, args.raw_dir, args.output_dir, threshold, end_date,
                               args.batch_size_in_days)
-    USC.execute()
+    USC.create_snapshot()
+    # USC.create_upstream()
     end = time.time()
     duration = end - start
     print(f"Total duration: {duration:.4f} seconds")
