@@ -24,13 +24,12 @@ public class CompanyApplyLoan implements DynamicActivity, Serializable {
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static CompanyApplyLoan createCompanyApplyLoan(long creationDate, Company company, Loan loan) {
+    public static void createCompanyApplyLoan(long creationDate, Company company, Loan loan) {
         CompanyApplyLoan companyApplyLoan = new CompanyApplyLoan(company, loan, creationDate, 0, false);
+        company.getLoans().add(loan);
         company.getCompanyApplyLoans().add(companyApplyLoan);
         loan.setOwnerType(PersonOrCompany.COMPANY);
         loan.setOwnerCompany(company);
-
-        return companyApplyLoan;
     }
 
     public Company getCompany() {

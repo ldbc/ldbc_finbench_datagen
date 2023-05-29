@@ -15,7 +15,7 @@ public class DistributionTest {
 
     public DistributionTest() {
         config = ConfigParser.readConfig("src/main/resources/params_default.ini");
-        config.putAll(ConfigParser.scaleFactorConf("0.1")); // use scale factor 0.1
+        config.putAll(ConfigParser.scaleFactorConf("", "0.1")); // use scale factor 0.1
         DatagenContext.initialize(new DatagenConfiguration(config));
     }
 

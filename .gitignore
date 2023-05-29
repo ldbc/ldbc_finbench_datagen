@@ -1,7 +1,15 @@
+# project env files
 .DS_Store
 *.iml
 target/
 .idea/
 .vscode/
+
+# local generated data
 out*/
+out*.tar
 out*.tar.gz
+
+# tune
+tune/
+tune.log

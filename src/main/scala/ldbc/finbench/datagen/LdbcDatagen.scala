@@ -18,6 +18,7 @@ object LdbcDatagen extends SparkApp {
 
   case class Args(
      scaleFactor: String = "0.01",
+     scaleFactorXml: String = "",
      params: Map[String, String] = Map.empty,
      paramFile: Option[String] = None,
      outputDir: String = "out",
@@ -45,6 +46,11 @@ object LdbcDatagen extends SparkApp {
         .valueName("scale-factor")
         .action((x, c) => args.scaleFactor.set(c)(x))
         .text("The generator scale factor")
+
+      opt[String]("scale-factor-xml")
+        .valueName("scale-factor-xml")
+        .action((x, c) => args.scaleFactorXml.set(c)(x))
+        .text("The generator scale factor config xml")
 
       opt[Map[String, String]]('p', "params")
         .action((x, c) => args.params.set(c)(x))
@@ -120,11 +126,9 @@ object LdbcDatagen extends SparkApp {
 
     val generationArgs = GenerationStage.Args(
       scaleFactor = args.scaleFactor,
-      params = args.params,
-      paramFile = args.paramFile,
       outputDir = args.outputDir,
-      partitionsOpt = args.numPartitions,
-      format = args.format
+      format = args.format,
+      partitionsOpt = args.numPartitions
     )
 //    GenerationStage.run(generationArgs)
 
@@ -163,7 +167,7 @@ object LdbcDatagen extends SparkApp {
     for {(k, v) <- args.params} conf.put(k, v)
 
     for {partitions <- args.numPartitions} conf.put("spark.partitions", partitions.toString) // Following params will overwrite the values in params_default
-    conf.putAll(ConfigParser.scaleFactorConf(args.scaleFactor)) // put scale factor conf
+    conf.putAll(ConfigParser.scaleFactorConf(args.scaleFactorXml, args.scaleFactor)) // put scale factor conf
     conf.put("generator.outputDir", args.outputDir)
     conf.put("generator.format", args.format)
 

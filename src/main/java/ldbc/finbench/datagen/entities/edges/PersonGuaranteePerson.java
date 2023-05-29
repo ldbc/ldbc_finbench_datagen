@@ -22,14 +22,12 @@ public class PersonGuaranteePerson implements DynamicActivity, Serializable {
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static PersonGuaranteePerson createPersonGuaranteePerson(Random random, Person fromPerson, Person toPerson) {
+    public static void createPersonGuaranteePerson(Random random, Person fromPerson, Person toPerson) {
         long creationDate = Dictionaries.dates.randomPersonToPersonDate(random, fromPerson, toPerson);
         PersonGuaranteePerson personGuaranteePerson =
             new PersonGuaranteePerson(fromPerson, toPerson, creationDate, 0, false);
         fromPerson.getGuaranteeSrc().add(personGuaranteePerson);
         toPerson.getGuaranteeDst().add(personGuaranteePerson);
-
-        return personGuaranteePerson;
     }
 
     public Person getFromPerson() {

@@ -1,6 +1,9 @@
 package ldbc.finbench.datagen.config;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.TreeMap;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -12,18 +15,25 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 public class ScaleFactors {
-    public final TreeMap<String, ScaleFactor> value;
+    public TreeMap<String, ScaleFactor> value;
 
     public static final ScaleFactors INSTANCE = new ScaleFactors();
 
     private ScaleFactors() {
+    }
+
+    public void initialize(String scaleFactorsXml) {
         try {
             value = new TreeMap<>();
             DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            Document doc = builder.parse(ScaleFactors.class.getResourceAsStream("/scale_factors.xml"));
+            InputStream configFile = scaleFactorsXml.isEmpty()
+                ? ScaleFactors.class.getResourceAsStream("/scale_factors.xml")
+                : Files.newInputStream(Paths.get(scaleFactorsXml));
+            Document doc = builder.parse(configFile);
             doc.getDocumentElement().normalize();
 
-            System.out.println("Reading scale factors..");
+            System.out.println("Reading scale factors from " + (scaleFactorsXml.isEmpty() ? "default" :
+                scaleFactorsXml) + "...");
             NodeList nodes = doc.getElementsByTagName("scale_factor");
             for (int i = 0; i < nodes.getLength(); i++) {
                 Node node = nodes.item(i);

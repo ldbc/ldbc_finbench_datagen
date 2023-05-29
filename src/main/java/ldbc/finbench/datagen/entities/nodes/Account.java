@@ -15,8 +15,10 @@ public class Account implements Serializable {
     private String type;
     private long creationDate;
     private long deletionDate;
-    private long maxInDegree;
-    private long maxOutDegree;
+    private long rawMaxInDegree;
+    private long rawMaxOutDegree;
+    private long maxInDegree; // max in degree before merging
+    private long maxOutDegree; // max out degree before merging
     private boolean isBlocked;
     private PersonOrCompany ownerType;
     private Person personOwner;
@@ -24,6 +26,7 @@ public class Account implements Serializable {
     private boolean isExplicitlyDeleted;
     private List<Transfer> transferIns;
     private List<Transfer> transferOuts;
+    private List<Transfer> loanTransfers;
     private List<Withdraw> withdraws;
     private List<Deposit> deposits;
     private List<Repay> repays;
@@ -32,10 +35,41 @@ public class Account implements Serializable {
     public Account() {
         transferIns = new ArrayList<>();
         transferOuts = new ArrayList<>();
+        loanTransfers = new ArrayList<>();
         withdraws = new ArrayList<>();
         repays = new ArrayList<>();
         deposits = new ArrayList<>();
         signIns = new ArrayList<>();
+    }
+
+    public Account(Account acc) {
+        transferIns = new ArrayList<>();
+        transferOuts = new ArrayList<>();
+        loanTransfers = new ArrayList<>();
+        withdraws = new ArrayList<>();
+        repays = new ArrayList<>();
+        deposits = new ArrayList<>();
+        signIns = new ArrayList<>();
+
+        accountId = acc.getAccountId();
+        type = acc.getType();
+        creationDate = acc.getCreationDate();
+        deletionDate = acc.getDeletionDate();
+        rawMaxInDegree = acc.getRawMaxInDegree();
+        rawMaxOutDegree = acc.getRawMaxOutDegree();
+        maxInDegree = acc.getMaxInDegree();
+        maxOutDegree = acc.getMaxOutDegree();
+        isBlocked = acc.isBlocked();
+        ownerType = acc.getOwnerType();
+        personOwner = acc.getPersonOwner();
+        companyOwner = acc.getCompanyOwner();
+        isExplicitlyDeleted = acc.isExplicitlyDeleted();
+        // Do not assign transfers
+        loanTransfers.addAll(acc.getLoanTransfers());
+        withdraws.addAll(acc.getWithdraws());
+        deposits.addAll(acc.getDeposits());
+        repays.addAll(acc.getRepays());
+        signIns.addAll(acc.getSignIns());
     }
 
     @Override
@@ -47,12 +81,12 @@ public class Account implements Serializable {
         return false;
     }
 
-    public long getAvaialbleInDegree() {
-        return maxInDegree - transferIns.size();
+    public long getAvailableInDegree() {
+        return Math.max(0, maxInDegree - transferIns.size());
     }
 
-    public long getAvaialbleOutDegree() {
-        return maxOutDegree - transferOuts.size();
+    public long getAvailableOutDegree() {
+        return Math.max(0, maxOutDegree - transferOuts.size());
     }
 
     public long getAccountId() {
@@ -87,6 +121,14 @@ public class Account implements Serializable {
         this.transferOuts = transferIns;
     }
 
+    public List<Transfer> getLoanTransfers() {
+        return loanTransfers;
+    }
+
+    public void setLoanTransfers(List<Transfer> loanTransfers) {
+        this.loanTransfers = loanTransfers;
+    }
+
     public List<Withdraw> getWithdraws() {
         return withdraws;
     }
@@ -117,6 +159,22 @@ public class Account implements Serializable {
 
     public void setCreationDate(long creationDate) {
         this.creationDate = creationDate;
+    }
+
+    public long getRawMaxInDegree() {
+        return rawMaxInDegree;
+    }
+
+    public void setRawMaxInDegree(long rawMaxInDegree) {
+        this.rawMaxInDegree = rawMaxInDegree;
+    }
+
+    public long getRawMaxOutDegree() {
+        return rawMaxOutDegree;
+    }
+
+    public void setRawMaxOutDegree(long rawMaxOutDegree) {
+        this.rawMaxOutDegree = rawMaxOutDegree;
     }
 
     public long getMaxInDegree() {
