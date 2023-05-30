@@ -14,8 +14,11 @@ from zoneinfo import ZoneInfo
 
 import duckdb
 
+TRUNCATION_LIMIT = 1000
+TRUNCATION_ORDER = "TIMESTAMP_ASCENDING"
 
-class UpdateStreamCreator:
+
+class Transformer:
 
     def __init__(self, raw_format, raw_dir, output_dir, start_date, end_date):
         """
@@ -42,7 +45,7 @@ class UpdateStreamCreator:
 
     def load_raw_data(self):
         for folder in glob.glob(f"{self.raw_dir}/raw/*"):
-            if (os.path.isdir(folder)):
+            if os.path.isdir(folder):
                 entity = folder.split('/')[-1]
                 if self.raw_format == 'parquet':
                     loader_function = f"read_parquet('{folder}/*.csv')"
@@ -60,14 +63,18 @@ class UpdateStreamCreator:
             queries_file = queries_file.replace(':start_date_long', str(int(start_date_long)))
             queries_file = queries_file.replace(':output_dir', self.output_dir)
             queries_file = queries_file.replace(':output_format', output_format)
+            queries_file = queries_file.replace(':truncation_limit', str(TRUNCATION_LIMIT))
+            queries_file = queries_file.replace(':truncation_order', TRUNCATION_ORDER)
             queries_file = re.sub(r"\n--.*", "", queries_file)
             for query in queries_file.split(';\n'):
                 if not query or query.isspace():
                     continue
                 if output_format == "parquet":
                     query = query + " (FORMAT 'parquet');"
-                elif output_format == "csv":  # TODO: debug
+                elif output_format == "csv":
                     query = query + " (DELIMITER '|', HEADER);"
+                elif output_format == "null":
+                    query = query + ";"
                 else:
                     raise ValueError(f"Unknown output format: {output_format}")
                 print(query)
@@ -82,11 +89,30 @@ class UpdateStreamCreator:
         Path(f"{self.output_dir}/snapshot").mkdir(parents=True, exist_ok=True)
         self.run_sql("snapshot.sql", "csv")
 
-    def create_upstream(self):
-        print(f"===== Creating update streams =====")
+    def create_writes(self):
+        print(f"===== Creating write queries =====")
         Path(f"{self.output_dir}/inserts").mkdir(parents=True, exist_ok=True)
         Path(f"{self.output_dir}/deletes").mkdir(parents=True, exist_ok=True)
-        self.run_sql("writes.sql", "parquet")
+        self.run_sql("writes.sql", "csv")
+
+    def create_readwrites(self):
+        if not os.path.exists(f"{self.output_dir}/inserts/Transfer.csv"):
+            raise ValueError(f"{self.output_dir}/inserts/Transfer.csv not existed")
+        if not os.path.exists(f"{self.output_dir}/inserts/PersonGuarantee.csv"):
+            raise ValueError(f"{self.output_dir}/inserts/PersonGuarantee.csv not existed")
+        Path(f"{self.output_dir}/readwrites").mkdir(parents=True, exist_ok=True)
+        self.create_rw12()
+        self.create_rw3()
+
+    def create_rw12(self):
+        print(f"===== Creating read write 1&&2 =====")
+        self.run_sql("readwrite12.sql", "null")
+        os.remove(f"{self.output_dir}/inserts/Transfer.csv")
+
+    def create_rw3(self):
+        print(f"===== Creating read write 3 =====")
+        self.run_sql("readwrite3.sql", "null")
+        os.remove(f"{self.output_dir}/inserts/PersonGuarantee.csv")
 
 
 if __name__ == "__main__":
@@ -121,9 +147,10 @@ if __name__ == "__main__":
                                        tz=ZoneInfo('GMT'))
 
     start = time.time()
-    USC = UpdateStreamCreator(args.raw_format, args.raw_dir, args.output_dir, threshold, end_date)
-    USC.create_snapshot()
-    USC.create_upstream()
+    transformer = Transformer(args.raw_format, args.raw_dir, args.output_dir, threshold, end_date)
+    transformer.create_snapshot()
+    transformer.create_writes()
+    transformer.create_readwrites()
     end = time.time()
     duration = end - start
     print(f"Total duration: {duration:.4f} seconds")
