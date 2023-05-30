@@ -11,6 +11,7 @@ import org.apache.spark.sql.functions.{col, date_format, date_trunc, from_unixti
 import scopt.OptionParser
 import shapeless.lens
 
+// Note: transformation is not used now. Data conversion is done by python scripts.
 object TransformationStage extends DatagenStage with Logging {
   private val options: Map[String, String] = Map("header" -> "true", "delimiter" -> "|")
 
