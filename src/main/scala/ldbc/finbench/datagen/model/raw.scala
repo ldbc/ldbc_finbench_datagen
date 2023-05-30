@@ -39,6 +39,7 @@ object raw {
   // define Loan entity
   case class LoanRaw(
       id: Long,
+      createTime: Long,
       loanAmount: Double,
       balance: Double
   )
@@ -85,15 +86,15 @@ object raw {
 
   // define PersonGuaranteePerson relationship
   case class PersonGuaranteePersonRaw(
-      from: Long,
-      to: Long,
+      fromId: Long,
+      toId: Long,
       createTime: Long
   )
 
   // define CompanyGuarantee relationship
   case class CompanyGuaranteeCompanyRaw(
-      from: Long,
-      to: Long,
+      fromId: Long,
+      toId: Long,
       createTime: Long
   )
 
@@ -117,8 +118,8 @@ object raw {
 
   // define Transfer relationship
   case class TransferRaw(
-      `fromId`: Long,
-      `toId`: Long,
+      fromId: Long,
+      toId: Long,
       multiplicityId: Long,
       createTime: Long,
       deleteTime: Long,
@@ -128,8 +129,8 @@ object raw {
 
   // define Withdraw relationship
   case class WithdrawRaw(
-      `fromId`: Long,
-      `toId`: Long,
+      fromId: Long,
+      toId: Long,
       fromType: String,
       toType: String,
       multiplicityId: Long,

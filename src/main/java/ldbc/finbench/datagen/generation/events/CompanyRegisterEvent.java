@@ -29,8 +29,7 @@ public class CompanyRegisterEvent implements Serializable {
             // Each company has at least one account
             for (int i = 0; i < Math.max(1, numAccounts); i++) {
                 Account account = accountGenerator.generateAccount(company.getCreationDate(), "company", blockId);
-                CompanyOwnAccount.createCompanyOwnAccount(
-                    randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_OWN_ACCOUNT_DATE), company, account);
+                CompanyOwnAccount.createCompanyOwnAccount(company, account, account.getCreationDate());
             }
         });
 
