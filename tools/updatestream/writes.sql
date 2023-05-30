@@ -11,7 +11,7 @@ FROM Person
 WHERE Person.createTime > :start_date_long
 ORDER BY Person.createTime
 )
-TO ':output_dir/inserts/AddPerson.parquet' (FORMAT 'parquet');
+TO ':output_dir/inserts/AddPerson.parquet';
 
 --- Insert 2: add a company
 COPY (
@@ -25,7 +25,7 @@ FROM Company
 WHERE Company.createTime > :start_date_long
 ORDER BY Company.createTime
 )
-TO ':output_dir/inserts/AddCompany.parquet' (FORMAT 'parquet');
+TO ':output_dir/inserts/AddCompany.parquet';
 
 
 --- Insert 3: person registers account
@@ -42,7 +42,7 @@ WHERE Person.id == PersonOwnAccount.personId
   AND PersonOwnAccount.createTime > :start_date_long
 ORDER BY PersonOwnAccount.createTime
 )
-TO ':output_dir/inserts/PersonRegister.parquet' (FORMAT 'parquet');
+TO ':output_dir/inserts/PersonRegister.parquet';
 
 --- Insert 4: company registers account
 COPY (
@@ -58,7 +58,7 @@ WHERE Company.id == CompanyOwnAccount.companyId
   AND CompanyOwnAccount.createTime > :start_date_long
 ORDER BY CompanyOwnAccount.createTime
 )
-TO ':output_dir/inserts/CompanyRegister.parquet' (FORMAT 'parquet');
+TO ':output_dir/inserts/CompanyRegister.parquet';
 
 --- Insert 5: person invests company
 COPY (
@@ -74,7 +74,7 @@ WHERE PersonInvest.createTime > :start_date_long
     AND Company.id == PersonInvest.companyId
 ORDER BY PersonInvest.createTime
 )
-TO ':output_dir/inserts/PersonInvest.parquet' (FORMAT 'parquet');
+TO ':output_dir/inserts/PersonInvest.parquet';
 
 --- Insert 6: company invests company
 COPY (
@@ -90,37 +90,37 @@ WHERE CompanyInvest.createTime > :start_date_long
     AND Company2.id == CompanyInvest.companyId
 ORDER BY CompanyInvest.createTime
 )
-TO ':output_dir/inserts/CompanyInvest.parquet' (FORMAT 'parquet');
+TO ':output_dir/inserts/CompanyInvest.parquet';
 
 --- Insert 7: person guarantees person
 COPY (
 SELECT
     PersonGuarantee.createTime,
     GREATEST(Person1.createTime, Person2.createTime) AS dependencyTime,
-    PersonGuarantee.from,
-    PersonGuarantee.to
+    PersonGuarantee.fromId,
+    PersonGuarantee.toId
 FROM PersonGuarantee, Person AS Person1, Person AS Person2
 WHERE PersonGuarantee.createTime > :start_date_long
-    AND Person1.id == PersonGuarantee.from
-    AND Person2.id == PersonGuarantee.to
+    AND Person1.id == PersonGuarantee.fromId
+    AND Person2.id == PersonGuarantee.toId
 ORDER BY PersonGuarantee.createTime
 )
-TO ':output_dir/inserts/PersonGuarantee.parquet' (FORMAT 'parquet');
+TO ':output_dir/inserts/PersonGuarantee.parquet';
 
 --- Insert 8: company guarantees company
 COPY (
 SELECT
     CompanyGuarantee.createTime,
     GREATEST(Company1.createTime, Company2.createTime) AS dependencyTime,
-    CompanyGuarantee.from,
-    CompanyGuarantee.to
+    CompanyGuarantee.fromId,
+    CompanyGuarantee.toId
 FROM CompanyGuarantee, Company AS Company1, Company AS Company2
 WHERE CompanyGuarantee.createTime > :start_date_long
-    AND Company1.id == CompanyGuarantee.from
-    AND Company2.id == CompanyGuarantee.to
+    AND Company1.id == CompanyGuarantee.fromId
+    AND Company2.id == CompanyGuarantee.toId
 ORDER BY CompanyGuarantee.createTime
 )
-TO ':output_dir/inserts/CompanyGuarantee.parquet' (FORMAT 'parquet');
+TO ':output_dir/inserts/CompanyGuarantee.parquet';
 
 --- Insert 9: person applies loan
 COPY (
@@ -135,7 +135,7 @@ WHERE PersonApplyLoan.createTime > :start_date_long
     AND PersonApplyLoan.loanId == Loan.id
 ORDER BY PersonApplyLoan.createTime
 )
-TO ':output_dir/inserts/PersonApplyLoan.parquet' (FORMAT 'parquet');
+TO ':output_dir/inserts/PersonApplyLoan.parquet';
 
 --- Insert 10: company applies loan
 COPY (
@@ -150,7 +150,7 @@ WHERE CompanyApplyLoan.createTime > :start_date_long
     AND CompanyApplyLoan.loanId == Loan.id
 ORDER BY CompanyApplyLoan.createTime
 )
-TO ':output_dir/inserts/CompanyApplyLoan.parquet' (FORMAT 'parquet');
+TO ':output_dir/inserts/CompanyApplyLoan.parquet';
 
 --- Insert 11: Add medium
 COPY (
@@ -164,7 +164,7 @@ FROM Medium
 WHERE Medium.createTime > :start_date_long
 ORDER BY Medium.createTime
     )
-TO ':output_dir/inserts/Medium.parquet' (FORMAT 'parquet');
+TO ':output_dir/inserts/Medium.parquet';
 
 --- Insert 12: medium signs in account
 COPY (
@@ -179,7 +179,7 @@ WHERE SignIn.createTime > :start_date_long
     AND Account.id == SignIn.accountId
 ORDER BY SignIn.createTime
 )
-TO ':output_dir/inserts/SignIn.parquet' (FORMAT 'parquet');
+TO ':output_dir/inserts/SignIn.parquet';
 
 --- Insert 13: transfer
 COPY (
@@ -210,7 +210,7 @@ WHERE LoanTransfer.createTime > :start_date_long
 )
 ORDER BY createTime
 )
-TO ':output_dir/inserts/Transfer.parquet' (FORMAT 'parquet');
+TO ':output_dir/inserts/Transfer.parquet';
 
 --- Insert 14: withdraw
 COPY (
@@ -226,7 +226,7 @@ WHERE Withdraw.createTime > :start_date_long
     AND Acc2.id == Withdraw.toId
 ORDER BY Withdraw.createTime
 )
-TO ':output_dir/inserts/Withdraw.parquet' (FORMAT 'parquet');
+TO ':output_dir/inserts/Withdraw.parquet';
 
 --- Insert 15: Deposits
 COPY (
@@ -242,7 +242,7 @@ WHERE Deposit.createTime > :start_date_long
     AND Loan.id == Deposit.loanId
 ORDER BY Deposit.createTime
 )
-TO ':output_dir/inserts/Deposit.parquet' (FORMAT 'parquet');
+TO ':output_dir/inserts/Deposit.parquet';
 
 --- Insert 16: Deposits
 COPY (
@@ -258,7 +258,7 @@ WHERE Repay.createTime > :start_date_long
     AND Loan.id == Repay.loanId
 ORDER BY Repay.createTime
 )
-TO ':output_dir/inserts/Repay.parquet' (FORMAT 'parquet');
+TO ':output_dir/inserts/Repay.parquet';
 
 
 -- Delete 1: delete an account
@@ -267,4 +267,4 @@ COPY (SELECT deleteTime, createTime as dependentDate, id
       WHERE deleteTime > :start_date_long
         AND isExplicitDeleted = true
       ORDER BY deleteTime ASC)
-TO ':output_dir/deletes/Account.parquet' (FORMAT 'parquet');
+TO ':output_dir/deletes/Account.parquet';
