@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-FILE: create_update_streams.py
+FILE: convert_data.py
 DESC: Creates the update streams for LDBC FinBench Transaction using the raw parquet files
 """
 import argparse
@@ -17,7 +17,7 @@ import duckdb
 
 class UpdateStreamCreator:
 
-    def __init__(self, raw_format, raw_dir, output_dir, start_date, end_date, batch_size_in_days):
+    def __init__(self, raw_format, raw_dir, output_dir, start_date, end_date):
         """
         Args:
             - raw_format (str): The format of the raw files (e.g. 'parquet', 'raw')
@@ -33,7 +33,6 @@ class UpdateStreamCreator:
         self.output_dir = output_dir
         self.start_date = start_date
         self.end_date = end_date
-        self.batch_size_in_days = batch_size_in_days
         self.database_name = 'finbench.duckdb'
 
         Path(self.database_name).unlink(missing_ok=True)  # Remove original file
@@ -111,13 +110,6 @@ if __name__ == "__main__":
         type=str,
         required=True
     )
-    parser.add_argument(
-        '--batch_size_in_days',
-        help="batch_size_in_days: The amount of days in a batch",
-        type=int,
-        default=1,
-        required=False
-    )
     args = parser.parse_args()
 
     # Determine date boundaries
@@ -129,8 +121,7 @@ if __name__ == "__main__":
                                        tz=ZoneInfo('GMT'))
 
     start = time.time()
-    USC = UpdateStreamCreator(args.raw_format, args.raw_dir, args.output_dir, threshold, end_date,
-                              args.batch_size_in_days)
+    USC = UpdateStreamCreator(args.raw_format, args.raw_dir, args.output_dir, threshold, end_date)
     USC.create_snapshot()
     USC.create_upstream()
     end = time.time()
