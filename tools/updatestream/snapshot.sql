@@ -1,7 +1,11 @@
 
 --- Person
 COPY (
-SELECT id, name, isBlocked, createTime
+SELECT
+    Person.id AS personId,
+    Person.name AS personName,
+    Person.isBlocked AS isBlocked,
+    epoch_ms(Person.createTime) AS createTime
 FROM Person
 WHERE Person.createTime <= :start_date_long
 ORDER BY Person.createTime
@@ -10,7 +14,11 @@ TO ':output_dir/snapshot/Person.:output_format';
 
 --- Company
 COPY (
-SELECT id, name, isBlocked, createTime
+SELECT
+    Company.id AS companyId,
+    Company.name AS companyName,
+    Company.isBlocked AS isBlocked,
+    epoch_ms(Company.createTime) AS createTime
 FROM Company
 WHERE Company.createTime <= :start_date_long
 ORDER BY Company.createTime
@@ -19,7 +27,11 @@ TO ':output_dir/snapshot/Company.:output_format';
 
 -- Account. It has deletes.
 COPY (
-SELECT id, createTime, isBlocked, type, createTime
+SELECT
+    Account.id AS accountId,
+    epoch_ms(Account.createTime) AS createTime,
+    Account.isBlocked AS isBlocked,
+    Account.type AS accoutType
 FROM Account
 WHERE Account.createTime <= :start_date_long AND Account.deleteTime > :start_date_long
 ORDER BY Account.createTime
@@ -28,16 +40,24 @@ TO ':output_dir/snapshot/Account.:output_format';
 
 -- Loan.
 COPY (
-SELECT id, loanAmount, balance, createTime
+SELECT
+    Loan.id AS loanId,
+    Loan.loanAmount AS loanAmount,
+    Loan.balance AS balance,
+    epoch_ms(Loan.createTime) AS createTime
 FROM Loan
 WHERE Loan.createTime <= :start_date_long
 ORDER BY Loan.createTime
-    )
+)
 TO ':output_dir/snapshot/Loan.:output_format';
 
 -- Medium.
 COPY (
-SELECT id, type, isBlocked, createTime
+SELECT
+    Medium.id AS mediumId,
+    Medium.type AS mediumType,
+    Medium.isBlocked AS isBlocked,
+    epoch_ms(Medium.createTime) AS createTime
 FROM Medium
 WHERE Medium.createTime <= :start_date_long
 ORDER BY Medium.createTime
@@ -46,7 +66,11 @@ TO ':output_dir/snapshot/Medium.:output_format';
 
 -- Transfer. It has deletes.
 COPY (
-SELECT fromId, toId, createTime, amount
+SELECT
+    Transfer.fromId AS fromId,
+    Transfer.toId AS toId,
+    Transfer.amount AS amount,
+    epoch_ms(Transfer.createTime) AS createTime
 FROM Transfer
 WHERE Transfer.createTime <= :start_date_long AND Transfer.deleteTime > :start_date_long
 ORDER BY Transfer.createTime
@@ -55,7 +79,11 @@ TO ':output_dir/snapshot/Transfer.:output_format';
 
 -- Withdraw. It has deletes.
 COPY (
-SELECT fromId, toId, createTime, amount
+SELECT
+    Withdraw.fromId AS fromId,
+    Withdraw.toId AS toId,
+    Withdraw.amount AS amount,
+    epoch_ms(Withdraw.createTime) AS createTime
 FROM Withdraw
 WHERE Withdraw.createTime <= :start_date_long AND Withdraw.deleteTime > :start_date_long
 ORDER BY Withdraw.createTime
@@ -64,7 +92,11 @@ TO ':output_dir/snapshot/Withdraw.:output_format';
 
 -- Repay. It has deletes.
 COPY (
-SELECT accountId, loanId, createTime, amount
+SELECT
+    Repay.accountId AS accountId,
+    Repay.loanId AS loanId,
+    Repay.amount AS amount,
+    epoch_ms(Repay.createTime) AS createTime
 FROM Repay
 WHERE Repay.createTime <= :start_date_long AND Repay.deleteTime > :start_date_long
 ORDER BY Repay.createTime
@@ -73,7 +105,11 @@ TO ':output_dir/snapshot/Repay.:output_format';
 
 -- Deposit. It has deletes.
 COPY (
-SELECT loanId, accountId, createTime, amount
+SELECT
+    Deposit.loanId AS loanId,
+    Deposit.accountId AS accountId,
+    Deposit.amount AS amount,
+    epoch_ms(Deposit.createTime) AS createTime
 FROM Deposit
 WHERE Deposit.createTime <= :start_date_long AND Deposit.deleteTime > :start_date_long
 ORDER BY Deposit.createTime
@@ -82,7 +118,10 @@ TO ':output_dir/snapshot/Deposit.:output_format';
 
 -- SignIn. It has deletes.
 COPY (
-SELECT mediumId, accountId, createTime
+SELECT
+    SignIn.mediumId AS mediumId,
+    SignIn.accountId AS accountId,
+    epoch_ms(SignIn.createTime) AS createTime
 FROM SignIn
 WHERE SignIn.createTime <= :start_date_long AND SignIn.deleteTime > :start_date_long
 ORDER BY SignIn.createTime
@@ -91,7 +130,11 @@ TO ':output_dir/snapshot/MediumSignInAccount.:output_format';
 
 -- PersonInvest.
 COPY (
-SELECT investorId, companyId, createTime, ratio
+SELECT
+    PersonInvest.investorId AS investorId,
+    PersonInvest.companyId AS companyId,
+    PersonInvest.ratio AS ratio,
+    epoch_ms(PersonInvest.createTime) AS createTime
 FROM PersonInvest
 WHERE PersonInvest.createTime <= :start_date_long
 ORDER BY PersonInvest.createTime
@@ -100,7 +143,11 @@ TO ':output_dir/snapshot/PersonInvestCompany.:output_format';
 
 -- CompanyInvest.
 COPY (
-SELECT investorId, companyId, createTime, ratio
+SELECT
+    CompanyInvest.investorId AS investorId,
+    CompanyInvest.companyId AS companyId,
+    CompanyInvest.ratio AS ratio,
+    epoch_ms(CompanyInvest.createTime) AS createTime
 FROM CompanyInvest
 WHERE CompanyInvest.createTime <= :start_date_long
 ORDER BY CompanyInvest.createTime
@@ -109,7 +156,10 @@ TO ':output_dir/snapshot/CompanyInvestCompany.:output_format';
 
 -- PersonApplyLoan.
 COPY (
-SELECT personId, loanId, createTime
+SELECT
+    PersonApplyLoan.personId AS personId,
+    PersonApplyLoan.loanId AS loanId,
+    epoch_ms(PersonApplyLoan.createTime) AS createTime
 FROM PersonApplyLoan
 WHERE PersonApplyLoan.createTime <= :start_date_long
 ORDER BY PersonApplyLoan.createTime
@@ -118,7 +168,10 @@ TO ':output_dir/snapshot/PersonApplyLoan.:output_format';
 
 -- CompanyApplyLoan.
 COPY (
-SELECT companyId, loanId, createTime
+SELECT
+    CompanyApplyLoan.companyId AS companyId,
+    CompanyApplyLoan.loanId AS loanId,
+    epoch_ms(CompanyApplyLoan.createTime) AS createTime
 FROM CompanyApplyLoan
 WHERE CompanyApplyLoan.createTime <= :start_date_long
 ORDER BY CompanyApplyLoan.createTime
@@ -127,7 +180,10 @@ TO ':output_dir/snapshot/CompanyApplyLoan.:output_format';
 
 -- PersonGuaranteePerson.
 COPY (
-SELECT fromId, toId, createTime
+SELECT
+    PersonGuarantee.fromId AS fromId,
+    PersonGuarantee.toId AS toId,
+    epoch_ms(PersonGuarantee.createTime) AS createTime
 FROM PersonGuarantee
 WHERE PersonGuarantee.createTime <= :start_date_long
 ORDER BY PersonGuarantee.createTime
@@ -136,7 +192,10 @@ TO ':output_dir/snapshot/PersonGuaranteePerson.:output_format';
 
 -- CompanyGuaranteeCompany.
 COPY (
-SELECT fromId, toId, createTime
+SELECT
+    CompanyGuarantee.fromId AS fromId,
+    CompanyGuarantee.toId AS toId,
+    epoch_ms(CompanyGuarantee.createTime) AS createTime
 FROM CompanyGuarantee
 WHERE CompanyGuarantee.createTime <= :start_date_long
 ORDER BY CompanyGuarantee.createTime
@@ -145,7 +204,10 @@ TO ':output_dir/snapshot/CompanyGuaranteeCompany.:output_format';
 
 -- PersonOwnAccount. It has deletes.
 COPY (
-SELECT personId, accountId, createTime
+SELECT
+    PersonOwnAccount.personId AS personId,
+    PersonOwnAccount.accountId AS accountId,
+    epoch_ms(PersonOwnAccount.createTime) AS createTime
 FROM PersonOwnAccount
 WHERE PersonOwnAccount.createTime <= :start_date_long AND PersonOwnAccount.deleteTime > :start_date_long
 ORDER BY PersonOwnAccount.createTime
@@ -154,7 +216,10 @@ TO ':output_dir/snapshot/PersonOwnAccount.:output_format';
 
 -- CompanyOwnAccount. It has deletes.
 COPY (
-SELECT companyId, accountId, createTime
+SELECT
+    CompanyOwnAccount.companyId AS companyId,
+    CompanyOwnAccount.accountId AS accountId,
+    epoch_ms(CompanyOwnAccount.createTime) AS createTime
 FROM CompanyOwnAccount
 WHERE CompanyOwnAccount.createTime <= :start_date_long AND CompanyOwnAccount.deleteTime > :start_date_long
 ORDER BY CompanyOwnAccount.createTime

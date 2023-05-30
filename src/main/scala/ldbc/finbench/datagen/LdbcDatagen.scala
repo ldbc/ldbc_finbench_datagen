@@ -141,19 +141,6 @@ object LdbcDatagen extends SparkApp with Logging {
       log.info("[Main] Starting factoring stage")
       FactorGenerationStage.run(factorArgs)
     }
-
-    val transformArgs = TransformationStage.Args(
-      outputDir = args.outputDir,
-      bulkloadPortion = args.bulkloadPortion,
-      keepImplicitDeletes = args.keepImplicitDeletes,
-      simulationStart = Dictionaries.dates.getSimulationStart,
-      simulationEnd = Dictionaries.dates.getSimulationEnd,
-      irFormat = args.irFormat,
-      format = args.format,
-      formatOptions = args.formatOptions,
-      epochMillis = args.epochMillis,
-      batchPeriod = args.batchPeriod
-    )
   }
 
 
