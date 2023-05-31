@@ -8,7 +8,6 @@ import ldbc.finbench.datagen.syntax._
 import ldbc.finbench.datagen.util.{Logging, SparkUI}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.functions.lit
 
 import scala.collection.JavaConverters._
 
@@ -16,11 +15,11 @@ import scala.collection.JavaConverters._
  * generate person and company activities
  * */
 class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit spark: SparkSession) extends Serializable with Logging {
-  private val pathPrefix:String = (sink.outputDir / "raw").toString
+  private val pathPrefix: String = (sink.outputDir / "raw").toString
 
   def writePersonWithActivities(self: RDD[Person]): Unit = {
     SparkUI.jobAsync("Write Person", "Write Person") {
-      val rawPersons = self.map { p: Person => PersonRaw(p.getPersonId, p.getCreationDate, p.getPersonName, p.isBlocked) }
+      val rawPersons = self.map { p: Person => PersonRaw(p.getPersonId, p.getCreationDate, p.getPersonName, p.isBlocked, p.getGender, p.getBirthday, p.getCountryName, p.getCityName) }
       spark.createDataFrame(rawPersons).write.format(sink.format.toString).options(options).save((pathPrefix / "person").toString)
     }
 
@@ -54,7 +53,7 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
 
   def writeCompanyWithActivities(self: RDD[Company]): Unit = {
     SparkUI.jobAsync("Write Company", "Write Company") {
-      val rawCompanies = self.map { c: Company => CompanyRaw(c.getCompanyId, c.getCreationDate, c.getCompanyName, c.isBlocked) }
+      val rawCompanies = self.map { c: Company => CompanyRaw(c.getCompanyId, c.getCreationDate, c.getCompanyName, c.isBlocked, c.getCountryName, c.getCityName, c.getBusiness, c.getDescription, c.getUrl) }
       spark.createDataFrame(rawCompanies).write.format(sink.format.toString).options(options).save((pathPrefix / "company").toString)
 
       val rawCompanyOwnAccount = self.flatMap { c =>
@@ -133,7 +132,7 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])(implicit s
 
   def writeLoanActivities(self: RDD[Loan], deposits: RDD[Deposit], repays: RDD[Repay], loantransfers: RDD[Transfer]): Unit = {
     SparkUI.jobAsync("Write loan", "Write Loan") {
-      val rawLoan = self.map { l: Loan => LoanRaw(l.getLoanId, l.getCreationDate, l.getLoanAmount, l.getBalance) }
+      val rawLoan = self.map { l: Loan => LoanRaw(l.getLoanId, l.getCreationDate, l.getLoanAmount, l.getBalance, l.getUsage, l.getInterestRate) }
       spark.createDataFrame(rawLoan).write.format(sink.format.toString).options(options).save((pathPrefix / "loan").toString)
 
       val rawDeposit = deposits.map { d: Deposit => DepositRaw(d.getLoan.getLoanId, d.getAccount.getAccountId, d.getCreationDate, d.getDeletionDate, d.getAmount, d.isExplicitlyDeleted) }

@@ -12,7 +12,11 @@ object raw {
       id: Long,
       createTime: Long,
       name: String,
-      isBlocked: Boolean
+      isBlocked: Boolean,
+      gender: String,
+      birthday: Long,
+      country: String,
+      city: String
   )
 
   // define Account entity
@@ -33,7 +37,12 @@ object raw {
       id: Long,
       createTime: Long,
       name: String,
-      isBlocked: Boolean
+      isBlocked: Boolean,
+      country: String,
+      city: String,
+      business: String,
+      description: String,
+      url: String
   )
 
   // define Loan entity
@@ -41,7 +50,9 @@ object raw {
       id: Long,
       createTime: Long,
       loanAmount: Double,
-      balance: Double
+      balance: Double,
+      usage: String,
+      interestRate: Double
   )
 
   // define Medium entity

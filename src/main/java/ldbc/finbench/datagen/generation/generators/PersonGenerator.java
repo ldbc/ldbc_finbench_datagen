@@ -36,7 +36,7 @@ public class PersonGenerator {
         person.setPersonName(personname);
         // Set blocked to false by default
         person.setBlocked(false);
-        // Set gender
+        // Set gender TODO: add ranker related with person name
         person.setGender((randomFarm.get(RandomGeneratorFarm.Aspect.GENDER).nextDouble() > 0.5) ? (byte) 1 : (byte) 0);
         // Set birthday
         long birthday = Dictionaries.dates.randomPersonBirthday(randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_BIRTHDAY));

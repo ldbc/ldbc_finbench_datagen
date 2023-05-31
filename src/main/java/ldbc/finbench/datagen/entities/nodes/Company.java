@@ -7,6 +7,7 @@ import ldbc.finbench.datagen.entities.edges.CompanyApplyLoan;
 import ldbc.finbench.datagen.entities.edges.CompanyGuaranteeCompany;
 import ldbc.finbench.datagen.entities.edges.CompanyInvestCompany;
 import ldbc.finbench.datagen.entities.edges.CompanyOwnAccount;
+import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 
 public class Company implements Serializable {
     private long companyId;
@@ -137,7 +138,6 @@ public class Company implements Serializable {
         isBlocked = blocked;
     }
 
-
     public List<Account> getAccounts() {
         return accounts;
     }
@@ -154,10 +154,12 @@ public class Company implements Serializable {
         this.loans = loans;
     }
 
-
-
     public int getCountryId() {
         return countryId;
+    }
+
+    public String getCountryName() {
+        return Dictionaries.places.getPlaceName(countryId);
     }
 
     public void setCountryId(int countryId) {
@@ -166,6 +168,10 @@ public class Company implements Serializable {
 
     public int getCityId() {
         return cityId;
+    }
+
+    public String getCityName() {
+        return Dictionaries.places.getPlaceName(cityId);
     }
 
     public void setCityId(int cityId) {

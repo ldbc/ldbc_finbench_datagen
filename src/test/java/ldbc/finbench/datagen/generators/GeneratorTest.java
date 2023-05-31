@@ -15,10 +15,12 @@ import ldbc.finbench.datagen.entities.nodes.Person;
 import ldbc.finbench.datagen.generation.DatagenContext;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.generation.generators.PersonGenerator;
+import net.andreinc.mockneat.unit.text.Markovs;
 import org.junit.Test;
 
 public class GeneratorTest {
     Map<String, String> config;
+    Markovs mk = markovs();
 
     public GeneratorTest() {
         config = ConfigParser.readConfig("src/main/resources/params_default.ini");
@@ -36,7 +38,7 @@ public class GeneratorTest {
     @Test
     public void testMockneat() {
         for (int i = 0; i < 10; i++) {
-            System.out.println(markovs().size(200).type(KAFKA).get());
+            System.out.println(mk.size(200).type(KAFKA).get()+"\n");
         }
         for (int i = 0; i < 10; i++) {
             System.out.println(

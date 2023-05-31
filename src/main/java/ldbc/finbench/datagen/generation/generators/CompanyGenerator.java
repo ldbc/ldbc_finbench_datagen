@@ -3,8 +3,8 @@ package ldbc.finbench.datagen.generation.generators;
 import static net.andreinc.mockneat.types.enums.DomainSuffixType.POPULAR;
 import static net.andreinc.mockneat.types.enums.HostNameType.ADVERB_VERB;
 import static net.andreinc.mockneat.types.enums.MarkovChainType.KAFKA;
-import static net.andreinc.mockneat.types.enums.MarkovChainType.LOREM_IPSUM;
 import static net.andreinc.mockneat.types.enums.URLSchemeType.HTTP;
+import static net.andreinc.mockneat.types.enums.URLSchemeType.HTTPS;
 import static net.andreinc.mockneat.unit.networking.URLs.urls;
 import static net.andreinc.mockneat.unit.text.Markovs.markovs;
 
@@ -13,13 +13,19 @@ import ldbc.finbench.datagen.entities.nodes.Company;
 import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
+import net.andreinc.mockneat.unit.networking.URLs;
+import net.andreinc.mockneat.unit.text.Markovs;
 
 public class CompanyGenerator {
     private final RandomGeneratorFarm randomFarm;
+    private final Markovs descriptionGenerator;
+    private final URLs urlGenerator;
     private int nextId = 0;
 
     public CompanyGenerator() {
         this.randomFarm = new RandomGeneratorFarm();
+        this.descriptionGenerator = markovs();
+        this.urlGenerator = urls();
     }
 
     private long composeCompanyId(long id, long date) {
@@ -53,11 +59,11 @@ public class CompanyGenerator {
         company.setBusiness(Dictionaries.businessTypes.getUniformDistRandomType(randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_BUSINESS)));
 
         // Set description TODO: use a better description
-        String descrption = markovs().size(DatagenParams.companyDescriptionMaxLength).type(KAFKA).get();
+        String descrption = descriptionGenerator.size(DatagenParams.companyDescriptionMaxLength).type(KAFKA).get();
         company.setDescription(descrption);
 
         // Set url
-        String url = urls().scheme(HTTP).domain(POPULAR).host(ADVERB_VERB).get();
+        String url = urlGenerator.scheme(HTTPS).domain(POPULAR).host(ADVERB_VERB).get();
         company.setUrl(url);
 
         // Set blocked to false by default

@@ -2,13 +2,12 @@ package ldbc.finbench.datagen.entities.nodes;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import ldbc.finbench.datagen.entities.edges.PersonApplyLoan;
 import ldbc.finbench.datagen.entities.edges.PersonGuaranteePerson;
 import ldbc.finbench.datagen.entities.edges.PersonInvestCompany;
 import ldbc.finbench.datagen.entities.edges.PersonOwnAccount;
-import ldbc.finbench.datagen.entities.edges.WorkIn;
+import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 
 public class Person implements Serializable {
     private long personId;
@@ -153,8 +152,8 @@ public class Person implements Serializable {
         this.loans = loans;
     }
 
-    public byte getGender() {
-        return gender;
+    public String getGender() {
+        return (gender == (byte) 1) ? "male" : "female";
     }
 
     public void setGender(byte gender) {
@@ -170,7 +169,6 @@ public class Person implements Serializable {
     }
 
 
-
     public int getCountryId() {
         return countryId;
     }
@@ -179,11 +177,19 @@ public class Person implements Serializable {
         this.countryId = countryId;
     }
 
+    public String getCountryName() {
+        return Dictionaries.places.getPlaceName(countryId);
+    }
+
     public int getCityId() {
         return cityId;
     }
 
     public void setCityId(int cityId) {
         this.cityId = cityId;
+    }
+
+    public String getCityName() {
+        return Dictionaries.places.getPlaceName(cityId);
     }
 }
