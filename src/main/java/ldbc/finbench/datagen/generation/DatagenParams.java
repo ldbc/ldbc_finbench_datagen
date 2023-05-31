@@ -19,6 +19,8 @@ public class DatagenParams {
     public static final String inDegreeRegressionFile = DISTRIBUTION_DIR + "inDegreeRegression.txt";
     public static final String outDegreeRegressionFile = DISTRIBUTION_DIR + "outDegreeRegression.txt";
     public static final String multiplictyPowerlawRegFile = DISTRIBUTION_DIR + "multiplicityPowerlawRegression.txt";
+    public static final String countryDictionaryFile = DICTIONARY_DIR + "dicLocations.txt";
+    public static final String cityDictionaryFile = DICTIONARY_DIR + "citiesByCountry.txt";
 
     public static int defaultSeed = 0;
     public static String outputDir;

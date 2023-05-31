@@ -10,6 +10,7 @@ public class Dictionaries {
     public static MediumNameDictionary mediumNames = null;
     public static AccountTypeDictionary accountTypes = null;
     public static DateGenerator dates = null;
+    public static PlaceDictionary places = null;
 
     public static void loadDictionaries() {
         personNames = new PersonNameDictionary();
@@ -21,6 +22,7 @@ public class Dictionaries {
             LocalDateTime.of(DatagenParams.startYear, 1, 1, 0, 0, 0),
             LocalDateTime.of(DatagenParams.startYear + DatagenParams.numYears, 1, 1, 0, 0, 0)
         );
+        places = new PlaceDictionary();
     }
 
 }

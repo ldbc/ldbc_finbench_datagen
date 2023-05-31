@@ -17,7 +17,8 @@ public class Person implements Serializable {
     private boolean isBlocked;
     private byte gender;
     private long birthday;
-    private String location;
+    private int countryId;
+    private int cityId;
     private List<Account> accounts;
     private List<Loan> loans;
     private List<PersonOwnAccount> personOwnAccounts;
@@ -168,11 +169,21 @@ public class Person implements Serializable {
         this.birthday = birthday;
     }
 
-    public String getLocation() {
-        return location;
+
+
+    public int getCountryId() {
+        return countryId;
     }
 
-    public void setLocation(String location) {
-        this.location = location;
+    public void setCountryId(int countryId) {
+        this.countryId = countryId;
+    }
+
+    public int getCityId() {
+        return cityId;
+    }
+
+    public void setCityId(int cityId) {
+        this.cityId = cityId;
     }
 }

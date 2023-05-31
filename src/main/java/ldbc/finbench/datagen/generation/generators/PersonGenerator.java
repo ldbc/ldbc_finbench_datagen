@@ -43,6 +43,10 @@ public class PersonGenerator {
         // Set birthday
         long birthday = Dictionaries.dates.randomPersonBirthday(randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_BIRTHDAY));
         person.setBirthday(birthday);
+        // Set country and city
+        int countryId = Dictionaries.places.getCountryForPerson(randomFarm.get(RandomGeneratorFarm.Aspect.COUNTRY));
+        person.setCountryId(countryId);
+        person.setCityId(Dictionaries.places.getRandomCity(randomFarm.get(RandomGeneratorFarm.Aspect.CITY), countryId));
 
         return person;
     }
