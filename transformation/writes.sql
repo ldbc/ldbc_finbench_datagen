@@ -26,7 +26,7 @@ ORDER BY Company.createTime )
 TO ':output_dir/inserts/AddCompany.:output_format';
 
 
---- Insert 3: person registers account
+--- Insert 3: person own account
 COPY
 (
 SELECT PersonOwnAccount.createTime AS createTime,
@@ -43,7 +43,7 @@ WHERE Person.id == PersonOwnAccount.personId
   AND PersonOwnAccount.createTime > :start_date_long
 ORDER BY PersonOwnAccount.createTime
     )
-    TO ':output_dir/inserts/AddPersonRegisterAccount.:output_format';
+    TO ':output_dir/inserts/AddPersonOwnAccount.:output_format';
 
 --- Insert 4: company registers account
 COPY
@@ -62,7 +62,7 @@ WHERE Company.id == CompanyOwnAccount.companyId
   AND CompanyOwnAccount.createTime > :start_date_long
 ORDER BY CompanyOwnAccount.createTime
     )
-    TO ':output_dir/inserts/AddCompanyRegisterAccount.:output_format';
+    TO ':output_dir/inserts/AddCompanyOwnAccount.:output_format';
 
 --- Insert 5: person invests company
 COPY
@@ -115,7 +115,7 @@ WHERE PersonGuarantee.createTime > :start_date_long
     AND Person2.id == PersonGuarantee.toId
 ORDER BY PersonGuarantee.createTime
     )
-    TO ':output_dir/inserts/AddPersonGuaranteePerson.:output_format';
+    TO ':output_dir/inserts/AddPersonGuaranteePersonAll.:output_format';
 
 --- Insert 8: company guarantees company
 COPY
@@ -232,7 +232,7 @@ WHERE LoanTransfer.createTime > :start_date_long
 )
 ORDER BY createTime
 )
-TO ':output_dir/inserts/AddAccountTransferAccount.:output_format';
+TO ':output_dir/inserts/AddAccountTransferAccountAll.:output_format';
 
 --- Insert 14: withdraw
 COPY

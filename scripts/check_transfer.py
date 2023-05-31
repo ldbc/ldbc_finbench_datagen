@@ -59,7 +59,7 @@ def draw_degree(inDegrees, outDegrees):
 
 # You can use this script to check if the in-degree and out-degree of each account is correct
 if __name__ == "__main__":
-    allTransferEdges = readAllEdges("./out/transfer/*.csv")
+    allTransferEdges = readAllEdges("./out/raw/transfer/*.csv")
 
     in_degrees = allTransferEdges.groupBy("toId").count().withColumnRenamed("count", "in_degree")
     out_degrees = allTransferEdges.groupBy("fromId").count().withColumnRenamed("count", "out_degree")

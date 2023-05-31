@@ -4,7 +4,7 @@
 CREATE
 OR REPLACE VIEW TransferInsertsAll AS
 SELECT *
-FROM read_csv_auto(':output_dir/inserts/AddAccountTransferAccount.csv', delim = '|', header = TRUE);
+FROM read_csv_auto(':output_dir/inserts/AddAccountTransferAccountAll.csv', delim = '|', header = TRUE);
 
 -- sample for read writes
 CREATE
@@ -21,7 +21,7 @@ WHERE NOT EXISTS(SELECT *
                    AND TransferInsertsAll.fromId = TransferReadWrites.fromId
                    AND TransferInsertsAll.toId = TransferReadWrites.toId)
 ORDER BY TransferInsertsAll.createTime )
-TO ':output_dir/inserts/AddAccountTransferAccountInserts.csv' (DELIMITER '|', HEADER);
+TO ':output_dir/inserts/AddAccountTransferAccount.csv' (DELIMITER '|', HEADER);
 
 
 -- Read Write 1 Raw
@@ -52,7 +52,7 @@ SELECT TransferReadWrite1.*,
        :truncation_limit                                AS TRUNCATION_LIMIT,
        ':truncation_order'                              AS TRUNCATION_ORDER
 FROM TransferReadWrite1 )
-TO ':output_dir/readwrites/AccountTransferAccountReadWrite1.csv' (DELIMITER '|', HEADER);
+TO ':output_dir/readwrites/AddAccountTransferAccountReadWrite1.csv' (DELIMITER '|', HEADER);
 
 -- Read Write 2 output
 COPY
@@ -63,4 +63,4 @@ SELECT TransferReadWrite2.*,
        :truncation_limit                                AS TRUNCATION_LIMIT,
        ':truncation_order'                              AS TRUNCATION_ORDER
 FROM TransferReadWrite2 )
-TO ':output_dir/readwrites/AccountTransferAccountReadWrite2.csv' (DELIMITER '|', HEADER);
+TO ':output_dir/readwrites/AddAccountTransferAccountReadWrite2.csv' (DELIMITER '|', HEADER);
