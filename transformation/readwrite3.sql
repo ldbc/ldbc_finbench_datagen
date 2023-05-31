@@ -33,4 +33,4 @@ SELECT PGPReadWrite3.*,
        :truncation_limit                           AS TRUNCATION_LIMIT,
        ':truncation_order'                         AS TRUNCATION_ORDER
 FROM PGPReadWrite3 )
-TO ':output_dir/readwrites/PGPReadWrite3.csv' (DELIMITER '|', HEADER);
+TO ':output_dir/readwrites/PersonGuaranteePersonReadWrite3.csv' (DELIMITER '|', HEADER);
