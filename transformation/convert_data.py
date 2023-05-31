@@ -96,10 +96,10 @@ class Transformer:
         self.run_sql("writes.sql", "csv")
 
     def create_readwrites(self):
-        if not os.path.exists(f"{self.output_dir}/inserts/Transfer.csv"):
-            raise ValueError(f"{self.output_dir}/inserts/Transfer.csv not existed")
-        if not os.path.exists(f"{self.output_dir}/inserts/PersonGuarantee.csv"):
-            raise ValueError(f"{self.output_dir}/inserts/PersonGuarantee.csv not existed")
+        if not os.path.exists(f"{self.output_dir}/inserts/AddAccountTransferAccount.csv"):
+            raise ValueError(f"{self.output_dir}/inserts/AddAccountTransferAccount.csv not existed")
+        if not os.path.exists(f"{self.output_dir}/inserts/AddPersonGuaranteePerson.csv"):
+            raise ValueError(f"{self.output_dir}/inserts/AddPersonGuaranteePerson.csv not existed")
         Path(f"{self.output_dir}/readwrites").mkdir(parents=True, exist_ok=True)
         self.create_rw12()
         self.create_rw3()
@@ -107,12 +107,12 @@ class Transformer:
     def create_rw12(self):
         print(f"===== Creating read write 1&&2 =====")
         self.run_sql("readwrite12.sql", "null")
-        os.remove(f"{self.output_dir}/inserts/Transfer.csv")
+        os.remove(f"{self.output_dir}/inserts/AddAccountTransferAccount.csv")
 
     def create_rw3(self):
         print(f"===== Creating read write 3 =====")
         self.run_sql("readwrite3.sql", "null")
-        os.remove(f"{self.output_dir}/inserts/PersonGuarantee.csv")
+        os.remove(f"{self.output_dir}/inserts/AddPersonGuaranteePerson.csv")
 
 
 if __name__ == "__main__":

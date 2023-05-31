@@ -4,7 +4,7 @@
 CREATE
 OR REPLACE VIEW TransferInsertsAll AS
 SELECT *
-FROM read_csv_auto(':output_dir/inserts/Transfer.csv', delim = '|', header = TRUE);
+FROM read_csv_auto(':output_dir/inserts/AddAccountTransferAccount.csv', delim = '|', header = TRUE);
 
 -- sample for read writes
 CREATE
@@ -21,7 +21,7 @@ WHERE NOT EXISTS(SELECT *
                    AND TransferInsertsAll.fromId = TransferReadWrites.fromId
                    AND TransferInsertsAll.toId = TransferReadWrites.toId)
 ORDER BY TransferInsertsAll.createTime )
-TO ':output_dir/inserts/TransferInserts.csv' (DELIMITER '|', HEADER);
+TO ':output_dir/inserts/AddAccountTransferAccountInserts.csv' (DELIMITER '|', HEADER);
 
 
 -- Read Write 1 Raw
