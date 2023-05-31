@@ -1,5 +1,6 @@
 package ldbc.finbench.datagen.generation.generators;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Random;
 import ldbc.finbench.datagen.entities.nodes.Account;
@@ -29,6 +30,8 @@ public class DateGenerator {
     private final long simulationEnd;
     private final PowerLawActivityDeleteDistribution powerLawActivityDeleteDistribution;
     private final TimeDistribution timeDistribution;
+    private final long fromBirthDay;
+    private final long toBirthDay;
 
     public DateGenerator(LocalDateTime simulationStartYear, LocalDateTime simulationEndYear) {
         simulationStart = DateTimeUtils.toEpochMilli(simulationStartYear);
@@ -37,6 +40,9 @@ public class DateGenerator {
             new PowerLawActivityDeleteDistribution(DatagenParams.powerLawActivityDeleteFile);
         powerLawActivityDeleteDistribution.initialize();
         timeDistribution = new TimeDistribution(DatagenParams.hourDistributionFile);
+        // For birthday from 1980 to 1990
+        fromBirthDay = DateTimeUtils.toEpochMilli(LocalDate.of(1980, 1, 1));
+        toBirthDay = DateTimeUtils.toEpochMilli(LocalDate.of(2000, 1, 1));
     }
 
     public long randomDate(Random random, long minDate, long maxDate) {
@@ -47,6 +53,12 @@ public class DateGenerator {
 
     public Long randomPersonCreationDate(Random random) {
         return randomDate(random, simulationStart, simulationEnd);
+    }
+
+    public Long randomPersonBirthday(Random random) {
+        LocalDate date =
+            DateTimeUtils.utcDateOfEpochMilli(((long) (random.nextDouble() * (toBirthDay - fromBirthDay)) + fromBirthDay));
+        return DateTimeUtils.toEpochMilli(date);
     }
 
     public Long randomCompanyCreationDate(Random random) {

@@ -25,20 +25,24 @@ public class PersonGenerator {
 
     public Person generatePerson() {
         Person person = new Person();
-
+        // Set creation date
         long creationDate =
             Dictionaries.dates.randomPersonCreationDate(randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_DATE));
         person.setCreationDate(creationDate);
-
+        // Set person id
         long personId = composePersonId(nextId++, creationDate);
         person.setPersonId(personId);
-
+        // Set person name
         String personname =
             Dictionaries.personNames.getUniformDistRandName(randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_NAME));
         person.setPersonName(personname);
-
         // Set blocked to false by default
         person.setBlocked(false);
+        // Set gender
+        person.setGender((randomFarm.get(RandomGeneratorFarm.Aspect.GENDER).nextDouble() > 0.5) ? (byte) 1 : (byte) 0);
+        // Set birthday
+        long birthday = Dictionaries.dates.randomPersonBirthday(randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_BIRTHDAY));
+        person.setBirthday(birthday);
 
         return person;
     }

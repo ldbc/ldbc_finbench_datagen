@@ -2,6 +2,7 @@ package ldbc.finbench.datagen.entities.nodes;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import ldbc.finbench.datagen.entities.edges.PersonApplyLoan;
 import ldbc.finbench.datagen.entities.edges.PersonGuaranteePerson;
@@ -14,6 +15,9 @@ public class Person implements Serializable {
     private String personName;
     private long creationDate;
     private boolean isBlocked;
+    private byte gender;
+    private long birthday;
+    private String location;
     private List<Account> accounts;
     private List<Loan> loans;
     private List<PersonOwnAccount> personOwnAccounts;
@@ -140,8 +144,6 @@ public class Person implements Serializable {
         this.accounts = accounts;
     }
 
-
-
     public List<Loan> getLoans() {
         return loans;
     }
@@ -150,4 +152,27 @@ public class Person implements Serializable {
         this.loans = loans;
     }
 
+    public byte getGender() {
+        return gender;
+    }
+
+    public void setGender(byte gender) {
+        this.gender = gender;
+    }
+
+    public long getBirthday() {
+        return birthday;
+    }
+
+    public void setBirthday(long birthday) {
+        this.birthday = birthday;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
 }
