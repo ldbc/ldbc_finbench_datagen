@@ -52,7 +52,7 @@ SELECT TransferReadWrite1.*,
        :truncation_limit                                AS TRUNCATION_LIMIT,
        ':truncation_order'                              AS TRUNCATION_ORDER
 FROM TransferReadWrite1 )
-TO ':output_dir/readwrites/TransferReadWrite1.csv' (DELIMITER '|', HEADER);
+TO ':output_dir/readwrites/AccountTransferAccountReadWrite1.csv' (DELIMITER '|', HEADER);
 
 -- Read Write 2 output
 COPY
@@ -63,4 +63,4 @@ SELECT TransferReadWrite2.*,
        :truncation_limit                                AS TRUNCATION_LIMIT,
        ':truncation_order'                              AS TRUNCATION_ORDER
 FROM TransferReadWrite2 )
-TO ':output_dir/readwrites/TransferReadWrite2.csv' (DELIMITER '|', HEADER);
+TO ':output_dir/readwrites/AccountTransferAccountReadWrite2.csv' (DELIMITER '|', HEADER);
