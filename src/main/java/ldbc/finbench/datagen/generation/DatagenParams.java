@@ -11,6 +11,7 @@ public class DatagenParams {
     public static final String personSurnameFile = DICTIONARY_DIR + "surnames.txt";
     public static final String mediumNameFile = DICTIONARY_DIR + "mediumNames.txt";
     public static final String accountFile = DICTIONARY_DIR + "accountTypes.txt";
+    public static final String businessTypeFile = DICTIONARY_DIR + "businessTypes.txt";
     public static final String DISTRIBUTION_DIR = "/distributions/";
     public static final String fbPowerlawDegreeFile = DISTRIBUTION_DIR + "facebookPowerlawBucket.dat";
     public static final String hourDistributionFile = DISTRIBUTION_DIR + "hourDistribution.dat";
@@ -29,6 +30,7 @@ public class DatagenParams {
     public static int blockSize = 0;
     public static long deleteDelta = 0;
     public static long activityDelta = 0;
+    public static int companyDescriptionMaxLength = 0;
     public static int maxAccountsPerOwner = 0;
     public static String tsfDegreeDistribution;
     public static String tsfMultiplicityDistribution;
@@ -66,6 +68,7 @@ public class DatagenParams {
     public static long minLoanAmount = 0;
     public static long maxLoanAmount = 0;
     public static int numLoanActions = 0;
+    public static double maxLoanInterest = 0.0;
 
 
     public static void readConf(DatagenConfiguration conf) {
@@ -86,6 +89,7 @@ public class DatagenParams {
 
             blockedMediumRatio = doubleConf(conf, "medium.blockedMediumRatio");
 
+            companyDescriptionMaxLength = intConf(conf, "company.maxDescriptionLength");
             maxAccountsPerOwner = intConf(conf, "own.maxAccounts");
 
             tsfDegreeDistribution = stringConf(conf, "transfer.degreeDistribution");
@@ -119,6 +123,7 @@ public class DatagenParams {
             minLoanAmount = longConf(conf, "loan.minLoanAmount");
             maxLoanAmount = longConf(conf, "loan.maxLoanAmount");
             numLoanActions = intConf(conf, "loan.numSubEvents");
+            maxLoanInterest = doubleConf(conf, "loan.maxLoanInterest");
 
             companyInvestedFraction = doubleConf(conf, "invest.companyInvestedFraction");
             minInvestors = intConf(conf, "invest.minInvestors");

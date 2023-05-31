@@ -1,9 +1,7 @@
 package ldbc.finbench.datagen.generation.generators;
 
 import java.util.Iterator;
-import java.util.Random;
 import ldbc.finbench.datagen.entities.nodes.Person;
-import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
@@ -44,9 +42,9 @@ public class PersonGenerator {
         long birthday = Dictionaries.dates.randomPersonBirthday(randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_BIRTHDAY));
         person.setBirthday(birthday);
         // Set country and city
-        int countryId = Dictionaries.places.getCountryForPerson(randomFarm.get(RandomGeneratorFarm.Aspect.COUNTRY));
+        int countryId = Dictionaries.places.getCountryForPerson(randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_COUNTRY));
         person.setCountryId(countryId);
-        person.setCityId(Dictionaries.places.getRandomCity(randomFarm.get(RandomGeneratorFarm.Aspect.CITY), countryId));
+        person.setCityId(Dictionaries.places.getRandomCity(randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_CITY), countryId));
 
         return person;
     }

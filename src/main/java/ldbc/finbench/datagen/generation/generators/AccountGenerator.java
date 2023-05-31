@@ -17,7 +17,6 @@ import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 public class AccountGenerator implements Serializable {
     private final DegreeDistribution degreeDistribution;
     private final AccountDeleteDistribution accountDeleteDistribution;
-    private final AccountTypeDictionary accountTypeDictionary;
     private final RandomGeneratorFarm randFarm;
     private final Random blockRandom;
 
@@ -27,7 +26,6 @@ public class AccountGenerator implements Serializable {
         this.degreeDistribution.initialize();
         this.accountDeleteDistribution = new AccountDeleteDistribution(DatagenParams.accountDeleteFile);
         this.accountDeleteDistribution.initialize();
-        this.accountTypeDictionary = new AccountTypeDictionary();
         this.blockRandom = new Random(DatagenParams.defaultSeed);
     }
 
@@ -77,8 +75,7 @@ public class AccountGenerator implements Serializable {
         // Set type
         // TODO: the account type should be determined by the type of account owner. Design a ranking function
         String type =
-            Dictionaries.accountTypes.getUniformDistRandomType(randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_TYPE),
-                                                               accountTypeDictionary.getNumNames());
+            Dictionaries.accountTypes.getUniformDistRandomType(randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_TYPE));
         account.setType(type);
 
         // Set isBlocked

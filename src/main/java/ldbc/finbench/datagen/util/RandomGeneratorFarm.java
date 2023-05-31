@@ -46,8 +46,14 @@ public class RandomGeneratorFarm implements Serializable {
         ACCOUNT_WHETHER_WITHDRAW,
         GENDER,
         PERSON_BIRTHDAY,
-        COUNTRY,
-        CITY,
+        PERSON_COUNTRY,
+        PERSON_CITY,
+        COMPANY_COUNTRY,
+        COMPANY_CITY,
+        COMPANY_BUSINESS,
+        COMPANY_DESCRIPTION,
+        LOAN_INTEREST_RATE,
+        LOAN_USAGE,
         NUM_ASPECT                  // This must be always the last one.
     }
 

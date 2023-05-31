@@ -14,6 +14,11 @@ public class Company implements Serializable {
     private long creationDate;
     //    private long maxDegree;
     private boolean isBlocked;
+    private int countryId;
+    private int cityId;
+    private String business;
+    private String description;
+    private String url;
     private List<Account> accounts;
     private List<Loan> loans;
     private List<CompanyOwnAccount> companyOwnAccounts;
@@ -147,5 +152,47 @@ public class Company implements Serializable {
 
     public void setLoans(List<Loan> loans) {
         this.loans = loans;
+    }
+
+
+
+    public int getCountryId() {
+        return countryId;
+    }
+
+    public void setCountryId(int countryId) {
+        this.countryId = countryId;
+    }
+
+    public int getCityId() {
+        return cityId;
+    }
+
+    public void setCityId(int cityId) {
+        this.cityId = cityId;
+    }
+
+    public String getBusiness() {
+        return business;
+    }
+
+    public void setBusiness(String business) {
+        this.business = business;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 }

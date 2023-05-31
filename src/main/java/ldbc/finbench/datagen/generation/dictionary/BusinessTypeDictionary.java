@@ -9,15 +9,15 @@ import java.util.Random;
 import java.util.TreeMap;
 import ldbc.finbench.datagen.generation.DatagenParams;
 
-public class AccountTypeDictionary implements Serializable {
+public class BusinessTypeDictionary implements Serializable {
 
     private static final String SEPARATOR = ",";
 
-    private TreeMap<Long, String> accountTypes;
+    private TreeMap<Long, String> businessTypes;
 
-    public AccountTypeDictionary() {
-        this.accountTypes = new TreeMap<>();
-        load(DatagenParams.accountFile);
+    public BusinessTypeDictionary() {
+        this.businessTypes = new TreeMap<>();
+        load(DatagenParams.businessTypeFile);
     }
 
 
@@ -27,12 +27,12 @@ public class AccountTypeDictionary implements Serializable {
                 getClass().getResourceAsStream(filePath), StandardCharsets.UTF_8);
             BufferedReader dictionary = new BufferedReader(inputStreamReader);
             String line;
-            long totalNumAccounts = 0;
+            long totalNumBusinessTypes = 0;
             while ((line = dictionary.readLine()) != null) {
                 String[] data = line.split(SEPARATOR);
                 String accountType = data[0].trim();
-                this.accountTypes.put(totalNumAccounts, accountType);
-                totalNumAccounts++;
+                this.businessTypes.put(totalNumBusinessTypes, accountType);
+                totalNumBusinessTypes++;
             }
             dictionary.close();
         } catch (IOException e) {
@@ -41,7 +41,7 @@ public class AccountTypeDictionary implements Serializable {
     }
 
     public String getUniformDistRandomType(Random random) {
-        long nameIndex = random.nextInt(accountTypes.size());
-        return accountTypes.get(nameIndex);
+        long nameIndex = random.nextInt(businessTypes.size());
+        return businessTypes.get(nameIndex);
     }
 }

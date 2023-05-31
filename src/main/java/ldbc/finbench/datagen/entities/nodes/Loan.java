@@ -12,18 +12,23 @@ public class Loan implements Serializable, Comparable<Loan> {
     private double balance;
     private long creationDate;
     private long maxDegree;
+    private String usage;
+    private double interestRate;
     private PersonOrCompany ownerType;
     private Person ownerPerson;
     private Company ownerCompany;
     private List<Deposit> deposits;
     private List<Repay> repays;
 
-    public Loan(long loanId, double loanAmount, double balance, long creationDate, long maxDegree) {
+    public Loan(long loanId, double loanAmount, double balance, long creationDate, long maxDegree,
+                String usage, double interestRate) {
         this.loanId = loanId;
         this.loanAmount = loanAmount;
         this.balance = balance;
         this.creationDate = creationDate;
         this.maxDegree = maxDegree;
+        this.usage = usage;
+        this.interestRate = interestRate;
         deposits = new ArrayList<>();
         repays = new ArrayList<>();
     }
@@ -131,5 +136,21 @@ public class Loan implements Serializable, Comparable<Loan> {
 
     public void setOwnerCompany(Company ownerCompany) {
         this.ownerCompany = ownerCompany;
+    }
+
+    public String getUsage() {
+        return usage;
+    }
+
+    public void setUsage(String usage) {
+        this.usage = usage;
+    }
+
+    public double getInterestRate() {
+        return interestRate;
+    }
+
+    public void setInterestRate(double interestRate) {
+        this.interestRate = interestRate;
     }
 }

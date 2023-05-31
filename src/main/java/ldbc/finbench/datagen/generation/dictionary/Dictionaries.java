@@ -9,6 +9,8 @@ public class Dictionaries {
     public static CompanyNameDictionary companyNames = null;
     public static MediumNameDictionary mediumNames = null;
     public static AccountTypeDictionary accountTypes = null;
+    public static BusinessTypeDictionary businessTypes = null;
+    public static LoanUsageDictionary loanUsages = null;
     public static DateGenerator dates = null;
     public static PlaceDictionary places = null;
 
@@ -17,6 +19,8 @@ public class Dictionaries {
         companyNames = new CompanyNameDictionary();
         mediumNames = new MediumNameDictionary();
         accountTypes = new AccountTypeDictionary();
+        businessTypes = new BusinessTypeDictionary();
+        loanUsages = new LoanUsageDictionary();
 
         dates = new DateGenerator(
             LocalDateTime.of(DatagenParams.startYear, 1, 1, 0, 0, 0),
