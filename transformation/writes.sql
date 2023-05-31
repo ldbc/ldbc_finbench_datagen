@@ -42,7 +42,7 @@ WHERE Person.id == PersonOwnAccount.personId
   AND PersonOwnAccount.createTime > :start_date_long
 ORDER BY PersonOwnAccount.createTime
     )
-    TO ':output_dir/inserts/PersonRegister.:output_format';
+    TO ':output_dir/inserts/AddPersonRegisterAccount.:output_format';
 
 --- Insert 4: company registers account
 COPY
@@ -60,7 +60,7 @@ WHERE Company.id == CompanyOwnAccount.companyId
   AND CompanyOwnAccount.createTime > :start_date_long
 ORDER BY CompanyOwnAccount.createTime
     )
-    TO ':output_dir/inserts/CompanyRegister.:output_format';
+    TO ':output_dir/inserts/AddCompanyRegisterAccount.:output_format';
 
 --- Insert 5: person invests company
 COPY
@@ -78,7 +78,7 @@ WHERE PersonInvest.createTime > :start_date_long
     AND Company.id == PersonInvest.companyId
 ORDER BY PersonInvest.createTime
     )
-    TO ':output_dir/inserts/PersonInvest.:output_format';
+    TO ':output_dir/inserts/AddPersonInvestCompany.:output_format';
 
 --- Insert 6: company invests company
 COPY
@@ -96,7 +96,7 @@ WHERE CompanyInvest.createTime > :start_date_long
     AND Company2.id == CompanyInvest.companyId
 ORDER BY CompanyInvest.createTime
     )
-    TO ':output_dir/inserts/CompanyInvest.:output_format';
+    TO ':output_dir/inserts/AddCompanyInvestCompany.:output_format';
 
 --- Insert 7: person guarantees person
 COPY
@@ -113,7 +113,7 @@ WHERE PersonGuarantee.createTime > :start_date_long
     AND Person2.id == PersonGuarantee.toId
 ORDER BY PersonGuarantee.createTime
     )
-    TO ':output_dir/inserts/PersonGuarantee.:output_format';
+    TO ':output_dir/inserts/AddPersonGuaranteePerson.:output_format';
 
 --- Insert 8: company guarantees company
 COPY
@@ -130,7 +130,7 @@ WHERE CompanyGuarantee.createTime > :start_date_long
     AND Company2.id == CompanyGuarantee.toId
 ORDER BY CompanyGuarantee.createTime
     )
-    TO ':output_dir/inserts/CompanyGuarantee.:output_format';
+    TO ':output_dir/inserts/AddCompanyGuaranteeCompany.:output_format';
 
 --- Insert 9: person applies loan
 COPY
@@ -147,7 +147,7 @@ WHERE PersonApplyLoan.createTime > :start_date_long
     AND PersonApplyLoan.loanId == Loan.id
 ORDER BY PersonApplyLoan.createTime
     )
-    TO ':output_dir/inserts/PersonApplyLoan.:output_format';
+    TO ':output_dir/inserts/AddPersonApplyLoan.:output_format';
 
 --- Insert 10: company applies loan
 COPY
@@ -164,7 +164,7 @@ WHERE CompanyApplyLoan.createTime > :start_date_long
     AND CompanyApplyLoan.loanId == Loan.id
 ORDER BY CompanyApplyLoan.createTime
     )
-    TO ':output_dir/inserts/CompanyApplyLoan.:output_format';
+    TO ':output_dir/inserts/AddCompanyApplyLoan.:output_format';
 
 --- Insert 11: Add medium
 COPY
@@ -177,7 +177,7 @@ SELECT Medium.createTime,
 FROM Medium
 WHERE Medium.createTime > :start_date_long
 ORDER BY Medium.createTime )
-TO ':output_dir/inserts/Medium.:output_format';
+TO ':output_dir/inserts/AddMedium.:output_format';
 
 --- Insert 12: medium signs in account
 COPY
@@ -194,7 +194,7 @@ WHERE SignIn.createTime > :start_date_long
     AND Account.id == SignIn.accountId
 ORDER BY SignIn.createTime
     )
-    TO ':output_dir/inserts/SignIn.:output_format';
+    TO ':output_dir/inserts/AddMediumSigninAccount.:output_format';
 
 --- Insert 13: transfer
 COPY
@@ -226,7 +226,7 @@ WHERE LoanTransfer.createTime > :start_date_long
 )
 ORDER BY createTime
 )
-TO ':output_dir/inserts/Transfer.:output_format';
+TO ':output_dir/inserts/AddAccountTransferAccount.:output_format';
 
 --- Insert 14: withdraw
 COPY
@@ -244,7 +244,7 @@ WHERE Withdraw.createTime > :start_date_long
     AND Acc2.id == Withdraw.toId
 ORDER BY Withdraw.createTime
     )
-    TO ':output_dir/inserts/Withdraw.:output_format';
+    TO ':output_dir/inserts/AddAccountWithdrawAccount.:output_format';
 
 --- Insert 15: Deposits
 COPY
@@ -262,7 +262,7 @@ WHERE Deposit.createTime > :start_date_long
     AND Loan.id == Deposit.loanId
 ORDER BY Deposit.createTime
     )
-    TO ':output_dir/inserts/Deposit.:output_format';
+    TO ':output_dir/inserts/AddLoanDepositAccount.:output_format';
 
 --- Insert 16: Deposits
 COPY
@@ -280,7 +280,7 @@ WHERE Repay.createTime > :start_date_long
     AND Loan.id == Repay.loanId
 ORDER BY Repay.createTime
     )
-    TO ':output_dir/inserts/Repay.:output_format';
+    TO ':output_dir/inserts/AddAccountRepayLoan.:output_format';
 
 
 -- Delete 1: delete an account
@@ -291,4 +291,4 @@ FROM Account
 WHERE deleteTime > :start_date_long
   AND isExplicitDeleted = true
 ORDER BY deleteTime ASC)
-TO ':output_dir/deletes/Account.:output_format';
+TO ':output_dir/deletes/DeleteAccount.:output_format';
