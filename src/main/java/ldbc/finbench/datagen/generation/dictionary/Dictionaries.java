@@ -31,7 +31,7 @@ public class Dictionaries {
         mediumNames = new CommonTextDictionary(DatagenParams.mediumNameFile, ",");
         accountTypes = new CommonTextDictionary(DatagenParams.accountFile, ",");
         businessTypes = new CommonTextDictionary(DatagenParams.businessTypeFile, ",");
-        randomTexts = new CommonTextDictionary(DatagenParams.randomTextFile, ",");
+        randomTexts = new CommonTextDictionary(DatagenParams.randomTextFile, "\n");
         transferTypes = new CommonTextDictionary(DatagenParams.transferTypeFile, ",");
         goodsTypes = new CommonTextDictionary(DatagenParams.goodsTypeFile, ",");
         loanUsages = new CommonTextDictionary(DatagenParams.loanUsageFile, ",");

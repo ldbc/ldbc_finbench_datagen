@@ -9,7 +9,7 @@ object raw {
 
   // define Person entity
   case class PersonRaw(
-      id: String,
+      id: Long,
       createTime: Long,
       name: String,
       isBlocked: Boolean,
@@ -21,7 +21,7 @@ object raw {
 
   // define Account entity
   case class AccountRaw(
-      id: String,
+      id: Long,
       createTime: Long,
       deleteTime: Long,
       isBlocked: Boolean,
@@ -40,7 +40,7 @@ object raw {
 
   // define Company entity
   case class CompanyRaw(
-      id: String,
+      id: Long,
       createTime: Long,
       name: String,
       isBlocked: Boolean,
@@ -53,7 +53,7 @@ object raw {
 
   // define Loan entity
   case class LoanRaw(
-      id: String,
+      id: Long,
       createTime: Long,
       loanAmount: Double,
       balance: Double,
@@ -63,7 +63,7 @@ object raw {
 
   // define Medium entity
   case class MediumRaw(
-      id: String,
+      id: Long,
       createTime: Long,
       `type`: String,
       isBlocked: Boolean,
@@ -73,8 +73,8 @@ object raw {
 
   // define PersonApplyLoan relationship
   case class PersonApplyLoanRaw(
-      personId: String,
-      loanId: String,
+      personId: Long,
+      loanId: Long,
       loanAmount: Double,
       createTime: Long,
       org: String
@@ -82,8 +82,8 @@ object raw {
 
   // define CompanyApplyLoan relationship
   case class CompanyApplyLoanRaw(
-      companyId: String,
-      loanId: String,
+      companyId: Long,
+      loanId: Long,
       loanAmount: Double,
       createTime: Long,
       org: String
@@ -91,40 +91,40 @@ object raw {
 
   // define PersonInvestCompany relationship
   case class PersonInvestCompanyRaw(
-      investorId: String,
-      companyId: String,
+      investorId: Long,
+      companyId: Long,
       createTime: Long,
       ratio: Double
   )
 
   // define CompanyInvestCompany relationship
   case class CompanyInvestCompanyRaw(
-      investorId: String,
-      companyId: String,
+      investorId: Long,
+      companyId: Long,
       createTime: Long,
       ratio: Double
   )
 
   // define PersonGuaranteePerson relationship
   case class PersonGuaranteePersonRaw(
-      fromId: String,
-      toId: String,
+      fromId: Long,
+      toId: Long,
       createTime: Long,
       relation: String
   )
 
   // define CompanyGuarantee relationship
   case class CompanyGuaranteeCompanyRaw(
-      fromId: String,
-      toId: String,
+      fromId: Long,
+      toId: Long,
       createTime: Long,
       relation: String
   )
 
   //define PersonOwnAccount relationship
   case class PersonOwnAccountRaw(
-      personId: String,
-      accountId: String,
+      personId: Long,
+      accountId: Long,
       createTime: Long,
       deleteTime: Long,
       isExplicitDeleted: Boolean
@@ -132,8 +132,8 @@ object raw {
 
   // define CompanyOwnAccount relationship
   case class CompanyOwnAccountRaw(
-      companyId: String,
-      accountId: String,
+      companyId: Long,
+      accountId: Long,
       createTime: Long,
       deleteTime: Long,
       isExplicitDeleted: Boolean
@@ -141,8 +141,8 @@ object raw {
 
   // define Transfer relationship
   case class TransferRaw(
-      fromId: String,
-      toId: String,
+      fromId: Long,
+      toId: Long,
       multiplicityId: Long,
       createTime: Long,
       deleteTime: Long,
@@ -156,8 +156,8 @@ object raw {
 
   // define Withdraw relationship
   case class WithdrawRaw(
-      fromId: String,
-      toId: String,
+      fromId: Long,
+      toId: Long,
       fromType: String,
       toType: String,
       multiplicityId: Long,
@@ -169,8 +169,8 @@ object raw {
 
   // define Repay relationship
   case class RepayRaw(
-      accountId: String,
-      loanId: String,
+      accountId: Long,
+      loanId: Long,
       createTime: Long,
       deleteTime: Long,
       amount: Double,
@@ -179,8 +179,8 @@ object raw {
 
   // define Deposit relationship
   case class DepositRaw(
-      loanId: String,
-      accountId: String,
+      loanId: Long,
+      accountId: Long,
       createTime: Long,
       deleteTime: Long,
       amount: Double,
@@ -189,8 +189,8 @@ object raw {
 
   // define SignIn relationship
   case class SignInRaw(
-      mediumId: String,
-      accountId: String,
+      mediumId: Long,
+      accountId: Long,
       multiplicityId: Long,
       createTime: Long,
       deleteTime: Long,
