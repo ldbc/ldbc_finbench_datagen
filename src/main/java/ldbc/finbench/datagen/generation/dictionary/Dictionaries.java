@@ -5,23 +5,24 @@ import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.generation.generators.DateGenerator;
 
 public class Dictionaries {
-    public static PersonNameDictionary personNames = null;
-    public static CompanyNameDictionary companyNames = null;
-    public static MediumNameDictionary mediumNames = null;
-    public static AccountTypeDictionary accountTypes = null;
-    public static BusinessTypeDictionary businessTypes = null;
-    public static LoanUsageDictionary loanUsages = null;
+    public static CommonTextDictionary personNames = null;
+    public static CommonTextDictionary companyNames = null;
+    public static CommonTextDictionary mediumNames = null;
+    public static CommonTextDictionary accountTypes = null;
+    public static CommonTextDictionary businessTypes = null;
+//    public static CommonTextDictionary businessDescription = null;
+    public static CommonTextDictionary loanUsages = null;
     public static DateGenerator dates = null;
     public static PlaceDictionary places = null;
 
     public static void loadDictionaries() {
-        personNames = new PersonNameDictionary();
-        companyNames = new CompanyNameDictionary();
-        mediumNames = new MediumNameDictionary();
-        accountTypes = new AccountTypeDictionary();
-        businessTypes = new BusinessTypeDictionary();
-        businessDescription = new BusinessDescriptionDictionary();
-        loanUsages = new LoanUsageDictionary();
+        personNames = new CommonTextDictionary(DatagenParams.personSurnameFile, ",");
+        companyNames = new CommonTextDictionary(DatagenParams.companyNameFile, ",");
+        mediumNames = new CommonTextDictionary(DatagenParams.mediumNameFile, ",");
+        accountTypes = new CommonTextDictionary(DatagenParams.accountFile, ",");
+        businessTypes = new CommonTextDictionary(DatagenParams.businessTypeFile, ",");
+//        businessDescription = new CommonTextDictionary(DatagenParams.businessDescriptionsFile, ",");
+        loanUsages = new CommonTextDictionary(DatagenParams.accountFile, ",");
 
         dates = new DateGenerator(
             LocalDateTime.of(DatagenParams.startYear, 1, 1, 0, 0, 0),

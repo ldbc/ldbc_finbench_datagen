@@ -32,7 +32,7 @@ public class PersonGenerator {
         person.setPersonId(personId);
         // Set person name
         String personname =
-            Dictionaries.personNames.getUniformDistRandName(randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_NAME));
+            Dictionaries.personNames.getUniformDistRandomText(randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_NAME));
         person.setPersonName(personname);
         // Set blocked to false by default
         person.setBlocked(false);

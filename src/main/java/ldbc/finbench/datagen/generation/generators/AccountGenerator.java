@@ -75,7 +75,7 @@ public class AccountGenerator implements Serializable {
         // Set type
         // TODO: the account type should be determined by the type of account owner. Design a ranking function
         String type =
-            Dictionaries.accountTypes.getUniformDistRandomType(randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_TYPE));
+            Dictionaries.accountTypes.getUniformDistRandomText(randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_TYPE));
         account.setType(type);
 
         // Set isBlocked

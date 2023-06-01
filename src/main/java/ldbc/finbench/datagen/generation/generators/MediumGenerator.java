@@ -36,7 +36,7 @@ public class MediumGenerator {
         medium.setMediumId(mediumId);
 
         String mediunName =
-            Dictionaries.mediumNames.getUniformDistRandomName(randomFarm.get(RandomGeneratorFarm.Aspect.MEDIUM_NAME));
+            Dictionaries.mediumNames.getUniformDistRandomText(randomFarm.get(RandomGeneratorFarm.Aspect.MEDIUM_NAME));
         medium.setMediumName(mediunName);
 
         // Set isBlocked

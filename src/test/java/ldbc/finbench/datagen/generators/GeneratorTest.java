@@ -1,26 +1,17 @@
 package ldbc.finbench.datagen.generators;
 
-import static net.andreinc.mockneat.types.enums.DomainSuffixType.POPULAR;
-import static net.andreinc.mockneat.types.enums.HostNameType.ADVERB_VERB;
-import static net.andreinc.mockneat.types.enums.MarkovChainType.KAFKA;
-import static net.andreinc.mockneat.types.enums.MarkovChainType.LOREM_IPSUM;
-import static net.andreinc.mockneat.types.enums.URLSchemeType.HTTP;
-import static net.andreinc.mockneat.unit.networking.URLs.urls;
-import static net.andreinc.mockneat.unit.text.Markovs.markovs;
-
 import java.util.Map;
+import java.util.Random;
 import ldbc.finbench.datagen.config.ConfigParser;
 import ldbc.finbench.datagen.config.DatagenConfiguration;
 import ldbc.finbench.datagen.entities.nodes.Person;
 import ldbc.finbench.datagen.generation.DatagenContext;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.generation.generators.PersonGenerator;
-import net.andreinc.mockneat.unit.text.Markovs;
 import org.junit.Test;
 
 public class GeneratorTest {
     Map<String, String> config;
-    Markovs mk = markovs();
 
     public GeneratorTest() {
         config = ConfigParser.readConfig("src/main/resources/params_default.ini");
@@ -36,19 +27,9 @@ public class GeneratorTest {
     }
 
     @Test
-    public void testMockneat() {
-        for (int i = 0; i < 10; i++) {
-            System.out.println(mk.size(200).type(KAFKA).get()+"\n");
-        }
-        for (int i = 0; i < 10; i++) {
-            System.out.println(
-                urls().scheme(HTTP).domain(POPULAR).host(ADVERB_VERB).get());
-        }
-    }
-
-    @Test
     public void testDatagenContext() {
-        System.out.println(Dictionaries.personNames.getNumNames());
+        Random random = new Random();
+        System.out.println(Dictionaries.personNames.getUniformDistRandomText(random));
     }
 
 }

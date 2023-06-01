@@ -12,6 +12,7 @@ public class DatagenParams {
     public static final String mediumNameFile = DICTIONARY_DIR + "mediumNames.txt";
     public static final String accountFile = DICTIONARY_DIR + "accountTypes.txt";
     public static final String businessTypeFile = DICTIONARY_DIR + "businessTypes.txt";
+    public static final String businessDescriptionsFile = DICTIONARY_DIR + "businessDescriptions.txt";
     public static final String DISTRIBUTION_DIR = "/distributions/";
     public static final String fbPowerlawDegreeFile = DISTRIBUTION_DIR + "facebookPowerlawBucket.dat";
     public static final String hourDistributionFile = DISTRIBUTION_DIR + "hourDistribution.dat";
