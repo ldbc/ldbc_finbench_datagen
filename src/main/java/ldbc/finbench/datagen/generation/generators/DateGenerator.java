@@ -75,8 +75,16 @@ public class DateGenerator {
         return randomDate(random, creationDate + DatagenParams.deleteDelta, maxDeletionDate);
     }
 
+    public Long randomAccountLastLoginTime(Random random, long creationDate, long deletionDate) {
+        return randomDate(random, creationDate, deletionDate);
+    }
+
     public Long randomMediumCreationDate(Random random) {
         return randomDate(random, simulationStart, simulationEnd);
+    }
+
+    public Long randomMediumLastLogin(Random random, long creationDate) {
+        return randomDate(random, creationDate, simulationEnd);
     }
 
     public long randomPersonToAccountDate(Random random, Person person, Account account, long deletionDate) {

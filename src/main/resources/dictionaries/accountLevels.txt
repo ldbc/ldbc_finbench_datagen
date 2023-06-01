@@ -1,0 +1,10 @@
+Basic level
+Bronze level
+Silver level
+Gold level
+Platinum level
+Diamond level
+Elite level
+Premier level
+VIP level
+Exclusive level

@@ -55,8 +55,14 @@ public class RandomGeneratorFarm implements Serializable {
         COMPANY_URL,
         ACCOUNT_NICKNAME,
         ACCOUNT_EMAIL,
+        ACCOUNT_PHONENUM,
+        ACCOUNT_FREQ_LOGIN_TYPE,
+        ACCOUNT_LAST_LOGIN_TIME,
+        ACCOUNT_LEVEL,
         LOAN_INTEREST_RATE,
         LOAN_USAGE,
+        MEDIUM_RISK_LEVEL,
+        MEDUIM_LAST_LOGIN_DATE,
         NUM_ASPECT                  // This must be always the last one.
     }
 

@@ -12,6 +12,8 @@ public class Medium implements Serializable {
     private long creationDate;
     //private long maxDegree;
     private boolean isBlocked;
+    private long lastLogin;
+    private String riskLevel;
 
     public Medium() {
         signIns = new ArrayList<>();
@@ -64,5 +66,21 @@ public class Medium implements Serializable {
 
     public void setBlocked(boolean blocked) {
         isBlocked = blocked;
+    }
+
+    public long getLastLogin() {
+        return lastLogin;
+    }
+
+    public void setLastLogin(long lastLogin) {
+        this.lastLogin = lastLogin;
+    }
+
+    public String getRiskLevel() {
+        return riskLevel;
+    }
+
+    public void setRiskLevel(String riskLevel) {
+        this.riskLevel = riskLevel;
     }
 }

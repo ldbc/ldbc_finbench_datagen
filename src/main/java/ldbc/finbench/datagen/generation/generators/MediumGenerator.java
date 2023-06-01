@@ -28,19 +28,32 @@ public class MediumGenerator {
     public Medium generateMedium() {
         Medium medium = new Medium();
 
+        // Set creationDate
         long creationDate = Dictionaries.dates.randomMediumCreationDate(
             randomFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_CREATION_DATE));
         medium.setCreationDate(creationDate);
 
+        // Set mediumId
         long mediumId = composeMediumId(nextId++, creationDate);
         medium.setMediumId(mediumId);
 
+        // Set mediumName
         String mediunName =
             Dictionaries.mediumNames.getUniformDistRandomText(randomFarm.get(RandomGeneratorFarm.Aspect.MEDIUM_NAME));
         medium.setMediumName(mediunName);
 
         // Set isBlocked
         medium.setBlocked(blockRandom.nextDouble() < DatagenParams.blockedMediumRatio);
+
+        // Set lastLogin
+        long lastLogin = Dictionaries.dates.randomMediumLastLogin(
+            randomFarm.get(RandomGeneratorFarm.Aspect.MEDUIM_LAST_LOGIN_DATE), creationDate);
+        medium.setLastLogin(lastLogin);
+
+        // Set riskLevel
+        String riskLevel = Dictionaries.riskLevels.getUniformDistRandomText(
+            randomFarm.get(RandomGeneratorFarm.Aspect.MEDIUM_RISK_LEVEL));
+        medium.setRiskLevel(riskLevel);
 
         return medium;
     }

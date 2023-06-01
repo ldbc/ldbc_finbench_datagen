@@ -67,31 +67,6 @@ public class AccountGenerator implements Serializable {
         account.setMaxInDegree(maxInDegree);
         account.setRawMaxInDegree(maxInDegree);
 
-        // Set outDegree. Note: Leave outDegree as 0 for shuffle later
-        account.setMaxOutDegree(0);
-        account.setRawMaxOutDegree(0);
-
-        // Set type
-        // TODO: the account type should be determined by the type of account owner. Design a ranking function
-        String type =
-            Dictionaries.accountTypes.getUniformDistRandomText(randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_TYPE));
-        account.setType(type);
-
-        // Set isBlocked
-        account.setBlocked(blockRandom.nextDouble() < DatagenParams.blockedAccountRatio);
-
-        // Set nickname
-        String nickname = Dictionaries.accountNicknames.getUniformDistRandomText(
-            randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_NICKNAME));
-        account.setNickname(nickname);
-
-        // Set phonenum
-
-
-        // Set email
-        String email = Dictionaries.emails.getUniformDistRandomText(randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_EMAIL));
-        account.setEmail(email);
-
         // Set deletionDate
         long deletionDate;
         if (accountDeleteDistribution.isDeleted(randFarm.get(RandomGeneratorFarm.Aspect.DELETE_ACCOUNT), maxInDegree)) {
@@ -105,6 +80,49 @@ public class AccountGenerator implements Serializable {
             deletionDate = Dictionaries.dates.getNetworkCollapse();
         }
         account.setDeletionDate(deletionDate);
+
+        // Set outDegree. Note: Leave outDegree as 0 for shuffle later
+        account.setMaxOutDegree(0);
+        account.setRawMaxOutDegree(0);
+
+        // Set type
+        // TODO: the account type should be determined by the type of account owner. Design a ranking function
+        String type =
+            Dictionaries.accountTypes.getUniformDistRandomText(randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_TYPE));
+        account.setType(type);
+
+        // Set nickname
+        String nickname = Dictionaries.accountNicknames.getUniformDistRandomText(
+            randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_NICKNAME));
+        account.setNickname(nickname);
+
+        // Set phonenum
+        String phonenum =
+            Dictionaries.numbers.generatePhonenum(randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_PHONENUM));
+        account.setPhonenum(phonenum);
+
+        // Set email
+        String email =
+            Dictionaries.emails.getUniformDistRandomText(randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_EMAIL));
+        account.setEmail(email);
+
+        // Set freqlogintype
+        String freqlogintype = Dictionaries.mediumNames.getUniformDistRandomText(
+            randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_FREQ_LOGIN_TYPE));
+        account.setFreqLoginType(freqlogintype);
+
+        // Set lastLoginTime
+        long lastLoginTime = Dictionaries.dates.randomAccountLastLoginTime(
+            randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_LAST_LOGIN_TIME), creationDate, deletionDate);
+        account.setLastLoginTime(lastLoginTime);
+
+        // Set accountLevel
+        String accountLevel = Dictionaries.accountLevels.getUniformDistRandomText(
+            randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_LEVEL));
+        account.setAccountLevel(accountLevel);
+
+        // Set isBlocked
+        account.setBlocked(blockRandom.nextDouble() < DatagenParams.blockedAccountRatio);
 
         return account;
     }

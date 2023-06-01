@@ -15,8 +15,11 @@ public class Dictionaries {
     public static CommonTextDictionary urls = null;
     public static CommonTextDictionary emails = null;
     public static CommonTextDictionary accountNicknames = null;
+    public static CommonTextDictionary accountLevels = null;
+    public static CommonTextDictionary riskLevels = null;
     public static DateGenerator dates = null;
     public static PlaceDictionary places = null;
+    public static NumbersGenerator numbers;
 
     public static void loadDictionaries() {
         personNames = new CommonTextDictionary(DatagenParams.personSurnameFile, ",");
@@ -29,12 +32,15 @@ public class Dictionaries {
         urls = new CommonTextDictionary(DatagenParams.urlFile, ",");
         emails = new CommonTextDictionary(DatagenParams.emailFile, ",");
         accountNicknames = new CommonTextDictionary(DatagenParams.accountNicknameFile, ",");
+        accountLevels = new CommonTextDictionary(DatagenParams.accountLevelFile, ",");
+        riskLevels = new CommonTextDictionary(DatagenParams.riskLevelFile, ",");
+        places = new PlaceDictionary();
+        numbers = new NumbersGenerator();
 
         dates = new DateGenerator(
             LocalDateTime.of(DatagenParams.startYear, 1, 1, 0, 0, 0),
             LocalDateTime.of(DatagenParams.startYear + DatagenParams.numYears, 1, 1, 0, 0, 0)
         );
-        places = new PlaceDictionary();
     }
 
 }

@@ -202,6 +202,7 @@ public class Account implements Serializable {
     public boolean isBlocked() {
         return isBlocked;
     }
+
     public void setBlocked(boolean blocked) {
         isBlocked = blocked;
     }
