@@ -15,6 +15,8 @@ public class DatagenParams {
     public static final String businessDescriptionsFile = DICTIONARY_DIR + "businessDescriptions.txt";
     public static final String loanUsageFile = DICTIONARY_DIR + "loanUsages.txt";
     public static final String urlFile = DICTIONARY_DIR + "urls.txt";
+    public static final String emailFile = DICTIONARY_DIR + "emails.txt";
+    public static final String accountNicknameFile = DICTIONARY_DIR + "accountNicknames.txt";
     public static final String DISTRIBUTION_DIR = "/distributions/";
     public static final String fbPowerlawDegreeFile = DISTRIBUTION_DIR + "facebookPowerlawBucket.dat";
     public static final String hourDistributionFile = DISTRIBUTION_DIR + "hourDistribution.dat";

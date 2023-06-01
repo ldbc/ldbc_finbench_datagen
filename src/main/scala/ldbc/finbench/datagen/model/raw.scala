@@ -9,7 +9,7 @@ object raw {
 
   // define Person entity
   case class PersonRaw(
-      id: Long,
+      id: String,
       createTime: Long,
       name: String,
       isBlocked: Boolean,
@@ -21,7 +21,7 @@ object raw {
 
   // define Account entity
   case class AccountRaw(
-      id: Long,
+      id: String,
       createTime: Long,
       deleteTime: Long,
       isBlocked: Boolean,
@@ -34,7 +34,7 @@ object raw {
 
   // define Company entity
   case class CompanyRaw(
-      id: Long,
+      id: String,
       createTime: Long,
       name: String,
       isBlocked: Boolean,
@@ -47,7 +47,7 @@ object raw {
 
   // define Loan entity
   case class LoanRaw(
-      id: Long,
+      id: String,
       createTime: Long,
       loanAmount: Double,
       balance: Double,
@@ -57,7 +57,7 @@ object raw {
 
   // define Medium entity
   case class MediumRaw(
-      id: Long,
+      id: String,
       createTime: Long,
       `type`: String,
       isBlocked: Boolean
@@ -65,54 +65,54 @@ object raw {
 
   // define PersonApplyLoan relationship
   case class PersonApplyLoanRaw(
-      `personId`: Long,
-      `loanId`: Long,
+      personId: String,
+      loanId: String,
       loanAmount: Double,
       createTime: Long
   )
 
   // define CompanyApplyLoan relationship
   case class CompanyApplyLoanRaw(
-      `companyId`: Long,
-      `loanId`: Long,
+      companyId: String,
+      loanId: String,
       loanAmount: Double,
       createTime: Long
   )
 
   // define PersonInvestCompany relationship
   case class PersonInvestCompanyRaw(
-      investorId: Long,
-      companyId: Long,
+      investorId: String,
+      companyId: String,
       createTime: Long,
       ratio: Double
   )
 
   // define CompanyInvestCompany relationship
   case class CompanyInvestCompanyRaw(
-      investorId: Long,
-      companyId: Long,
+      investorId: String,
+      companyId: String,
       createTime: Long,
       ratio: Double
   )
 
   // define PersonGuaranteePerson relationship
   case class PersonGuaranteePersonRaw(
-      fromId: Long,
-      toId: Long,
+      fromId: String,
+      toId: String,
       createTime: Long
   )
 
   // define CompanyGuarantee relationship
   case class CompanyGuaranteeCompanyRaw(
-      fromId: Long,
-      toId: Long,
+      fromId: String,
+      toId: String,
       createTime: Long
   )
 
   //define PersonOwnAccount relationship
   case class PersonOwnAccountRaw(
-      `personId`: Long,
-      `accountId`: Long,
+      personId: String,
+      accountId: String,
       createTime: Long,
       deleteTime: Long,
       isExplicitDeleted: Boolean
@@ -120,8 +120,8 @@ object raw {
 
   // define CompanyOwnAccount relationship
   case class CompanyOwnAccountRaw(
-      `companyId`: Long,
-      `accountId`: Long,
+      companyId: String,
+      accountId: String,
       createTime: Long,
       deleteTime: Long,
       isExplicitDeleted: Boolean
@@ -129,8 +129,8 @@ object raw {
 
   // define Transfer relationship
   case class TransferRaw(
-      fromId: Long,
-      toId: Long,
+      fromId: String,
+      toId: String,
       multiplicityId: Long,
       createTime: Long,
       deleteTime: Long,
@@ -140,8 +140,8 @@ object raw {
 
   // define Withdraw relationship
   case class WithdrawRaw(
-      fromId: Long,
-      toId: Long,
+      fromId: String,
+      toId: String,
       fromType: String,
       toType: String,
       multiplicityId: Long,
@@ -153,8 +153,8 @@ object raw {
 
   // define Repay relationship
   case class RepayRaw(
-      `accountId`: Long,
-      `loanId`: Long,
+      accountId: String,
+      loanId: String,
       createTime: Long,
       deleteTime: Long,
       amount: Double,
@@ -163,8 +163,8 @@ object raw {
 
   // define Deposit relationship
   case class DepositRaw(
-      `loanId`: Long,
-      `accountId`: Long,
+      loanId: String,
+      accountId: String,
       createTime: Long,
       deleteTime: Long,
       amount: Double,
@@ -173,8 +173,8 @@ object raw {
 
   // define SignIn relationship
   case class SignInRaw(
-      `mediumId`: Long,
-      `accountId`: Long,
+      mediumId: String,
+      accountId: String,
       multiplicityId: Long,
       createTime: Long,
       deleteTime: Long,

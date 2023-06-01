@@ -80,6 +80,18 @@ public class AccountGenerator implements Serializable {
         // Set isBlocked
         account.setBlocked(blockRandom.nextDouble() < DatagenParams.blockedAccountRatio);
 
+        // Set nickname
+        String nickname = Dictionaries.accountNicknames.getUniformDistRandomText(
+            randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_NICKNAME));
+        account.setNickname(nickname);
+
+        // Set phonenum
+
+
+        // Set email
+        String email = Dictionaries.emails.getUniformDistRandomText(randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_EMAIL));
+        account.setEmail(email);
+
         // Set deletionDate
         long deletionDate;
         if (accountDeleteDistribution.isDeleted(randFarm.get(RandomGeneratorFarm.Aspect.DELETE_ACCOUNT), maxInDegree)) {

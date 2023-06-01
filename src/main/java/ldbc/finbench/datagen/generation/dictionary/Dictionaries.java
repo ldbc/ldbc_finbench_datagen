@@ -13,6 +13,8 @@ public class Dictionaries {
     public static CommonTextDictionary businessDescription = null;
     public static CommonTextDictionary loanUsages = null;
     public static CommonTextDictionary urls = null;
+    public static CommonTextDictionary emails = null;
+    public static CommonTextDictionary accountNicknames = null;
     public static DateGenerator dates = null;
     public static PlaceDictionary places = null;
 
@@ -25,6 +27,8 @@ public class Dictionaries {
         businessDescription = new CommonTextDictionary(DatagenParams.businessDescriptionsFile, ",");
         loanUsages = new CommonTextDictionary(DatagenParams.loanUsageFile, ",");
         urls = new CommonTextDictionary(DatagenParams.urlFile, ",");
+        emails = new CommonTextDictionary(DatagenParams.emailFile, ",");
+        accountNicknames = new CommonTextDictionary(DatagenParams.accountNicknameFile, ",");
 
         dates = new DateGenerator(
             LocalDateTime.of(DatagenParams.startYear, 1, 1, 0, 0, 0),
