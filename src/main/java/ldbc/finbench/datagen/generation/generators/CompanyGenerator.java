@@ -47,7 +47,7 @@ public class CompanyGenerator {
             randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_BUSINESS)));
 
         // Set description TODO: use a better description
-        String description = Dictionaries.businessDescription.getUniformDistRandomText(
+        String description = Dictionaries.randomTexts.getUniformDistRandomText(
             randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_DESCRIPTION));
         company.setDescription(description);
 

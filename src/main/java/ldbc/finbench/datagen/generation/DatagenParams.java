@@ -12,7 +12,9 @@ public class DatagenParams {
     public static final String mediumNameFile = DICTIONARY_DIR + "mediumNames.txt";
     public static final String accountFile = DICTIONARY_DIR + "accountTypes.txt";
     public static final String businessTypeFile = DICTIONARY_DIR + "businessTypes.txt";
-    public static final String businessDescriptionsFile = DICTIONARY_DIR + "businessDescriptions.txt";
+    public static final String randomTextFile = DICTIONARY_DIR + "randomText.txt";
+    public static final String transferTypeFile = DICTIONARY_DIR + "payTypes.txt";
+    public static final String goodsTypeFile = DICTIONARY_DIR + "goodsTypes.txt";
     public static final String loanUsageFile = DICTIONARY_DIR + "loanUsages.txt";
     public static final String urlFile = DICTIONARY_DIR + "urls.txt";
     public static final String emailFile = DICTIONARY_DIR + "emails.txt";

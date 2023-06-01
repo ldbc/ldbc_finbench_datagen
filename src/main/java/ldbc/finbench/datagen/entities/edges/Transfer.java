@@ -33,19 +33,6 @@ public class Transfer implements DynamicActivity, Serializable {
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    // Note: used in account centric implementation
-    public static void createTransfer(RandomGeneratorFarm farm, Account from, Account to, long multiplicityId,
-                                      double amount) {
-        long deleteDate = Math.min(from.getDeletionDate(), to.getDeletionDate());
-        long creationDate =
-            Dictionaries.dates.randomAccountToAccountDate(farm.get(RandomGeneratorFarm.Aspect.TRANSFER_DATE), from, to,
-                                                          deleteDate);
-        boolean willDelete = from.isExplicitlyDeleted() && to.isExplicitlyDeleted();
-        Transfer transfer = new Transfer(from, to, amount, creationDate, deleteDate, multiplicityId, willDelete);
-        from.getTransferOuts().add(transfer);
-        to.getTransferIns().add(transfer);
-    }
-
     public static Transfer createTransferAndReturn(RandomGeneratorFarm farm, Account from, Account to,
                                                    long multiplicityId,
                                                    double amount) {
@@ -61,12 +48,53 @@ public class Transfer implements DynamicActivity, Serializable {
         transfer.setOrdernum(ordernum);
 
         // Set comment
-
-        // Set status
+        String comment =
+            Dictionaries.randomTexts.getUniformDistRandomText(farm.get(RandomGeneratorFarm.Aspect.TRANSFER_COMMENT));
+        transfer.setComment(comment);
 
         // Set payType
+        String paytype =
+            Dictionaries.transferTypes.getUniformDistRandomText(farm.get(RandomGeneratorFarm.Aspect.TRANSFER_PAYTYPE));
+        transfer.setPayType(paytype);
 
         // Set goodsType
+        String goodsType =
+            Dictionaries.transferTypes.getUniformDistRandomText(farm.get(RandomGeneratorFarm.Aspect.TRANSFER_GOODSTYPE));
+        transfer.setGoodsType(goodsType);
+
+        from.getTransferOuts().add(transfer);
+        to.getTransferIns().add(transfer);
+        return transfer;
+    }
+
+    public static Transfer createLoanTransferAndReturn(RandomGeneratorFarm farm, Account from, Account to,
+                                                   long multiplicityId,
+                                                   double amount) {
+        long deleteDate = Math.min(from.getDeletionDate(), to.getDeletionDate());
+        long creationDate =
+            Dictionaries.dates.randomAccountToAccountDate(farm.get(RandomGeneratorFarm.Aspect.LOAN_SUBEVENTS_DATE), from, to,
+                                                          deleteDate);
+        boolean willDelete = from.isExplicitlyDeleted() && to.isExplicitlyDeleted();
+        Transfer transfer = new Transfer(from, to, amount, creationDate, deleteDate, multiplicityId, willDelete);
+
+        // Set ordernum
+        String ordernum = Dictionaries.numbers.generateOrdernum(farm.get(RandomGeneratorFarm.Aspect.TRANSFER_ORDERNUM));
+        transfer.setOrdernum(ordernum);
+
+        // Set comment
+        String comment =
+            Dictionaries.randomTexts.getUniformDistRandomText(farm.get(RandomGeneratorFarm.Aspect.TRANSFER_COMMENT));
+        transfer.setComment(comment);
+
+        // Set payType
+        String paytype =
+            Dictionaries.transferTypes.getUniformDistRandomText(farm.get(RandomGeneratorFarm.Aspect.TRANSFER_PAYTYPE));
+        transfer.setPayType(paytype);
+
+        // Set goodsType
+        String goodsType =
+            Dictionaries.transferTypes.getUniformDistRandomText(farm.get(RandomGeneratorFarm.Aspect.TRANSFER_GOODSTYPE));
+        transfer.setGoodsType(goodsType);
 
         from.getTransferOuts().add(transfer);
         to.getTransferIns().add(transfer);

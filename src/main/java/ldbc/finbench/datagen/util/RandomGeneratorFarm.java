@@ -65,6 +65,9 @@ public class RandomGeneratorFarm implements Serializable {
         MEDIUM_RISK_LEVEL,
         MEDUIM_LAST_LOGIN_DATE,
         TRANSFER_ORDERNUM,
+        TRANSFER_COMMENT,
+        TRANSFER_PAYTYPE,
+        TRANSFER_GOODSTYPE,
         NUM_ASPECT                  // This must be always the last one.
     }
 
