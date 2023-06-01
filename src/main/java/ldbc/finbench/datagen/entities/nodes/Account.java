@@ -15,6 +15,12 @@ public class Account implements Serializable {
     private String type;
     private long creationDate;
     private long deletionDate;
+    private String nickname;
+    private String phonenum;
+    private String email;
+    private String freqLoginType;
+    private long lastLoginTime;
+    private String accountLevel;
     private long rawMaxInDegree;
     private long rawMaxOutDegree;
     private long maxInDegree; // max in degree before merging
@@ -42,7 +48,7 @@ public class Account implements Serializable {
         signIns = new ArrayList<>();
     }
 
-    public Account(Account acc) {
+    /*public Account(Account acc) {
         transferIns = new ArrayList<>();
         transferOuts = new ArrayList<>();
         loanTransfers = new ArrayList<>();
@@ -70,7 +76,7 @@ public class Account implements Serializable {
         deposits.addAll(acc.getDeposits());
         repays.addAll(acc.getRepays());
         signIns.addAll(acc.getSignIns());
-    }
+    }*/
 
     @Override
     public boolean equals(Object obj) {
@@ -196,7 +202,6 @@ public class Account implements Serializable {
     public boolean isBlocked() {
         return isBlocked;
     }
-
     public void setBlocked(boolean blocked) {
         isBlocked = blocked;
     }
@@ -208,7 +213,6 @@ public class Account implements Serializable {
     public void setDeletionDate(long deletionDate) {
         this.deletionDate = deletionDate;
     }
-
 
     public PersonOrCompany getOwnerType() {
         return ownerType;
@@ -248,5 +252,55 @@ public class Account implements Serializable {
 
     public void setSignIns(List<SignIn> signIns) {
         this.signIns = signIns;
+    }
+
+
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public String getPhonenum() {
+        return phonenum;
+    }
+
+    public void setPhonenum(String phonenum) {
+        this.phonenum = phonenum;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getFreqLoginType() {
+        return freqLoginType;
+    }
+
+    public void setFreqLoginType(String freqLoginType) {
+        this.freqLoginType = freqLoginType;
+    }
+
+    public long getLastLoginTime() {
+        return lastLoginTime;
+    }
+
+    public void setLastLoginTime(long lastLoginTime) {
+        this.lastLoginTime = lastLoginTime;
+    }
+
+    public String getAccountLevel() {
+        return accountLevel;
+    }
+
+    public void setAccountLevel(String accountLevel) {
+        this.accountLevel = accountLevel;
     }
 }
