@@ -35,13 +35,4 @@ public class PersonNameDictionary {
         long nameIndex = random.nextInt(personSurnames.size());
         return personSurnames.get(nameIndex);
     }
-
-    public String getPersonSurname(long k) {
-        return personSurnames.get(k);
-    }
-
-    public int getNumNames() {
-        return personSurnames.size();
-    }
-
 }
