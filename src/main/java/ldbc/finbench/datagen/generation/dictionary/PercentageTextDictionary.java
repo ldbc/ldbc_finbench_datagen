@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Random;
 
 public class PercentageTextDictionary {
-
     private final List<String> resources;
     private final List<Double> cumulativeDistribution;
 
@@ -22,7 +21,7 @@ public class PercentageTextDictionary {
             String line;
             double cummulativeDist = 0.0;
             while ((line = dictionary.readLine()) != null) {
-                String data[] = line.split(separator);
+                String[] data = line.split(separator);
                 String browser = data[0];
                 cummulativeDist += Double.parseDouble(data[1]);
                 resources.add(browser);
