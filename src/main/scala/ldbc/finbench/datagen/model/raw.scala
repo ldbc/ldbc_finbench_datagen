@@ -55,10 +55,10 @@ object raw {
   case class LoanRaw(
       id: Long,
       createTime: Long,
-      loanAmount: Double,
-      balance: Double,
+      loanAmount: String,
+      balance: String,
       usage: String,
-      interestRate: Double
+      interestRate: String
   )
 
   // define Medium entity
@@ -75,7 +75,7 @@ object raw {
   case class PersonApplyLoanRaw(
       personId: Long,
       loanId: Long,
-      loanAmount: Double,
+      loanAmount: String,
       createTime: Long,
       org: String
   )
@@ -84,7 +84,7 @@ object raw {
   case class CompanyApplyLoanRaw(
       companyId: Long,
       loanId: Long,
-      loanAmount: Double,
+      loanAmount: String,
       createTime: Long,
       org: String
   )
@@ -146,7 +146,7 @@ object raw {
       multiplicityId: Long,
       createTime: Long,
       deleteTime: Long,
-      amount: Double,
+      amount: String,
       isExplicitDeleted: Boolean,
       orderNum: String,
       comment: String,
@@ -163,7 +163,7 @@ object raw {
       multiplicityId: Long,
       createTime: Long,
       deleteTime: Long,
-      amount: Double,
+      amount: String,
       isExplicitDeleted: Boolean
   )
 
@@ -173,7 +173,7 @@ object raw {
       loanId: Long,
       createTime: Long,
       deleteTime: Long,
-      amount: Double,
+      amount: String,
       isExplicitDeleted: Boolean
   )
 
@@ -183,7 +183,7 @@ object raw {
       accountId: Long,
       createTime: Long,
       deleteTime: Long,
-      amount: Double,
+      amount: String,
       isExplicitDeleted: Boolean
   )
 

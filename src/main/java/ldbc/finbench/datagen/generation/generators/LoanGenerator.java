@@ -8,8 +8,8 @@ import ldbc.finbench.datagen.generation.distribution.DegreeDistribution;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class LoanGenerator implements Serializable {
-    private final double loanAmountMin;
-    private final double loanAmountMax;
+    private final long loanAmountMin;
+    private final long loanAmountMax;
     private final DegreeDistribution degreeDistribution;
     private final RandomGeneratorFarm randomFarm;
     private int nextId = 0;
@@ -46,7 +46,7 @@ public class LoanGenerator implements Serializable {
     public Loan generateLoan(long creationDate, String type, int blockId) {
         long loanId = composeLoanId(nextId++, creationDate, type, blockId);
         double loanAmount =
-            randomFarm.get(RandomGeneratorFarm.Aspect.LOAN_AMOUNT).nextDouble() * (loanAmountMax - loanAmountMin)
+            randomFarm.get(RandomGeneratorFarm.Aspect.LOAN_AMOUNT).nextInt((int) (loanAmountMax - loanAmountMin))
                 + loanAmountMin;
         long maxDegree = Math.min(degreeDistribution.nextDegree(), DatagenParams.tsfMaxNumDegree);
         String usage =
