@@ -13,3 +13,4 @@ out*.tar.gz
 # tune
 tune/
 tune.log
+sf*/
