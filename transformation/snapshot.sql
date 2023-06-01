@@ -81,7 +81,7 @@ COPY
     )
     ORDER BY createTime
 )
-TO ':output_dir/snapshot/Transfer.:output_format';
+TO ':output_dir/snapshot/AccountTransferAccount.:output_format';
 
 -- Withdraw. It has deletes.
 COPY
@@ -94,7 +94,7 @@ FROM Withdraw
 WHERE Withdraw.createTime <= :start_date_long
   AND Withdraw.deleteTime > :start_date_long
 ORDER BY Withdraw.createTime )
-TO ':output_dir/snapshot/Withdraw.:output_format';
+TO ':output_dir/snapshot/AccountWithdrawAccount.:output_format';
 
 -- Repay. It has deletes.
 COPY
@@ -107,7 +107,7 @@ FROM Repay
 WHERE Repay.createTime <= :start_date_long
   AND Repay.deleteTime > :start_date_long
 ORDER BY Repay.createTime )
-TO ':output_dir/snapshot/Repay.:output_format';
+TO ':output_dir/snapshot/AccountRepayLoan.:output_format';
 
 -- Deposit. It has deletes.
 COPY
@@ -120,7 +120,7 @@ FROM Deposit
 WHERE Deposit.createTime <= :start_date_long
   AND Deposit.deleteTime > :start_date_long
 ORDER BY Deposit.createTime )
-TO ':output_dir/snapshot/Deposit.:output_format';
+TO ':output_dir/snapshot/LoanDepositAccount.:output_format';
 
 -- SignIn. It has deletes.
 COPY
