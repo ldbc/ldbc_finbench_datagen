@@ -59,7 +59,8 @@ public class Transfer implements DynamicActivity, Serializable {
 
         // Set goodsType
         String goodsType =
-            Dictionaries.transferTypes.getUniformDistRandomText(farm.get(RandomGeneratorFarm.Aspect.TRANSFER_GOODSTYPE));
+            Dictionaries.transferTypes.getUniformDistRandomText(
+                farm.get(RandomGeneratorFarm.Aspect.TRANSFER_GOODSTYPE));
         transfer.setGoodsType(goodsType);
 
         from.getTransferOuts().add(transfer);
@@ -68,11 +69,12 @@ public class Transfer implements DynamicActivity, Serializable {
     }
 
     public static Transfer createLoanTransferAndReturn(RandomGeneratorFarm farm, Account from, Account to,
-                                                   long multiplicityId,
-                                                   double amount) {
+                                                       long multiplicityId,
+                                                       double amount) {
         long deleteDate = Math.min(from.getDeletionDate(), to.getDeletionDate());
         long creationDate =
-            Dictionaries.dates.randomAccountToAccountDate(farm.get(RandomGeneratorFarm.Aspect.LOAN_SUBEVENTS_DATE), from, to,
+            Dictionaries.dates.randomAccountToAccountDate(farm.get(RandomGeneratorFarm.Aspect.LOAN_SUBEVENTS_DATE),
+                                                          from, to,
                                                           deleteDate);
         boolean willDelete = from.isExplicitlyDeleted() && to.isExplicitlyDeleted();
         Transfer transfer = new Transfer(from, to, amount, creationDate, deleteDate, multiplicityId, willDelete);
@@ -93,7 +95,8 @@ public class Transfer implements DynamicActivity, Serializable {
 
         // Set goodsType
         String goodsType =
-            Dictionaries.transferTypes.getUniformDistRandomText(farm.get(RandomGeneratorFarm.Aspect.TRANSFER_GOODSTYPE));
+            Dictionaries.transferTypes.getUniformDistRandomText(
+                farm.get(RandomGeneratorFarm.Aspect.TRANSFER_GOODSTYPE));
         transfer.setGoodsType(goodsType);
 
         from.getTransferOuts().add(transfer);
