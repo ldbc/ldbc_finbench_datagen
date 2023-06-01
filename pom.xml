@@ -175,5 +175,6 @@
             <artifactId>scalatest-funsuite_2.12</artifactId>
             <version>${scalatest.version}</version>
         </dependency>
+
     </dependencies>
 </project>

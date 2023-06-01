@@ -2,7 +2,6 @@ package ldbc.finbench.datagen.generation.generators;
 
 import java.util.Iterator;
 import ldbc.finbench.datagen.entities.nodes.Company;
-import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
@@ -48,11 +47,12 @@ public class CompanyGenerator {
             randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_BUSINESS)));
 
         // Set description TODO: use a better description
-//        String descrption = descriptionGenerator.size(DatagenParams.companyDescriptionMaxLength).type(KAFKA).get();
+        //        String descrption = descriptionGenerator.size(DatagenParams.companyDescriptionMaxLength).type
+        //        (KAFKA).get();
         company.setDescription("descrption");
 
         // Set url
-//        String url = urlGenerator.scheme(HTTPS).domain(POPULAR).host(ADVERB_VERB).get();
+        //        String url = urlGenerator.scheme(HTTPS).domain(POPULAR).host(ADVERB_VERB).get();
         company.setUrl("url");
 
         // Set blocked to false by default

@@ -1,19 +1,17 @@
 package ldbc.finbench.datagen.generation.dictionary;
 
-/**
- * Private class used to sort countries by their z-order value.
- */
+// Private class used to sort countries by their z-order value.
 class PlaceZOrder implements Comparable<PlaceZOrder> {
 
     public int id;
-    Integer zValue;
+    Integer zvalue;
 
-    PlaceZOrder(int id, int zValue) {
+    PlaceZOrder(int id, int zvalue) {
         this.id = id;
-        this.zValue = zValue;
+        this.zvalue = zvalue;
     }
 
     public int compareTo(PlaceZOrder obj) {
-        return zValue.compareTo(obj.zValue);
+        return zvalue.compareTo(obj.zvalue);
     }
 }

@@ -57,7 +57,8 @@ public class DateGenerator {
 
     public Long randomPersonBirthday(Random random) {
         LocalDate date =
-            DateTimeUtils.utcDateOfEpochMilli(((long) (random.nextDouble() * (toBirthDay - fromBirthDay)) + fromBirthDay));
+            DateTimeUtils.utcDateOfEpochMilli(
+                ((long) (random.nextDouble() * (toBirthDay - fromBirthDay)) + fromBirthDay));
         return DateTimeUtils.toEpochMilli(date);
     }
 

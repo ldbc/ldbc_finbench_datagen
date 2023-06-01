@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.Random;
 import ldbc.finbench.datagen.entities.nodes.Account;
 import ldbc.finbench.datagen.generation.DatagenParams;
-import ldbc.finbench.datagen.generation.dictionary.AccountTypeDictionary;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.generation.distribution.AccountDeleteDistribution;
 import ldbc.finbench.datagen.generation.distribution.DegreeDistribution;

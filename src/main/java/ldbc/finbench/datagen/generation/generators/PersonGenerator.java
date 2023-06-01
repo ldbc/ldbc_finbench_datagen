@@ -39,12 +39,15 @@ public class PersonGenerator {
         // Set gender TODO: add ranker related with person name
         person.setGender((randomFarm.get(RandomGeneratorFarm.Aspect.GENDER).nextDouble() > 0.5) ? (byte) 1 : (byte) 0);
         // Set birthday
-        long birthday = Dictionaries.dates.randomPersonBirthday(randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_BIRTHDAY));
+        long birthday =
+            Dictionaries.dates.randomPersonBirthday(randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_BIRTHDAY));
         person.setBirthday(birthday);
         // Set country and city
-        int countryId = Dictionaries.places.getCountryForPerson(randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_COUNTRY));
+        int countryId =
+            Dictionaries.places.getCountryForPerson(randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_COUNTRY));
         person.setCountryId(countryId);
-        person.setCityId(Dictionaries.places.getRandomCity(randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_CITY), countryId));
+        person.setCityId(
+            Dictionaries.places.getRandomCity(randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_CITY), countryId));
 
         return person;
     }

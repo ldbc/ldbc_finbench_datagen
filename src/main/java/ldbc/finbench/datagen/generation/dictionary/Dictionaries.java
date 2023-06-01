@@ -10,7 +10,7 @@ public class Dictionaries {
     public static CommonTextDictionary mediumNames = null;
     public static CommonTextDictionary accountTypes = null;
     public static CommonTextDictionary businessTypes = null;
-//    public static CommonTextDictionary businessDescription = null;
+    //    public static CommonTextDictionary businessDescription = null;
     public static CommonTextDictionary loanUsages = null;
     public static DateGenerator dates = null;
     public static PlaceDictionary places = null;
@@ -21,7 +21,7 @@ public class Dictionaries {
         mediumNames = new CommonTextDictionary(DatagenParams.mediumNameFile, ",");
         accountTypes = new CommonTextDictionary(DatagenParams.accountFile, ",");
         businessTypes = new CommonTextDictionary(DatagenParams.businessTypeFile, ",");
-//        businessDescription = new CommonTextDictionary(DatagenParams.businessDescriptionsFile, ",");
+        //        businessDescription = new CommonTextDictionary(DatagenParams.businessDescriptionsFile, ",");
         loanUsages = new CommonTextDictionary(DatagenParams.accountFile, ",");
 
         dates = new DateGenerator(
