@@ -52,6 +52,7 @@ public class RandomGeneratorFarm implements Serializable {
         COMPANY_CITY,
         COMPANY_BUSINESS,
         COMPANY_DESCRIPTION,
+        COMPANY_URL,
         LOAN_INTEREST_RATE,
         LOAN_USAGE,
         NUM_ASPECT                  // This must be always the last one.

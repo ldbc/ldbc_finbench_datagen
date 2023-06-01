@@ -47,13 +47,13 @@ public class CompanyGenerator {
             randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_BUSINESS)));
 
         // Set description TODO: use a better description
-        //        String descrption = descriptionGenerator.size(DatagenParams.companyDescriptionMaxLength).type
-        //        (KAFKA).get();
-        company.setDescription("descrption");
+        String description = Dictionaries.businessDescription.getUniformDistRandomText(
+            randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_DESCRIPTION));
+        company.setDescription(description);
 
         // Set url
-        //        String url = urlGenerator.scheme(HTTPS).domain(POPULAR).host(ADVERB_VERB).get();
-        company.setUrl("url");
+        String url = Dictionaries.urls.getUniformDistRandomText(randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_URL));
+        company.setUrl(url);
 
         // Set blocked to false by default
         company.setBlocked(false);
