@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <scale_factors>
+    <!--tuned-->
     <scale_factor name="0.01">
         <property>
             <name>generator.numPersons</name>
@@ -36,29 +37,6 @@
         <property>
             <name>generator.numMediums</name>
             <value>10000</value>
-        </property>
-        <property>
-            <name>transfer.minNumDegree</name>
-            <value>1</value>
-        </property>
-        <property>
-            <name>transfer.maxNumDegree</name>
-            <value>1000</value>
-        </property>
-    </scale_factor>
-
-    <scale_factor name="0.3">
-        <property>
-            <name>generator.numPersons</name>
-            <value>24000</value>
-        </property>
-        <property>
-            <name>generator.numCompanies</name>
-            <value>12000</value>
-        </property>
-        <property>
-            <name>generator.numMediums</name>
-            <value>30000</value>
         </property>
         <property>
             <name>transfer.minNumDegree</name>
