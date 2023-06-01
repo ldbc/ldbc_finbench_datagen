@@ -14,9 +14,11 @@ from zoneinfo import ZoneInfo
 
 import duckdb
 
-TRUNCATION_LIMIT = 1000
-TRUNCATION_ORDER = "TIMESTAMP_ASCENDING"
-
+TRUNCATION_LIMIT = 500
+TRUNCATION_ORDER = "TIMESTAMP_DESCENDING"
+RW2_AMOUNT_THRESHOLD = 1000
+RW2_RATIO_THRESHOLD = 1.0
+RW3_AMOUNT_THRESHOLD = 10000
 
 class Transformer:
 
@@ -65,6 +67,9 @@ class Transformer:
             queries_file = queries_file.replace(':output_format', output_format)
             queries_file = queries_file.replace(':truncation_limit', str(TRUNCATION_LIMIT))
             queries_file = queries_file.replace(':truncation_order', TRUNCATION_ORDER)
+            queries_file = queries_file.replace(':rw2_amount_threshold', str(RW2_AMOUNT_THRESHOLD))
+            queries_file = queries_file.replace(':rw2_ratio_threshold', str(RW2_RATIO_THRESHOLD))
+            queries_file = queries_file.replace(':rw3_amount_threshold', str(RW3_AMOUNT_THRESHOLD))
             queries_file = re.sub(r"\n--.*", "", queries_file)
             for query in queries_file.split(';\n'):
                 if not query or query.isspace():
@@ -95,22 +100,15 @@ class Transformer:
         self.run_sql("writes.sql", "csv")
 
     def create_readwrites(self):
+        print(f"===== Creating read writes =====")
         if not os.path.exists(f"{self.output_dir}/incremental/AddAccountTransferAccountAll.csv"):
             raise ValueError(f"{self.output_dir}/incremental/AddAccountTransferAccountAll.csv not existed")
         if not os.path.exists(f"{self.output_dir}/incremental/AddPersonGuaranteePersonAll.csv"):
             raise ValueError(f"{self.output_dir}/incremental/AddPersonGuaranteePersonAll.csv not existed")
-        self.create_rw12()
-        self.create_rw3()
-
-    def create_rw12(self):
-        print(f"===== Creating read write 1&&2 =====")
-        self.run_sql("readwrite12.sql", "null")
+        self.run_sql("readwrites.sql", "null")
         os.remove(f"{self.output_dir}/incremental/AddAccountTransferAccountAll.csv")
-
-    def create_rw3(self):
-        print(f"===== Creating read write 3 =====")
-        self.run_sql("readwrite3.sql", "null")
         os.remove(f"{self.output_dir}/incremental/AddPersonGuaranteePersonAll.csv")
+
 
     def create_updateBlock(self):
         print(f"===== Creating update block =====")

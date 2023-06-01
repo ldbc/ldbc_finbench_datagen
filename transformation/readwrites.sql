@@ -48,9 +48,7 @@ COPY
 (
 SELECT TransferReadWrite1.*,
        (SELECT min(createTime) FROM TransferReadWrite1) AS startTime,
-       (SELECT max(createTime) FROM TransferReadWrite1) AS endTime,
-       :truncation_limit                                AS TRUNCATION_LIMIT,
-       ':truncation_order'                              AS TRUNCATION_ORDER
+       (SELECT max(createTime) FROM TransferReadWrite1) AS endTime
 FROM TransferReadWrite1 )
 TO ':output_dir/incremental/AddAccountTransferAccountReadWrite1.csv' (DELIMITER '|', HEADER);
 
@@ -61,6 +59,47 @@ SELECT TransferReadWrite2.*,
        (SELECT min(createTime) FROM TransferReadWrite2) AS startTime,
        (SELECT max(createTime) FROM TransferReadWrite2) AS endTime,
        :truncation_limit                                AS TRUNCATION_LIMIT,
-       ':truncation_order'                              AS TRUNCATION_ORDER
+       ':truncation_order'                              AS TRUNCATION_ORDER,
+       :rw2_amount_threshold                            AS AMOUNT_THRESHOLD,
+       :rw2_ratio_threshold                             AS RATIO_THRESHOLD
 FROM TransferReadWrite2 )
 TO ':output_dir/incremental/AddAccountTransferAccountReadWrite2.csv' (DELIMITER '|', HEADER);
+
+-- Read Write 3
+
+-- Load raw data
+CREATE
+OR REPLACE VIEW PersonGuarantee AS
+SELECT *
+FROM read_csv_auto(':output_dir/incremental/AddPersonGuaranteePersonAll.csv', delim = '|', header = TRUE);
+
+-- Sample for read write 3
+CREATE
+OR REPLACE TABLE PGPReadWrite3 AS (SELECT * FROM PersonGuarantee USING SAMPLE 20 PERCENT (bernoulli, 23));
+
+-- PGP Left for insert
+COPY
+(
+SELECT *
+FROM PersonGuarantee
+WHERE NOT EXISTS(SELECT *
+                 FROM PGPReadWrite3
+                 WHERE PersonGuarantee.createTime = PGPReadWrite3.createTime
+                   AND PersonGuarantee.fromId = PGPReadWrite3.fromId
+                   AND PersonGuarantee.toId = PGPReadWrite3.toId)
+ORDER BY PersonGuarantee.createTime )
+TO ':output_dir/incremental/AddPersonGuaranteePersonWrite10.csv' (DELIMITER '|', HEADER);
+
+
+-- Read Write 3 output
+COPY
+(
+SELECT PGPReadWrite3.*,
+       (SELECT min(createTime) FROM PGPReadWrite3) AS startTime,
+       (SELECT max(createTime) FROM PGPReadWrite3) AS endTime,
+       :truncation_limit                           AS TRUNCATION_LIMIT,
+       ':truncation_order'                         AS TRUNCATION_ORDER,
+       :rw3_amount_threshold                       AS AMOUNT_THRESHOLD,
+FROM PGPReadWrite3 )
+TO ':output_dir/incremental/AddPersonGuaranteePersonReadWrite3.csv' (DELIMITER '|', HEADER);
+
