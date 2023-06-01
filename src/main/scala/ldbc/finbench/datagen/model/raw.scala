@@ -76,7 +76,8 @@ object raw {
       personId: String,
       loanId: String,
       loanAmount: Double,
-      createTime: Long
+      createTime: Long,
+      org: String
   )
 
   // define CompanyApplyLoan relationship
@@ -84,7 +85,8 @@ object raw {
       companyId: String,
       loanId: String,
       loanAmount: Double,
-      createTime: Long
+      createTime: Long,
+      org: String
   )
 
   // define PersonInvestCompany relationship
@@ -143,7 +145,11 @@ object raw {
       createTime: Long,
       deleteTime: Long,
       amount: Double,
-      isExplicitDeleted: Boolean
+      isExplicitDeleted: Boolean,
+      orderNum: String,
+      comment: String,
+      payType: String,
+      goodsType: String
   )
 
   // define Withdraw relationship
@@ -186,6 +192,7 @@ object raw {
       multiplicityId: Long,
       createTime: Long,
       deleteTime: Long,
-      isExplicitDeleted: Boolean
+      isExplicitDeleted: Boolean,
+      location: String
   )
 }

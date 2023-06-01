@@ -68,6 +68,10 @@ public class RandomGeneratorFarm implements Serializable {
         TRANSFER_COMMENT,
         TRANSFER_PAYTYPE,
         TRANSFER_GOODSTYPE,
+        SIGNIN_COUNTRY,
+        SIGNIN_CITY,
+        PERSON_APPLY_LOAN_ORGANIZATION,
+        COMPANY_APPLY_LOAN_ORGANIZATION,
         NUM_ASPECT                  // This must be always the last one.
     }
 

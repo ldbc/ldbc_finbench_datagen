@@ -59,7 +59,7 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])
           pal: PersonApplyLoan =>
             PersonApplyLoanRaw(idFormat.format(pal.getPerson.getPersonId),
                                idFormat.format(pal.getLoan.getLoanId), pal.getLoan.getLoanAmount,
-                               pal.getCreationDate)
+                               pal.getCreationDate, pal.getOrganization)
         }
       }
       spark.createDataFrame(rawPersonLoan).write.format(sink.format.toString).options(options)
@@ -105,7 +105,7 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])
           cal: CompanyApplyLoan =>
             CompanyApplyLoanRaw(idFormat.format(cal.getCompany.getCompanyId),
                                 idFormat.format(cal.getLoan.getLoanId),
-                                cal.getLoan.getLoanAmount, cal.getCreationDate)
+                                cal.getLoan.getLoanAmount, cal.getCreationDate, cal.getOrganization)
         }
       }
       spark.createDataFrame(rawCompanyLoan).write.format(sink.format.toString).options(options)
@@ -116,15 +116,16 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])
   def writeMediumWithActivities(media: RDD[Medium], signIns: RDD[SignIn]): Unit = {
     SparkUI.jobAsync("Write media", "Write Medium") {
       val rawMedium = media
-        .map { m: Medium => MediumRaw(idFormat.format(m.getMediumId), m.getCreationDate, m.getMediumName, m.isBlocked,
-                                      m.getLastLogin, m.getRiskLevel)
+        .map { m: Medium =>
+          MediumRaw(idFormat.format(m.getMediumId), m.getCreationDate, m.getMediumName, m.isBlocked,
+                    m.getLastLogin, m.getRiskLevel)
         }
       spark.createDataFrame(rawMedium).write.format(sink.format.toString).options(options)
            .save((pathPrefix / "medium").toString)
 
       val rawSignIn = signIns.map { si: SignIn =>
         SignInRaw(idFormat.format(si.getMedium.getMediumId), idFormat.format(si.getAccount.getAccountId),
-                  si.getMultiplicityId, si.getCreationDate, si.getDeletionDate, si.isExplicitlyDeleted)
+                  si.getMultiplicityId, si.getCreationDate, si.getDeletionDate, si.isExplicitlyDeleted, si.getLocation)
       }
       spark.createDataFrame(rawSignIn).write.format(sink.format.toString).options(options)
            .save((pathPrefix / "signIn").toString)
@@ -144,7 +145,8 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])
 
       val rawTransfer = transfers.map { t =>
         TransferRaw(idFormat.format(t.getFromAccount.getAccountId), idFormat.format(t.getToAccount.getAccountId),
-                    t.getMultiplicityId, t.getCreationDate, t.getDeletionDate, t.getAmount, t.isExplicitlyDeleted)
+                    t.getMultiplicityId, t.getCreationDate, t.getDeletionDate, t.getAmount, t.isExplicitlyDeleted,
+                    t.getOrdernum, t.getComment, t.getPayType, t.getGoodsType)
       }
       spark.createDataFrame(rawTransfer).write.format(sink.format.toString).options(options)
            .save((pathPrefix / "transfer").toString)
@@ -209,7 +211,8 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])
       val rawLoanTransfer = loantransfers.map { t: Transfer =>
         TransferRaw(idFormat.format(t.getFromAccount.getAccountId),
                     idFormat.format(t.getToAccount.getAccountId), t.getMultiplicityId, t.getCreationDate,
-                    t.getDeletionDate, t.getAmount, t.isExplicitlyDeleted)
+                    t.getDeletionDate, t.getAmount, t.isExplicitlyDeleted, t.getOrdernum, t.getComment, t.getPayType,
+                    t.getGoodsType)
       }
       spark.createDataFrame(rawLoanTransfer).write.format(sink.format.toString).options(options)
            .save((pathPrefix / "loantransfer").toString)

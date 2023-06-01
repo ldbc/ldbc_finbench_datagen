@@ -16,6 +16,7 @@ public class DatagenParams {
     public static final String transferTypeFile = DICTIONARY_DIR + "payTypes.txt";
     public static final String goodsTypeFile = DICTIONARY_DIR + "goodsTypes.txt";
     public static final String loanUsageFile = DICTIONARY_DIR + "loanUsages.txt";
+    public static final String loanOrganizationsFile = DICTIONARY_DIR + "loanOrganizations.txt";
     public static final String urlFile = DICTIONARY_DIR + "urls.txt";
     public static final String emailFile = DICTIONARY_DIR + "emails.txt";
     public static final String accountNicknameFile = DICTIONARY_DIR + "accountNicknames.txt";

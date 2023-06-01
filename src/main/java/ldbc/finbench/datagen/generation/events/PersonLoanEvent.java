@@ -35,8 +35,10 @@ public class PersonLoanEvent implements Serializable {
                     long applyDate =
                         Dictionaries.dates.randomPersonToLoanDate(
                             randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_APPLY_LOAN_DATE), person);
+                    String organization = Dictionaries.loanOrganizations.getUniformDistRandomText(
+                        randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_APPLY_LOAN_ORGANIZATION));
                     Loan loan = loanGenerator.generateLoan(applyDate, "person", blockId);
-                    PersonApplyLoan.createPersonApplyLoan(applyDate, person, loan);
+                    PersonApplyLoan.createPersonApplyLoan(applyDate, person, loan, organization);
                 }
             }
         });
