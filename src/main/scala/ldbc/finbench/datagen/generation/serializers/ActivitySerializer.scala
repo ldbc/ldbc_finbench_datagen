@@ -17,7 +17,6 @@ import scala.collection.JavaConverters._
 class ActivitySerializer(sink: RawSink, options: Map[String, String])
                         (implicit spark: SparkSession) extends Serializable with Logging {
   private val pathPrefix: String = (sink.outputDir / "raw").toString
-  private val idFormat: String = "%019d"
 
   def writePersonWithActivities(self: RDD[Person]): Unit = {
     SparkUI.jobAsync("Write Person", "Write Person") {
