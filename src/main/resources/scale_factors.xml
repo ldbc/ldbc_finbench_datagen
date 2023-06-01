@@ -3,15 +3,15 @@
     <scale_factor name="0.01">
         <property>
             <name>generator.numPersons</name>
-            <value>2000</value>
+            <value>800</value>
         </property>
         <property>
             <name>generator.numCompanies</name>
-            <value>1000</value>
+            <value>400</value>
         </property>
         <property>
             <name>generator.numMediums</name>
-            <value>1500</value>
+            <value>1000</value>
         </property>
         <property>
             <name>transfer.minNumDegree</name>
@@ -23,6 +23,7 @@
         </property>
     </scale_factor>
 
+    <!--tuned-->
     <scale_factor name="0.1">
         <property>
             <name>generator.numPersons</name>
@@ -49,11 +50,15 @@
     <scale_factor name="0.3">
         <property>
             <name>generator.numPersons</name>
-            <value>1000</value>
+            <value>24000</value>
         </property>
         <property>
             <name>generator.numCompanies</name>
-            <value>700</value>
+            <value>12000</value>
+        </property>
+        <property>
+            <name>generator.numMediums</name>
+            <value>30000</value>
         </property>
         <property>
             <name>transfer.minNumDegree</name>
@@ -65,14 +70,19 @@
         </property>
     </scale_factor>
 
+    <!--tuned-->
     <scale_factor name="1">
         <property>
             <name>generator.numPersons</name>
-            <value>1000</value>
+            <value>80000</value>
         </property>
         <property>
             <name>generator.numCompanies</name>
-            <value>700</value>
+            <value>40000</value>
+        </property>
+        <property>
+            <name>generator.numMediums</name>
+            <value>100000</value>
         </property>
         <property>
             <name>transfer.minNumDegree</name>
@@ -87,11 +97,15 @@
     <scale_factor name="3">
         <property>
             <name>generator.numPersons</name>
-            <value>1000</value>
+            <value>240000</value>
         </property>
         <property>
             <name>generator.numCompanies</name>
-            <value>700</value>
+            <value>120000</value>
+        </property>
+        <property>
+            <name>generator.numMediums</name>
+            <value>300000</value>
         </property>
         <property>
             <name>transfer.minNumDegree</name>
