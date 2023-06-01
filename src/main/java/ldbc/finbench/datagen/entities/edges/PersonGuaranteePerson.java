@@ -2,7 +2,7 @@ package ldbc.finbench.datagen.entities.edges;
 
 import java.io.Serializable;
 import java.util.Random;
-import -am ldbc.finbench.datagen.entities.DynamicActivity;
+import ldbc.finbench.datagen.entities.DynamicActivity;
 import ldbc.finbench.datagen.entities.nodes.Person;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
