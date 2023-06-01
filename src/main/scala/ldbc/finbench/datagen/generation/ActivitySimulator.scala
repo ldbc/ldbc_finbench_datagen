@@ -16,13 +16,11 @@ import scala.collection.JavaConverters._
 //  - refactor using common GraphDef to make the code less verbose
 //  - repartition with the partition option
 class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Writer[RawSink] with Serializable with Logging {
-
-  private val options: Map[String, String] = sink.formatOptions ++ Map("header" -> "true", "delimiter" -> "|")
   private val parallelism = spark.sparkContext.defaultParallelism
   private val blockSize: Int = DatagenParams.blockSize
 
   private val activityGenerator = new ActivityGenerator()
-  private val activitySerializer = new ActivitySerializer(sink, options)
+  private val activitySerializer = new ActivitySerializer(sink)
 
   private val personNum: Long = DatagenParams.numPersons
   private val personPartitions = Some(Math.min(Math.ceil(personNum.toDouble / blockSize).toLong, parallelism).toInt)
