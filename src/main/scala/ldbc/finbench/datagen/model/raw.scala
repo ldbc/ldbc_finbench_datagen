@@ -26,6 +26,12 @@ object raw {
       deleteTime: Long,
       isBlocked: Boolean,
       `type`: String,
+      nickname: String,
+      phonenum: String,
+      email: String,
+      freqLoginType: String,
+      lastLoginTime: Long,
+      accountLevel: String,
       inDegree: Long,
       OutDegree: Long,
       isExplicitDeleted: Boolean,
@@ -60,7 +66,9 @@ object raw {
       id: String,
       createTime: Long,
       `type`: String,
-      isBlocked: Boolean
+      isBlocked: Boolean,
+      lastLogin: Long,
+      riskLevel: String,
   )
 
   // define PersonApplyLoan relationship
