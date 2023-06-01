@@ -63,7 +63,7 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession) extends Se
                                pal.getCreationDate, pal.getOrganization)
         }
       }
-      spark.createDataFrame(rawPersonLoan).write.format(sink.format.toString).options(options).option("numDigits", 2)
+      spark.createDataFrame(rawPersonLoan).write.format(sink.format.toString).options(options)
            .save((pathPrefix / "personApplyLoan").toString)
     }
   }
