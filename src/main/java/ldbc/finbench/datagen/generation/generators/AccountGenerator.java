@@ -118,8 +118,8 @@ public class AccountGenerator implements Serializable {
         account.setLastLoginTime(lastLoginTime);
 
         // Set accountLevel
-        String accountLevel = Dictionaries.accountLevels.getUniformDistRandomText(
-            randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_LEVEL));
+        String accountLevel =
+            Dictionaries.accountLevels.getDistributedText(randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_LEVEL));
         account.setAccountLevel(accountLevel);
 
         // Set isBlocked

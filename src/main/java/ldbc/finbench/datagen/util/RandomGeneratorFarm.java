@@ -48,6 +48,8 @@ public class RandomGeneratorFarm implements Serializable {
         PERSON_BIRTHDAY,
         PERSON_COUNTRY,
         PERSON_CITY,
+        PERSON_APPLY_LOAN_ORGANIZATION,
+        PERSON_GUARANTEE_RELATIONSHIP,
         COMPANY_COUNTRY,
         COMPANY_CITY,
         COMPANY_BUSINESS,
@@ -70,7 +72,6 @@ public class RandomGeneratorFarm implements Serializable {
         TRANSFER_GOODSTYPE,
         SIGNIN_COUNTRY,
         SIGNIN_CITY,
-        PERSON_APPLY_LOAN_ORGANIZATION,
         COMPANY_APPLY_LOAN_ORGANIZATION,
         NUM_ASPECT                  // This must be always the last one.
     }

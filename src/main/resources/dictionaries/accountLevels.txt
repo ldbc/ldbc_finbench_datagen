@@ -1,10 +1,6 @@
-Basic level
-Bronze level
-Silver level
-Gold level
-Platinum level
-Diamond level
-Elite level
-Premier level
-VIP level
-Exclusive level
+Basic level, 0.6
+Silver level, 0.2
+Gold level, 0.1
+Platinum level, 0.05
+Diamond level, 0.03
+Elite level, 0.02

@@ -18,8 +18,9 @@ public class Dictionaries {
     public static CommonTextDictionary urls = null;
     public static EmailDictionary emails = null;
     public static CommonTextDictionary accountNicknames = null;
-    public static CommonTextDictionary accountLevels = null;
+    public static PercentageTextDictionary accountLevels = null;
     public static CommonTextDictionary riskLevels = null;
+    public static PercentageTextDictionary guaranteeRelationships = null;
     public static DateGenerator dates = null;
     public static PlaceDictionary places = null;
     public static NumbersGenerator numbers;
@@ -38,8 +39,9 @@ public class Dictionaries {
         urls = new CommonTextDictionary(DatagenParams.urlFile, ",");
         emails = new EmailDictionary(DatagenParams.emailFile, " ");
         accountNicknames = new CommonTextDictionary(DatagenParams.accountNicknameFile, ",");
-        accountLevels = new CommonTextDictionary(DatagenParams.accountLevelFile, ",");
+        accountLevels = new PercentageTextDictionary(DatagenParams.accountLevelFile, ",");
         riskLevels = new CommonTextDictionary(DatagenParams.riskLevelFile, ",");
+        guaranteeRelationships = new PercentageTextDictionary(DatagenParams.guaranteeRelationshipFile, ",");
         places = new PlaceDictionary();
         numbers = new NumbersGenerator();
 

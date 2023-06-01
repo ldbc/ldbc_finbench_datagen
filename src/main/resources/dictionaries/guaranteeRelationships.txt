@@ -1,0 +1,5 @@
+friends, 0.3
+business associate, 0.2
+parents, 0.2
+siblings, 0.2
+other relatives, 0.1

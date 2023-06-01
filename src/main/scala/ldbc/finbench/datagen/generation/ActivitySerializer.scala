@@ -1,4 +1,4 @@
-package ldbc.finbench.datagen.generation.serializers
+package ldbc.finbench.datagen.generation
 
 import ldbc.finbench.datagen.entities.edges._
 import ldbc.finbench.datagen.entities.nodes._
@@ -46,7 +46,7 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])
           pgp: PersonGuaranteePerson =>
             PersonGuaranteePersonRaw(idFormat.format(pgp.getFromPerson.getPersonId),
                                      idFormat.format(pgp.getToPerson.getPersonId),
-                                     pgp.getCreationDate)
+                                     pgp.getCreationDate, pgp.getRelationship)
         }
       }
       spark.createDataFrame(rawPersonGuarantee).write.format(sink.format.toString).options(options)
@@ -92,7 +92,7 @@ class ActivitySerializer(sink: RawSink, options: Map[String, String])
           cgc: CompanyGuaranteeCompany =>
             CompanyGuaranteeCompanyRaw(idFormat.format(cgc.getFromCompany.getCompanyId),
                                        idFormat.format(cgc.getToCompany.getCompanyId),
-                                       cgc.getCreationDate)
+                                       cgc.getCreationDate, cgc.getRelationship)
         }
       }
       spark.createDataFrame(rawCompanyGuarantee).write.format(sink.format.toString).options(options)

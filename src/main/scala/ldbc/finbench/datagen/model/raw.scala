@@ -109,14 +109,16 @@ object raw {
   case class PersonGuaranteePersonRaw(
       fromId: String,
       toId: String,
-      createTime: Long
+      createTime: Long,
+      relation: String
   )
 
   // define CompanyGuarantee relationship
   case class CompanyGuaranteeCompanyRaw(
       fromId: String,
       toId: String,
-      createTime: Long
+      createTime: Long,
+      relation: String
   )
 
   //define PersonOwnAccount relationship
