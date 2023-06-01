@@ -5,7 +5,7 @@ import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.generation.generators.DateGenerator;
 
 public class Dictionaries {
-    public static CommonTextDictionary personNames = null;
+    public static PersonNameDictionary personNames = null;
     public static CommonTextDictionary companyNames = null;
     public static CommonTextDictionary mediumNames = null;
     public static CommonTextDictionary accountTypes = null;
@@ -26,7 +26,7 @@ public class Dictionaries {
     public static NumbersGenerator numbers;
 
     public static void loadDictionaries() {
-        personNames = new CommonTextDictionary(DatagenParams.personSurnameFile, ",");
+        personNames = new PersonNameDictionary(DatagenParams.personSurnameFile, ",");
         companyNames = new CommonTextDictionary(DatagenParams.companyNameFile, ",");
         mediumNames = new CommonTextDictionary(DatagenParams.mediumNameFile, ",");
         accountTypes = new CommonTextDictionary(DatagenParams.accountFile, ",");

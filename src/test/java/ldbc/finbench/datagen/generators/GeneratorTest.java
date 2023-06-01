@@ -29,7 +29,7 @@ public class GeneratorTest {
     @Test
     public void testDatagenContext() {
         Random random = new Random();
-        System.out.println(Dictionaries.personNames.getUniformDistRandomText(random));
+        System.out.println(Dictionaries.personNames.getUniformDistRandName(random));
     }
 
 }
