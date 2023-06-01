@@ -58,10 +58,10 @@ COPY
 SELECT TransferReadWrite2.*,
        (SELECT min(createTime) FROM TransferReadWrite2) AS startTime,
        (SELECT max(createTime) FROM TransferReadWrite2) AS endTime,
-       :truncation_limit                                AS TRUNCATION_LIMIT,
-       ':truncation_order'                              AS TRUNCATION_ORDER,
-       :rw2_amount_threshold                            AS AMOUNT_THRESHOLD,
-       :rw2_ratio_threshold                             AS RATIO_THRESHOLD
+       :truncation_limit                                AS truncation_limit,
+       ':truncation_order'                              AS truncation_order,
+       :rw2_amount_threshold                            AS amount_threshold,
+       :rw2_ratio_threshold                             AS ratio_threshold
 FROM TransferReadWrite2 )
 TO ':output_dir/incremental/AddAccountTransferAccountReadWrite2.csv' (DELIMITER '|', HEADER);
 
@@ -97,9 +97,9 @@ COPY
 SELECT PGPReadWrite3.*,
        (SELECT min(createTime) FROM PGPReadWrite3) AS startTime,
        (SELECT max(createTime) FROM PGPReadWrite3) AS endTime,
-       :truncation_limit                           AS TRUNCATION_LIMIT,
-       ':truncation_order'                         AS TRUNCATION_ORDER,
-       :rw3_amount_threshold                       AS AMOUNT_THRESHOLD,
+       :truncation_limit                           AS truncation_limit,
+       ':truncation_order'                         AS truncation_order,
+       :rw3_amount_threshold                       AS amount_threshold,
 FROM PGPReadWrite3 )
 TO ':output_dir/incremental/AddPersonGuaranteePersonReadWrite3.csv' (DELIMITER '|', HEADER);
 
