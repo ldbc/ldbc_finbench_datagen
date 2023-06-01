@@ -6,7 +6,8 @@ SELECT Person.createTime AS createTime,
        0                 AS dependencyTime,
        Person.id         AS personId,
        Person.name       AS personName,
-       Person.isBlocked  AS isBlocked
+       Person.isBlocked  AS isBlocked,
+
 FROM Person
 WHERE Person.createTime > :start_date_long
 ORDER BY Person.createTime )
