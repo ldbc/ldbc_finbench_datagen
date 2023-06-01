@@ -13,7 +13,7 @@ public class TransferMerger {
         int index = 0;
         for (Account acc : accounts) {
             if (index == 0) {
-                account = new Account(acc);
+                account = new Account(); // TODO: use copy constructor
             }
             transfers.addAll(acc.getTransferOuts());
             index++;

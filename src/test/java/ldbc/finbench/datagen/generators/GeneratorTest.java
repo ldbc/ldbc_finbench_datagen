@@ -1,6 +1,7 @@
 package ldbc.finbench.datagen.generators;
 
 import java.util.Map;
+import java.util.Random;
 import ldbc.finbench.datagen.config.ConfigParser;
 import ldbc.finbench.datagen.config.DatagenConfiguration;
 import ldbc.finbench.datagen.entities.nodes.Person;
@@ -14,7 +15,7 @@ public class GeneratorTest {
 
     public GeneratorTest() {
         config = ConfigParser.readConfig("src/main/resources/params_default.ini");
-        config.putAll(ConfigParser.scaleFactorConf("","0.1")); // use scale factor 0.1
+        config.putAll(ConfigParser.scaleFactorConf("", "0.1")); // use scale factor 0.1
         DatagenContext.initialize(new DatagenConfiguration(config));
     }
 
@@ -27,7 +28,8 @@ public class GeneratorTest {
 
     @Test
     public void testDatagenContext() {
-        System.out.println(Dictionaries.personNames.getNumNames());
+        Random random = new Random();
+        System.out.println(Dictionaries.personNames.getUniformDistRandName(random));
     }
 
 }

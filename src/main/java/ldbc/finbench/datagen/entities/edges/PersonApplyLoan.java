@@ -12,18 +12,20 @@ public class PersonApplyLoan implements DynamicActivity, Serializable {
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
+    private String organization;
 
     public PersonApplyLoan(Person person, Loan loan, long creationDate, long deletionDate,
-                           boolean isExplicitlyDeleted) {
+                           boolean isExplicitlyDeleted, String organization) {
         this.person = person;
         this.loan = loan;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
+        this.organization = organization;
     }
 
-    public static void createPersonApplyLoan(long creationDate, Person person, Loan loan) {
-        PersonApplyLoan personApplyLoan = new PersonApplyLoan(person, loan, creationDate, 0, false);
+    public static void createPersonApplyLoan(long creationDate, Person person, Loan loan, String organization) {
+        PersonApplyLoan personApplyLoan = new PersonApplyLoan(person, loan, creationDate, 0, false, organization);
         person.getLoans().add(loan);
         person.getPersonApplyLoans().add(personApplyLoan);
         loan.setOwnerType(PersonOrCompany.PERSON);
@@ -72,4 +74,13 @@ public class PersonApplyLoan implements DynamicActivity, Serializable {
     public void setExplicitlyDeleted(boolean explicitlyDeleted) {
         isExplicitlyDeleted = explicitlyDeleted;
     }
+
+    public String getOrganization() {
+        return organization;
+    }
+
+    public void setOrganization(String organization) {
+        this.organization = organization;
+    }
+
 }

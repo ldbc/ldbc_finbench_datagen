@@ -1,0 +1,17 @@
+PayPal
+Apple Pay
+Google Pay
+Alipay
+WeChat Pay
+Venmo
+Cash App
+Bank Transfer
+Gift Card
+Cryptocurrency
+Money Order
+Cheque
+Direct Deposit
+E-wallets
+Mobile Carrier Billing
+Invoice Factoring
+Payment Plan

@@ -12,7 +12,11 @@ object raw {
       id: Long,
       createTime: Long,
       name: String,
-      isBlocked: Boolean
+      isBlocked: Boolean,
+      gender: String,
+      birthday: Long,
+      country: String,
+      city: String
   )
 
   // define Account entity
@@ -22,6 +26,12 @@ object raw {
       deleteTime: Long,
       isBlocked: Boolean,
       `type`: String,
+      nickname: String,
+      phonenum: String,
+      email: String,
+      freqLoginType: String,
+      lastLoginTime: Long,
+      accountLevel: String,
       inDegree: Long,
       OutDegree: Long,
       isExplicitDeleted: Boolean,
@@ -33,7 +43,12 @@ object raw {
       id: Long,
       createTime: Long,
       name: String,
-      isBlocked: Boolean
+      isBlocked: Boolean,
+      country: String,
+      city: String,
+      business: String,
+      description: String,
+      url: String
   )
 
   // define Loan entity
@@ -41,7 +56,9 @@ object raw {
       id: Long,
       createTime: Long,
       loanAmount: Double,
-      balance: Double
+      balance: Double,
+      usage: String,
+      interestRate: Double
   )
 
   // define Medium entity
@@ -49,23 +66,27 @@ object raw {
       id: Long,
       createTime: Long,
       `type`: String,
-      isBlocked: Boolean
+      isBlocked: Boolean,
+      lastLogin: Long,
+      riskLevel: String,
   )
 
   // define PersonApplyLoan relationship
   case class PersonApplyLoanRaw(
-      `personId`: Long,
-      `loanId`: Long,
+      personId: Long,
+      loanId: Long,
       loanAmount: Double,
-      createTime: Long
+      createTime: Long,
+      org: String
   )
 
   // define CompanyApplyLoan relationship
   case class CompanyApplyLoanRaw(
-      `companyId`: Long,
-      `loanId`: Long,
+      companyId: Long,
+      loanId: Long,
       loanAmount: Double,
-      createTime: Long
+      createTime: Long,
+      org: String
   )
 
   // define PersonInvestCompany relationship
@@ -88,20 +109,22 @@ object raw {
   case class PersonGuaranteePersonRaw(
       fromId: Long,
       toId: Long,
-      createTime: Long
+      createTime: Long,
+      relation: String
   )
 
   // define CompanyGuarantee relationship
   case class CompanyGuaranteeCompanyRaw(
       fromId: Long,
       toId: Long,
-      createTime: Long
+      createTime: Long,
+      relation: String
   )
 
   //define PersonOwnAccount relationship
   case class PersonOwnAccountRaw(
-      `personId`: Long,
-      `accountId`: Long,
+      personId: Long,
+      accountId: Long,
       createTime: Long,
       deleteTime: Long,
       isExplicitDeleted: Boolean
@@ -109,8 +132,8 @@ object raw {
 
   // define CompanyOwnAccount relationship
   case class CompanyOwnAccountRaw(
-      `companyId`: Long,
-      `accountId`: Long,
+      companyId: Long,
+      accountId: Long,
       createTime: Long,
       deleteTime: Long,
       isExplicitDeleted: Boolean
@@ -124,7 +147,11 @@ object raw {
       createTime: Long,
       deleteTime: Long,
       amount: Double,
-      isExplicitDeleted: Boolean
+      isExplicitDeleted: Boolean,
+      orderNum: String,
+      comment: String,
+      payType: String,
+      goodsType: String
   )
 
   // define Withdraw relationship
@@ -142,8 +169,8 @@ object raw {
 
   // define Repay relationship
   case class RepayRaw(
-      `accountId`: Long,
-      `loanId`: Long,
+      accountId: Long,
+      loanId: Long,
       createTime: Long,
       deleteTime: Long,
       amount: Double,
@@ -152,8 +179,8 @@ object raw {
 
   // define Deposit relationship
   case class DepositRaw(
-      `loanId`: Long,
-      `accountId`: Long,
+      loanId: Long,
+      accountId: Long,
       createTime: Long,
       deleteTime: Long,
       amount: Double,
@@ -162,11 +189,12 @@ object raw {
 
   // define SignIn relationship
   case class SignInRaw(
-      `mediumId`: Long,
-      `accountId`: Long,
+      mediumId: Long,
+      accountId: Long,
       multiplicityId: Long,
       createTime: Long,
       deleteTime: Long,
-      isExplicitDeleted: Boolean
+      isExplicitDeleted: Boolean,
+      location: String
   )
 }

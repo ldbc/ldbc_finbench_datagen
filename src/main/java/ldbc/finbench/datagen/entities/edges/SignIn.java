@@ -6,12 +6,15 @@ import ldbc.finbench.datagen.entities.DynamicActivity;
 import ldbc.finbench.datagen.entities.nodes.Account;
 import ldbc.finbench.datagen.entities.nodes.Medium;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
+import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class SignIn implements DynamicActivity, Serializable {
     private Medium medium;
     private Account account;
     private long creationDate;
     private long deletionDate;
+    private int countryId;
+    private int cityId;
     private long multiplicityId;
     private boolean isExplicitlyDeleted;
 
@@ -25,11 +28,19 @@ public class SignIn implements DynamicActivity, Serializable {
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static SignIn createSignIn(int mid, Random random, Medium medium, Account account) {
+    public static SignIn createSignIn(int mid, RandomGeneratorFarm randomFarm, Medium medium, Account account) {
         long creationDate =
-            Dictionaries.dates.randomMediumToAccountDate(random, medium, account, account.getDeletionDate());
+            Dictionaries.dates.randomMediumToAccountDate(randomFarm.get(RandomGeneratorFarm.Aspect.SIGNIN_DATE), medium,
+                                                         account, account.getDeletionDate());
         SignIn signIn = new SignIn(medium, account, mid, creationDate, account.getDeletionDate(),
                                    account.isExplicitlyDeleted());
+        // Set country and city
+        int countryId =
+            Dictionaries.places.getCountryForPerson(randomFarm.get(RandomGeneratorFarm.Aspect.SIGNIN_COUNTRY));
+        signIn.setCountryId(countryId);
+        signIn.setCityId(
+            Dictionaries.places.getRandomCity(randomFarm.get(RandomGeneratorFarm.Aspect.SIGNIN_CITY), countryId));
+
         medium.getSignIns().add(signIn);
         account.getSignIns().add(signIn);
 
@@ -85,5 +96,25 @@ public class SignIn implements DynamicActivity, Serializable {
 
     public void setExplicitlyDeleted(boolean explicitlyDeleted) {
         isExplicitlyDeleted = explicitlyDeleted;
+    }
+
+    public int getCountryId() {
+        return countryId;
+    }
+
+    public void setCountryId(int countryId) {
+        this.countryId = countryId;
+    }
+
+    public int getCityId() {
+        return cityId;
+    }
+
+    public void setCityId(int cityId) {
+        this.cityId = cityId;
+    }
+
+    public String getLocation() {
+        return Dictionaries.places.getPlaceName(countryId) + " -> " + Dictionaries.places.getPlaceName(cityId);
     }
 }

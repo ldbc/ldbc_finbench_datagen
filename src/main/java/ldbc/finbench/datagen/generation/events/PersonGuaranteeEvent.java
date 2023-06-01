@@ -7,6 +7,7 @@ import java.util.Random;
 import ldbc.finbench.datagen.entities.edges.PersonGuaranteePerson;
 import ldbc.finbench.datagen.entities.nodes.Person;
 import ldbc.finbench.datagen.generation.DatagenParams;
+import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class PersonGuaranteeEvent implements Serializable {
@@ -38,8 +39,7 @@ public class PersonGuaranteeEvent implements Serializable {
                 for (int j = 0; j < targetsToGuarantee; j++) {
                     Person toPerson = persons.get(randIndex.nextInt(persons.size())); // Choose a random person
                     if (person.canGuarantee(toPerson)) {
-                        PersonGuaranteePerson.createPersonGuaranteePerson(
-                            randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_GUARANTEE_DATE), person, toPerson);
+                        PersonGuaranteePerson.createPersonGuaranteePerson(randomFarm, person, toPerson);
                     }
                 }
             }

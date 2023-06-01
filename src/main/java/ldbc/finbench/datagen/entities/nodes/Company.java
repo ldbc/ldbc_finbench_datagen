@@ -7,6 +7,7 @@ import ldbc.finbench.datagen.entities.edges.CompanyApplyLoan;
 import ldbc.finbench.datagen.entities.edges.CompanyGuaranteeCompany;
 import ldbc.finbench.datagen.entities.edges.CompanyInvestCompany;
 import ldbc.finbench.datagen.entities.edges.CompanyOwnAccount;
+import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 
 public class Company implements Serializable {
     private long companyId;
@@ -14,6 +15,11 @@ public class Company implements Serializable {
     private long creationDate;
     //    private long maxDegree;
     private boolean isBlocked;
+    private int countryId;
+    private int cityId;
+    private String business;
+    private String description;
+    private String url;
     private List<Account> accounts;
     private List<Loan> loans;
     private List<CompanyOwnAccount> companyOwnAccounts;
@@ -132,7 +138,6 @@ public class Company implements Serializable {
         isBlocked = blocked;
     }
 
-
     public List<Account> getAccounts() {
         return accounts;
     }
@@ -147,5 +152,53 @@ public class Company implements Serializable {
 
     public void setLoans(List<Loan> loans) {
         this.loans = loans;
+    }
+
+    public int getCountryId() {
+        return countryId;
+    }
+
+    public String getCountryName() {
+        return Dictionaries.places.getPlaceName(countryId);
+    }
+
+    public void setCountryId(int countryId) {
+        this.countryId = countryId;
+    }
+
+    public int getCityId() {
+        return cityId;
+    }
+
+    public String getCityName() {
+        return Dictionaries.places.getPlaceName(cityId);
+    }
+
+    public void setCityId(int cityId) {
+        this.cityId = cityId;
+    }
+
+    public String getBusiness() {
+        return business;
+    }
+
+    public void setBusiness(String business) {
+        this.business = business;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 }

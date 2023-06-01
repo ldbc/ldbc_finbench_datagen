@@ -116,20 +116,16 @@ public class LoanSubEvents implements Serializable {
         if (actionRandom.nextDouble() < 0.5) {
             if (!cannotTransfer(account, target)) {
                 transfers.add(
-                    Transfer.createTransferAndReturn(randomFarm.get(RandomGeneratorFarm.Aspect.LOAN_SUBEVENTS_DATE),
-                                                     account,
-                                                     target,
-                                                     getMultiplicityIdAndInc(account, target),
-                                                     amountRandom.nextDouble() * DatagenParams.tsfMaxAmount));
+                    Transfer.createLoanTransferAndReturn(randomFarm, account, target,
+                                                         getMultiplicityIdAndInc(account, target),
+                                                         amountRandom.nextDouble() * DatagenParams.tsfMaxAmount));
             }
         } else {
             if (!cannotTransfer(target, account)) {
                 transfers.add(
-                    Transfer.createTransferAndReturn(randomFarm.get(RandomGeneratorFarm.Aspect.LOAN_SUBEVENTS_DATE),
-                                                     target,
-                                                     account,
-                                                     getMultiplicityIdAndInc(target, account),
-                                                     amountRandom.nextDouble() * DatagenParams.tsfMaxAmount));
+                    Transfer.createLoanTransferAndReturn(randomFarm, target, account,
+                                                         getMultiplicityIdAndInc(target, account),
+                                                         amountRandom.nextDouble() * DatagenParams.tsfMaxAmount));
             }
         }
     }

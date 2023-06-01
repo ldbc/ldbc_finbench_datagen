@@ -4,7 +4,11 @@ COPY
 SELECT Person.id                   AS personId,
        Person.name                 AS personName,
        Person.isBlocked            AS isBlocked,
-       epoch_ms(Person.createTime) AS createTime
+       epoch_ms(Person.createTime) AS createTime,
+       Person.gender               AS gender,
+       epoch_ms(Person.birthday)   AS birthday,
+       Person.country              AS country,
+       Person.city                 AS city
 FROM Person
 WHERE Person.createTime <= :start_date_long
 ORDER BY Person.createTime )
@@ -16,7 +20,12 @@ COPY
 SELECT Company.id                   AS companyId,
        Company.name                 AS companyName,
        Company.isBlocked            AS isBlocked,
-       epoch_ms(Company.createTime) AS createTime
+       epoch_ms(Company.createTime) AS createTime,
+       Company.country              AS country,
+       Company.city                 AS city,
+       Company.business             AS business,
+       Company.description          AS description,
+       Company.url                  AS url
 FROM Company
 WHERE Company.createTime <= :start_date_long
 ORDER BY Company.createTime )
@@ -28,7 +37,13 @@ COPY
 SELECT Account.id                   AS accountId,
        epoch_ms(Account.createTime) AS createTime,
        Account.isBlocked            AS isBlocked,
-       Account.type                 AS accoutType
+       Account.type                 AS accoutType,
+       Account.nickname             AS nickname,
+       Account.phonenum             AS phonenum,
+       Account.email                AS email,
+       Account.freqLoginType        AS freqLoginType,
+       Account.lastLoginTime        AS lastLoginTime,
+       Account.accountLevel         AS accountLevel,
 FROM Account
 WHERE Account.createTime <= :start_date_long
   AND Account.deleteTime > :start_date_long
@@ -41,11 +56,13 @@ COPY
 SELECT Loan.id                   AS loanId,
        Loan.loanAmount           AS loanAmount,
        Loan.balance              AS balance,
-       epoch_ms(Loan.createTime) AS createTime
+       epoch_ms(Loan.createTime) AS createTime,
+       Loan.usage                AS loanUsage,
+       Loan.interestRate         AS interestRate
 FROM Loan
 WHERE Loan.createTime <= :start_date_long
 ORDER BY Loan.createTime )
-TO ':output_dir/snapshot/Loan.:output_format';
+    TO ':output_dir/snapshot/Loan.:output_format';
 
 -- Medium.
 COPY
@@ -53,7 +70,9 @@ COPY
 SELECT Medium.id                   AS mediumId,
        Medium.type                 AS mediumType,
        Medium.isBlocked            AS isBlocked,
-       epoch_ms(Medium.createTime) AS createTime
+       epoch_ms(Medium.createTime) AS createTime,
+       Medium.lastLogin            AS lastLoginTime,
+       Medium.riskLevel            AS riskLevel
 FROM Medium
 WHERE Medium.createTime <= :start_date_long
 ORDER BY Medium.createTime )
@@ -66,7 +85,10 @@ COPY
         Transfer.fromId AS fromId,
         Transfer.toId AS toId,
         Transfer.amount AS amount,
-        epoch_ms(Transfer.createTime) AS createTime
+        epoch_ms(Transfer.createTime) AS createTime,
+        Transfer.orderNum AS orderNum,
+        Transfer.comment AS comment,
+        Transfer.goodsType AS goodsType
     FROM Transfer
     WHERE Transfer.createTime <= :start_date_long AND Transfer.deleteTime > :start_date_long
     )
@@ -75,7 +97,10 @@ COPY
         LoanTransfer.fromId AS fromId,
         LoanTransfer.toId AS toId,
         LoanTransfer.amount AS amount,
-        epoch_ms(LoanTransfer.createTime) AS createTime
+        epoch_ms(LoanTransfer.createTime) AS createTime,
+        LoanTransfer.orderNum AS orderNum,
+        LoanTransfer.comment AS comment,
+        LoanTransfer.goodsType AS goodsType
     FROM LoanTransfer
     WHERE LoanTransfer.createTime <= :start_date_long  AND LoanTransfer.deleteTime > :start_date_long
     )
@@ -127,7 +152,8 @@ COPY
 (
 SELECT SignIn.mediumId             AS mediumId,
        SignIn.accountId            AS accountId,
-       epoch_ms(SignIn.createTime) AS createTime
+       epoch_ms(SignIn.createTime) AS createTime,
+       SignIn.location             AS location
 FROM SignIn
 WHERE SignIn.createTime <= :start_date_long
   AND SignIn.deleteTime > :start_date_long
@@ -163,7 +189,8 @@ COPY
 (
 SELECT PersonApplyLoan.personId             AS personId,
        PersonApplyLoan.loanId               AS loanId,
-       epoch_ms(PersonApplyLoan.createTime) AS createTime
+       epoch_ms(PersonApplyLoan.createTime) AS createTime,
+       PersonApplyLoan.org                  AS org
 FROM PersonApplyLoan
 WHERE PersonApplyLoan.createTime <= :start_date_long
 ORDER BY PersonApplyLoan.createTime )
@@ -174,7 +201,8 @@ COPY
 (
 SELECT CompanyApplyLoan.companyId            AS companyId,
        CompanyApplyLoan.loanId               AS loanId,
-       epoch_ms(CompanyApplyLoan.createTime) AS createTime
+       epoch_ms(CompanyApplyLoan.createTime) AS createTime,
+       CompanyApplyLoan.org                  AS org
 FROM CompanyApplyLoan
 WHERE CompanyApplyLoan.createTime <= :start_date_long
 ORDER BY CompanyApplyLoan.createTime )
@@ -185,7 +213,8 @@ COPY
 (
 SELECT PersonGuarantee.fromId               AS fromId,
        PersonGuarantee.toId                 AS toId,
-       epoch_ms(PersonGuarantee.createTime) AS createTime
+       epoch_ms(PersonGuarantee.createTime) AS createTime,
+       PersonGuarantee.relation             AS relation
 FROM PersonGuarantee
 WHERE PersonGuarantee.createTime <= :start_date_long
 ORDER BY PersonGuarantee.createTime )
@@ -196,7 +225,8 @@ COPY
 (
 SELECT CompanyGuarantee.fromId               AS fromId,
        CompanyGuarantee.toId                 AS toId,
-       epoch_ms(CompanyGuarantee.createTime) AS createTime
+       epoch_ms(CompanyGuarantee.createTime) AS createTime,
+       CompanyGuarantee.relation             AS relation
 FROM CompanyGuarantee
 WHERE CompanyGuarantee.createTime <= :start_date_long
 ORDER BY CompanyGuarantee.createTime )
