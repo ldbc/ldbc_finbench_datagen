@@ -13,7 +13,7 @@ public class Dictionaries {
     public static CommonTextDictionary businessDescription = null;
     public static CommonTextDictionary loanUsages = null;
     public static CommonTextDictionary urls = null;
-    public static CommonTextDictionary emails = null;
+    public static EmailDictionary emails = null;
     public static CommonTextDictionary accountNicknames = null;
     public static CommonTextDictionary accountLevels = null;
     public static CommonTextDictionary riskLevels = null;
@@ -30,7 +30,7 @@ public class Dictionaries {
         businessDescription = new CommonTextDictionary(DatagenParams.businessDescriptionsFile, ",");
         loanUsages = new CommonTextDictionary(DatagenParams.loanUsageFile, ",");
         urls = new CommonTextDictionary(DatagenParams.urlFile, ",");
-        emails = new CommonTextDictionary(DatagenParams.emailFile, ",");
+        emails = new EmailDictionary(DatagenParams.emailFile, " ");
         accountNicknames = new CommonTextDictionary(DatagenParams.accountNicknameFile, ",");
         accountLevels = new CommonTextDictionary(DatagenParams.accountLevelFile, ",");
         riskLevels = new CommonTextDictionary(DatagenParams.riskLevelFile, ",");

@@ -54,6 +54,7 @@ public class RandomGeneratorFarm implements Serializable {
         COMPANY_DESCRIPTION,
         COMPANY_URL,
         ACCOUNT_NICKNAME,
+        ACCOUNT_TOP_EMAIL,
         ACCOUNT_EMAIL,
         ACCOUNT_PHONENUM,
         ACCOUNT_FREQ_LOGIN_TYPE,

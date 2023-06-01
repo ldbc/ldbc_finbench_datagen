@@ -103,7 +103,8 @@ public class AccountGenerator implements Serializable {
 
         // Set email
         String email =
-            Dictionaries.emails.getUniformDistRandomText(randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_EMAIL));
+            Dictionaries.emails.getRandomEmail(randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_TOP_EMAIL),
+                                               randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_EMAIL));
         account.setEmail(email);
 
         // Set freqlogintype
