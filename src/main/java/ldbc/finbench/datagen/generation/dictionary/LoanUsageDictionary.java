@@ -13,7 +13,7 @@ public class LoanUsageDictionary implements Serializable {
 
     private static final String SEPARATOR = ",";
 
-    private TreeMap<Long, String> loanUsages;
+    private final TreeMap<Long, String> loanUsages;
 
     public LoanUsageDictionary() {
         this.loanUsages = new TreeMap<>();

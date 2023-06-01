@@ -20,6 +20,7 @@ public class Dictionaries {
         mediumNames = new MediumNameDictionary();
         accountTypes = new AccountTypeDictionary();
         businessTypes = new BusinessTypeDictionary();
+        businessDescription = new BusinessDescriptionDictionary();
         loanUsages = new LoanUsageDictionary();
 
         dates = new DateGenerator(

@@ -175,11 +175,5 @@
             <artifactId>scalatest-funsuite_2.12</artifactId>
             <version>${scalatest.version}</version>
         </dependency>
-
-        <dependency>
-            <groupId>net.andreinc.mockneat</groupId>
-            <artifactId>mockneat</artifactId>
-            <version>0.4.2</version>
-        </dependency>
     </dependencies>
 </project>
