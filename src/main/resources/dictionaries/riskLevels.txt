@@ -1,0 +1,9 @@
+Low risk
+Moderate risk
+High risk
+Very high risk
+Extreme risk
+Minimal risk
+Significant risk
+Severe risk
+Critical risk

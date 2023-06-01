@@ -43,8 +43,7 @@ public class SignInEvent implements Serializable {
                 }
                 int numSignIn = multiplicityRandom.nextInt(DatagenParams.maxSignInPerPair);
                 for (int mid = 0; mid < numSignIn; mid++) {
-                    SignIn signIn = SignIn.createSignIn(mid, randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
-                                                        medium, accountToSign);
+                    SignIn signIn = SignIn.createSignIn(mid, randomFarm, medium, accountToSign);
                     signIns.add(signIn);
                 }
                 signedCount++;

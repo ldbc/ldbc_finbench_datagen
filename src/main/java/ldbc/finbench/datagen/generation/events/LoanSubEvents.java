@@ -30,8 +30,7 @@ public class LoanSubEvents implements Serializable {
     private final List<Deposit> deposits;
     private final List<Repay> repays;
     private final List<Transfer> transfers;
-    // Note: Don't make it static. It will be accessed by different Spark workers, which makes the multiplicity
-    // wrong.
+    // Note: Don't make it static. It will be accessed by different Spark workers, which makes multiplicity wrong.
     private final Map<String, AtomicLong> multiplicityMap;
 
     public LoanSubEvents(List<Account> targets) {
@@ -45,7 +44,9 @@ public class LoanSubEvents implements Serializable {
         repays = new ArrayList<>();
         transfers = new ArrayList<>();
         // Add all defined subevents to the consumers list
-        consumers = Arrays.asList(this::depositSubEvent, this::repaySubEvent, this::transferSubEvent);
+        consumers = Arrays.asList(this::depositSubEvent,
+                                  this::repaySubEvent,
+                                  this::transferSubEvent);
     }
 
     public void resetState(int seed) {
@@ -84,7 +85,9 @@ public class LoanSubEvents implements Serializable {
             return;
         }
         double amount = amountRandom.nextDouble() * loan.getBalance();
-        Deposit deposit = Deposit.createDeposit(randomFarm.get(RandomGeneratorFarm.Aspect.DATE), loan, account, amount);
+        Deposit deposit =
+            Deposit.createDeposit(randomFarm.get(RandomGeneratorFarm.Aspect.LOAN_SUBEVENTS_DATE), loan, account,
+                                  amount);
         deposits.add(deposit);
     }
 
@@ -95,7 +98,8 @@ public class LoanSubEvents implements Serializable {
         }
 
         double amount = amountRandom.nextDouble() * (loan.getLoanAmount() - loan.getBalance());
-        Repay repay = Repay.createRepay(randomFarm.get(RandomGeneratorFarm.Aspect.DATE), account, loan, amount);
+        Repay repay =
+            Repay.createRepay(randomFarm.get(RandomGeneratorFarm.Aspect.LOAN_SUBEVENTS_DATE), account, loan, amount);
         repays.add(repay);
     }
 
@@ -111,15 +115,17 @@ public class LoanSubEvents implements Serializable {
         Account target = targetAccounts.get(indexRandom.nextInt(targetAccounts.size()));
         if (actionRandom.nextDouble() < 0.5) {
             if (!cannotTransfer(account, target)) {
-                transfers.add(Transfer.createTransfer(randomFarm.get(RandomGeneratorFarm.Aspect.DATE), account, target,
-                                                      getMultiplicityIdAndInc(account, target),
-                                                      amountRandom.nextDouble() * DatagenParams.tsfMaxAmount));
+                transfers.add(
+                    Transfer.createLoanTransferAndReturn(randomFarm, account, target,
+                                                         getMultiplicityIdAndInc(account, target),
+                                                         amountRandom.nextDouble() * DatagenParams.tsfMaxAmount));
             }
         } else {
             if (!cannotTransfer(target, account)) {
-                transfers.add(Transfer.createTransfer(randomFarm.get(RandomGeneratorFarm.Aspect.DATE), target, account,
-                                                      getMultiplicityIdAndInc(target, account),
-                                                      amountRandom.nextDouble() * DatagenParams.tsfMaxAmount));
+                transfers.add(
+                    Transfer.createLoanTransferAndReturn(randomFarm, target, account,
+                                                         getMultiplicityIdAndInc(target, account),
+                                                         amountRandom.nextDouble() * DatagenParams.tsfMaxAmount));
             }
         }
     }

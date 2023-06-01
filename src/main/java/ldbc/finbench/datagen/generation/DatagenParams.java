@@ -11,6 +11,18 @@ public class DatagenParams {
     public static final String personSurnameFile = DICTIONARY_DIR + "surnames.txt";
     public static final String mediumNameFile = DICTIONARY_DIR + "mediumNames.txt";
     public static final String accountFile = DICTIONARY_DIR + "accountTypes.txt";
+    public static final String businessTypeFile = DICTIONARY_DIR + "businessTypes.txt";
+    public static final String randomTextFile = DICTIONARY_DIR + "randomText.txt";
+    public static final String transferTypeFile = DICTIONARY_DIR + "payTypes.txt";
+    public static final String goodsTypeFile = DICTIONARY_DIR + "goodsTypes.txt";
+    public static final String loanUsageFile = DICTIONARY_DIR + "loanUsages.txt";
+    public static final String loanOrganizationsFile = DICTIONARY_DIR + "loanOrganizations.txt";
+    public static final String urlFile = DICTIONARY_DIR + "urls.txt";
+    public static final String emailFile = DICTIONARY_DIR + "emails.txt";
+    public static final String accountNicknameFile = DICTIONARY_DIR + "accountNicknames.txt";
+    public static final String accountLevelFile = DICTIONARY_DIR + "accountLevels.txt";
+    public static final String riskLevelFile = DICTIONARY_DIR + "riskLevels.txt";
+    public static final String guaranteeRelationshipFile = DICTIONARY_DIR + "guaranteeRelationships.txt";
     public static final String DISTRIBUTION_DIR = "/distributions/";
     public static final String fbPowerlawDegreeFile = DISTRIBUTION_DIR + "facebookPowerlawBucket.dat";
     public static final String hourDistributionFile = DISTRIBUTION_DIR + "hourDistribution.dat";
@@ -19,6 +31,8 @@ public class DatagenParams {
     public static final String inDegreeRegressionFile = DISTRIBUTION_DIR + "inDegreeRegression.txt";
     public static final String outDegreeRegressionFile = DISTRIBUTION_DIR + "outDegreeRegression.txt";
     public static final String multiplictyPowerlawRegFile = DISTRIBUTION_DIR + "multiplicityPowerlawRegression.txt";
+    public static final String countryDictionaryFile = DICTIONARY_DIR + "dicLocations.txt";
+    public static final String cityDictionaryFile = DICTIONARY_DIR + "citiesByCountry.txt";
 
     public static int defaultSeed = 0;
     public static String outputDir;
@@ -27,6 +41,7 @@ public class DatagenParams {
     public static int blockSize = 0;
     public static long deleteDelta = 0;
     public static long activityDelta = 0;
+    public static int companyDescriptionMaxLength = 0;
     public static int maxAccountsPerOwner = 0;
     public static String tsfDegreeDistribution;
     public static String tsfMultiplicityDistribution;
@@ -37,6 +52,8 @@ public class DatagenParams {
     public static double tsfBaseProbCorrelated = 0.0;
     public static double tsfLimitProCorrelated = 0.0;
     public static long tsfMaxAmount = 0;
+    public static String tsfGenerationMode;
+    public static int tsfShuffleTimes;
     public static double accountWithdrawFraction = 0.0;
     public static int maxWithdrawals = 0;
     public static long withdrawMaxAmount = 0;
@@ -62,6 +79,7 @@ public class DatagenParams {
     public static long minLoanAmount = 0;
     public static long maxLoanAmount = 0;
     public static int numLoanActions = 0;
+    public static double maxLoanInterest = 0.0;
 
 
     public static void readConf(DatagenConfiguration conf) {
@@ -82,6 +100,7 @@ public class DatagenParams {
 
             blockedMediumRatio = doubleConf(conf, "medium.blockedMediumRatio");
 
+            companyDescriptionMaxLength = intConf(conf, "company.maxDescriptionLength");
             maxAccountsPerOwner = intConf(conf, "own.maxAccounts");
 
             tsfDegreeDistribution = stringConf(conf, "transfer.degreeDistribution");
@@ -93,6 +112,8 @@ public class DatagenParams {
             tsfBaseProbCorrelated = doubleConf(conf, "transfer.baseProbCorrelated");
             tsfLimitProCorrelated = doubleConf(conf, "transfer.limitProCorrelated");
             tsfMaxAmount = longConf(conf, "transfer.maxAmount");
+            tsfGenerationMode = stringConf(conf, "transfer.generationMode");
+            tsfShuffleTimes = intConf(conf, "transfer.shuffleTimes");
 
             accountWithdrawFraction = doubleConf(conf, "withdraw.accountWithdrawFraction");
             maxWithdrawals = intConf(conf, "withdraw.maxWithdrawals");
@@ -113,14 +134,17 @@ public class DatagenParams {
             minLoanAmount = longConf(conf, "loan.minLoanAmount");
             maxLoanAmount = longConf(conf, "loan.maxLoanAmount");
             numLoanActions = intConf(conf, "loan.numSubEvents");
+            maxLoanInterest = doubleConf(conf, "loan.maxLoanInterest");
 
             companyInvestedFraction = doubleConf(conf, "invest.companyInvestedFraction");
             minInvestors = intConf(conf, "invest.minInvestors");
             maxInvestors = intConf(conf, "invest.maxInvestors");
 
-            System.out.println(" ... Num Accounts " + (numPersons + numCompanies));
+            System.out.println(" ... Num Persons " + numPersons);
+            System.out.println(" ... Num Companies " + numCompanies);
             System.out.println(" ... Start Year " + startYear);
             System.out.println(" ... Num Years " + numYears);
+            System.out.println(" ... Max degree of Powerlaw " + tsfMaxNumDegree);
         } catch (Exception e) {
             System.out.println("Error reading scale factors or conf");
             System.err.println(e.getMessage());

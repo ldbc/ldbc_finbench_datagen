@@ -9,16 +9,10 @@ import java.util.TreeMap;
 import ldbc.finbench.datagen.generation.DatagenParams;
 
 public class PersonNameDictionary {
-
-    private static final String SEPARATOR = ",";
     private final TreeMap<Long, String> personSurnames;
 
-    public PersonNameDictionary() {
+    public PersonNameDictionary(String filePath, String separator) {
         this.personSurnames = new TreeMap<>();
-        load(DatagenParams.personSurnameFile);
-    }
-
-    private void load(String filePath) {
         try {
             InputStreamReader inputStreamReader = new InputStreamReader(
                 getClass().getResourceAsStream(filePath), StandardCharsets.UTF_8);
@@ -26,7 +20,7 @@ public class PersonNameDictionary {
             String line;
             long totalNumSurnames = 0;
             while ((line = dictionary.readLine()) != null) {
-                String[] data = line.split(SEPARATOR);
+                String[] data = line.split(separator);
                 String surname = data[2].trim();
                 this.personSurnames.put(totalNumSurnames, surname);
                 totalNumSurnames++;
@@ -41,13 +35,4 @@ public class PersonNameDictionary {
         long nameIndex = random.nextInt(personSurnames.size());
         return personSurnames.get(nameIndex);
     }
-
-    public String getPersonSurname(long k) {
-        return personSurnames.get(k);
-    }
-
-    public int getNumNames() {
-        return personSurnames.size();
-    }
-
 }

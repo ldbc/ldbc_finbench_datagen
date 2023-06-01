@@ -12,25 +12,24 @@ public class CompanyGuaranteeCompany implements DynamicActivity, Serializable {
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
+    private String relationship;
 
     public CompanyGuaranteeCompany(Company fromCompany, Company toCompany,
-                                   long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
+                                   long creationDate, long deletionDate, boolean isExplicitlyDeleted, String relation) {
         this.fromCompany = fromCompany;
         this.toCompany = toCompany;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
+        this.relationship = relation;
     }
 
-    public static CompanyGuaranteeCompany createCompanyGuaranteeCompany(Random random,
-                                                                        Company fromCompany, Company toCompany) {
+    public static void createCompanyGuaranteeCompany(Random random, Company fromCompany, Company toCompany) {
         long creationDate = Dictionaries.dates.randomCompanyToCompanyDate(random, fromCompany, toCompany);
         CompanyGuaranteeCompany companyGuaranteeCompany = new CompanyGuaranteeCompany(fromCompany,
-                toCompany, creationDate, 0, false);
+                toCompany, creationDate, 0, false, "business associate");
         fromCompany.getGuaranteeSrc().add(companyGuaranteeCompany);
         toCompany.getGuaranteeDst().add(companyGuaranteeCompany);
-
-        return companyGuaranteeCompany;
     }
 
     public Company getFromCompany() {
@@ -74,5 +73,13 @@ public class CompanyGuaranteeCompany implements DynamicActivity, Serializable {
 
     public void setExplicitlyDeleted(boolean explicitlyDeleted) {
         isExplicitlyDeleted = explicitlyDeleted;
+    }
+
+    public String getRelationship() {
+        return relationship;
+    }
+
+    public void setRelationship(String relationship) {
+        this.relationship = relationship;
     }
 }

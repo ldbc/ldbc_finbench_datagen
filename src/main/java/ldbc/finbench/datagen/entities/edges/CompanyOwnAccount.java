@@ -1,12 +1,10 @@
 package ldbc.finbench.datagen.entities.edges;
 
 import java.io.Serializable;
-import java.util.Random;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 import ldbc.finbench.datagen.entities.nodes.Account;
 import ldbc.finbench.datagen.entities.nodes.Company;
 import ldbc.finbench.datagen.entities.nodes.PersonOrCompany;
-import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 
 public class CompanyOwnAccount implements DynamicActivity, Serializable {
     private Company company;
@@ -24,17 +22,14 @@ public class CompanyOwnAccount implements DynamicActivity, Serializable {
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static CompanyOwnAccount createCompanyOwnAccount(Random random, Company company, Account account) {
-        long creationDate =
-            Dictionaries.dates.randomCompanyToAccountDate(random, company, account, account.getDeletionDate());
+    public static void createCompanyOwnAccount(Company company, Account account, long creationDate) {
         CompanyOwnAccount companyOwnAccount =
             new CompanyOwnAccount(company, account, creationDate, account.getDeletionDate(),
                                   account.isExplicitlyDeleted());
+        company.getAccounts().add(account);
         company.getCompanyOwnAccounts().add(companyOwnAccount);
         account.setOwnerType(PersonOrCompany.COMPANY);
         account.setCompanyOwner(company);
-
-        return companyOwnAccount;
     }
 
     public Company getCompany() {

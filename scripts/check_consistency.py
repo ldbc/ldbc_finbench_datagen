@@ -1,8 +1,24 @@
 import hashlib
 import os
 import sys
+import glob
 
 print_templ = "| {} | {} | {} | {} |"
+
+
+def get_md5_list(subdir, dir):
+    md5_list = []
+    csvs = glob.glob("{}/{}/*.csv".format(dir, subdir))
+    for csv in csvs:
+        with open(csv, 'rb') as f:
+            md5_list.append(hashlib.md5(f.read()).hexdigest())
+    return sorted(md5_list)
+
+def check_multiple_files(subdir, dir1, dir2):
+    dir1_list = get_md5_list(subdir, dir1)
+    dir2_list = get_md5_list(subdir, dir2)
+    return dir1_list == dir2_list
+
 
 def check_consistency(dir1, dir2):
     subdirs1 = [d for d in os.listdir(dir1) if os.path.isdir(os.path.join(dir1, d))]
@@ -20,22 +36,14 @@ def check_consistency(dir1, dir2):
                                  col3.center(max_len3)))
 
     align_print(headers[0], headers[1], headers[2], headers[3])
-    for subdir in common_subdirs:
-        files1 = [f for f in os.listdir(os.path.join(dir1, subdir)) if f.endswith('.csv')]
-        files2 = [f for f in os.listdir(os.path.join(dir2, subdir)) if f.endswith('.csv')]
-        if not (len(files1) == len(files2) and len(files1) == 1):
-            align_print(subdir, dir1, dir2, "skipped for more than one file")
-            continue
-        path1 = os.path.join(dir1, subdir, files1[0])
-        path2 = os.path.join(dir2, subdir, files2[0])
-        with open(path1, 'rb') as f1, open(path2, 'rb') as f2:
-            if hashlib.md5(f1.read()).hexdigest() == hashlib.md5(f2.read()).hexdigest():
-                align_print(subdir, dir1, dir2, "same")
-            else:
-                align_print(subdir, dir1, dir2, "different")
+    for subdir in sorted(common_subdirs):
+        if check_multiple_files(subdir, dir1, dir2):
+            align_print(subdir, dir1, dir2, "same")
+        else:
+            align_print(subdir, dir1, dir2, "different")
 
 
 if __name__ == '__main__':
     dir1 = sys.argv[1]
     dir2 = sys.argv[2]
-    check_consistency(dir1, dir2)
+    check_consistency(dir1+"/raw", dir2+"/raw")

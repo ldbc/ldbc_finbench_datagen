@@ -1,8 +1,6 @@
 package ldbc.finbench.datagen.generation.events;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 import ldbc.finbench.datagen.entities.edges.PersonInvestCompany;
 import ldbc.finbench.datagen.entities.nodes.Company;
@@ -25,8 +23,9 @@ public class PersonInvestEvent implements Serializable {
     }
 
     public PersonInvestCompany personInvest(Person person, Company company) {
-        return PersonInvestCompany.createPersonInvestCompany(randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
-                                                             randomFarm.get(RandomGeneratorFarm.Aspect.INVEST_RATIO),
-                                                             person, company);
+        return PersonInvestCompany.createPersonInvestCompany(
+            randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_INVEST_DATE),
+            randomFarm.get(RandomGeneratorFarm.Aspect.INVEST_RATIO),
+            person, company);
     }
 }

@@ -5,7 +5,7 @@ import ldbc.finbench.datagen.factors.FactorGenerationStage
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries
 import ldbc.finbench.datagen.generation.{DatagenContext, GenerationStage}
 import ldbc.finbench.datagen.transformation.TransformationStage
-import ldbc.finbench.datagen.util.SparkApp
+import ldbc.finbench.datagen.util.{Logging, SparkApp}
 import org.apache.hadoop.fs.{FSDataInputStream, FileSystem, Path}
 import shapeless.lens
 
@@ -13,25 +13,26 @@ import java.net.URI
 import java.util.Properties
 import scala.collection.JavaConverters._
 
-object LdbcDatagen extends SparkApp {
+object LdbcDatagen extends SparkApp with Logging {
   val appName = "LDBC FinBench Datagen for Spark"
 
   case class Args(
-     scaleFactor: String = "0.01",
-     params: Map[String, String] = Map.empty,
-     paramFile: Option[String] = None,
-     outputDir: String = "out",
-     bulkloadPortion: Double = 0.97,
-     keepImplicitDeletes: Boolean = false,
-     batchPeriod: String = "day",
-     numPartitions: Option[Int] = None,
-     irFormat: String = "csv",
-     format: String = "csv",
-     formatOptions: Map[String, String] = Map.empty,
-     epochMillis: Boolean = false,
-     generateFactors: Boolean = false,
-     factorFormat: String = "parquet"
-   )
+                   scaleFactor: String = "0.01",
+                   scaleFactorXml: String = "",
+                   params: Map[String, String] = Map.empty,
+                   paramFile: Option[String] = None,
+                   outputDir: String = "out",
+                   bulkloadPortion: Double = 0.97,
+                   keepImplicitDeletes: Boolean = false,
+                   batchPeriod: String = "second",
+                   numPartitions: Option[Int] = None,
+                   irFormat: String = "csv",
+                   format: String = "csv",
+                   formatOptions: Map[String, String] = Map.empty,
+                   epochMillis: Boolean = false,
+                   generateFactors: Boolean = false,
+                   factorFormat: String = "parquet"
+                 )
 
   override type ArgsType = Args
 
@@ -45,6 +46,11 @@ object LdbcDatagen extends SparkApp {
         .valueName("scale-factor")
         .action((x, c) => args.scaleFactor.set(c)(x))
         .text("The generator scale factor")
+
+      opt[String]("scale-factor-xml")
+        .valueName("scale-factor-xml")
+        .action((x, c) => args.scaleFactorXml.set(c)(x))
+        .text("The generator scale factor config xml")
 
       opt[Map[String, String]]('p', "params")
         .action((x, c) => args.params.set(c)(x))
@@ -120,12 +126,11 @@ object LdbcDatagen extends SparkApp {
 
     val generationArgs = GenerationStage.Args(
       scaleFactor = args.scaleFactor,
-      params = args.params,
-      paramFile = args.paramFile,
       outputDir = args.outputDir,
-      partitionsOpt = args.numPartitions,
-      format = args.format
+      format = args.format,
+      partitionsOpt = args.numPartitions
     )
+    log.info("[Main] Starting generation stage")
     GenerationStage.run(generationArgs)
 
     if (args.generateFactors) {
@@ -133,20 +138,9 @@ object LdbcDatagen extends SparkApp {
         outputDir = args.outputDir,
         format = args.factorFormat
       )
+      log.info("[Main] Starting factoring stage")
       FactorGenerationStage.run(factorArgs)
     }
-
-    val transformArgs = TransformationStage.Args(
-      outputDir = args.outputDir,
-      keepImplicitDeletes = args.keepImplicitDeletes,
-      simulationStart = Dictionaries.dates.getSimulationStart,
-      simulationEnd = Dictionaries.dates.getSimulationEnd,
-      irFormat = args.irFormat,
-      format = args.format,
-      formatOptions = args.formatOptions,
-      epochMillis = args.epochMillis
-    )
-    TransformationStage.run(transformArgs)
   }
 
 
@@ -161,7 +155,7 @@ object LdbcDatagen extends SparkApp {
     for {(k, v) <- args.params} conf.put(k, v)
 
     for {partitions <- args.numPartitions} conf.put("spark.partitions", partitions.toString) // Following params will overwrite the values in params_default
-    conf.putAll(ConfigParser.scaleFactorConf(args.scaleFactor)) // put scale factor conf
+    conf.putAll(ConfigParser.scaleFactorConf(args.scaleFactorXml, args.scaleFactor)) // put scale factor conf
     conf.put("generator.outputDir", args.outputDir)
     conf.put("generator.format", args.format)
 

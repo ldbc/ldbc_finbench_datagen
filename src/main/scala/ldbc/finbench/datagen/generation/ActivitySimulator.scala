@@ -6,23 +6,21 @@ import ldbc.finbench.datagen.generation.serializers.ActivitySerializer
 import ldbc.finbench.datagen.io.Writer
 import ldbc.finbench.datagen.io.raw.RawSink
 import ldbc.finbench.datagen.util.Logging
+import org.apache.spark.TaskContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
 import scala.collection.JavaConverters._
 
 // TODO:
-//  - re-implement the code in more elegant and less verbose way
+//  - refactor using common GraphDef to make the code less verbose
 //  - repartition with the partition option
-//  - config the paramMap (including header, mode, dateFormat and so on)
 class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Writer[RawSink] with Serializable with Logging {
-
-  private val options: Map[String, String] = sink.formatOptions ++ Map("header" -> "true", "delimiter" -> "|")
-  private val parallelism = spark.sparkContext.defaultParallelism // TODO: compute parallelism
+  private val parallelism = spark.sparkContext.defaultParallelism
   private val blockSize: Int = DatagenParams.blockSize
 
   private val activityGenerator = new ActivityGenerator()
-  private val activitySerializer = new ActivitySerializer(sink, options)
+  private val activitySerializer = new ActivitySerializer(sink)
 
   private val personNum: Long = DatagenParams.numPersons
   private val personPartitions = Some(Math.min(Math.ceil(personNum.toDouble / blockSize).toLong, parallelism).toInt)
@@ -35,92 +33,94 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
 
 
   def simulate(): Unit = {
-    // simulate person register account event
     val personRdd: RDD[Person] = SparkPersonGenerator(personNum, blockSize, personPartitions)
-    val personOwnAccountInfo = activityGenerator.personRegisterEvent(personRdd)
-    // Add the ownAccount info back to the person vertices
-    val poas = personOwnAccountInfo.collect()
-    val personWithAccountRdd = personRdd.map(person => {
-      person.getPersonOwnAccounts.addAll(poas.filter(_.getPerson.equals(person)).toList.asJava)
-      person
-    })
-    log.info(s"[Simulation] Person RDD partitions: ${personRdd.getNumPartitions}, count: ${personRdd.count()}")
-
-    // simulate company register account event
     val companyRdd: RDD[Company] = SparkCompanyGenerator(companyNum, blockSize, companyPartitions)
-    val companyOwnAccountInfo = activityGenerator.companyRegisterEvent(companyRdd)
-    // Add the ownAccount info back to the company vertices
-    val coas = companyOwnAccountInfo.collect()
-    val companyWithAccountRdd = companyRdd.map(company => {
-      company.getCompanyOwnAccounts.addAll(coas.filter(_.getCompany.equals(company)).toList.asJava)
-      company
-    })
-    log.info(s"[Simulation] Company RDD partitions: ${companyRdd.getNumPartitions}, count: ${companyRdd.count()}")
-
-    // Merge accounts vertices registered by persons and companies
-    // TODO: can not coalesce when large scale data generated in cluster
-    val personAccounts = personOwnAccountInfo.map(personOwnAccount => personOwnAccount.getAccount)
-    val companyAccounts = companyOwnAccountInfo.map(companyOwnAccount => companyOwnAccount.getAccount)
-    val accountRdd = personAccounts.union(companyAccounts)
-    log.info(s"[Simulation] Account RDD partitions: ${accountRdd.getNumPartitions}, count: ${accountRdd.count()}")
-
-    // simulate person signIn medium event
     val mediumRdd: RDD[Medium] = SparkMediumGenerator(mediumNum, blockSize, mediumPartitions)
-    val signInRdd = activityGenerator.signInEvent(mediumRdd, accountRdd)
-    log.info(s"[Simulation] Medium RDD partitions: ${mediumRdd.getNumPartitions}, count: ${mediumRdd.count()}")
-    log.info(s"[Simulation] signIn RDD partitions: ${signInRdd.getNumPartitions}, count: ${signInRdd.count()}")
+    log.info(s"[Simulation] Person RDD partitions: ${personRdd.getNumPartitions}")
+    log.info(s"[Simulation] Company RDD partitions: ${companyRdd.getNumPartitions}")
+    log.info(s"[Simulation] Medium RDD partitions: ${mediumRdd.getNumPartitions}")
+
+    // =========================================
+    // Person and company related activities
+    // =========================================
+    val personWithAccounts = activityGenerator.personRegisterEvent(personRdd) // simulate person register event
+    log.info(s"[Simulation] personWithAccounts partitions: ${personWithAccounts.getNumPartitions}")
+    val companyWithAccounts = activityGenerator.companyRegisterEvent(companyRdd) // simulate company register event
+    log.info(s"[Simulation] companyWithAccounts partitions: ${companyWithAccounts.getNumPartitions}")
 
     // simulate person or company invest company event
     val investRdd = activityGenerator.investEvent(personRdd, companyRdd)
-    log.info(s"[Simulation] invest RDD partitions: ${investRdd.getNumPartitions}, count: ${investRdd.count()}")
+    log.info(s"[Simulation] invest RDD partitions: ${investRdd.getNumPartitions}")
 
     // simulate person guarantee person event and company guarantee company event
-    val personGuaranteeRdd = activityGenerator.personGuaranteeEvent(personRdd)
-    val companyGuaranteeRdd = activityGenerator.companyGuaranteeEvent(companyRdd)
-    log.info(s"[Simulation] personGuarantee RDD partitions: ${personGuaranteeRdd.getNumPartitions}, count: ${personGuaranteeRdd.count()}")
-    log.info(s"[Simulation] companyGuarantee RDD partitions: ${companyGuaranteeRdd.getNumPartitions}, count: ${companyGuaranteeRdd.count()}")
+    val personWithAccGua = activityGenerator.personGuaranteeEvent(personWithAccounts)
+    val companyWitAccGua = activityGenerator.companyGuaranteeEvent(companyWithAccounts)
+    log.info(s"[Simulation] personWithAccGua partitions: ${personWithAccGua.getNumPartitions}")
+    log.info(s"[Simulation] companyWitAccGua partitions: ${companyWitAccGua.getNumPartitions}")
 
     // simulate person apply loans event and company apply loans event
-    val personLoanRdd = activityGenerator.personLoanEvent(personWithAccountRdd)
-    val companyLoanRdd = activityGenerator.companyLoanEvent(companyWithAccountRdd)
-    log.info(s"[Simulation] personApplyLoan RDD partitions: ${personLoanRdd.getNumPartitions}, count: ${personLoanRdd.count()}")
-    log.info(s"[Simulation] companyApplyLoan RDD partitions: ${companyLoanRdd.getNumPartitions}, count: ${companyLoanRdd.count()}")
+    val personWithAccGuaLoan = activityGenerator.personLoanEvent(personWithAccGua).cache()
+    val companyWithAccGuaLoan = activityGenerator.companyLoanEvent(companyWitAccGua).cache()
+    assert(personWithAccGuaLoan.count() == personRdd.count())
+    assert(companyWithAccGuaLoan.count() == companyRdd.count())
+    log.info(s"[Simulation] personWithAccGuaLoan partitions: ${personWithAccGuaLoan.getNumPartitions}")
+    log.info(s"[Simulation] companyWithAccGuaLoan partitions: ${companyWithAccGuaLoan.getNumPartitions}")
 
-    // Merge accounts vertices registered by persons and companies
-    val loanRdd = personLoanRdd.map(personLoan => personLoan.getLoan)
-      .union(companyLoanRdd.map(companyLoan => companyLoan.getLoan))
-    log.info(s"[Simulation] Loan RDD partitions: ${loanRdd.getNumPartitions}, count: ${loanRdd.count()}")
+    // =========================================
+    // Account related activities
+    // =========================================
+    val accountRdd = mergeAccounts(personWithAccounts, companyWithAccounts) // merge
+    log.info(s"[Simulation] Account RDD partitions: ${accountRdd.getNumPartitions}")
+    val signInRdd = activityGenerator.signInEvent(mediumRdd, accountRdd) // simulate signIn
+    val mergedTransfers = activityGenerator.transferEvent(accountRdd) // simulate transfer
+    val withdrawRdd = activityGenerator.withdrawEvent(accountRdd) // simulate withdraw
+    log.info(s"[Simulation] signIn RDD partitions: ${signInRdd.getNumPartitions}")
+    log.info(s"[Simulation] transfer RDD partitions: ${mergedTransfers.getNumPartitions}")
+    log.info(s"[Simulation] withdraw RDD partitions: ${withdrawRdd.getNumPartitions}")
 
-    // simulate loan subevents including deposit, repay and transfer
+    // =========================================
+    // Loan related activities
+    // =========================================
+    val loanRdd = mergeLoans(personWithAccGuaLoan, companyWithAccGuaLoan) // merge
+    log.info(s"[Simulation] Loan RDD partitions: ${loanRdd.getNumPartitions}")
     val (depositsRdd, repaysRdd, loanTrasfersRdd) = activityGenerator.afterLoanSubEvents(loanRdd, accountRdd)
-    log.info(s"[Simulation] deposits RDD partitions: ${depositsRdd.getNumPartitions}, count: ${depositsRdd.count()}")
-    log.info(s"[Simulation] repays RDD partitions: ${repaysRdd.getNumPartitions}, count: ${repaysRdd.count()}")
-    log.info(s"[Simulation] loanTrasfers RDD partitions: ${loanTrasfersRdd.getNumPartitions}, count: ${loanTrasfersRdd.count()}")
+    log.info(s"[Simulation] deposits RDD partitions: ${depositsRdd.getNumPartitions}, " +
+      s"repays RDD partitions: ${repaysRdd.getNumPartitions}, " +
+      s"loanTrasfers RDD partitions: ${loanTrasfersRdd.getNumPartitions}")
 
-    // simulate transfer and withdraw event
-    val transferRdd = activityGenerator.transferEvent(accountRdd)
-    val withdrawRdd = activityGenerator.withdrawEvent(accountRdd)
-    log.info(s"[Simulation] transfer RDD partitions: ${transferRdd.getNumPartitions}, count: ${transferRdd.count()}")
-    log.info(s"[Simulation] withdraw RDD partitions: ${withdrawRdd.getNumPartitions}, count: ${withdrawRdd.count()}")
-
-    // TODO: use some syntax to implement serializer less verbose like GraphDef
-    activitySerializer.writePerson(personRdd)
-    activitySerializer.writeCompany(companyRdd)
-    activitySerializer.writeMedium(mediumRdd)
-    activitySerializer.writePersonOwnAccount(personOwnAccountInfo)
-    activitySerializer.writeCompanyOwnAccount(companyOwnAccountInfo)
-    activitySerializer.writeAccount(accountRdd)
-    activitySerializer.writeInvest(investRdd)
-    activitySerializer.writeSignIn(signInRdd)
-    activitySerializer.writePersonGuarantee(personGuaranteeRdd)
-    activitySerializer.writeCompanyGuarantee(companyGuaranteeRdd)
-    activitySerializer.writePersonLoan(personLoanRdd)
-    activitySerializer.writeCompanyLoan(companyLoanRdd)
-    activitySerializer.writeLoan(loanRdd)
-    activitySerializer.writeDeposit(depositsRdd)
-    activitySerializer.writeRepay(repaysRdd)
-    activitySerializer.writeLoanTransfer(loanTrasfersRdd)
-    activitySerializer.writeTransfer(transferRdd)
+    // =========================================
+    // Serialize
+    // =========================================
+    activitySerializer.writePersonWithActivities(personWithAccGuaLoan)
+    activitySerializer.writeCompanyWithActivities(companyWithAccGuaLoan)
+    activitySerializer.writeMediumWithActivities(mediumRdd, signInRdd)
+    activitySerializer.writeAccountWithActivities(accountRdd, mergedTransfers)
     activitySerializer.writeWithdraw(withdrawRdd)
+    activitySerializer.writeInvest(investRdd)
+    activitySerializer.writeLoanActivities(loanRdd, depositsRdd, repaysRdd, loanTrasfersRdd)
+  }
+
+  private def mergeAccounts(persons: RDD[Person], companies: RDD[Company]): RDD[Account] = {
+    val personAccounts = persons.flatMap(person => person.getPersonOwnAccounts.asScala.map(_.getAccount))
+    val companyAccounts = companies.flatMap(company => company.getCompanyOwnAccounts.asScala.map(_.getAccount))
+    val allAccounts = personAccounts.union(companyAccounts).mapPartitions(iter => shuffleDegrees(iter.toList).iterator)
+    allAccounts
+  }
+
+  private def shuffleDegrees(accounts: List[Account]): List[Account] = {
+    val indegrees = accounts.map(_.getMaxInDegree)
+    val shuffled = new scala.util.Random(TaskContext.getPartitionId()).shuffle(indegrees)
+    accounts.zip(shuffled).foreach {
+      case (account, shuffled) =>
+        account.setMaxOutDegree(shuffled)
+        account.setRawMaxOutDegree(shuffled)
+    }
+    accounts
+  }
+
+  private def mergeLoans(persons: RDD[Person], companies: RDD[Company]): RDD[Loan] = {
+    val personLoans = persons.flatMap(person => person.getLoans.asScala)
+    val companyLoans = companies.flatMap(company => company.getLoans.asScala)
+    personLoans.union(companyLoans)
   }
 }

@@ -7,23 +7,29 @@ import ldbc.finbench.datagen.entities.edges.PersonApplyLoan;
 import ldbc.finbench.datagen.entities.edges.PersonGuaranteePerson;
 import ldbc.finbench.datagen.entities.edges.PersonInvestCompany;
 import ldbc.finbench.datagen.entities.edges.PersonOwnAccount;
-import ldbc.finbench.datagen.entities.edges.WorkIn;
+import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 
 public class Person implements Serializable {
     private long personId;
     private String personName;
     private long creationDate;
     private boolean isBlocked;
-    private List<PersonOwnAccount> personOwnAccounts;
+    private byte gender;
+    private long birthday;
+    private int countryId;
+    private int cityId;
     private List<Account> accounts;
+    private List<Loan> loans;
+    private List<PersonOwnAccount> personOwnAccounts;
     private List<PersonInvestCompany> personInvestCompanies;
     private List<PersonGuaranteePerson> guaranteeSrc;
     private List<PersonGuaranteePerson> guaranteeDst;
     private List<PersonApplyLoan> personApplyLoans;
 
     public Person() {
-        personOwnAccounts = new ArrayList<>();
         accounts = new ArrayList<>();
+        loans = new ArrayList<>();
+        personOwnAccounts = new ArrayList<>();
         personInvestCompanies = new ArrayList<>();
         guaranteeSrc = new ArrayList<>();
         guaranteeDst = new ArrayList<>();
@@ -138,4 +144,52 @@ public class Person implements Serializable {
         this.accounts = accounts;
     }
 
+    public List<Loan> getLoans() {
+        return loans;
+    }
+
+    public void setLoans(List<Loan> loans) {
+        this.loans = loans;
+    }
+
+    public String getGender() {
+        return (gender == (byte) 1) ? "male" : "female";
+    }
+
+    public void setGender(byte gender) {
+        this.gender = gender;
+    }
+
+    public long getBirthday() {
+        return birthday;
+    }
+
+    public void setBirthday(long birthday) {
+        this.birthday = birthday;
+    }
+
+
+    public int getCountryId() {
+        return countryId;
+    }
+
+    public void setCountryId(int countryId) {
+        this.countryId = countryId;
+    }
+
+    public String getCountryName() {
+        return Dictionaries.places.getPlaceName(countryId);
+    }
+
+    public int getCityId() {
+        return cityId;
+    }
+
+    public void setCityId(int cityId) {
+        this.cityId = cityId;
+    }
+
+    public String getCityName() {
+        return Dictionaries.places.getPlaceName(cityId);
+    }
 }

@@ -23,17 +23,37 @@ public class CompanyGenerator {
 
     public Company generateCompany() {
         Company company = new Company();
-
+        // Set creation date
         long creationDate = Dictionaries.dates.randomCompanyCreationDate(
-            randomFarm.get(RandomGeneratorFarm.Aspect.DATE));
+            randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_DATE));
         company.setCreationDate(creationDate);
-
+        // Set company id
         long companyId = composeCompanyId(nextId++, creationDate);
         company.setCompanyId(companyId);
-
+        // Set company name
         String companyName =
-            Dictionaries.companyNames.getUniformDistRandName(randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_NAME));
+            Dictionaries.companyNames.getUniformDistRandomText(randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_NAME));
         company.setCompanyName(companyName);
+
+        // Set country and city
+        int countryId =
+            Dictionaries.places.getCountryForPerson(randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_COUNTRY));
+        company.setCountryId(countryId);
+        company.setCityId(
+            Dictionaries.places.getRandomCity(randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_CITY), countryId));
+
+        // Set business
+        company.setBusiness(Dictionaries.businessTypes.getUniformDistRandomText(
+            randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_BUSINESS)));
+
+        // Set description TODO: use a better description
+        String description = Dictionaries.randomTexts.getUniformDistRandomText(
+            randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_DESCRIPTION));
+        company.setDescription(description);
+
+        // Set url
+        String url = Dictionaries.urls.getUniformDistRandomText(randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_URL));
+        company.setUrl(url);
 
         // Set blocked to false by default
         company.setBlocked(false);

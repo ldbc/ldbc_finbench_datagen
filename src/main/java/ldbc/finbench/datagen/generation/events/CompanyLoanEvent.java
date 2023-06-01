@@ -1,9 +1,7 @@
 package ldbc.finbench.datagen.generation.events;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import ldbc.finbench.datagen.entities.edges.CompanyApplyLoan;
 import ldbc.finbench.datagen.entities.nodes.Company;
 import ldbc.finbench.datagen.entities.nodes.Loan;
@@ -14,38 +12,38 @@ import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class CompanyLoanEvent implements Serializable {
     private final RandomGeneratorFarm randomFarm;
-    private final Random random; // first random long is for personApply, second for companyApply
-    private final Random numLoanRandom;
+    private final double probLoan;
 
-    public CompanyLoanEvent() {
+    public CompanyLoanEvent(double probLoan) {
+        this.probLoan = probLoan;
         randomFarm = new RandomGeneratorFarm();
-        random = new Random(DatagenParams.defaultSeed);
-        numLoanRandom = new Random(DatagenParams.defaultSeed);
     }
 
-    private void resetState(LoanGenerator loanGenerator, int seed) {
+    private void resetState(int seed) {
         randomFarm.resetRandomGenerators(seed);
-        random.setSeed(7654321L + 1234567 * seed);
-        random.nextLong(); // Skip first random number for personApply
-        long newSeed = random.nextLong();
-        loanGenerator.resetState(newSeed);
-        numLoanRandom.setSeed(newSeed);
     }
 
-    public List<CompanyApplyLoan> companyLoan(List<Company> companies, LoanGenerator loanGenerator, int blockId) {
-        resetState(loanGenerator, blockId);
-        List<CompanyApplyLoan> companyApplyLoans = new ArrayList<>();
+    public List<Company> companyLoan(List<Company> companies, LoanGenerator loanGenerator, int blockId) {
+        resetState(blockId);
+        loanGenerator.resetState(blockId);
 
-        for (Company company : companies) {
-            for (int i = 0; i < numLoanRandom.nextInt(DatagenParams.maxLoans); i++) {
-                long applyDate =
-                    Dictionaries.dates.randomCompanyToLoanDate(randomFarm.get(RandomGeneratorFarm.Aspect.DATE),
-                                                               company);
-                Loan loan = loanGenerator.generateLoan(applyDate);
-                CompanyApplyLoan companyApplyLoan = CompanyApplyLoan.createCompanyApplyLoan(applyDate, company, loan);
-                companyApplyLoans.add(companyApplyLoan);
+        companies.forEach(company -> {
+            if (randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_WHETHER_LOAN).nextDouble() < probLoan) {
+                int numLoans =
+                    randomFarm.get(RandomGeneratorFarm.Aspect.NUM_LOANS_PER_COMPANY).nextInt(DatagenParams.maxLoans);
+                for (int i = 0; i < Math.max(1, numLoans); i++) {
+                    long applyDate =
+                        Dictionaries.dates.randomCompanyToLoanDate(
+                            randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_APPLY_LOAN_DATE),
+                            company);
+                    Loan loan = loanGenerator.generateLoan(applyDate, "company", blockId);
+                    String organization = Dictionaries.loanOrganizations.getUniformDistRandomText(
+                        randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_APPLY_LOAN_ORGANIZATION));
+                    CompanyApplyLoan.createCompanyApplyLoan(applyDate, company, loan, organization);
+                }
             }
-        }
-        return companyApplyLoans;
+        });
+
+        return companies;
     }
 }

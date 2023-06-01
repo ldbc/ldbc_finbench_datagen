@@ -12,7 +12,11 @@ object raw {
       id: Long,
       createTime: Long,
       name: String,
-      isBlocked: Boolean
+      isBlocked: Boolean,
+      gender: String,
+      birthday: Long,
+      country: String,
+      city: String
   )
 
   // define Account entity
@@ -22,6 +26,12 @@ object raw {
       deleteTime: Long,
       isBlocked: Boolean,
       `type`: String,
+      nickname: String,
+      phonenum: String,
+      email: String,
+      freqLoginType: String,
+      lastLoginTime: Long,
+      accountLevel: String,
       inDegree: Long,
       OutDegree: Long,
       isExplicitDeleted: Boolean,
@@ -33,14 +43,22 @@ object raw {
       id: Long,
       createTime: Long,
       name: String,
-      isBlocked: Boolean
+      isBlocked: Boolean,
+      country: String,
+      city: String,
+      business: String,
+      description: String,
+      url: String
   )
 
   // define Loan entity
   case class LoanRaw(
       id: Long,
-      loanAmount: Double,
-      balance: Double
+      createTime: Long,
+      loanAmount: String,
+      balance: String,
+      usage: String,
+      interestRate: String
   )
 
   // define Medium entity
@@ -48,23 +66,27 @@ object raw {
       id: Long,
       createTime: Long,
       `type`: String,
-      isBlocked: Boolean
+      isBlocked: Boolean,
+      lastLogin: Long,
+      riskLevel: String,
   )
 
   // define PersonApplyLoan relationship
   case class PersonApplyLoanRaw(
-      `personId`: Long,
-      `loanId`: Long,
-      loanAmount: Double,
-      createTime: Long
+      personId: Long,
+      loanId: Long,
+      loanAmount: String,
+      createTime: Long,
+      org: String
   )
 
   // define CompanyApplyLoan relationship
   case class CompanyApplyLoanRaw(
-      `companyId`: Long,
-      `loanId`: Long,
-      loanAmount: Double,
-      createTime: Long
+      companyId: Long,
+      loanId: Long,
+      loanAmount: String,
+      createTime: Long,
+      org: String
   )
 
   // define PersonInvestCompany relationship
@@ -85,22 +107,24 @@ object raw {
 
   // define PersonGuaranteePerson relationship
   case class PersonGuaranteePersonRaw(
-      from: Long,
-      to: Long,
-      createTime: Long
+      fromId: Long,
+      toId: Long,
+      createTime: Long,
+      relation: String
   )
 
   // define CompanyGuarantee relationship
   case class CompanyGuaranteeCompanyRaw(
-      from: Long,
-      to: Long,
-      createTime: Long
+      fromId: Long,
+      toId: Long,
+      createTime: Long,
+      relation: String
   )
 
   //define PersonOwnAccount relationship
   case class PersonOwnAccountRaw(
-      `personId`: Long,
-      `accountId`: Long,
+      personId: Long,
+      accountId: Long,
       createTime: Long,
       deleteTime: Long,
       isExplicitDeleted: Boolean
@@ -108,8 +132,8 @@ object raw {
 
   // define CompanyOwnAccount relationship
   case class CompanyOwnAccountRaw(
-      `companyId`: Long,
-      `accountId`: Long,
+      companyId: Long,
+      accountId: Long,
       createTime: Long,
       deleteTime: Long,
       isExplicitDeleted: Boolean
@@ -117,55 +141,60 @@ object raw {
 
   // define Transfer relationship
   case class TransferRaw(
-      `fromId`: Long,
-      `toId`: Long,
+      fromId: Long,
+      toId: Long,
       multiplicityId: Long,
       createTime: Long,
       deleteTime: Long,
-      amount: Double,
-      isExplicitDeleted: Boolean
+      amount: String,
+      isExplicitDeleted: Boolean,
+      orderNum: String,
+      comment: String,
+      payType: String,
+      goodsType: String
   )
 
   // define Withdraw relationship
   case class WithdrawRaw(
-      `fromId`: Long,
-      `toId`: Long,
+      fromId: Long,
+      toId: Long,
       fromType: String,
       toType: String,
       multiplicityId: Long,
       createTime: Long,
       deleteTime: Long,
-      amount: Double,
+      amount: String,
       isExplicitDeleted: Boolean
   )
 
   // define Repay relationship
   case class RepayRaw(
-      `accountId`: Long,
-      `loanId`: Long,
+      accountId: Long,
+      loanId: Long,
       createTime: Long,
       deleteTime: Long,
-      amount: Double,
+      amount: String,
       isExplicitDeleted: Boolean
   )
 
   // define Deposit relationship
   case class DepositRaw(
-      `loanId`: Long,
-      `accountId`: Long,
+      loanId: Long,
+      accountId: Long,
       createTime: Long,
       deleteTime: Long,
-      amount: Double,
+      amount: String,
       isExplicitDeleted: Boolean
   )
 
   // define SignIn relationship
   case class SignInRaw(
-      `mediumId`: Long,
-      `accountId`: Long,
+      mediumId: Long,
+      accountId: Long,
       multiplicityId: Long,
       createTime: Long,
       deleteTime: Long,
-      isExplicitDeleted: Boolean
+      isExplicitDeleted: Boolean,
+      location: String
   )
 }

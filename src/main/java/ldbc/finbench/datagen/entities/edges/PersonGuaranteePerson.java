@@ -5,6 +5,7 @@ import java.util.Random;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 import ldbc.finbench.datagen.entities.nodes.Person;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
+import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class PersonGuaranteePerson implements DynamicActivity, Serializable {
     private Person fromPerson;
@@ -12,24 +13,27 @@ public class PersonGuaranteePerson implements DynamicActivity, Serializable {
     private long creationDate;
     private long deletionDate;
     private boolean isExplicitlyDeleted;
+    private String relationship;
 
     public PersonGuaranteePerson(Person fromPerson, Person toPerson,
-                                 long creationDate, long deletionDate, boolean isExplicitlyDeleted) {
+                                 long creationDate, long deletionDate, boolean isExplicitlyDeleted, String relation) {
         this.fromPerson = fromPerson;
         this.toPerson = toPerson;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
+        this.relationship = relation;
     }
 
-    public static PersonGuaranteePerson createPersonGuaranteePerson(Random random, Person fromPerson, Person toPerson) {
-        long creationDate = Dictionaries.dates.randomPersonToPersonDate(random, fromPerson, toPerson);
+    public static void createPersonGuaranteePerson(RandomGeneratorFarm randomFarm, Person fromPerson, Person toPerson) {
+        long creationDate = Dictionaries.dates.randomPersonToPersonDate(
+            randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_GUARANTEE_DATE), fromPerson, toPerson);
+        String relation = Dictionaries.guaranteeRelationships.getDistributedText(
+            randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_GUARANTEE_RELATIONSHIP));
         PersonGuaranteePerson personGuaranteePerson =
-            new PersonGuaranteePerson(fromPerson, toPerson, creationDate, 0, false);
+            new PersonGuaranteePerson(fromPerson, toPerson, creationDate, 0, false, relation);
         fromPerson.getGuaranteeSrc().add(personGuaranteePerson);
         toPerson.getGuaranteeDst().add(personGuaranteePerson);
-
-        return personGuaranteePerson;
     }
 
     public Person getFromPerson() {
@@ -73,5 +77,13 @@ public class PersonGuaranteePerson implements DynamicActivity, Serializable {
 
     public void setExplicitlyDeleted(boolean explicitlyDeleted) {
         isExplicitlyDeleted = explicitlyDeleted;
+    }
+
+    public String getRelationship() {
+        return relationship;
+    }
+
+    public void setRelationship(String relationship) {
+        this.relationship = relationship;
     }
 }
