@@ -4,7 +4,7 @@
 CREATE
 OR REPLACE VIEW PersonGuarantee AS
 SELECT *
-FROM read_csv_auto(':output_dir/inserts/AddPersonGuaranteePersonAll.csv', delim = '|', header = TRUE);
+FROM read_csv_auto(':output_dir/incremental/AddPersonGuaranteePersonAll.csv', delim = '|', header = TRUE);
 
 -- Sample for read write 3
 CREATE
@@ -21,7 +21,7 @@ WHERE NOT EXISTS(SELECT *
                    AND PersonGuarantee.fromId = PGPReadWrite3.fromId
                    AND PersonGuarantee.toId = PGPReadWrite3.toId)
 ORDER BY PersonGuarantee.createTime )
-TO ':output_dir/inserts/AddPersonGuaranteePerson.csv' (DELIMITER '|', HEADER);
+TO ':output_dir/incremental/AddPersonGuaranteePersonWrite10.csv' (DELIMITER '|', HEADER);
 
 
 -- Read Write 3 output
@@ -33,4 +33,4 @@ SELECT PGPReadWrite3.*,
        :truncation_limit                           AS TRUNCATION_LIMIT,
        ':truncation_order'                         AS TRUNCATION_ORDER
 FROM PGPReadWrite3 )
-TO ':output_dir/readwrites/AddPersonGuaranteePersonReadWrite3.csv' (DELIMITER '|', HEADER);
+TO ':output_dir/incremental/AddPersonGuaranteePersonReadWrite3.csv' (DELIMITER '|', HEADER);

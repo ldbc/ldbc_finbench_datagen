@@ -1,4 +1,4 @@
 *.duckdb*
-inserts/
-deletes/
+incremental/
+incremental/
 *.log
