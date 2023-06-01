@@ -72,6 +72,7 @@
         </property>
     </scale_factor>
 
+    <!--tuned-->
     <scale_factor name="3">
         <property>
             <name>generator.numPersons</name>
