@@ -7,7 +7,10 @@ SELECT Person.createTime AS createTime,
        Person.id         AS personId,
        Person.name       AS personName,
        Person.isBlocked  AS isBlocked,
-
+       Person.gender     AS gender,
+       Person.birthday   AS birthday,
+       Person.country    AS country,
+       Person.city       AS city
 FROM Person
 WHERE Person.createTime > :start_date_long
 ORDER BY Person.createTime )
@@ -16,11 +19,16 @@ TO ':output_dir/incremental/AddPersonWrite1.:output_format';
 --- Insert 2: add a company
 COPY
 (
-SELECT Company.createTime AS createTime,
-       0                  AS dependencyTime,
-       Company.id         AS companyId,
-       Company.name       AS companyName,
-       Company.isBlocked  AS isBlocked
+SELECT Company.createTime  AS createTime,
+       0                   AS dependencyTime,
+       Company.id          AS companyId,
+       Company.name        AS companyName,
+       Company.isBlocked   AS isBlocked,
+       Company.country     AS country,
+       Company.city        AS city,
+       Company.business    AS business,
+       Company.description AS description,
+       Company.url         AS url
 FROM Company
 WHERE Company.createTime > :start_date_long
 ORDER BY Company.createTime )
@@ -33,14 +41,16 @@ SELECT Medium.createTime AS createTime,
        0                 AS dependencyTime,
        Medium.id         AS mediumId,
        Medium.type       AS mediumType,
-       Medium.isBlocked  AS isBlocked
+       Medium.isBlocked  AS isBlocked,
+       Medium.lastLogin  AS lastLoginTime,
+       Medium.riskLevel  AS riskLevel
 FROM Medium
 WHERE Medium.createTime > :start_date_long
 ORDER BY Medium.createTime )
 TO ':output_dir/incremental/AddMediumWrite3.:output_format';
 
 
---- Insert 4: person own account
+--- Insert 4: person owns account
 COPY
 (
 SELECT PersonOwnAccount.createTime AS createTime,
@@ -48,7 +58,13 @@ SELECT PersonOwnAccount.createTime AS createTime,
        PersonOwnAccount.personId   AS personId,
        PersonOwnAccount.accountId  AS accountId,
        Account.type                AS accountType,
-       Account.isBlocked           AS accountBlocked
+       Account.isBlocked           AS accountBlocked,
+       Account.nickname            AS nickname,
+       Account.phonenum            AS phonenum,
+       Account.email               AS email,
+       Account.freqLoginType       AS freqLoginType,
+       Account.lastLoginTime       AS lastLoginTime,
+       Account.accountLevel        AS accountLevel,
 FROM Person,
      Account,
      PersonOwnAccount
@@ -59,7 +75,7 @@ ORDER BY PersonOwnAccount.createTime
     )
     TO ':output_dir/incremental/AddPersonOwnAccountWrite4.:output_format';
 
---- Insert 5: company registers account
+--- Insert 5: company owns account
 COPY
 (
 SELECT CompanyOwnAccount.createTime AS createTime,
@@ -67,7 +83,13 @@ SELECT CompanyOwnAccount.createTime AS createTime,
        CompanyOwnAccount.companyId  AS companyId,
        CompanyOwnAccount.accountId  AS accountId,
        Account.type                 AS accountType,
-       Account.isBlocked            AS accountBlocked
+       Account.isBlocked            AS accountBlocked,
+       Account.nickname             AS nickname,
+       Account.phonenum             AS phonenum,
+       Account.email                AS email,
+       Account.freqLoginType        AS freqLoginType,
+       Account.lastLoginTime        AS lastLoginTime,
+       Account.accountLevel         AS accountLevel,
 FROM Company,
      Account,
      CompanyOwnAccount
@@ -87,6 +109,9 @@ SELECT PersonApplyLoan.createTime AS createTime,
        Loan.id                    AS loanId,
        Loan.loanAmount            AS loanAmount,
        Loan.balance               AS balance,
+       Loan.usage                 AS loanUsage,
+       Loan.interestRate          AS interestRate,
+       PersonApplyLoan.org        AS org
 FROM PersonApplyLoan,
      Person,
      Loan
@@ -106,6 +131,9 @@ SELECT CompanyApplyLoan.createTime AS createTime,
        Loan.id                     AS loanId,
        Loan.loanAmount             AS loanAmount,
        Loan.balance                AS balance,
+       Loan.usage                  AS loanUsage,
+       Loan.interestRate           AS interestRate,
+       CompanyApplyLoan.org         AS org
 FROM CompanyApplyLoan,
      Company,
      Loan
@@ -158,7 +186,8 @@ COPY
 SELECT PersonGuarantee.createTime                       AS createTime,
        GREATEST(Person1.createTime, Person2.createTime) AS dependencyTime,
        PersonGuarantee.fromId                           AS fromId,
-       PersonGuarantee.toId                             AS toId
+       PersonGuarantee.toId                             AS toId,
+       PersonGuarantee.relation                         AS relation
 FROM PersonGuarantee,
      Person AS Person1,
      Person AS Person2
@@ -175,7 +204,8 @@ COPY
 SELECT CompanyGuarantee.createTime                        AS createTime,
        GREATEST(Company1.createTime, Company2.createTime) AS dependencyTime,
        CompanyGuarantee.fromId                            AS fromId,
-       CompanyGuarantee.toId                              AS toId
+       CompanyGuarantee.toId                              AS toId,
+       CompanyGuarantee.relation                          AS relation
 FROM CompanyGuarantee,
      Company AS Company1,
      Company AS Company2
@@ -195,7 +225,10 @@ SELECT
     GREATEST(Acc1.createTime, Acc2.createTime) AS dependencyTime,
     Transfer.fromId                            AS fromId,
     Transfer.toId                              AS toId,
-    Transfer.amount                            AS amount
+    Transfer.amount                            AS amount,
+    Transfer.orderNum                          AS orderNum,
+    Transfer.comment                           AS comment,
+    Transfer.goodsType                         AS goodsType
 FROM Transfer, Account AS Acc1, Account AS Acc2
 WHERE Transfer.createTime > :start_date_long
     AND Acc1.id == Transfer.fromId
@@ -208,7 +241,10 @@ SELECT
     GREATEST(Acc1.createTime, Acc2.createTime) AS dependencyTime,
     LoanTransfer.fromId                        AS fromId,
     LoanTransfer.toId                          AS toId,
-    LoanTransfer.amount                        AS amount
+    LoanTransfer.amount                        AS amount,
+    LoanTransfer.orderNum                      AS orderNum,
+    LoanTransfer.comment                       AS comment,
+    LoanTransfer.goodsType                     AS goodsType
 FROM LoanTransfer, Account AS Acc1, Account AS Acc2
 WHERE LoanTransfer.createTime > :start_date_long
     AND Acc1.id == LoanTransfer.fromId
@@ -278,7 +314,8 @@ COPY
 SELECT SignIn.createTime                               AS createTime,
        GREATEST(Account.createTime, Medium.createTime) AS dependencyTime,
        SignIn.mediumId                                 AS mediumId,
-       SignIn.accountId                                AS accountId
+       SignIn.accountId                                AS accountId,
+       SignIn.location                                 AS location
 FROM Medium,
      SignIn,
      Account
