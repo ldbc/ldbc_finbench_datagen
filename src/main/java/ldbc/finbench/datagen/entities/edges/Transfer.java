@@ -6,11 +6,17 @@ import java.util.Random;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 import ldbc.finbench.datagen.entities.nodes.Account;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
+import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class Transfer implements DynamicActivity, Serializable {
     private Account fromAccount;
     private Account toAccount;
     private double amount;
+    private String ordernum;
+    private String comment;
+    private String status;
+    private String payType;
+    private String goodsType;
     private long creationDate;
     private long deletionDate;
     private long multiplicityId;
@@ -28,21 +34,40 @@ public class Transfer implements DynamicActivity, Serializable {
     }
 
     // Note: used in account centric implementation
-    public static void createTransfer(Random random, Account from, Account to, long multiplicityId, double amount) {
+    public static void createTransfer(RandomGeneratorFarm farm, Account from, Account to, long multiplicityId,
+                                      double amount) {
         long deleteDate = Math.min(from.getDeletionDate(), to.getDeletionDate());
-        long creationDate = Dictionaries.dates.randomAccountToAccountDate(random, from, to, deleteDate);
+        long creationDate =
+            Dictionaries.dates.randomAccountToAccountDate(farm.get(RandomGeneratorFarm.Aspect.TRANSFER_DATE), from, to,
+                                                          deleteDate);
         boolean willDelete = from.isExplicitlyDeleted() && to.isExplicitlyDeleted();
         Transfer transfer = new Transfer(from, to, amount, creationDate, deleteDate, multiplicityId, willDelete);
         from.getTransferOuts().add(transfer);
         to.getTransferIns().add(transfer);
     }
 
-    public static Transfer createTransferAndReturn(Random random, Account from, Account to, long multiplicityId,
+    public static Transfer createTransferAndReturn(RandomGeneratorFarm farm, Account from, Account to,
+                                                   long multiplicityId,
                                                    double amount) {
         long deleteDate = Math.min(from.getDeletionDate(), to.getDeletionDate());
-        long creationDate = Dictionaries.dates.randomAccountToAccountDate(random, from, to, deleteDate);
+        long creationDate =
+            Dictionaries.dates.randomAccountToAccountDate(farm.get(RandomGeneratorFarm.Aspect.TRANSFER_DATE), from, to,
+                                                          deleteDate);
         boolean willDelete = from.isExplicitlyDeleted() && to.isExplicitlyDeleted();
         Transfer transfer = new Transfer(from, to, amount, creationDate, deleteDate, multiplicityId, willDelete);
+
+        // Set ordernum
+        String ordernum = Dictionaries.numbers.generateOrdernum(farm.get(RandomGeneratorFarm.Aspect.TRANSFER_ORDERNUM));
+        transfer.setOrdernum(ordernum);
+
+        // Set comment
+
+        // Set status
+
+        // Set payType
+
+        // Set goodsType
+
         from.getTransferOuts().add(transfer);
         to.getTransferIns().add(transfer);
         return transfer;
@@ -127,6 +152,47 @@ public class Transfer implements DynamicActivity, Serializable {
 
     public void setExplicitlyDeleted(boolean explicitlyDeleted) {
         isExplicitlyDeleted = explicitlyDeleted;
+    }
+
+
+    public String getOrdernum() {
+        return ordernum;
+    }
+
+    public void setOrdernum(String ordernum) {
+        this.ordernum = ordernum;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getPayType() {
+        return payType;
+    }
+
+    public void setPayType(String payType) {
+        this.payType = payType;
+    }
+
+    public String getGoodsType() {
+        return goodsType;
+    }
+
+    public void setGoodsType(String goodsType) {
+        this.goodsType = goodsType;
     }
 
     @Override

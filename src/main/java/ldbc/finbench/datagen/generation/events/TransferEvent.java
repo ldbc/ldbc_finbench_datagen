@@ -61,7 +61,6 @@ public class TransferEvent implements Serializable {
         resetState(blockId);
 
         List<Integer> availableToAccountIds = getIndexList(accounts.size()); // available transferTo accountIds
-        Random dateRandom = randomFarm.get(RandomGeneratorFarm.Aspect.TRANSFER_DATE);
 
         // scale to percentage
         accounts.forEach(
@@ -87,7 +86,7 @@ public class TransferEvent implements Serializable {
                     long numTransfers = Math.min(multiplicityDist.nextDegree(),
                                                  Math.min(from.getAvailableOutDegree(), to.getAvailableInDegree()));
                     for (int mindex = 0; mindex < numTransfers; mindex++) {
-                        transfers.add(Transfer.createTransferAndReturn(dateRandom, from, to, mindex,
+                        transfers.add(Transfer.createTransferAndReturn(randomFarm, from, to, mindex,
                                                 amountRandom.nextDouble() * DatagenParams.tsfMaxAmount));
                     }
                     if (to.getAvailableInDegree() == 0) {
