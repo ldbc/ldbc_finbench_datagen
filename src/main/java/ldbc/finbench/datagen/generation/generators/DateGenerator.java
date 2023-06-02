@@ -52,7 +52,8 @@ public class DateGenerator {
     }
 
     public Long randomPersonCreationDate(Random random) {
-        return randomDate(random, simulationStart, simulationEnd);
+        return randomDate(random, simulationStart,
+                          simulationEnd - DatagenParams.deleteDelta - DatagenParams.activityDelta);
     }
 
     public Long randomPersonBirthday(Random random) {
@@ -63,7 +64,8 @@ public class DateGenerator {
     }
 
     public Long randomCompanyCreationDate(Random random) {
-        return randomDate(random, simulationStart, simulationEnd);
+        return randomDate(random, simulationStart,
+                          simulationEnd - DatagenParams.deleteDelta - DatagenParams.activityDelta);
     }
 
     public Long randomAccountCreationDate(Random random, long minTime) {
@@ -85,16 +87,6 @@ public class DateGenerator {
 
     public Long randomMediumLastLogin(Random random, long creationDate) {
         return randomDate(random, creationDate, simulationEnd);
-    }
-
-    public long randomPersonToAccountDate(Random random, Person person, Account account, long deletionDate) {
-        long fromDate = Math.max(person.getCreationDate(), account.getCreationDate()) + DatagenParams.activityDelta;
-        return randomDate(random, fromDate, Math.min(deletionDate, simulationEnd));
-    }
-
-    public long randomCompanyToAccountDate(Random random, Company company, Account account, long deletionDate) {
-        long fromDate = Math.max(company.getCreationDate(), account.getCreationDate()) + DatagenParams.activityDelta;
-        return randomDate(random, fromDate, Math.min(deletionDate, simulationEnd));
     }
 
     public long randomPersonToCompanyDate(Random random, Person person, Company company) {
