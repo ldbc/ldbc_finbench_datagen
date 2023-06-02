@@ -62,7 +62,8 @@ object FactorGenerationStage extends DatagenStage {
     run(parsedArgs)
   }
 
-  // execute the data generation process
+  // execute factorization process
+  // TODO: finish all
   override def run(args: Args) = {
     parameterCuration
   }
