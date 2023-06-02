@@ -133,7 +133,7 @@ SELECT CompanyApplyLoan.createTime AS createTime,
        Loan.balance                AS balance,
        Loan.usage                  AS loanUsage,
        Loan.interestRate           AS interestRate,
-       CompanyApplyLoan.org         AS org
+       CompanyApplyLoan.org        AS org
 FROM CompanyApplyLoan,
      Company,
      Loan
@@ -228,6 +228,7 @@ SELECT
     Transfer.amount                            AS amount,
     Transfer.orderNum                          AS orderNum,
     Transfer.comment                           AS comment,
+    Transfer.payType                           AS payType,
     Transfer.goodsType                         AS goodsType
 FROM Transfer, Account AS Acc1, Account AS Acc2
 WHERE Transfer.createTime > :start_date_long
@@ -244,6 +245,7 @@ SELECT
     LoanTransfer.amount                        AS amount,
     LoanTransfer.orderNum                      AS orderNum,
     LoanTransfer.comment                       AS comment,
+    LoanTransfer.payType                       AS payType,
     LoanTransfer.goodsType                     AS goodsType
 FROM LoanTransfer, Account AS Acc1, Account AS Acc2
 WHERE LoanTransfer.createTime > :start_date_long

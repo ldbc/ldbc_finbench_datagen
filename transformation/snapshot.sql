@@ -88,6 +88,7 @@ COPY
         epoch_ms(Transfer.createTime) AS createTime,
         Transfer.orderNum AS orderNum,
         Transfer.comment AS comment,
+        Transfer.payType AS payType,
         Transfer.goodsType AS goodsType
     FROM Transfer
     WHERE Transfer.createTime <= :start_date_long AND Transfer.deleteTime > :start_date_long
@@ -100,6 +101,7 @@ COPY
         epoch_ms(LoanTransfer.createTime) AS createTime,
         LoanTransfer.orderNum AS orderNum,
         LoanTransfer.comment AS comment,
+        LoanTransfer.payType AS payType,
         LoanTransfer.goodsType AS goodsType
     FROM LoanTransfer
     WHERE LoanTransfer.createTime <= :start_date_long  AND LoanTransfer.deleteTime > :start_date_long
