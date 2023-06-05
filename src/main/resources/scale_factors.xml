@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
 <scale_factors>
-    <!--tuned-->
     <scale_factor name="0.01">
         <property>
             <name>generator.numPersons</name>
@@ -24,7 +23,6 @@
         </property>
     </scale_factor>
 
-    <!--tuned-->
     <scale_factor name="0.1">
         <property>
             <name>generator.numPersons</name>
@@ -48,7 +46,6 @@
         </property>
     </scale_factor>
 
-    <!--tuned-->
     <scale_factor name="1">
         <property>
             <name>generator.numPersons</name>
@@ -98,11 +95,15 @@
     <scale_factor name="10">
         <property>
             <name>generator.numPersons</name>
-            <value>1000</value>
+            <value>600000</value>
         </property>
         <property>
             <name>generator.numCompanies</name>
-            <value>700</value>
+            <value>300000</value>
+        </property>
+        <property>
+            <name>generator.numMediums</name>
+            <value>2000000</value>
         </property>
         <property>
             <name>transfer.minNumDegree</name>
@@ -110,26 +111,7 @@
         </property>
         <property>
             <name>transfer.maxNumDegree</name>
-            <value>1000</value>
-        </property>
-    </scale_factor>
-
-    <scale_factor name="30">
-        <property>
-            <name>generator.numPersons</name>
-            <value>1000</value>
-        </property>
-        <property>
-            <name>generator.numCompanies</name>
-            <value>700</value>
-        </property>
-        <property>
-            <name>transfer.minNumDegree</name>
-            <value>1</value>
-        </property>
-        <property>
-            <name>transfer.maxNumDegree</name>
-            <value>1000</value>
+            <value>10000</value>
         </property>
     </scale_factor>
 
