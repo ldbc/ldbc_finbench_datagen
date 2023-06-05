@@ -10,7 +10,7 @@ import re
 import time
 from datetime import datetime
 from pathlib import Path
-from zoneinfo import ZoneInfo # use zoneinfo instead of backports.zoneinfo in higher python versions
+from backports.zoneinfo import ZoneInfo # use zoneinfo instead of backports.zoneinfo in higher python versions
 
 import duckdb
 
