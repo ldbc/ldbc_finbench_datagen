@@ -12,7 +12,7 @@ This data generator produces labelled directred property graphs based on the sim
 
 ### Data Schema
 
-![Schema](https://github.com/ldbc/ldbc_finbench_docs/blob/fd326ec51ef4b3aa8ab5034f54013db18384f3c1/figures/data-schema.png)
+![Schema](https://github.com/ldbc/ldbc_finbench_docs/blob/main/figures/data-schema.png)
 
 ### Implementation
 
