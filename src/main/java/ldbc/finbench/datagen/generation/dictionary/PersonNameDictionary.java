@@ -21,7 +21,7 @@ public class PersonNameDictionary {
             long totalNumSurnames = 0;
             while ((line = dictionary.readLine()) != null) {
                 String[] data = line.split(separator);
-                String surname = data[2].trim();
+                String surname = data[1].trim();
                 this.personSurnames.put(totalNumSurnames, surname);
                 totalNumSurnames++;
             }
