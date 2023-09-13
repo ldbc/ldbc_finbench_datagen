@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-FinBench_DATA_ROOT=${PATH_TO_FINBENCH_RAW_DATA}
+## Point this path to the directory containing the `raw` directory
+FinBench_DATA_ROOT=${PATH_TO_FINBENCH_DATA}
 
 set -eu
 set -o pipefail
