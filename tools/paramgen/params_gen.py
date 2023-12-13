@@ -7,7 +7,7 @@ import random
 data_prefix = './finbench/sf1/snapshot/'
 params_input_prefix = './input_data/read_params/'
 params_output_prefix = './output_data/read_params/'
-create_validation_cmd = 'java -cp ../target/tugraph-0.1.0.jar org.ldbcouncil.finbench.driver.driver.Driver -P params_gen.properties -p "ldbc.finbench.transaction.queries.ComplexRead%d_enable|true" -p "validation_parameters_size|%d" -p "validate_database|validation_params.csv.%d"'
+create_validation_cmd = 'java -cp ../target/tugraph-0.2.0-SNAPSHOT.jar org.ldbcouncil.finbench.driver.driver.Driver -P params_gen.properties -p "ldbc.finbench.transaction.queries.ComplexRead%d_enable|true" -p "validation_parameters_size|%d" -p "validate_database|validation_params.csv.%d"'
 
 
 def get_ids(file):
