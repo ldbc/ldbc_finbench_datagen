@@ -1,6 +1,6 @@
 #!/bin/bash
 
-LDBC_SNB_DATAGEN_JAR=target/ldbc_finbench_datagen-0.1.0-alpha-jar-with-dependencies.jar
+LDBC_SNB_DATAGEN_JAR=target/ldbc_finbench_datagen-0.2.0-SNAPSHOT-jar-with-dependencies.jar
 OUTPUT_DIR=out
 
 # For more command line arguments, see the main entry for more information at
