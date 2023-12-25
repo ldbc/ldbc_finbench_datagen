@@ -6,7 +6,7 @@ SELECT Person.id                   AS personId,
        Person.isBlocked            AS isBlocked,
        epoch_ms(Person.createTime) AS createTime,
        Person.gender               AS gender,
-       epoch_ms(Person.birthday)   AS birthday,
+       epoch_ms(Person.birthday)::DATE   AS birthday,
        Person.country              AS country,
        Person.city                 AS city
 FROM Person
@@ -34,16 +34,16 @@ TO ':output_dir/snapshot/Company.:output_format';
 -- Account. It has deletes.
 COPY
 (
-SELECT Account.id                   AS accountId,
-       epoch_ms(Account.createTime) AS createTime,
-       Account.isBlocked            AS isBlocked,
-       Account.type                 AS accoutType,
-       Account.nickname             AS nickname,
-       Account.phonenum             AS phonenum,
-       Account.email                AS email,
-       Account.freqLoginType        AS freqLoginType,
-       Account.lastLoginTime        AS lastLoginTime,
-       Account.accountLevel         AS accountLevel,
+SELECT Account.id                       AS accountId,
+       epoch_ms(Account.createTime)     AS createTime,
+       Account.isBlocked                AS isBlocked,
+       Account.type                     AS accountType,
+       Account.nickname                 AS nickname,
+       Account.phonenum                 AS phonenum,
+       Account.email                    AS email,
+       Account.freqLoginType            AS freqLoginType,
+       epoch_ms(Account.lastLoginTime)  AS lastLoginTime,
+       Account.accountLevel             AS accountLevel,
 FROM Account
 WHERE Account.createTime <= :start_date_long
   AND Account.deleteTime > :start_date_long
@@ -71,7 +71,7 @@ SELECT Medium.id                   AS mediumId,
        Medium.type                 AS mediumType,
        Medium.isBlocked            AS isBlocked,
        epoch_ms(Medium.createTime) AS createTime,
-       Medium.lastLogin            AS lastLoginTime,
+       epoch_ms(Medium.lastLogin)  AS lastLoginTime,
        Medium.riskLevel            AS riskLevel
 FROM Medium
 WHERE Medium.createTime <= :start_date_long
@@ -86,7 +86,7 @@ COPY
         Transfer.toId AS toId,
         Transfer.amount AS amount,
         epoch_ms(Transfer.createTime) AS createTime,
-        Transfer.orderNum AS orderNum,
+        Transfer.orderNum::VARCHAR AS orderNum,
         Transfer.comment AS comment,
         Transfer.payType AS payType,
         Transfer.goodsType AS goodsType
@@ -99,7 +99,7 @@ COPY
         LoanTransfer.toId AS toId,
         LoanTransfer.amount AS amount,
         epoch_ms(LoanTransfer.createTime) AS createTime,
-        LoanTransfer.orderNum AS orderNum,
+        LoanTransfer.orderNum::VARCHAR AS orderNum,
         LoanTransfer.comment AS comment,
         LoanTransfer.payType AS payType,
         LoanTransfer.goodsType AS goodsType
