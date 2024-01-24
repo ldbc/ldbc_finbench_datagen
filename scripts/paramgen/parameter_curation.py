@@ -118,12 +118,12 @@ def handleTimeDurationParam(timeParam):
 
 def main():
 
-    loan_account_path = '../out/factor_table/loan_account_list.csv'
-    account_account_path = '../out/factor_table/account_items.csv'
-    account_amount_path = '../out/factor_table/amount.csv'
-    amount_bucket_path = '../out/factor_table/amount_bucket.csv'
-    time_bucket_path = '../out/factor_table/month.csv'
-    output_path = '../out/substitute_parameters/'
+    loan_account_path = '../../out/factor_table/loan_account_list.csv'
+    account_account_path = '../../out/factor_table/account_items.csv'
+    account_amount_path = '../../out/factor_table/amount.csv'
+    amount_bucket_path = '../../out/factor_table/amount_bucket.csv'
+    time_bucket_path = '../../out/factor_table/month.csv'
+    output_path = '../../out/substitute_parameters/'
 
 
     loan_account_df = process_csv(loan_account_path)

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-rm -rf ../out/factor_table
+rm -rf ../../out/factor_table
 
 python3 generate_account.py &
 

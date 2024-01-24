@@ -7,10 +7,10 @@ def process_csv(file_path):
     return df
 
 
-account_folder_path = '../out/raw/account'
-transfer_folder_path = '../out/raw/transfer'
-output_folder = '../out/factor_table'
-withdraw_folder_path = '../out/raw/withdraw'
+account_folder_path = '../../out/raw/account'
+transfer_folder_path = '../../out/raw/transfer'
+output_folder = '../../out/factor_table'
+withdraw_folder_path = '../../out/raw/withdraw'
 
 account_files = [os.path.join(account_folder_path, file) for file in os.listdir(account_folder_path) if file.endswith('.csv')]
 transfer_files = [os.path.join(transfer_folder_path, file) for file in os.listdir(transfer_folder_path) if file.endswith('.csv')]

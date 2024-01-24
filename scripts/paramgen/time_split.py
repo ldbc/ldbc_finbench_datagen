@@ -10,10 +10,10 @@ def process_csv(file_path):
 def timestamp_to_year_month(timestamp):
     return timestamp.strftime('%Y-%m')
 
-account_folder_path = '../out/raw/account'
-transfer_folder_path = '../out/raw/transfer'
-withdraw_folder_path = '../out/raw/withdraw'
-output_folder = '../out/factor_table'
+account_folder_path = '../../out/raw/account'
+transfer_folder_path = '../../out/raw/transfer'
+withdraw_folder_path = '../../out/raw/withdraw'
+output_folder = '../../out/factor_table'
 
 account_files = [os.path.join(account_folder_path, file) for file in os.listdir(account_folder_path) if file.endswith('.csv')]
 transfer_files = [os.path.join(transfer_folder_path, file) for file in os.listdir(transfer_folder_path) if file.endswith('.csv')]
@@ -54,4 +54,4 @@ result_df.columns = ['account_id'] + [str(timestamp_to_year_month(month)) for mo
 
 
 os.makedirs(output_folder, exist_ok=True)
-result_df.to_csv('../out/factor_table/month.csv', sep='|', index=False)
+result_df.to_csv('../../out/factor_table/month.csv', sep='|', index=False)
