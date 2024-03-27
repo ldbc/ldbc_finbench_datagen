@@ -9,13 +9,23 @@ import time_select
 import os
 import codecs
 from datetime import date
+from glob import glob
 
 THRESH_HOLD = 0
 TRUNCATION_LIMIT = 10000
 
 def process_csv(file_path):
-    df = pd.read_csv(file_path, delimiter='|')
-    return df
+    all_files = glob(file_path + '/*.csv')
+    
+    df_list = []
+    
+    for filename in all_files:
+        df = pd.read_csv(filename, delimiter='|')
+        df_list.append(df)
+    
+    combined_df = pd.concat(df_list, ignore_index=True)
+    
+    return combined_df
 
 
 class CSVSerializer:
@@ -118,11 +128,11 @@ def handleTimeDurationParam(timeParam):
 
 def main():
 
-    loan_account_path = '../../out/factor_table/loan_account_list.csv'
-    account_account_path = '../../out/factor_table/account_items.csv'
-    account_amount_path = '../../out/factor_table/amount.csv'
-    amount_bucket_path = '../../out/factor_table/amount_bucket.csv'
-    time_bucket_path = '../../out/factor_table/month.csv'
+    loan_account_path = '../../out/new_factor_table/loan_account_list'
+    account_account_path = '../../out/new_factor_table/account_items'
+    account_amount_path = '../../out/new_factor_table/amount'
+    amount_bucket_path = '../../out/new_factor_table/amount_bucket'
+    time_bucket_path = '../../out/new_factor_table/month'
     output_path = '../../out/substitute_parameters/'
 
 

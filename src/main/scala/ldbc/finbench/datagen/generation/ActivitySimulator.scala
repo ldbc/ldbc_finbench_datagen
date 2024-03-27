@@ -11,6 +11,9 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
 import scala.collection.JavaConverters._
+import scala.concurrent.{Future, Await}
+import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 // TODO:
 //  - refactor using common GraphDef to make the code less verbose
@@ -91,13 +94,22 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     // =========================================
     // Serialize
     // =========================================
-    activitySerializer.writePersonWithActivities(personWithAccGuaLoan)
-    activitySerializer.writeCompanyWithActivities(companyWithAccGuaLoan)
-    activitySerializer.writeMediumWithActivities(mediumRdd, signInRdd)
-    activitySerializer.writeAccountWithActivities(accountRdd, mergedTransfers)
-    activitySerializer.writeWithdraw(withdrawRdd)
-    activitySerializer.writeInvest(investRdd)
-    activitySerializer.writeLoanActivities(loanRdd, depositsRdd, repaysRdd, loanTrasfersRdd)
+    val allFutures = activitySerializer.writePersonWithActivities(personWithAccGuaLoan) ++
+      activitySerializer.writeCompanyWithActivities(companyWithAccGuaLoan) ++
+      activitySerializer.writeMediumWithActivities(mediumRdd, signInRdd) ++
+      activitySerializer.writeAccountWithActivities(accountRdd, mergedTransfers) ++
+      activitySerializer.writeWithdraw(withdrawRdd) ++
+      activitySerializer.writeInvest(investRdd) ++
+      activitySerializer.writeLoanActivities(loanRdd, depositsRdd, repaysRdd, loanTrasfersRdd)
+
+    Await.result(Future.sequence(allFutures), Duration.Inf)
+    // activitySerializer.writePersonWithActivities(personWithAccGuaLoan)
+    // activitySerializer.writeCompanyWithActivities(companyWithAccGuaLoan)
+    // activitySerializer.writeMediumWithActivities(mediumRdd, signInRdd)
+    // activitySerializer.writeAccountWithActivities(accountRdd, mergedTransfers)
+    // activitySerializer.writeWithdraw(withdrawRdd)
+    // activitySerializer.writeInvest(investRdd)
+    // activitySerializer.writeLoanActivities(loanRdd, depositsRdd, repaysRdd, loanTrasfersRdd)
   }
 
   private def mergeAccounts(persons: RDD[Person], companies: RDD[Company]): RDD[Account] = {

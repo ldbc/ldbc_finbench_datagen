@@ -1,15 +1,31 @@
 package ldbc.finbench.datagen.factors
 
 import ldbc.finbench.datagen.util.DatagenStage
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{SparkSession, functions => F}
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions.{col, countDistinct, row_number, var_pop}
+import org.apache.spark.sql.functions.max
+import org.apache.spark.sql.functions.lit
+import org.apache.spark.sql.functions.date_format
+import org.apache.spark.sql.functions.first
+import org.apache.spark.sql.functions.when
+import org.apache.spark.sql.functions.collect_set
+import org.apache.spark.sql.functions.split
+import org.apache.spark.sql.functions.from_json
+import org.apache.spark.sql.functions.array
+import org.apache.spark.sql.functions.coalesce
+import org.apache.spark.sql.functions.array_join
+import org.apache.spark.sql.functions.concat
+import org.apache.spark.sql.functions.sum
+import org.apache.spark.sql.functions.format_string
+import org.apache.spark.sql.types.{ArrayType, StringType}
 import org.graphframes.GraphFrame
 import org.slf4j.{Logger, LoggerFactory}
 import scopt.OptionParser
 import shapeless.lens
 
 import scala.util.matching.Regex
+import ldbc.finbench.datagen.factors.AccountItemsGenerator
 
 object FactorGenerationStage extends DatagenStage {
 
@@ -69,82 +85,153 @@ object FactorGenerationStage extends DatagenStage {
   }
 
   def parameterCuration(implicit spark: SparkSession) = {
+    import spark.implicits._
 
-    val accountDf = spark.read.format("csv")
+    // AccountItemsGenerator.generateAccountItems
+    val accountDf = spark.read
+      .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
       .option("header", "true")
       .option("delimiter", "|")
-      .load("./out/account/*.csv")
-    //      .toDF("_id","createTime","deleteTime","isBlocked","type","inDegree","OutDegree","isExplicitDeleted","Owner")
+      .load("./out/raw/account/*.csv")
 
-    val transferDf = spark.read.format("csv")
+    val transferDf = spark.read
+      .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
       .option("header", "true")
       .option("delimiter", "|")
-      .csv("./out/transfer/*.csv")
-      .toDF("src", "dst", "multiplicityI", "createTime", "deleteTime", "amount", "isExplicitDeleted")
+      .load("./out/raw/transfer/*.csv")
 
-    val graph = GraphFrame(accountDf, transferDf)
-
-    val accountTransferAccountOut1Hops = graph.find("(a)-[e1]->(b)")
-      .filter("e1.src == a.id")
-      .groupBy("a.id")
-      .agg(countDistinct("b.id").alias("AccountTransferAccountOut1Hops"))
-
-    val accountTransferAccountOut2Hops = graph.find("(a)-[e1]->(b); (b)-[e2]->(c)")
-      .filter("e1.src == a.id and e2.src == b.id")
-      .groupBy("a.id")
-      .agg(countDistinct("c.id").alias("AccountTransferAccountOut2Hops"))
-
-    val accountTransferAccountOut3Hops = graph.find("(a)-[e1]->(b); (b)-[e2]->(c); (c)-[e3]->(d)")
-      .filter("e1.src == a.id and e2.src == b.id and e3.src == c.id")
-      .groupBy("a.id")
-      .agg(countDistinct("d.id").alias("AccountTransferAccountOut3Hops"))
-
-    val factorTable = accountTransferAccountOut1Hops
-      .join(accountTransferAccountOut2Hops.join(accountTransferAccountOut3Hops, "id"), "id")
-
-    val w1 = Window.orderBy(col("AccountTransferAccountOut1Hops")).rowsBetween(-100000, 0)
-    val variance1 = var_pop(col("AccountTransferAccountOut1Hops")).over(w1)
-    val df1 = accountTransferAccountOut1Hops
-      .withColumn("variance1", variance1)
-      .filter(col("AccountTransferAccountOut1Hops") > 1)
-      .withColumn("row_number1", row_number.over(Window.orderBy("variance1")))
-      .filter(col("row_number1") <= 100000)
-
-
-    val w2 = Window.orderBy(col("AccountTransferAccountOut2Hops")).rowsBetween(-10000, 0)
-    val variance2 = var_pop(col("AccountTransferAccountOut2Hops")).over(w2)
-    val df2 = df1
-      .join(accountTransferAccountOut2Hops, "id")
-      .withColumn("variance2", variance2)
-      .filter(col("AccountTransferAccountOut2Hops") > 10)
-      .withColumn("row_number2", row_number.over(Window.orderBy("variance2")))
-      .filter(col("row_number2") <= 10000)
-
-    val w3 = Window.orderBy(col("AccountTransferAccountOut3Hops")).rowsBetween(-1000, 0)
-    val variance3 = var_pop(col("AccountTransferAccountOut3Hops")).over(w3)
-    val paramTable = df2
-      .join(accountTransferAccountOut3Hops, "id")
-      .withColumn("variance3", variance3)
-      .filter(col("AccountTransferAccountOut3Hops") > 100)
-      .withColumn("row_number3", row_number.over(Window.orderBy("variance3")))
-      .filter(col("row_number3") <= 1000)
-      .select("id", "AccountTransferAccountOut1Hops", "AccountTransferAccountOut2Hops", "AccountTransferAccountOut3Hops")
-
-    factorTable.coalesce(1).write
-      .format("csv")
-      .option("header", value = true)
+    val withdrawDf = spark.read
+      .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
+      .option("header", "true")
       .option("delimiter", "|")
-      .option("encoding", "UTF-8")
-      .mode("overwrite")
-      .save("./out/factorTable/")
+      .load("./out/raw/withdraw/*.csv")
 
-    paramTable.coalesce(1).write
-      .format("csv")
-      .option("header", value = true)
+    val combinedDf = transferDf.select($"fromId", $"toId", $"amount".cast("double"))
+      .union(withdrawDf.select($"fromId", $"toId", $"amount".cast("double")))
+
+    val transactionsDf = transferDf.select(col("fromId"), col("createTime"))
+      .union(withdrawDf.select(col("fromId"), col("createTime")))
+
+    val transactionsByMonthDf = transactionsDf
+      .withColumn("year_month", date_format((col("createTime") / 1000).cast("timestamp"), "yyyy-MM"))
+      .groupBy("fromId", "year_month")
+      .count()
+
+    val pivotDf = transactionsByMonthDf.groupBy("fromId")
+      .pivot("year_month")
+      .agg(first("count"))
+      .na.fill(0) 
+      .withColumnRenamed("fromId", "account_id")
+
+    val maxAmountDf = combinedDf.groupBy($"fromId", $"toId")
+      .agg(max($"amount").alias("maxAmount"))
+
+    val accountItemsDf = maxAmountDf.groupBy($"fromId")
+      .agg(F.collect_list(F.array($"toId", $"maxAmount")).alias("items"))
+      .select($"fromId".alias("account_id"), $"items")
+      .sort($"account_id")
+
+    val transformedAccountItemsDf = accountItemsDf.withColumn(
+      "items",
+      F.expr("transform(items, array -> concat('[', concat_ws(',', array), ']'))")
+    ).withColumn(
+      "items",
+      F.concat_ws(",", $"items")
+    ).withColumn(
+      "items",
+      F.concat(lit("["), $"items", lit("]"))
+    )
+
+    val transactionsAmountDf = transferDf.select(col("fromId"), col("amount").cast("double"))
+      .union(withdrawDf.select(col("fromId"), col("amount").cast("double")))
+
+    val buckets = Array(10000, 30000, 100000, 300000, 1000000, 2000000, 3000000, 4000000, 5000000, 6000000, 7000000, 8000000, 9000000, 10000000)
+
+    val bucketedDf = transactionsAmountDf.withColumn("bucket", 
+      when(col("amount") <= buckets(0), buckets(0))
+        .when(col("amount") <= buckets(1), buckets(1))
+        .when(col("amount") <= buckets(2), buckets(2))
+        .when(col("amount") <= buckets(3), buckets(3))
+        .when(col("amount") <= buckets(4), buckets(4))
+        .when(col("amount") <= buckets(5), buckets(5))
+        .when(col("amount") <= buckets(6), buckets(6))
+        .when(col("amount") <= buckets(7), buckets(7))
+        .when(col("amount") <= buckets(8), buckets(8))
+        .when(col("amount") <= buckets(9), buckets(9))
+        .when(col("amount") <= buckets(10), buckets(10))
+        .when(col("amount") <= buckets(11), buckets(11))
+        .when(col("amount") <= buckets(12), buckets(12))
+        .otherwise(buckets(13))
+    )
+
+    val bucketCountsDf = bucketedDf.groupBy("fromId")
+      .pivot("bucket", buckets.map(_.toString))
+      .count()
+      .na.fill(0)
+      .withColumnRenamed("fromId", "account_id")
+
+    val loanDf = spark.read
+      .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
+      .option("header", "true")
       .option("delimiter", "|")
-      .option("encoding", "UTF-8")
-      .mode("overwrite")
-      .save("./out/paramTable/")
+      .load("./out/raw/loan/*.csv")
 
+    val depositDf = spark.read
+      .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
+      .option("header", "true")
+      .option("delimiter", "|")
+      .load("./out/raw/deposit/*.csv")
+
+    val loanAccountListDf = loanDf.join(depositDf, loanDf("id") === depositDf("loanId"), "left_outer")
+      .groupBy("id")
+      .agg(coalesce(collect_set("accountId"), array()).alias("account_list"))  
+      .select(col("id").alias("loan_id"), concat(lit("["), array_join(col("account_list"), ","), lit("]")).alias("account_list"))  
+
+    val transactionsSumDf = transferDf.select(col("toId"), col("amount").cast("double"))
+      .union(withdrawDf.select(col("toId"), col("amount").cast("double")))
+
+    val amountSumDf = transactionsSumDf.groupBy("toId")
+      .agg(sum("amount").alias("amount"))
+      .withColumnRenamed("toId", "account_id")
+      .select(col("account_id"), format_string("%.2f", col("amount")).alias("amount"))  
+    
+    amountSumDf
+      .write
+      .option("header", "true")
+      .option("delimiter", "|")
+      .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
+      .save("./out/new_factor_table/amount")
+
+    loanAccountListDf
+      .write
+      .option("header", "true")
+      .option("delimiter", "|")
+      .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
+      .save("./out/new_factor_table/loan_account_list")
+
+    transformedAccountItemsDf
+      .coalesce(1)
+      .write
+      .option("header", "true")
+      .option("delimiter", "|")
+      .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
+      .save("./out/new_factor_table/account_items")
+
+    
+    pivotDf
+      .write
+      .option("header", "true")
+      .option("delimiter", "|")
+      .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
+      .save("./out/new_factor_table/month")
+
+    bucketCountsDf
+      .write
+      .option("header", "true")
+      .option("delimiter", "|")
+      .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
+      .save("./out/new_factor_table/amount_bucket")
+
+    
   }
 }

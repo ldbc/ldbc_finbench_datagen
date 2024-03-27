@@ -30,7 +30,7 @@ object LdbcDatagen extends SparkApp with Logging {
                    format: String = "csv",
                    formatOptions: Map[String, String] = Map.empty,
                    epochMillis: Boolean = false,
-                   generateFactors: Boolean = false,
+                   generateFactors: Boolean = true,
                    factorFormat: String = "parquet"
                  )
 
