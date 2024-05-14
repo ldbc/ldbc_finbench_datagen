@@ -42,7 +42,8 @@ trait SparkApp {
   }
 
   def defaultSparkConf: Map[String, String] = Map(
-    "spark.sql.session.timeZone" -> "GMT"
+    "spark.sql.session.timeZone" -> "GMT",
+    "spark.sql.sources.useV1SourceList" -> "csv"
   )
 
   protected lazy val env: SparkEnv = new SparkEnv
