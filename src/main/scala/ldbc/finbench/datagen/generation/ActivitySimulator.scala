@@ -103,13 +103,6 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
       activitySerializer.writeLoanActivities(loanRdd, depositsRdd, repaysRdd, loanTrasfersRdd)
 
     Await.result(Future.sequence(allFutures), Duration.Inf)
-    // activitySerializer.writePersonWithActivities(personWithAccGuaLoan)
-    // activitySerializer.writeCompanyWithActivities(companyWithAccGuaLoan)
-    // activitySerializer.writeMediumWithActivities(mediumRdd, signInRdd)
-    // activitySerializer.writeAccountWithActivities(accountRdd, mergedTransfers)
-    // activitySerializer.writeWithdraw(withdrawRdd)
-    // activitySerializer.writeInvest(investRdd)
-    // activitySerializer.writeLoanActivities(loanRdd, depositsRdd, repaysRdd, loanTrasfersRdd)
   }
 
   private def mergeAccounts(persons: RDD[Person], companies: RDD[Company]): RDD[Account] = {

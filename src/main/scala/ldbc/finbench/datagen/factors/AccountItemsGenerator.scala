@@ -9,36 +9,36 @@ object AccountItemsGenerator {
   def generateAccountItems(implicit spark: SparkSession): Unit = {
     import spark.implicits._
 
-    val accountDf = spark.read
+    val accountRDD = spark.read
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
       .option("header", "true")
       .option("delimiter", "|")
       .load("./out/raw/account/*.csv")
 
-    val transferDf = spark.read
+    val transferRDD = spark.read
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
       .option("header", "true")
       .option("delimiter", "|")
       .load("./out/raw/transfer/*.csv")
 
-    val withdrawDf = spark.read
+    val withdrawRDD = spark.read
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
       .option("header", "true")
       .option("delimiter", "|")
       .load("./out/raw/withdraw/*.csv")
 
-    val combinedDf = transferDf.select($"fromId", $"toId", $"amount".cast("double"))
-      .union(withdrawDf.select($"fromId", $"toId", $"amount".cast("double")))
+    val combinedRDD = transferRDD.select($"fromId", $"toId", $"amount".cast("double"))
+      .union(withdrawRDD.select($"fromId", $"toId", $"amount".cast("double")))
 
-    val maxAmountDf = combinedDf.groupBy($"fromId", $"toId")
+    val maxAmountRDD = combinedRDD.groupBy($"fromId", $"toId")
       .agg(max($"amount").alias("maxAmount"))
 
-    val accountItemsDf = maxAmountDf.groupBy($"fromId")
+    val accountItemsRDD = maxAmountRDD.groupBy($"fromId")
       .agg(F.collect_list(F.array($"toId", $"maxAmount")).alias("items"))
       .select($"fromId".alias("account_id"), $"items")
       .sort($"account_id")
 
-    val transformedAccountItemsDf = accountItemsDf.withColumn(
+    val transformedAccountItemsRDD = accountItemsRDD.withColumn(
       "items",
       F.expr("transform(items, array -> concat('[', concat_ws(',', array), ']'))")
     ).withColumn(
@@ -49,12 +49,12 @@ object AccountItemsGenerator {
       F.concat(lit("["), $"items", lit("]"))
     )
 
-    transformedAccountItemsDf
+    transformedAccountItemsRDD
       .coalesce(1)
       .write
       .option("header", "true")
       .option("delimiter", "|")
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .save("./out/new_factor_table/account_items")
+      .save("./out/factor_table/account_items")
   }
 }

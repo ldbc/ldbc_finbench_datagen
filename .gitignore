@@ -4,6 +4,7 @@
 target/
 .idea/
 .vscode/
+.metals/
 
 # local generated data
 out*/

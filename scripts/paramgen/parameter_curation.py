@@ -128,11 +128,11 @@ def handleTimeDurationParam(timeParam):
 
 def main():
 
-    loan_account_path = '../../out/new_factor_table/loan_account_list'
-    account_account_path = '../../out/new_factor_table/account_items'
-    account_amount_path = '../../out/new_factor_table/amount'
-    amount_bucket_path = '../../out/new_factor_table/amount_bucket'
-    time_bucket_path = '../../out/new_factor_table/month'
+    loan_account_path = '../../out/factor_table/loan_account_list'
+    account_account_path = '../../out/factor_table/account_items'
+    account_amount_path = '../../out/factor_table/amount'
+    amount_bucket_path = '../../out/factor_table/amount_bucket'
+    time_bucket_path = '../../out/factor_table/month'
     output_path = '../../out/substitute_parameters/'
 
 

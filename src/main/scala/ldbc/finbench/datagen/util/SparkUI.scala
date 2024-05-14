@@ -15,20 +15,6 @@ object SparkUI {
     }
   }
 
-  // def jobAsync(jobGroup: String, jobDescription: String)(action: => Unit)(
-  //   implicit spark: SparkSession): Unit = {
-  //   spark.sparkContext.setJobGroup(jobGroup, jobDescription)
-  //   try {
-  //     new Thread(new Runnable {
-  //       override def run(): Unit = {
-  //         action
-  //       }
-  //     }).start()
-  //   } finally {
-  //     spark.sparkContext.clearJobGroup()
-  //   }
-  // }
-
   def jobAsync(jobGroup: String, jobDescription: String)(action: => Unit)(
     implicit spark: SparkSession): Future[Unit] = {
     spark.sparkContext.setJobGroup(jobGroup, jobDescription)
