@@ -3,6 +3,7 @@
 from ast import literal_eval
 from calendar import timegm
 import multiprocessing
+import random
 import pandas as pd
 import numpy as np
 import search_params
@@ -12,8 +13,10 @@ import codecs
 from datetime import date
 from glob import glob
 import concurrent.futures
+from functools import partial
 
 THRESH_HOLD = 0
+THRESH_HOLD_6 = 0
 TRUNCATION_LIMIT = 10000
 
 def process_csv(file_path):
@@ -86,7 +89,47 @@ def find_neighbors(account_list, account_account_df, account_amount_df, amount_b
             rows_amount_bucket = amount_bucket_df.loc[item]
             result.update(neighbors_with_trancate(rows_account_list, rows_amount_bucket, num_list))
 
+    elif query_id in [3, 11]:
+        for item in account_list:
+            try:
+                rows_account_list = account_account_df.loc[item][item_name]
+            except KeyError:
+                rows_account_list = []
+            result.update(rows_account_list)
+
     return list(result)
+
+
+def filter_neighbors(account_list, amount_bucket_df, num_list, account_id):
+
+    # print(f'account_list: {account_list}')
+
+    rows_amount_bucket = amount_bucket_df.loc[account_id]
+
+    sum_num = 0
+    header_at_limit = -1
+    for col in reversed(num_list):
+        sum_num += rows_amount_bucket[str(col)]
+        if sum_num >= TRUNCATION_LIMIT:
+            header_at_limit = col
+            break
+
+    partial_apply = partial(filter_neighbors_with_truncate_threshold, amount_bucket_df=amount_bucket_df, num_list=num_list, header_at_limit=header_at_limit)
+    account_mapped = map(partial_apply, account_list)
+    result = [x for x in account_mapped if x is not None]
+    return result
+
+
+def filter_neighbors_with_truncate_threshold(item, amount_bucket_df, num_list, header_at_limit):
+
+    if header_at_limit != -1:
+        if item[1] > THRESH_HOLD_6 and item[1] >= header_at_limit:
+            return item[0]
+    else:
+        if item[1] > THRESH_HOLD_6:
+            return item[0]
+        
+    return None
 
 
 def neighbors_with_truncate_threshold(transfer_in_amount, rows_account_list, rows_amount_bucket, num_list):
@@ -125,7 +168,7 @@ def neighbors_with_trancate(rows_account_list, rows_amount_bucket, num_list):
         return [t[0] for t in rows_account_list]
 
 
-def process_chunk(chunk, account_account_df, account_amount_df, amount_bucket_df, num_list, query_id):
+def process_get_neighbors(chunk, account_account_df, account_amount_df, amount_bucket_df, num_list, query_id):
     second_column_name = chunk.columns[1]
     chunk[second_column_name] = chunk[second_column_name].apply(
         lambda x: find_neighbors(x, account_account_df, account_amount_df, amount_bucket_df, num_list, query_id)
@@ -133,19 +176,50 @@ def process_chunk(chunk, account_account_df, account_amount_df, amount_bucket_df
     return chunk
 
 
+def process_filter_neighbors(chunk, amount_bucket_df, num_list):
+
+    first_column_name = chunk.columns[0]
+    second_column_name = chunk.columns[1]
+
+    chunk[second_column_name] = chunk.apply(
+        lambda row: filter_neighbors(row[second_column_name], amount_bucket_df, num_list, row[first_column_name]),
+        axis=1
+    )
+    return chunk
+
+
 def get_next_neighbor_list(neighbors_df, account_account_df, account_amount_df, amount_bucket_df, query_id):
-    num_list = [int(x) for x in amount_bucket_df.columns.tolist()]
+
+    num_list = []
+    if query_id != 3 and query_id != 11:
+        num_list = [int(x) for x in amount_bucket_df.columns.tolist()]
 
     query_parallelism = max(1, multiprocessing.cpu_count() // 4)
     print(f'query_parallelism: {query_parallelism}')
     chunks = np.array_split(neighbors_df, query_parallelism)
 
     with concurrent.futures.ProcessPoolExecutor(max_workers=query_parallelism) as executor:
-        futures = [executor.submit(process_chunk, chunk, account_account_df, account_amount_df, amount_bucket_df, num_list, query_id) for chunk in chunks]
+        futures = [executor.submit(process_get_neighbors, chunk, account_account_df, account_amount_df, amount_bucket_df, num_list, query_id) for chunk in chunks]
         results = [future.result() for future in concurrent.futures.as_completed(futures)]
     
     next_neighbors_df = pd.concat(results)
     next_neighbors_df = next_neighbors_df.sort_index()
+    return next_neighbors_df
+
+
+def get_filter_neighbor_list(neighbors_df, amount_bucket_df):
+    first_column_name = neighbors_df.columns[0]
+    num_list = [int(x) for x in amount_bucket_df.columns.tolist()]
+
+    query_parallelism = max(1, multiprocessing.cpu_count() // 4)
+    chunks = np.array_split(neighbors_df, query_parallelism)
+
+    with concurrent.futures.ProcessPoolExecutor(max_workers=query_parallelism) as executor:
+        futures = [executor.submit(process_filter_neighbors, chunk, amount_bucket_df, num_list) for chunk in chunks]
+        results = [future.result() for future in concurrent.futures.as_completed(futures)]
+
+    next_neighbors_df = pd.concat(results)
+    next_neighbors_df = next_neighbors_df.sort_values(by=first_column_name)
     return next_neighbors_df
 
 
@@ -170,10 +244,14 @@ def handleTimeDurationParam(timeParam):
     return res
 
 
-def process_query(query_config):
-    query_id = query_config['query_id']
-    process_function = query_config['function']
-    process_function(query_id)
+def process_query(query_id):
+
+    if query_id in [7, 10]:
+        process_1_hop_query(query_id)
+    elif query_id in [1, 2, 3, 5, 8, 11]:
+        process_iter_queries(query_id)
+    elif query_id == 6:
+        process_withdraw_query()
 
 
 def process_iter_queries(query_id):
@@ -208,7 +286,7 @@ def process_iter_queries(query_id):
         time_bucket_path = '../../out/factor_table/transfer_out_month'
         output_path = '../../out/substitute_parameters/'
         steps = 3
-    
+
     elif query_id == 2:
         first_account_path = '../../out/factor_table/person_account_list'
         account_account_path = '../../out/factor_table/account_transfer_in_items'
@@ -216,6 +294,23 @@ def process_iter_queries(query_id):
         time_bucket_path = '../../out/factor_table/transfer_in_month'
         output_path = '../../out/substitute_parameters/tcr2.txt'
         steps = 3
+
+    elif query_id == 3:
+        first_account_path = '../../out/factor_table/account_in_out_list'
+        account_account_path = '../../out/factor_table/account_in_out_list'
+        amount_bucket_path = '../../out/factor_table/account_in_out_count'
+        time_bucket_path = '../../out/factor_table/account_in_out_month'
+        output_path = '../../out/substitute_parameters/'
+        steps = 2
+
+    elif query_id == 11:
+        first_account_path = '../../out/factor_table/person_guarantee_list'
+        account_account_path = '../../out/factor_table/person_guarantee_list'
+        amount_bucket_path = '../../out/factor_table/person_guarantee_count'
+        time_bucket_path = '../../out/factor_table/person_guarantee_month'
+        output_path = '../../out/substitute_parameters/tcr11.txt'
+        steps = 3
+
 
     first_account_df = process_csv(first_account_path)
     account_account_df = process_csv(account_account_path)
@@ -249,7 +344,10 @@ def process_iter_queries(query_id):
 
     while current_step < steps:
         next_first_amount_bucket = get_next_sum_table(first_neighbors_df, amount_bucket_df)
-        temp_first_array = next_first_amount_bucket.to_numpy().sum(axis=1)
+        if query_id in [3, 11]:
+            temp_first_array = next_first_amount_bucket.to_numpy()
+        else:
+            temp_first_array = next_first_amount_bucket.to_numpy().sum(axis=1)
         first_array = np.column_stack((first_array, temp_first_array))
 
         if current_step == steps - 1:
@@ -266,26 +364,26 @@ def process_iter_queries(query_id):
         csvWriter = CSVSerializer()
         csvWriter.setOutputFile(output_path)
         csvWriter.registerHandler(handleLoanParam, final_first_items, "loanId")
-        csvWriter.registerHandler(handleTimeDurationParam, time_list, "startDate|endDate")
+        csvWriter.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
         csvWriter.writeCSV()
 
     elif query_id == 1:
         csvWriter = CSVSerializer()
         csvWriter.setOutputFile(output_path)
         csvWriter.registerHandler(handleLoanParam, final_first_items, "account_id")
-        csvWriter.registerHandler(handleTimeDurationParam, time_list, "startDate|endDate")
+        csvWriter.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
         csvWriter.writeCSV()
 
     elif query_id == 5:
         csvWriter_5 = CSVSerializer()
         csvWriter_5.setOutputFile(output_path + 'tcr5.txt')
         csvWriter_5.registerHandler(handleLoanParam, final_first_items, "personId")
-        csvWriter_5.registerHandler(handleTimeDurationParam, time_list, "startDate|endDate")
+        csvWriter_5.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
 
         csvWriter_12 = CSVSerializer()
         csvWriter_12.setOutputFile(output_path + 'tcr12.txt')
         csvWriter_12.registerHandler(handleLoanParam, final_first_items, "personId")
-        csvWriter_12.registerHandler(handleTimeDurationParam, time_list, "startDate|endDate")
+        csvWriter_12.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
 
         csvWriter_5.writeCSV()
         csvWriter_12.writeCSV()
@@ -294,159 +392,159 @@ def process_iter_queries(query_id):
         csvWriter = CSVSerializer()
         csvWriter.setOutputFile(output_path)
         csvWriter.registerHandler(handleLoanParam, final_first_items, "personId")
-        csvWriter.registerHandler(handleTimeDurationParam, time_list, "startDate|endDate")
+        csvWriter.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
+        csvWriter.writeCSV()
+
+    elif query_id == 3:
+        final_second_items_3 = []
+        final_second_items_4 = []
+
+        for account_id in final_first_items:
+            j = 0
+            k = 0
+            while True:
+                j = random.randint(0, len(final_first_items)-1)
+                k = random.randint(0, len(final_first_items)-1)
+                if final_first_items[j] != account_id and final_first_items[k] != account_id:
+                    break
+            final_second_items_3.append(final_first_items[j])
+            final_second_items_4.append(final_first_items[k])
+        
+        csvWriter_3 = CSVSerializer()
+        csvWriter_3.setOutputFile(output_path + 'tcr3.txt')
+        csvWriter_3.registerHandler(handleLoanParam, final_first_items, "id1")
+        csvWriter_3.registerHandler(handleLoanParam, final_second_items_3, "id2")
+        csvWriter_3.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
+        
+        csvWriter_4 = CSVSerializer()
+        csvWriter_4.setOutputFile(output_path + 'tcr4.txt')
+        csvWriter_4.registerHandler(handleLoanParam, final_first_items, "id1")
+        csvWriter_4.registerHandler(handleLoanParam, final_second_items_4, "id2")
+        csvWriter_4.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
+
+        csvWriter_3.writeCSV()
+        csvWriter_4.writeCSV()
+
+    elif query_id == 11:
+        csvWriter = CSVSerializer()
+        csvWriter.setOutputFile(output_path)
+        csvWriter.registerHandler(handleLoanParam, final_first_items, "id")
+        csvWriter.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
         csvWriter.writeCSV()
 
 
-def process_iter_query_without_truncate(query_id):
+def process_1_hop_query(query_id):
 
-    account_out_path = '../../out/factor_table/account_transfer_out_list'
-    account_in_path = '../../out/factor_table/account_transfer_in_list'
-    amount_bucket_out_path = '../../out/factor_table/transfer_out_bucket'
-    amount_bucket_in_path = '../../out/factor_table/transfer_in_bucket'
-    time_bucket_out_path = '../../out/factor_table/transfer_out_month'
-    time_bucket_in_path = '../../out/factor_table/transfer_in_month'
-    output_path = '../../out/substitute_parameters/'
+    if query_id == 7:
+        first_count_path = '../../out/factor_table/account_in_out_count'
+        time_bucket_path = '../../out/factor_table/account_in_out_month'
+        output_path = '../../out/substitute_parameters/'
+    elif query_id == 10:
+        first_count_path = '../../out/factor_table/person_invest_company'
+        time_bucket_path = '../../out/factor_table/invest_month'
+        output_path = '../../out/substitute_parameters/tcr10.txt'
 
-    account_out_df = process_csv(account_out_path)
-    account_in_df = process_csv(account_in_path)
-    amount_bucket_out_df = process_csv(amount_bucket_out_path)
-    amount_bucket_in_df = process_csv(amount_bucket_in_path)
-    time_bucket_out_df = process_csv(time_bucket_out_path)
-    time_bucket_in_df = process_csv(time_bucket_in_path)
+    first_count_df = process_csv(first_count_path)
+    time_bucket_df = process_csv(time_bucket_path)
 
-    second_out_column_name = account_out_df.columns[1]
-    second_in_column_name = account_in_df.columns[1]
+    first_time_name = time_bucket_df.columns[0]
 
-    account_out_df[second_out_column_name] = account_out_df[second_out_column_name].apply(literal_eval)
-    account_in_df[second_in_column_name] = account_in_df[second_in_column_name].apply(literal_eval)
-    account_account_out_df = account_out_df.copy()
-    account_account_in_df = account_in_df.copy()
+    time_bucket_df.set_index(first_time_name, inplace=True)
 
-    first_out_time_name = time_bucket_out_df.columns[0]
-    first_in_time_name = time_bucket_in_df.columns[0]
-    first_out_account_name = account_account_out_df.columns[0]
-    first_in_account_name = account_account_in_df.columns[0]
-    first_out_amount_name = amount_bucket_out_df.columns[0]
-    first_in_amount_name = amount_bucket_in_df.columns[0]
+    first_array = first_count_df.to_numpy()
+    final_first_items = search_params.generate(first_array, 0.01)
+    time_list = time_select.findTimeParams(final_first_items, time_bucket_df)
 
-    account_account_out_df.set_index(first_out_account_name, inplace=True)
-    account_account_in_df.set_index(first_in_account_name, inplace=True)
-    time_bucket_out_df.set_index(first_out_time_name, inplace=True)
-    time_bucket_in_df.set_index(first_in_time_name, inplace=True)
-    amount_bucket_out_df.set_index(first_out_amount_name, inplace=True)
-    amount_bucket_in_df.set_index(first_in_amount_name, inplace=True)
+    if query_id == 7:
 
-    current_step = 0
-    steps = 2
+        csvWriter_7 = CSVSerializer()
+        csvWriter_7.setOutputFile(output_path + 'tcr7.txt')
+        csvWriter_7.registerHandler(handleLoanParam, final_first_items, "account_id")
+        csvWriter_7.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
 
-    first_out_neighbors_df = account_out_df.sort_values(by=first_out_account_name)
-    first_out_array = first_out_neighbors_df[first_out_account_name].to_numpy()
+        csvWriter_9 = CSVSerializer()
+        csvWriter_9.setOutputFile(output_path + 'tcr9.txt')
+        csvWriter_9.registerHandler(handleLoanParam, final_first_items, "account_id")
+        csvWriter_9.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
 
-    first_in_neighbors_df = account_in_df.sort_values(by=first_in_account_name)
-    first_in_array = first_in_neighbors_df[first_in_account_name].to_numpy()
+        csvWriter_7.writeCSV()
+        csvWriter_9.writeCSV()
+    
+    elif query_id == 10:
+        final_second_items = []
+        for person in final_first_items:
+            j = 0
+            while True:
+                j = random.randint(0, len(final_first_items)-1)
+                if final_first_items[j] != person:
+                    break
+            final_second_items.append(final_first_items[j])
 
-    next_out_time_bucket = None
-    next_in_time_bucket = None
-
-    while current_step < steps:
-
-        next_first_out_amount_bucket = get_next_sum_table(first_out_neighbors_df, amount_bucket_out_df)
-        temp_first_out_array = next_first_out_amount_bucket.to_numpy().sum(axis=1)
-        first_out_array = np.column_stack((first_out_array, temp_first_out_array))
-
-        next_first_in_amount_bucket = get_next_sum_table(first_in_neighbors_df, amount_bucket_in_df)
-        temp_first_in_array = next_first_in_amount_bucket.to_numpy().sum(axis=1)
-        first_in_array = np.column_stack((first_in_array, temp_first_in_array))
-
-        if current_step == steps - 1:
-            next_out_time_bucket = get_next_sum_table(first_out_neighbors_df, time_bucket_out_df)
-            next_in_time_bucket = get_next_sum_table(first_in_neighbors_df, time_bucket_in_df)
-        else:
-            first_out_neighbors_df = neighbors_without_trancate(first_out_neighbors_df, account_account_out_df)
-            first_in_neighbors_df = neighbors_without_trancate(first_in_neighbors_df, account_account_in_df)
-
-        current_step += 1
-
-    final_first_out_items = search_params.generate(first_out_array, 0.01)
-    final_first_in_items = search_params.generate(first_in_array, 0.01)
-    time_list_out = time_select.findTimeParams(final_first_out_items, next_out_time_bucket)
-    time_list_in = time_select.findTimeParams(final_first_in_items, next_in_time_bucket)
+        csvWriter = CSVSerializer()
+        csvWriter.setOutputFile(output_path)
+        csvWriter.registerHandler(handleLoanParam, final_first_items, "pid1")
+        csvWriter.registerHandler(handleLoanParam, final_second_items, "pid2")
+        csvWriter.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
+        csvWriter.writeCSV()
 
 
+def process_withdraw_query():
 
+    first_account_path = '../../out/factor_table/account_withdraw_in_items'
+    time_bucket_path = '../../out/factor_table/transfer_in_month'
+    withdraw_bucket_path = '../../out/factor_table/withdraw_in_bucket'
+    transfer_bucket_path = '../../out/factor_table/transfer_in_bucket'
+    output_path = '../../out/substitute_parameters/tcr6.txt'
 
-def neighbors_without_trancate(first_neighbors_df, account_account_df):
+    first_account_df = process_csv(first_account_path)
+    time_bucket_df = process_csv(time_bucket_path)
+    transfer_bucket_df = process_csv(transfer_bucket_path)
+    withdraw_bucket_df = process_csv(withdraw_bucket_path)
 
-    first_column_name = first_neighbors_df.columns[0]
-    second_column_name = first_neighbors_df.columns[1]
-    neighbors_exploded = first_neighbors_df.explode(second_column_name)
-    merged_df = neighbors_exploded.merge(account_account_df, left_on=second_column_name, right_index=True, how='left').drop(columns=[second_column_name])
-    result_df = merged_df.groupby(first_column_name).agg(lambda x: list(set(x)))
+    first_column_name = first_account_df.columns[0]
+    second_column_name = first_account_df.columns[1]
+    withdraw_first_name = withdraw_bucket_df.columns[0]
+    transfer_first_name = transfer_bucket_df.columns[0]
+    time_first_name = time_bucket_df.columns[0]
 
-    return result_df
+    withdraw_bucket_df.set_index(withdraw_first_name, inplace=True)
+    transfer_bucket_df.set_index(transfer_first_name, inplace=True)
+    time_bucket_df.set_index(time_first_name, inplace=True)
+    
+    first_account_df[second_column_name] = first_account_df[second_column_name].apply(literal_eval)
+    first_neighbors_df = first_account_df.sort_values(by=first_column_name)
+
+    first_neighbors_df = get_filter_neighbor_list(first_neighbors_df, withdraw_bucket_df)
+
+    first_array = first_neighbors_df[first_column_name].to_numpy()
+    next_first_amount_bucket = get_next_sum_table(first_neighbors_df, transfer_bucket_df)
+    temp_first_array = next_first_amount_bucket.to_numpy().sum(axis=1)
+    first_array = np.column_stack((first_array, temp_first_array))
+    next_time_bucket = get_next_sum_table(first_neighbors_df, time_bucket_df)
+
+    final_first_items = search_params.generate(first_array, 0.01)
+    time_list = time_select.findTimeParams(final_first_items, next_time_bucket)
+
+    csvWriter = CSVSerializer()
+    csvWriter.setOutputFile(output_path)
+    csvWriter.registerHandler(handleLoanParam, final_first_items, "id")
+    csvWriter.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
+    csvWriter.writeCSV()
 
 
 def main():
-    queries = [
-        {
-            'query_id': 8,
-            'function': process_iter_queries,
-        },
-        {
-            'query_id': 1,
-            'function': process_iter_queries,
-        },
-        {
-            'query_id': 5,
-            'function': process_iter_queries,
-        },
-        {
-            'query_id': 2,
-            'function': process_iter_queries,
-        },
-        # {
-        #     'query_id': 3,
-        #     'function': process_iter_query_without_truncate,
-        # }
-        # {
-        #     'query_id': 1,
-        #     'function': process_query_1_5_12,
-        # }
-        # {
-        #     'query_id': 8,
-        #     'function': process_query_8,
-        # },
-        # {
-        #     'query_id': 8,
-        #     'function': process_query_8,
-        # },
-        # {
-        #     'query_id': 8,
-        #     'function': process_query_8,
-        # },
-        # {
-        #     'query_id': 8,
-        #     'function': process_query_8,
-        # }
-    ]
+    queries = [7, 10, 11, 1, 2, 3, 5, 8, 6]
 
     multiprocessing.set_start_method('spawn')
     processes = []
 
-    for query_config in queries:
-        p = multiprocessing.Process(target=process_query, args=(query_config,))
+    for query_id in queries:
+        p = multiprocessing.Process(target=process_query, args=(query_id,))
         p.start()
         processes.append(p)
 
     for p in processes:
         p.join()
-
-    # with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, multiprocessing.cpu_count())) as executor:
-    #     futures = []
-    #     for query_config in queries:
-    #         futures.append(executor.submit(process_query, query_config))
-
 
 
 if __name__ == "__main__":
