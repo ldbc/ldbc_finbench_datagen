@@ -76,17 +76,34 @@ def find_neighbors(account_list, account_account_df, account_amount_df, amount_b
     item_name = account_account_df.columns[0]
 
     if query_id == 8:
-        transfer_in_amounts = account_amount_df.loc[account_list]['amount']
+        # transfer_in_amounts = account_amount_df.loc[account_list]['amount']
         for item in account_list:
-            rows_account_list = account_account_df.loc[item][item_name]
-            rows_amount_bucket = amount_bucket_df.loc[item]
-            transfer_in_amount = transfer_in_amounts[item]
+            try:
+                rows_account_list = account_account_df.loc[item][item_name]
+            except KeyError:
+                rows_account_list = []
+
+            try:
+                rows_amount_bucket = amount_bucket_df.loc[item]
+            except KeyError:
+                rows_amount_bucket = None
+
+            try:
+                transfer_in_amount = account_amount_df.loc[item]['amount']
+            except KeyError:
+                transfer_in_amount = 0
             result.update(neighbors_with_truncate_threshold(transfer_in_amount, rows_account_list, rows_amount_bucket, num_list))
 
     elif query_id in [1, 2, 5]:
         for item in account_list:
-            rows_account_list = account_account_df.loc[item][item_name]
-            rows_amount_bucket = amount_bucket_df.loc[item]
+            try:
+                rows_account_list = account_account_df.loc[item][item_name]
+            except KeyError:
+                rows_account_list = []
+            try:
+                rows_amount_bucket = amount_bucket_df.loc[item]
+            except KeyError:
+                rows_amount_bucket = None
             result.update(neighbors_with_trancate(rows_account_list, rows_amount_bucket, num_list))
 
     elif query_id in [3, 11]:
@@ -133,6 +150,8 @@ def filter_neighbors_with_truncate_threshold(item, amount_bucket_df, num_list, h
 
 
 def neighbors_with_truncate_threshold(transfer_in_amount, rows_account_list, rows_amount_bucket, num_list):
+    if rows_amount_bucket is None:
+        return []
     threshold_value = transfer_in_amount * THRESH_HOLD
     temp = [ata for ata in rows_account_list if ata[1] > threshold_value]
 
@@ -152,7 +171,8 @@ def neighbors_with_truncate_threshold(transfer_in_amount, rows_account_list, row
     
 
 def neighbors_with_trancate(rows_account_list, rows_amount_bucket, num_list):
-
+    if rows_amount_bucket is None:
+        return []
     # truncate at truncationLimit
     sum_num = 0
     header_at_limit = -1
@@ -195,7 +215,7 @@ def get_next_neighbor_list(neighbors_df, account_account_df, account_amount_df, 
         num_list = [int(x) for x in amount_bucket_df.columns.tolist()]
 
     query_parallelism = max(1, multiprocessing.cpu_count() // 4)
-    print(f'query_parallelism: {query_parallelism}')
+    print(f'query_id {query_id} query_parallelism {query_parallelism}')
     chunks = np.array_split(neighbors_df, query_parallelism)
 
     with concurrent.futures.ProcessPoolExecutor(max_workers=query_parallelism) as executor:
@@ -223,12 +243,29 @@ def get_filter_neighbor_list(neighbors_df, amount_bucket_df):
     return next_neighbors_df
 
 
-def get_next_sum_table(neighbors_df, basic_sum_df):
+# def get_next_sum_table(neighbors_df, basic_sum_df):
+#     first_column_name = neighbors_df.columns[0]
+#     second_column_name = neighbors_df.columns[1]
+#     neighbors_exploded = neighbors_df.explode(second_column_name)
+#     merged_df = neighbors_exploded.merge(basic_sum_df, left_on=second_column_name, right_index=True, how='left').drop(columns=[second_column_name])
+#     result_df = merged_df.groupby(first_column_name).sum().astype(int)
+
+#     return result_df
+
+def get_next_sum_table(neighbors_df, basic_sum_df, batch_size=5000):
     first_column_name = neighbors_df.columns[0]
     second_column_name = neighbors_df.columns[1]
-    neighbors_exploded = neighbors_df.explode(second_column_name)
-    merged_df = neighbors_exploded.merge(basic_sum_df, left_on=second_column_name, right_index=True, how='left').drop(columns=[second_column_name])
-    result_df = merged_df.groupby(first_column_name).sum().astype(int)
+    
+    result_list = []
+
+    for start in range(0, len(neighbors_df), batch_size):
+        end = start + batch_size
+        batch = neighbors_df.iloc[start:end]
+        neighbors_exploded = batch.explode(second_column_name)
+        merged_df = neighbors_exploded.merge(basic_sum_df, left_on=second_column_name, right_index=True, how='left').drop(columns=[second_column_name])
+        result_list.append(merged_df.groupby(first_column_name).sum().astype(int))
+
+    result_df = pd.concat(result_list).groupby(first_column_name).sum().astype(int)
 
     return result_df
 
@@ -533,7 +570,8 @@ def process_withdraw_query():
 
 
 def main():
-    queries = [7, 10, 11, 1, 2, 3, 5, 8, 6]
+    queries = [3, 8, 7, 10, 11, 1, 2, 5, 6]
+    # queries = [3]
 
     multiprocessing.set_start_method('spawn')
     processes = []
