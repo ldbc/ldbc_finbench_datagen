@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
+import warnings
 
+# Suppress FutureWarnings
+warnings.filterwarnings("ignore", category=FutureWarning)
 from ast import literal_eval
 from calendar import timegm
 import multiprocessing
