@@ -1,7 +1,7 @@
 package ldbc.finbench.datagen.factors
 
 import ldbc.finbench.datagen.util.DatagenStage
-import org.apache.spark.sql.{SparkSession, functions => F}
+import org.apache.spark.sql.{SparkSession, functions => F, DataFrame}
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions.{col, countDistinct, row_number, var_pop}
 import org.apache.spark.sql.functions.max
@@ -135,65 +135,89 @@ object FactorGenerationStage extends DatagenStage {
       .option("delimiter", "|")
       .load("./out/raw/personGuarantee/*.csv")
 
-    val transferOutRDD = transferRDD.select($"fromId", $"toId", $"amount".cast("double"))
+    def transformItems(df: DataFrame, groupByCol: String, selectCol: String): DataFrame = {
+      val itemAmountRDD = df.groupBy(groupByCol, selectCol)
+        .agg(max($"amount").alias("maxAmount"))
 
-    val transferOutItemAmountRDD = transferOutRDD.groupBy($"fromId", $"toId")
-      .agg(max($"amount").alias("maxAmount"))
+      val itemsRDD = itemAmountRDD.groupBy(groupByCol)
+        .agg(collect_list(array(col(selectCol), $"maxAmount")).alias("items"))
+        .select(col(groupByCol).alias("account_id"), $"items")
 
-    val transferOutItemsRDD = transferOutItemAmountRDD.groupBy($"fromId")
-      .agg(F.collect_list(F.array($"toId", $"maxAmount")).alias("items"))
-      .select($"fromId".alias("account_id"), $"items")
-      .sort($"account_id")
+      val accountItemsRDD = itemsRDD.withColumn(
+        "items",
+        F.expr("transform(items, array -> concat('[', concat_ws(',', array), ']'))")
+      ).withColumn(
+        "items",
+        F.concat(lit("["), F.concat_ws(",", $"items"), lit("]"))
+      )
 
-    val transferOutAccountItemsRDD = transferOutItemsRDD.withColumn(
-      "items",
-      F.expr("transform(items, array -> concat('[', concat_ws(',', array), ']'))")
-    ).withColumn(
-      "items",
-      F.concat_ws(",", $"items")
-    ).withColumn(
-      "items",
-      F.concat(lit("["), $"items", lit("]"))
-    )
+      accountItemsRDD
+    }
 
-    val transferOutLRDD = transferOutRDD.select($"fromId", $"toId")
+    def bucketAndCount(df: DataFrame, idCol: String, amountCol: String, groupCol: String): DataFrame = {
+
+      val buckets = Array(10000, 30000, 100000, 300000, 1000000, 2000000, 3000000, 4000000, 5000000, 6000000, 7000000, 8000000, 9000000, 10000000)
+
+      val bucketedRDD = df.withColumn("bucket", 
+        when(col(amountCol) <= buckets(0), buckets(0))
+          .when(col(amountCol) <= buckets(1), buckets(1))
+          .when(col(amountCol) <= buckets(2), buckets(2))
+          .when(col(amountCol) <= buckets(3), buckets(3))
+          .when(col(amountCol) <= buckets(4), buckets(4))
+          .when(col(amountCol) <= buckets(5), buckets(5))
+          .when(col(amountCol) <= buckets(6), buckets(6))
+          .when(col(amountCol) <= buckets(7), buckets(7))
+          .when(col(amountCol) <= buckets(8), buckets(8))
+          .when(col(amountCol) <= buckets(9), buckets(9))
+          .when(col(amountCol) <= buckets(10), buckets(10))
+          .when(col(amountCol) <= buckets(11), buckets(11))
+          .when(col(amountCol) <= buckets(12), buckets(12))
+          .otherwise(buckets(13))
+      )
+
+      val bucketCountsRDD = bucketedRDD.groupBy(idCol)
+        .pivot("bucket", buckets.map(_.toString))
+        .count()
+        .na.fill(0)
+        .withColumnRenamed(idCol, groupCol)
+
+      bucketCountsRDD
+    }
+
+    def processByMonth(df: DataFrame, idCol: String, timeCol: String, newIdColName: String): DataFrame = {
+      val byMonthRDD = df.withColumn("year_month", date_format((col(timeCol) / 1000).cast("timestamp"), "yyyy-MM"))
+        .groupBy(idCol, "year_month")
+        .count()
+
+      val pivotRDD = byMonthRDD.groupBy(idCol)
+        .pivot("year_month")
+        .agg(first("count"))
+        .na.fill(0)
+        .withColumnRenamed(idCol, newIdColName)
+
+      pivotRDD
+    }
+
+    val transferItRDD = transferRDD.select($"fromId", $"toId", $"amount".cast("double"))
+
+    val transferOutAccountItemsRDD = transformItems(transferItRDD, "fromId", "toId")
+    val transferInAccountItemsRDD = transformItems(transferItRDD, "toId", "fromId")
+
+    val transferOutLRDD = transferItRDD.select($"fromId", $"toId")
       .groupBy($"fromId")
       .agg(F.collect_list($"toId").alias("transfer_out_list"))
       .select($"fromId".alias("account_id"), $"transfer_out_list")
-      .sort($"account_id")
 
     val transferOutListRDD = transferOutLRDD.withColumn(
       "transfer_out_list",
       F.concat(lit("["), F.concat_ws(",", $"transfer_out_list"), lit("]"))
     )
 
-    val transferInRDD = transferRDD.select($"fromId", $"toId", $"amount".cast("double"))
-
-    val transferInItemAmountRDD = transferInRDD.groupBy($"toId", $"fromId")
-      .agg(max($"amount").alias("maxAmount"))
-
-    val transferInItemsRDD = transferInItemAmountRDD.groupBy($"toId")
-      .agg(F.collect_list(F.array($"fromId", $"maxAmount")).alias("items"))
-      .select($"toId".alias("account_id"), $"items")
-      .sort($"account_id")
-
-    val transferInAccountItemsRDD = transferInItemsRDD.withColumn(
-      "items",
-      F.expr("transform(items, array -> concat('[', concat_ws(',', array), ']'))")
-    ).withColumn(
-      "items",
-      F.concat_ws(",", $"items")
-    ).withColumn(
-      "items",
-      F.concat(lit("["), $"items", lit("]"))
-    )
-
     val fromAccounts = transferRDD.select($"fromId".alias("account_id"), $"toId".alias("corresponding_account_id"), $"createTime")
     val toAccounts = transferRDD.select($"toId".alias("account_id"), $"fromId".alias("corresponding_account_id"), $"createTime")
-
     val allAccounts = fromAccounts.union(toAccounts)
 
-    val accountListRDD = allAccounts
+    val accountListRDD = allAccounts.select("account_id", "corresponding_account_id")
       .groupBy("account_id")
       .agg(collect_set("corresponding_account_id").alias("account_list"))
 
@@ -205,234 +229,43 @@ object FactorGenerationStage extends DatagenStage {
       F.concat(lit("["), F.concat_ws(",", $"account_list"), lit("]"))
     )
 
-    val transferInOutByMonthRDD = allAccounts
-      .withColumn("year_month", date_format((col("createTime") / 1000).cast("timestamp"), "yyyy-MM"))
-      .groupBy("account_id", "year_month")
-      .count()
-
-    val transferInOutPivotRDD = transferInOutByMonthRDD.groupBy("account_id")
-      .pivot("year_month")
-      .agg(first("count"))
-      .na.fill(0)
-      .withColumnRenamed("account_id", "account_id")
-
     val transferInTimeRDD = transferRDD.select(col("toId"), col("createTime"))
-
-    val transferInByMonthRDD = transferInTimeRDD
-      .withColumn("year_month", date_format((col("createTime") / 1000).cast("timestamp"), "yyyy-MM"))
-      .groupBy("toId", "year_month")
-      .count()
-
-    val transferInPivotRDD = transferInByMonthRDD.groupBy("toId")
-      .pivot("year_month")
-      .agg(first("count"))
-      .na.fill(0)
-      .withColumnRenamed("toId", "account_id")
-
     val personGuaranteeTimeRDD = personGuaranteeRDD.select(col("fromId"), col("createTime"))
-
-    val personGuaranteeByMonthRDD = personGuaranteeTimeRDD
-      .withColumn("year_month", date_format((col("createTime") / 1000).cast("timestamp"), "yyyy-MM"))
-      .groupBy("fromId", "year_month")
-      .count()
-
-    val personGuaranteePivotRDD = personGuaranteeByMonthRDD.groupBy("fromId")
-      .pivot("year_month")
-      .agg(first("count"))
-      .na.fill(0)
-      .withColumnRenamed("fromId", "person_id")
-
     val InvestInTimeRDD = personInvestRDD.select(col("investorId"), col("createTime"))
-
-    val InvestInByMonthRDD = InvestInTimeRDD
-      .withColumn("year_month", date_format((col("createTime") / 1000).cast("timestamp"), "yyyy-MM"))
-      .groupBy("investorId", "year_month")
-      .count()
-
-    val InvestInPivotRDD = InvestInByMonthRDD.groupBy("investorId")
-      .pivot("year_month")
-      .agg(first("count"))
-      .na.fill(0)
-      .withColumnRenamed("investorId", "person_id")
-
     val transferOutTimeRDD = transferRDD.select(col("fromId"), col("createTime"))
-
-    val transferOutByMonthRDD = transferOutTimeRDD
-      .withColumn("year_month", date_format((col("createTime") / 1000).cast("timestamp"), "yyyy-MM"))
-      .groupBy("fromId", "year_month")
-      .count()
-
-    val transferOutPivotRDD = transferOutByMonthRDD.groupBy("fromId")
-      .pivot("year_month")
-      .agg(first("count"))
-      .na.fill(0)
-      .withColumnRenamed("fromId", "account_id")
-      
-    val withdrawInRDD = withdrawRDD.select($"toId", $"fromId", $"amount".cast("double"))
-
-    val combinedRDD = transferRDD.select($"fromId", $"toId", $"amount".cast("double"))
-      .union(withdrawRDD.select($"fromId", $"toId", $"amount".cast("double")))
-
-    val transactionsRDD = transferRDD.select(col("fromId"), col("createTime"))
+    val transactionsRDD = transferOutTimeRDD
       .union(withdrawRDD.select(col("fromId"), col("createTime")))
 
-    val transactionsByMonthRDD = transactionsRDD
-      .withColumn("year_month", date_format((col("createTime") / 1000).cast("timestamp"), "yyyy-MM"))
-      .groupBy("fromId", "year_month")
-      .count()
+    val transferInOutPivotRDD = processByMonth(allAccounts, "account_id", "createTime", "account_id")
+    val transferInPivotRDD = processByMonth(transferInTimeRDD, "toId", "createTime", "account_id")
+    val personGuaranteePivotRDD = processByMonth(personGuaranteeTimeRDD, "fromId", "createTime", "person_id")
+    val InvestInPivotRDD = processByMonth(InvestInTimeRDD, "investorId", "createTime", "person_id")
+    val transferOutPivotRDD = processByMonth(transferOutTimeRDD, "fromId", "createTime", "account_id")
+    val pivotRDD = processByMonth(transactionsRDD, "fromId", "createTime", "account_id")
 
-    val pivotRDD = transactionsByMonthRDD.groupBy("fromId")
-      .pivot("year_month")
-      .agg(first("count"))
-      .na.fill(0) 
-      .withColumnRenamed("fromId", "account_id")
+    val withdrawInRDD = withdrawRDD.select($"fromId", $"toId", $"amount".cast("double"))
+    val combinedRDD = transferItRDD.union(withdrawInRDD)
 
-    val maxAmountRDD = combinedRDD.groupBy($"fromId", $"toId")
-      .agg(max($"amount").alias("maxAmount"))
+    val transformedAccountItemsRDD = transformItems(combinedRDD, "fromId", "toId")
+    val transformedWithdrawInItemsRDD = transformItems(withdrawInRDD, "toId", "fromId")
 
-    val withdrawInAmountRDD = withdrawInRDD.groupBy($"toId", $"fromId")
-      .agg(max($"amount").alias("maxAmount"))
+    val transferOutAmountRDD = transferItRDD.select($"fromId", $"amount".cast("double"))
+    val transferInAmountRDD = transferItRDD.select($"toId", $"amount".cast("double"))
 
-    val accountItemsRDD = maxAmountRDD.groupBy($"fromId")
-      .agg(F.collect_list(F.array($"toId", $"maxAmount")).alias("items"))
-      .select($"fromId".alias("account_id"), $"items")
-      .sort($"account_id")
-    
-    val withdrawInItemsRDD = withdrawInAmountRDD.groupBy($"toId")
-      .agg(F.collect_list(F.array($"fromId", $"maxAmount")).alias("items"))
-      .select($"toId".alias("account_id"), $"items")
-      .sort($"account_id")
-
-    val transformedAccountItemsRDD = accountItemsRDD.withColumn(
-      "items",
-      F.expr("transform(items, array -> concat('[', concat_ws(',', array), ']'))")
-    ).withColumn(
-      "items",
-      F.concat_ws(",", $"items")
-    ).withColumn(
-      "items",
-      F.concat(lit("["), $"items", lit("]"))
-    )
-
-    val transformedWithdrawInItemsRDD = withdrawInItemsRDD.withColumn(
-      "items",
-      F.expr("transform(items, array -> concat('[', concat_ws(',', array), ']'))")
-    ).withColumn(
-      "items",
-      F.concat_ws(",", $"items")
-    ).withColumn(
-      "items",
-      F.concat(lit("["), $"items", lit("]"))
-    )
-
-    val transactionsAmountRDD = transferRDD.select(col("fromId"), col("amount").cast("double"))
+    val transactionsAmountRDD = transferOutAmountRDD
       .union(withdrawRDD.select(col("fromId"), col("amount").cast("double")))
-
-    val buckets = Array(10000, 30000, 100000, 300000, 1000000, 2000000, 3000000, 4000000, 5000000, 6000000, 7000000, 8000000, 9000000, 10000000)
-
-    val bucketRDD = transactionsAmountRDD.withColumn("bucket", 
-      when(col("amount") <= buckets(0), buckets(0))
-        .when(col("amount") <= buckets(1), buckets(1))
-        .when(col("amount") <= buckets(2), buckets(2))
-        .when(col("amount") <= buckets(3), buckets(3))
-        .when(col("amount") <= buckets(4), buckets(4))
-        .when(col("amount") <= buckets(5), buckets(5))
-        .when(col("amount") <= buckets(6), buckets(6))
-        .when(col("amount") <= buckets(7), buckets(7))
-        .when(col("amount") <= buckets(8), buckets(8))
-        .when(col("amount") <= buckets(9), buckets(9))
-        .when(col("amount") <= buckets(10), buckets(10))
-        .when(col("amount") <= buckets(11), buckets(11))
-        .when(col("amount") <= buckets(12), buckets(12))
-        .otherwise(buckets(13))
-    )
-
-    val bucketCountsRDD = bucketRDD.groupBy("fromId")
-      .pivot("bucket", buckets.map(_.toString))
-      .count()
-      .na.fill(0)
-      .withColumnRenamed("fromId", "account_id")
 
     val withdrawInBucketAmountRDD = withdrawInRDD.select($"toId", $"amount".cast("double"))
 
-    val withdrawInbucketRDD = withdrawInBucketAmountRDD.withColumn("bucket", 
-      when(col("amount") <= buckets(0), buckets(0))
-        .when(col("amount") <= buckets(1), buckets(1))
-        .when(col("amount") <= buckets(2), buckets(2))
-        .when(col("amount") <= buckets(3), buckets(3))
-        .when(col("amount") <= buckets(4), buckets(4))
-        .when(col("amount") <= buckets(5), buckets(5))
-        .when(col("amount") <= buckets(6), buckets(6))
-        .when(col("amount") <= buckets(7), buckets(7))
-        .when(col("amount") <= buckets(8), buckets(8))
-        .when(col("amount") <= buckets(9), buckets(9))
-        .when(col("amount") <= buckets(10), buckets(10))
-        .when(col("amount") <= buckets(11), buckets(11))
-        .when(col("amount") <= buckets(12), buckets(12))
-        .otherwise(buckets(13))
-    )
-
-    val withdrawInBucketCountsRDD = withdrawInbucketRDD.groupBy("toId")
-      .pivot("bucket", buckets.map(_.toString))
-      .count()
-      .na.fill(0)
-      .withColumnRenamed("toId", "account_id")
-
-    val transferInAmountRDD = transferRDD.select($"toId", $"amount".cast("double"))
-
-    val transferInbucketRDD = transferInAmountRDD.withColumn("bucket", 
-      when(col("amount") <= buckets(0), buckets(0))
-        .when(col("amount") <= buckets(1), buckets(1))
-        .when(col("amount") <= buckets(2), buckets(2))
-        .when(col("amount") <= buckets(3), buckets(3))
-        .when(col("amount") <= buckets(4), buckets(4))
-        .when(col("amount") <= buckets(5), buckets(5))
-        .when(col("amount") <= buckets(6), buckets(6))
-        .when(col("amount") <= buckets(7), buckets(7))
-        .when(col("amount") <= buckets(8), buckets(8))
-        .when(col("amount") <= buckets(9), buckets(9))
-        .when(col("amount") <= buckets(10), buckets(10))
-        .when(col("amount") <= buckets(11), buckets(11))
-        .when(col("amount") <= buckets(12), buckets(12))
-        .otherwise(buckets(13))
-    )
-
-    val transferInBucketCountsRDD = transferInbucketRDD.groupBy("toId")
-      .pivot("bucket", buckets.map(_.toString))
-      .count()
-      .na.fill(0)
-      .withColumnRenamed("toId", "account_id")
-
-    val transferOutAmountRDD = transferRDD.select($"fromId", $"amount".cast("double"))
-
-    val transferOutbucketRDD = transferOutAmountRDD.withColumn("bucket", 
-      when(col("amount") <= buckets(0), buckets(0))
-        .when(col("amount") <= buckets(1), buckets(1))
-        .when(col("amount") <= buckets(2), buckets(2))
-        .when(col("amount") <= buckets(3), buckets(3))
-        .when(col("amount") <= buckets(4), buckets(4))
-        .when(col("amount") <= buckets(5), buckets(5))
-        .when(col("amount") <= buckets(6), buckets(6))
-        .when(col("amount") <= buckets(7), buckets(7))
-        .when(col("amount") <= buckets(8), buckets(8))
-        .when(col("amount") <= buckets(9), buckets(9))
-        .when(col("amount") <= buckets(10), buckets(10))
-        .when(col("amount") <= buckets(11), buckets(11))
-        .when(col("amount") <= buckets(12), buckets(12))
-        .otherwise(buckets(13))
-    )
-
-    val transferOutBucketCountsRDD = transferOutbucketRDD.groupBy("fromId")
-      .pivot("bucket", buckets.map(_.toString))
-      .count()
-      .na.fill(0)
-      .withColumnRenamed("fromId", "account_id")
+    val bucketCountsRDD = bucketAndCount(transactionsAmountRDD, "fromId", "amount", "account_id")
+    val withdrawInBucketCountsRDD = bucketAndCount(withdrawInBucketAmountRDD, "toId", "amount", "account_id")
+    val transferInBucketCountsRDD = bucketAndCount(transferInAmountRDD, "toId", "amount", "account_id")
+    val transferOutBucketCountsRDD = bucketAndCount(transferOutAmountRDD, "fromId", "amount", "account_id")
 
     val PersonOwnAccountRDD = OwnRDD.select($"personId", $"accountId")
       .groupBy("personId")
       .agg(coalesce(collect_set("accountId"), array()).alias("account_list"))
       .select(col("personId").alias("person_id"), concat(lit("["), array_join(col("account_list"), ","), lit("]")).alias("account_list"))
-      .orderBy("person_id")
 
     val PersonGuaranteeListRDD = personGuaranteeRDD.select($"fromId", $"toId")
       .groupBy("fromId")
@@ -449,10 +282,9 @@ object FactorGenerationStage extends DatagenStage {
     val loanAccountListRDD = loanRDD.join(depositRDD, loanRDD("id") === depositRDD("loanId"), "left_outer")
       .groupBy("id")
       .agg(coalesce(collect_set("accountId"), array()).alias("account_list"))  
-      .select(col("id").alias("loan_id"), concat(lit("["), array_join(col("account_list"), ","), lit("]")).alias("account_list"))  
-      .orderBy("loan_id")
+      .select(col("id").alias("loan_id"), concat(lit("["), array_join(col("account_list"), ","), lit("]")).alias("account_list"))
 
-    val transactionsSumRDD = transferRDD.select(col("toId"), col("amount").cast("double"))
+    val transactionsSumRDD = transferInAmountRDD
       .union(withdrawRDD.select(col("toId"), col("amount").cast("double")))
 
     val amountSumRDD = transactionsSumRDD.groupBy("toId")

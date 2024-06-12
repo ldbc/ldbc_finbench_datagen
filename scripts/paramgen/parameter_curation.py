@@ -18,6 +18,7 @@ from functools import partial
 THRESH_HOLD = 0
 THRESH_HOLD_6 = 0
 TRUNCATION_LIMIT = 10000
+BATCH_SIZE = 5000
 
 def process_csv(file_path):
     all_files = glob(file_path + '/*.csv')
@@ -215,7 +216,7 @@ def get_next_neighbor_list(neighbors_df, account_account_df, account_amount_df, 
         num_list = [int(x) for x in amount_bucket_df.columns.tolist()]
 
     query_parallelism = max(1, multiprocessing.cpu_count() // 4)
-    print(f'query_id {query_id} query_parallelism {query_parallelism}')
+    # print(f'query_id {query_id} query_parallelism {query_parallelism}')
     chunks = np.array_split(neighbors_df, query_parallelism)
 
     with concurrent.futures.ProcessPoolExecutor(max_workers=query_parallelism) as executor:
@@ -243,16 +244,7 @@ def get_filter_neighbor_list(neighbors_df, amount_bucket_df):
     return next_neighbors_df
 
 
-# def get_next_sum_table(neighbors_df, basic_sum_df):
-#     first_column_name = neighbors_df.columns[0]
-#     second_column_name = neighbors_df.columns[1]
-#     neighbors_exploded = neighbors_df.explode(second_column_name)
-#     merged_df = neighbors_exploded.merge(basic_sum_df, left_on=second_column_name, right_index=True, how='left').drop(columns=[second_column_name])
-#     result_df = merged_df.groupby(first_column_name).sum().astype(int)
-
-#     return result_df
-
-def get_next_sum_table(neighbors_df, basic_sum_df, batch_size=5000):
+def get_next_sum_table(neighbors_df, basic_sum_df, batch_size=BATCH_SIZE):
     first_column_name = neighbors_df.columns[0]
     second_column_name = neighbors_df.columns[1]
     
@@ -306,7 +298,7 @@ def process_iter_queries(query_id):
         amount_bucket_path = '../../out/factor_table/trans_withdraw_bucket'
         time_bucket_path = '../../out/factor_table/trans_withdraw_month'
         output_path = '../../out/substitute_parameters/tcr8.txt'
-        steps = 3
+        steps = 2
 
     elif query_id == 1:
         first_account_path = '../../out/factor_table/account_transfer_out_list'
@@ -404,12 +396,16 @@ def process_iter_queries(query_id):
         csvWriter.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
         csvWriter.writeCSV()
 
+        print(f'query_id {query_id} finished')
+
     elif query_id == 1:
         csvWriter = CSVSerializer()
         csvWriter.setOutputFile(output_path)
         csvWriter.registerHandler(handleLoanParam, final_first_items, "account_id")
         csvWriter.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
         csvWriter.writeCSV()
+
+        print(f'query_id {query_id} finished')
 
     elif query_id == 5:
         csvWriter_5 = CSVSerializer()
@@ -425,12 +421,16 @@ def process_iter_queries(query_id):
         csvWriter_5.writeCSV()
         csvWriter_12.writeCSV()
 
+        print(f'query_id 5 and 12 finished')
+
     elif query_id == 2:
         csvWriter = CSVSerializer()
         csvWriter.setOutputFile(output_path)
         csvWriter.registerHandler(handleLoanParam, final_first_items, "personId")
         csvWriter.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
         csvWriter.writeCSV()
+
+        print(f'query_id {query_id} finished')
 
     elif query_id == 3:
         final_second_items_3 = []
@@ -462,12 +462,16 @@ def process_iter_queries(query_id):
         csvWriter_3.writeCSV()
         csvWriter_4.writeCSV()
 
+        print(f'query_id 3 and 4 finished')
+
     elif query_id == 11:
         csvWriter = CSVSerializer()
         csvWriter.setOutputFile(output_path)
         csvWriter.registerHandler(handleLoanParam, final_first_items, "id")
         csvWriter.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
         csvWriter.writeCSV()
+
+        print(f'query_id {query_id} finished')
 
 
 def process_1_hop_query(query_id):
@@ -506,6 +510,8 @@ def process_1_hop_query(query_id):
 
         csvWriter_7.writeCSV()
         csvWriter_9.writeCSV()
+
+        print(f'query_id 7 and 9 finished')
     
     elif query_id == 10:
         final_second_items = []
@@ -523,6 +529,8 @@ def process_1_hop_query(query_id):
         csvWriter.registerHandler(handleLoanParam, final_second_items, "pid2")
         csvWriter.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
         csvWriter.writeCSV()
+
+        print(f'query_id {query_id} finished')
 
 
 def process_withdraw_query():
@@ -568,10 +576,12 @@ def process_withdraw_query():
     csvWriter.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
     csvWriter.writeCSV()
 
+    print(f'query_id 6 finished')
+
 
 def main():
-    queries = [3, 8, 7, 10, 11, 1, 2, 5, 6]
-    # queries = [3]
+    queries = [3, 1, 8, 7, 10, 11, 2, 5, 6]
+    # queries = [8]
 
     multiprocessing.set_start_method('spawn')
     processes = []
