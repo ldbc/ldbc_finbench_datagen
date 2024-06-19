@@ -18,3 +18,5 @@ tune.log
 sf*/
 sf*.tar
 sf*.tar.gz
+
+scripts/paramgen/__pycache__/
