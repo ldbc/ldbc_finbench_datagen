@@ -100,7 +100,7 @@ object LdbcDatagen extends SparkApp with Logging {
         )
 
       opt[Unit]("generate-factors")
-        .action((x, c) => args.generateFactors.set(c)(true))
+        .action((x, c) => args.generateFactors.set(c)(false))
         .text("Generate factor tables")
 
       opt[String]("factor-format")

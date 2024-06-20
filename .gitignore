@@ -1,5 +1,6 @@
 # project env files
 .DS_Store
+.bloop
 *.iml
 target/
 .idea/
