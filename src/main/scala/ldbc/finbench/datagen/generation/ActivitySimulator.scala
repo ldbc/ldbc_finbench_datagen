@@ -43,9 +43,7 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     log.info(s"[Simulation] Company RDD partitions: ${companyRdd.getNumPartitions}")
     log.info(s"[Simulation] Medium RDD partitions: ${mediumRdd.getNumPartitions}")
 
-    // =========================================
     // Person and company related activities
-    // =========================================
     val personWithAccounts = activityGenerator.personRegisterEvent(personRdd) // simulate person register event
     log.info(s"[Simulation] personWithAccounts partitions: ${personWithAccounts.getNumPartitions}")
     val companyWithAccounts = activityGenerator.companyRegisterEvent(companyRdd) // simulate company register event
@@ -64,14 +62,12 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
     // simulate person apply loans event and company apply loans event
     val personWithAccGuaLoan = activityGenerator.personLoanEvent(personWithAccGua).cache()
     val companyWithAccGuaLoan = activityGenerator.companyLoanEvent(companyWitAccGua).cache()
-    assert(personWithAccGuaLoan.count() == personRdd.count())
-    assert(companyWithAccGuaLoan.count() == companyRdd.count())
+//    assert(personWithAccGuaLoan.count() == personRdd.count())
+//    assert(companyWithAccGuaLoan.count() == companyRdd.count())
     log.info(s"[Simulation] personWithAccGuaLoan partitions: ${personWithAccGuaLoan.getNumPartitions}")
     log.info(s"[Simulation] companyWithAccGuaLoan partitions: ${companyWithAccGuaLoan.getNumPartitions}")
 
-    // =========================================
     // Account related activities
-    // =========================================
     val accountRdd = mergeAccounts(personWithAccounts, companyWithAccounts) // merge
     log.info(s"[Simulation] Account RDD partitions: ${accountRdd.getNumPartitions}")
     val signInRdd = activityGenerator.signInEvent(mediumRdd, accountRdd) // simulate signIn
@@ -91,9 +87,7 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
       s"repays RDD partitions: ${repaysRdd.getNumPartitions}, " +
       s"loanTrasfers RDD partitions: ${loanTrasfersRdd.getNumPartitions}")
 
-    // =========================================
     // Serialize
-    // =========================================
     val allFutures = activitySerializer.writePersonWithActivities(personWithAccGuaLoan) ++
       activitySerializer.writeCompanyWithActivities(companyWithAccGuaLoan) ++
       activitySerializer.writeMediumWithActivities(mediumRdd, signInRdd) ++

@@ -80,6 +80,7 @@ class ActivityGenerator()(implicit spark: SparkSession) extends Serializable wit
     val personEitherRDD: RDD[EitherPersonOrCompany] = personRDD.map(person => Left(person))
     val companyEitherRDD: RDD[EitherPersonOrCompany] = companyRDD.map(company => Right(company))
     val mergedEither = personEitherRDD.union(companyEitherRDD).collect().toList
+//    val mergedEither = personEitherRDD.union(companyEitherRDD)
 
     // TODO: optimize the Spark process when large scale
     investedCompanyRDD.flatMap(investedCompany => {
