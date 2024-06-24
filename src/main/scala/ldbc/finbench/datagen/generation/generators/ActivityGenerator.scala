@@ -10,6 +10,8 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
 import java.util
+// import java.util.LinkedList
+import java.util.ArrayList
 import scala.collection.JavaConverters._
 import scala.collection.SortedMap
 
@@ -162,7 +164,12 @@ class ActivityGenerator()(implicit spark: SparkSession) extends Serializable wit
     val transferEvent = new TransferEvent(1.0 / DatagenParams.tsfShuffleTimes)
 
     def generateTransferParts(accounts: Iterator[Account], blockId: Int): Iterator[Transfer] = {
-      val transferList = transferEvent.transferPart(accounts.toList.asJava, blockId)
+      // val shuffledAccounts = accounts.toList
+      // val sortedAccounts = accounts.toList.sortBy(_.getCreationDate())
+      val shuffledAccounts = scala.util.Random.shuffle(accounts.toList)
+      // val transferList = transferEvent.transferPart(shuffledAccounts.asJava, blockId)
+      // val transferList = transferEvent.transferPart(new LinkedList(shuffledAccounts.asJava), blockId)
+      val transferList = transferEvent.transferPart(new ArrayList(shuffledAccounts.asJava), blockId)
       for {transfer <- transferList.iterator().asScala} yield transfer
     }
 
