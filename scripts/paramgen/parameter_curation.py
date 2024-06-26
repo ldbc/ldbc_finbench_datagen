@@ -23,6 +23,9 @@ THRESH_HOLD_6 = 0
 TRUNCATION_LIMIT = 10000
 BATCH_SIZE = 5000
 
+table_dir = '../../out/factor_table'
+out_dir = '../../out/substitute_parameters/'
+
 def process_csv(file_path):
     all_files = glob(file_path + '/*.csv')
     
@@ -295,52 +298,52 @@ def process_iter_queries(query_id):
     steps = None
 
     if query_id == 8:
-        first_account_path = '../../out/factor_table/loan_account_list'
-        account_account_path = '../../out/factor_table/trans_withdraw_items'
-        upstream_amount_path = '../../out/factor_table/upstream_amount'
-        amount_bucket_path = '../../out/factor_table/trans_withdraw_bucket'
-        time_bucket_path = '../../out/factor_table/trans_withdraw_month'
-        output_path = '../../out/substitute_parameters/tcr8.txt'
+        first_account_path = os.path.join(table_dir, 'loan_account_list')
+        account_account_path = os.path.join(table_dir, 'trans_withdraw_items')
+        upstream_amount_path = os.path.join(table_dir, 'upstream_amount')
+        amount_bucket_path = os.path.join(table_dir, 'trans_withdraw_bucket')
+        time_bucket_path = os.path.join(table_dir, 'trans_withdraw_month')
+        output_path = os.path.join(out_dir, 'tcr8.txt')
         steps = 2
 
     elif query_id == 1:
-        first_account_path = '../../out/factor_table/account_transfer_out_list'
-        account_account_path = '../../out/factor_table/account_transfer_out_items'
-        amount_bucket_path = '../../out/factor_table/transfer_out_bucket'
-        time_bucket_path = '../../out/factor_table/transfer_out_month'
-        output_path = '../../out/substitute_parameters/tcr1.txt'
+        first_account_path = os.path.join(table_dir, 'account_transfer_out_list')
+        account_account_path = os.path.join(table_dir, 'account_transfer_out_items')
+        amount_bucket_path = os.path.join(table_dir, 'transfer_out_bucket')
+        time_bucket_path = os.path.join(table_dir, 'transfer_out_month')
+        output_path = os.path.join(out_dir, 'tcr1.txt')
         steps = 2
 
     elif query_id == 5:
-        first_account_path = '../../out/factor_table/person_account_list'
-        account_account_path = '../../out/factor_table/account_transfer_out_items'
-        amount_bucket_path = '../../out/factor_table/transfer_out_bucket'
-        time_bucket_path = '../../out/factor_table/transfer_out_month'
-        output_path = '../../out/substitute_parameters/'
+        first_account_path = os.path.join(table_dir, 'person_account_list')
+        account_account_path = os.path.join(table_dir, 'account_transfer_out_items')
+        amount_bucket_path = os.path.join(table_dir, 'transfer_out_bucket')
+        time_bucket_path = os.path.join(table_dir, 'transfer_out_month')
+        output_path = out_dir
         steps = 3
 
     elif query_id == 2:
-        first_account_path = '../../out/factor_table/person_account_list'
-        account_account_path = '../../out/factor_table/account_transfer_in_items'
-        amount_bucket_path = '../../out/factor_table/transfer_in_bucket'
-        time_bucket_path = '../../out/factor_table/transfer_in_month'
-        output_path = '../../out/substitute_parameters/tcr2.txt'
+        first_account_path = os.path.join(table_dir, 'person_account_list')
+        account_account_path = os.path.join(table_dir, 'account_transfer_in_items')
+        amount_bucket_path = os.path.join(table_dir, 'transfer_in_bucket')
+        time_bucket_path = os.path.join(table_dir, 'transfer_in_month')
+        output_path = os.path.join(out_dir, 'tcr2.txt')
         steps = 3
 
     elif query_id == 3:
-        first_account_path = '../../out/factor_table/account_in_out_list'
-        account_account_path = '../../out/factor_table/account_in_out_list'
-        amount_bucket_path = '../../out/factor_table/account_in_out_count'
-        time_bucket_path = '../../out/factor_table/account_in_out_month'
-        output_path = '../../out/substitute_parameters/'
+        first_account_path = os.path.join(table_dir, 'account_in_out_list')
+        account_account_path = os.path.join(table_dir, 'account_in_out_list')
+        amount_bucket_path = os.path.join(table_dir, 'account_in_out_count')
+        time_bucket_path = os.path.join(table_dir, 'account_in_out_month')
+        output_path = out_dir
         steps = 2
 
     elif query_id == 11:
-        first_account_path = '../../out/factor_table/person_guarantee_list'
-        account_account_path = '../../out/factor_table/person_guarantee_list'
-        amount_bucket_path = '../../out/factor_table/person_guarantee_count'
-        time_bucket_path = '../../out/factor_table/person_guarantee_month'
-        output_path = '../../out/substitute_parameters/tcr11.txt'
+        first_account_path = os.path.join(table_dir, 'person_guarantee_list')
+        account_account_path = os.path.join(table_dir, 'person_guarantee_list')
+        amount_bucket_path = os.path.join(table_dir, 'person_guarantee_count')
+        time_bucket_path = os.path.join(table_dir, 'person_guarantee_month')
+        output_path = os.path.join(out_dir, 'tcr11.txt')
         steps = 3
 
 
@@ -480,13 +483,13 @@ def process_iter_queries(query_id):
 def process_1_hop_query(query_id):
 
     if query_id == 7:
-        first_count_path = '../../out/factor_table/account_in_out_count'
-        time_bucket_path = '../../out/factor_table/account_in_out_month'
-        output_path = '../../out/substitute_parameters/'
+        first_count_path = os.path.join(table_dir, 'account_in_out_count')
+        time_bucket_path = os.path.join(table_dir, 'account_in_out_month')
+        output_path = out_dir
     elif query_id == 10:
-        first_count_path = '../../out/factor_table/person_invest_company'
-        time_bucket_path = '../../out/factor_table/invest_month'
-        output_path = '../../out/substitute_parameters/tcr10.txt'
+        first_count_path = os.path.join(table_dir, 'person_invest_company')
+        time_bucket_path = os.path.join(table_dir, 'invest_month')
+        output_path = os.path.join(out_dir, 'tcr10.txt')
 
     first_count_df = process_csv(first_count_path)
     time_bucket_df = process_csv(time_bucket_path)
@@ -538,11 +541,11 @@ def process_1_hop_query(query_id):
 
 def process_withdraw_query():
 
-    first_account_path = '../../out/factor_table/account_withdraw_in_items'
-    time_bucket_path = '../../out/factor_table/transfer_in_month'
-    withdraw_bucket_path = '../../out/factor_table/withdraw_in_bucket'
-    transfer_bucket_path = '../../out/factor_table/transfer_in_bucket'
-    output_path = '../../out/substitute_parameters/tcr6.txt'
+    first_account_path = os.path.join(table_dir, 'account_withdraw_in_items')
+    time_bucket_path = os.path.join(table_dir, 'transfer_in_month')
+    withdraw_bucket_path = os.path.join(table_dir, 'withdraw_in_bucket')
+    transfer_bucket_path = os.path.join(table_dir, 'transfer_in_bucket')
+    output_path = os.path.join(out_dir, 'tcr6.txt')
 
     first_account_df = process_csv(first_account_path)
     time_bucket_df = process_csv(time_bucket_path)
