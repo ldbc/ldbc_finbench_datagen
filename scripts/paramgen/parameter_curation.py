@@ -24,7 +24,7 @@ TRUNCATION_LIMIT = 10000
 BATCH_SIZE = 5000
 
 table_dir = '../../out/factor_table'
-out_dir = '../../out/substitute_parameters'
+out_dir = '../../out/substitute_parameters/'
 
 def process_csv(file_path):
     all_files = glob(file_path + '/*.csv')
@@ -319,7 +319,7 @@ def process_iter_queries(query_id):
         account_account_path = os.path.join(table_dir, 'account_transfer_out_items')
         amount_bucket_path = os.path.join(table_dir, 'transfer_out_bucket')
         time_bucket_path = os.path.join(table_dir, 'transfer_out_month')
-        output_path = os.path.join(out_dir, 'tcr5.txt')
+        output_path = out_dir
         steps = 3
 
     elif query_id == 2:
@@ -335,7 +335,7 @@ def process_iter_queries(query_id):
         account_account_path = os.path.join(table_dir, 'account_in_out_list')
         amount_bucket_path = os.path.join(table_dir, 'account_in_out_count')
         time_bucket_path = os.path.join(table_dir, 'account_in_out_month')
-        output_path = os.path.join(out_dir, 'tcr3.txt')
+        output_path = out_dir
         steps = 2
 
     elif query_id == 11:
@@ -485,7 +485,7 @@ def process_1_hop_query(query_id):
     if query_id == 7:
         first_count_path = os.path.join(table_dir, 'account_in_out_count')
         time_bucket_path = os.path.join(table_dir, 'account_in_out_month')
-        output_path = os.path.join(out_dir, 'tcr7.txt')
+        output_path = out_dir
     elif query_id == 10:
         first_count_path = os.path.join(table_dir, 'person_invest_company')
         time_bucket_path = os.path.join(table_dir, 'invest_month')
