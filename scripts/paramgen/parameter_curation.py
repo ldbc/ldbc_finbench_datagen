@@ -22,6 +22,7 @@ THRESH_HOLD = 0
 THRESH_HOLD_6 = 0
 TRUNCATION_LIMIT = 10000
 BATCH_SIZE = 5000
+TRUNCATION_ORDER = "TIMESTAMP_ASCENDING"
 
 table_dir = '../../out/factor_table'
 out_dir = '../../out/substitute_parameters/'
@@ -268,8 +269,20 @@ def get_next_sum_table(neighbors_df, basic_sum_df, batch_size=BATCH_SIZE):
     return result_df
 
 
-def handleLoanParam(loan):
-    return str(loan)
+def handleThresholdParam(threshold):
+    return str(threshold)
+
+def handleThreshold2Param(threshold2):
+    return str(threshold2)
+
+def hendleIdParam(id):
+    return str(id)
+
+def handleTruncateLimitParam(truncateLimit):
+    return str(truncateLimit)
+
+def handleTruncateOrderParam(truncateOrder):
+    return truncateOrder
 
 
 def handleTimeDurationParam(timeParam):
@@ -394,12 +407,18 @@ def process_iter_queries(query_id):
 
     final_first_items = search_params.generate(first_array, 0.01)
     time_list = time_select.findTimeParams(final_first_items, next_time_bucket)
+    truncate_limit_list = [TRUNCATION_LIMIT] * len(final_first_items)
+    truncate_order_list = [TRUNCATION_ORDER] * len(final_first_items)
+    thresh_list = [THRESH_HOLD] * len(final_first_items)
 
     if query_id == 8:
         csvWriter = CSVSerializer()
         csvWriter.setOutputFile(output_path)
-        csvWriter.registerHandler(handleLoanParam, final_first_items, "loanId")
+        csvWriter.registerHandler(hendleIdParam, final_first_items, "id")
+        csvWriter.registerHandler(handleThresholdParam, thresh_list, "threshold")
         csvWriter.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
+        csvWriter.registerHandler(handleTruncateLimitParam, truncate_limit_list, "truncationLimit")
+        csvWriter.registerHandler(handleTruncateOrderParam, truncate_order_list, "truncationOrder")
         csvWriter.writeCSV()
 
         print(f'query_id {query_id} finished')
@@ -407,8 +426,10 @@ def process_iter_queries(query_id):
     elif query_id == 1:
         csvWriter = CSVSerializer()
         csvWriter.setOutputFile(output_path)
-        csvWriter.registerHandler(handleLoanParam, final_first_items, "account_id")
+        csvWriter.registerHandler(hendleIdParam, final_first_items, "id")
         csvWriter.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
+        csvWriter.registerHandler(handleTruncateLimitParam, truncate_limit_list, "truncationLimit")
+        csvWriter.registerHandler(handleTruncateOrderParam, truncate_order_list, "truncationOrder")
         csvWriter.writeCSV()
 
         print(f'query_id {query_id} finished')
@@ -416,13 +437,17 @@ def process_iter_queries(query_id):
     elif query_id == 5:
         csvWriter_5 = CSVSerializer()
         csvWriter_5.setOutputFile(output_path + 'tcr5.txt')
-        csvWriter_5.registerHandler(handleLoanParam, final_first_items, "personId")
+        csvWriter_5.registerHandler(hendleIdParam, final_first_items, "id")
         csvWriter_5.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
+        csvWriter_5.registerHandler(handleTruncateLimitParam, truncate_limit_list, "truncationLimit")
+        csvWriter_5.registerHandler(handleTruncateOrderParam, truncate_order_list, "truncationOrder")
 
         csvWriter_12 = CSVSerializer()
         csvWriter_12.setOutputFile(output_path + 'tcr12.txt')
-        csvWriter_12.registerHandler(handleLoanParam, final_first_items, "personId")
+        csvWriter_12.registerHandler(hendleIdParam, final_first_items, "id")
         csvWriter_12.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
+        csvWriter_12.registerHandler(handleTruncateLimitParam, truncate_limit_list, "truncationLimit")
+        csvWriter_12.registerHandler(handleTruncateOrderParam, truncate_order_list, "truncationOrder")
 
         csvWriter_5.writeCSV()
         csvWriter_12.writeCSV()
@@ -432,8 +457,10 @@ def process_iter_queries(query_id):
     elif query_id == 2:
         csvWriter = CSVSerializer()
         csvWriter.setOutputFile(output_path)
-        csvWriter.registerHandler(handleLoanParam, final_first_items, "personId")
+        csvWriter.registerHandler(hendleIdParam, final_first_items, "id")
         csvWriter.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
+        csvWriter.registerHandler(handleTruncateLimitParam, truncate_limit_list, "truncationLimit")
+        csvWriter.registerHandler(handleTruncateOrderParam, truncate_order_list, "truncationOrder")
         csvWriter.writeCSV()
 
         print(f'query_id {query_id} finished')
@@ -455,15 +482,19 @@ def process_iter_queries(query_id):
         
         csvWriter_3 = CSVSerializer()
         csvWriter_3.setOutputFile(output_path + 'tcr3.txt')
-        csvWriter_3.registerHandler(handleLoanParam, final_first_items, "id1")
-        csvWriter_3.registerHandler(handleLoanParam, final_second_items_3, "id2")
+        csvWriter_3.registerHandler(hendleIdParam, final_first_items, "id1")
+        csvWriter_3.registerHandler(hendleIdParam, final_second_items_3, "id2")
         csvWriter_3.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
+        csvWriter_3.registerHandler(handleTruncateLimitParam, truncate_limit_list, "truncationLimit")
+        csvWriter_3.registerHandler(handleTruncateOrderParam, truncate_order_list, "truncationOrder")
         
         csvWriter_4 = CSVSerializer()
         csvWriter_4.setOutputFile(output_path + 'tcr4.txt')
-        csvWriter_4.registerHandler(handleLoanParam, final_first_items, "id1")
-        csvWriter_4.registerHandler(handleLoanParam, final_second_items_4, "id2")
+        csvWriter_4.registerHandler(hendleIdParam, final_first_items, "id1")
+        csvWriter_4.registerHandler(hendleIdParam, final_second_items_4, "id2")
         csvWriter_4.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
+        csvWriter_4.registerHandler(handleTruncateLimitParam, truncate_limit_list, "truncationLimit")
+        csvWriter_4.registerHandler(handleTruncateOrderParam, truncate_order_list, "truncationOrder")
 
         csvWriter_3.writeCSV()
         csvWriter_4.writeCSV()
@@ -473,8 +504,10 @@ def process_iter_queries(query_id):
     elif query_id == 11:
         csvWriter = CSVSerializer()
         csvWriter.setOutputFile(output_path)
-        csvWriter.registerHandler(handleLoanParam, final_first_items, "id")
+        csvWriter.registerHandler(hendleIdParam, final_first_items, "id")
         csvWriter.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
+        csvWriter.registerHandler(handleTruncateLimitParam, truncate_limit_list, "truncationLimit")
+        csvWriter.registerHandler(handleTruncateOrderParam, truncate_order_list, "truncationOrder")
         csvWriter.writeCSV()
 
         print(f'query_id {query_id} finished')
@@ -502,17 +535,27 @@ def process_1_hop_query(query_id):
     final_first_items = search_params.generate(first_array, 0.01)
     time_list = time_select.findTimeParams(final_first_items, time_bucket_df)
 
+    truncate_limit_list = [TRUNCATION_LIMIT] * len(final_first_items)
+    truncate_order_list = [TRUNCATION_ORDER] * len(final_first_items)
+    thresh_list = [THRESH_HOLD] * len(final_first_items)
+
     if query_id == 7:
 
         csvWriter_7 = CSVSerializer()
         csvWriter_7.setOutputFile(output_path + 'tcr7.txt')
-        csvWriter_7.registerHandler(handleLoanParam, final_first_items, "account_id")
+        csvWriter_7.registerHandler(hendleIdParam, final_first_items, "id")
+        csvWriter_7.registerHandler(handleThresholdParam, thresh_list, "threshold")
         csvWriter_7.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
+        csvWriter_7.registerHandler(handleTruncateLimitParam, truncate_limit_list, "truncationLimit")
+        csvWriter_7.registerHandler(handleTruncateOrderParam, truncate_order_list, "truncationOrder")
 
         csvWriter_9 = CSVSerializer()
         csvWriter_9.setOutputFile(output_path + 'tcr9.txt')
-        csvWriter_9.registerHandler(handleLoanParam, final_first_items, "account_id")
+        csvWriter_9.registerHandler(hendleIdParam, final_first_items, "id")
+        csvWriter_9.registerHandler(handleThresholdParam, thresh_list, "threshold")
         csvWriter_9.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
+        csvWriter_9.registerHandler(handleTruncateLimitParam, truncate_limit_list, "truncationLimit")
+        csvWriter_9.registerHandler(handleTruncateOrderParam, truncate_order_list, "truncationOrder")
 
         csvWriter_7.writeCSV()
         csvWriter_9.writeCSV()
@@ -531,8 +574,8 @@ def process_1_hop_query(query_id):
 
         csvWriter = CSVSerializer()
         csvWriter.setOutputFile(output_path)
-        csvWriter.registerHandler(handleLoanParam, final_first_items, "pid1")
-        csvWriter.registerHandler(handleLoanParam, final_second_items, "pid2")
+        csvWriter.registerHandler(hendleIdParam, final_first_items, "pid1")
+        csvWriter.registerHandler(hendleIdParam, final_second_items, "pid2")
         csvWriter.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
         csvWriter.writeCSV()
 
@@ -576,10 +619,18 @@ def process_withdraw_query():
     final_first_items = search_params.generate(first_array, 0.01)
     time_list = time_select.findTimeParams(final_first_items, next_time_bucket)
 
+    truncate_limit_list = [TRUNCATION_LIMIT] * len(final_first_items)
+    truncate_order_list = [TRUNCATION_ORDER] * len(final_first_items)
+    thresh_list = [THRESH_HOLD_6] * len(final_first_items)
+
     csvWriter = CSVSerializer()
     csvWriter.setOutputFile(output_path)
-    csvWriter.registerHandler(handleLoanParam, final_first_items, "id")
+    csvWriter.registerHandler(hendleIdParam, final_first_items, "id")
+    csvWriter.registerHandler(handleThresholdParam, thresh_list, "threshold1")
+    csvWriter.registerHandler(handleThreshold2Param, thresh_list, "threshold2")
     csvWriter.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
+    csvWriter.registerHandler(handleTruncateLimitParam, truncate_limit_list, "truncationLimit")
+    csvWriter.registerHandler(handleTruncateOrderParam, truncate_order_list, "truncationOrder")
     csvWriter.writeCSV()
 
     print(f'query_id 6 finished')
