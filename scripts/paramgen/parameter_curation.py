@@ -23,6 +23,7 @@ THRESH_HOLD_6 = 0
 TRUNCATION_LIMIT = 10000
 BATCH_SIZE = 5000
 TRUNCATION_ORDER = "TIMESTAMP_ASCENDING"
+TIME_TRUNCATE = True
 
 table_dir = '../../out/factor_table'
 out_dir = '../../out/substitute_parameters/'
@@ -134,7 +135,7 @@ def filter_neighbors(account_list, amount_bucket_df, num_list, account_id):
     sum_num = 0
     header_at_limit = -1
     for col in reversed(num_list):
-        sum_num += rows_amount_bucket[str(col)]
+        sum_num += rows_amount_bucket[col]
         if sum_num >= TRUNCATION_LIMIT:
             header_at_limit = col
             break
@@ -167,7 +168,7 @@ def neighbors_with_truncate_threshold(transfer_in_amount, rows_account_list, row
     sum_num = 0
     header_at_limit = -1
     for col in reversed(num_list):
-        sum_num += rows_amount_bucket[str(col)]
+        sum_num += rows_amount_bucket[col]
         if sum_num >= TRUNCATION_LIMIT:
             header_at_limit = col
             break
@@ -185,7 +186,7 @@ def neighbors_with_trancate(rows_account_list, rows_amount_bucket, num_list):
     sum_num = 0
     header_at_limit = -1
     for col in reversed(num_list):
-        sum_num += rows_amount_bucket[str(col)]
+        sum_num += rows_amount_bucket[col]
         if sum_num >= TRUNCATION_LIMIT:
             header_at_limit = col
             break
@@ -220,7 +221,7 @@ def get_next_neighbor_list(neighbors_df, account_account_df, account_amount_df, 
 
     num_list = []
     if query_id != 3 and query_id != 11:
-        num_list = [int(x) for x in amount_bucket_df.columns.tolist()]
+        num_list = [x for x in amount_bucket_df.columns.tolist()]
 
     query_parallelism = max(1, multiprocessing.cpu_count() // 4)
     # print(f'query_id {query_id} query_parallelism {query_parallelism}')
@@ -237,7 +238,7 @@ def get_next_neighbor_list(neighbors_df, account_account_df, account_amount_df, 
 
 def get_filter_neighbor_list(neighbors_df, amount_bucket_df):
     first_column_name = neighbors_df.columns[0]
-    num_list = [int(x) for x in amount_bucket_df.columns.tolist()]
+    num_list = [x for x in amount_bucket_df.columns.tolist()]
 
     query_parallelism = max(1, multiprocessing.cpu_count() // 4)
     chunks = np.array_split(neighbors_df, query_parallelism)
@@ -314,7 +315,10 @@ def process_iter_queries(query_id):
         first_account_path = os.path.join(table_dir, 'loan_account_list')
         account_account_path = os.path.join(table_dir, 'trans_withdraw_items')
         upstream_amount_path = os.path.join(table_dir, 'upstream_amount')
-        amount_bucket_path = os.path.join(table_dir, 'trans_withdraw_bucket')
+        if TIME_TRUNCATE:
+            amount_bucket_path = os.path.join(table_dir, 'trans_withdraw_month')
+        else:
+            amount_bucket_path = os.path.join(table_dir, 'trans_withdraw_bucket')
         time_bucket_path = os.path.join(table_dir, 'trans_withdraw_month')
         output_path = os.path.join(out_dir, 'tcr8.txt')
         steps = 2
@@ -322,7 +326,10 @@ def process_iter_queries(query_id):
     elif query_id == 1:
         first_account_path = os.path.join(table_dir, 'account_transfer_out_list')
         account_account_path = os.path.join(table_dir, 'account_transfer_out_items')
-        amount_bucket_path = os.path.join(table_dir, 'transfer_out_bucket')
+        if TIME_TRUNCATE:
+            amount_bucket_path = os.path.join(table_dir, 'transfer_out_month')
+        else:
+            amount_bucket_path = os.path.join(table_dir, 'transfer_out_bucket')
         time_bucket_path = os.path.join(table_dir, 'transfer_out_month')
         output_path = os.path.join(out_dir, 'tcr1.txt')
         steps = 2
@@ -330,7 +337,10 @@ def process_iter_queries(query_id):
     elif query_id == 5:
         first_account_path = os.path.join(table_dir, 'person_account_list')
         account_account_path = os.path.join(table_dir, 'account_transfer_out_items')
-        amount_bucket_path = os.path.join(table_dir, 'transfer_out_bucket')
+        if TIME_TRUNCATE:
+            amount_bucket_path = os.path.join(table_dir, 'transfer_out_month')
+        else:
+            amount_bucket_path = os.path.join(table_dir, 'transfer_out_bucket')
         time_bucket_path = os.path.join(table_dir, 'transfer_out_month')
         output_path = out_dir
         steps = 3
@@ -338,7 +348,10 @@ def process_iter_queries(query_id):
     elif query_id == 2:
         first_account_path = os.path.join(table_dir, 'person_account_list')
         account_account_path = os.path.join(table_dir, 'account_transfer_in_items')
-        amount_bucket_path = os.path.join(table_dir, 'transfer_in_bucket')
+        if TIME_TRUNCATE:
+            amount_bucket_path = os.path.join(table_dir, 'transfer_in_month')
+        else:
+            amount_bucket_path = os.path.join(table_dir, 'transfer_in_bucket')
         time_bucket_path = os.path.join(table_dir, 'transfer_in_month')
         output_path = os.path.join(out_dir, 'tcr2.txt')
         steps = 3
@@ -586,7 +599,10 @@ def process_withdraw_query():
 
     first_account_path = os.path.join(table_dir, 'account_withdraw_in_items')
     time_bucket_path = os.path.join(table_dir, 'transfer_in_month')
-    withdraw_bucket_path = os.path.join(table_dir, 'withdraw_in_bucket')
+    if TIME_TRUNCATE:
+        withdraw_bucket_path = os.path.join(table_dir, 'withdraw_in_month')
+    else:
+        withdraw_bucket_path = os.path.join(table_dir, 'withdraw_in_bucket')
     transfer_bucket_path = os.path.join(table_dir, 'transfer_in_bucket')
     output_path = os.path.join(out_dir, 'tcr6.txt')
 
