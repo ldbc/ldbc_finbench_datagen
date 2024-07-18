@@ -1,6 +1,7 @@
 package ldbc.finbench.datagen.generation.events;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -46,8 +47,8 @@ public class TransferEvent implements Serializable {
         IntStream.range(0, accounts.size()).parallel().forEach(i -> accounts.get(i).setMaxOutDegree(degrees.get(i)));
     }
 
-    private List<Integer> getIndexList(int size) {
-        List<Integer> indexList = new LinkedList<>();
+    private LinkedList<Integer> getIndexList(int size) {
+        LinkedList<Integer> indexList = new LinkedList<>();
         for (int i = 0; i < size; i++) {
             indexList.add(i);
         }
@@ -57,10 +58,11 @@ public class TransferEvent implements Serializable {
     // Generation to parts will mess up the average degree(make it bigger than expected) caused by ceiling operations.
     // Also, it will mess up the long tail range of powerlaw distribution of degrees caused by 1 rounded to 2.
     // See the plot drawn by check_transfer.py for more details.
-    public List<Transfer> transferPart(List<Account> accounts, int blockId) {
+    public LinkedList<Transfer> transferPart(ArrayList<Account> accounts, int blockId) {
         resetState(blockId);
 
-        List<Integer> availableToAccountIds = getIndexList(accounts.size()); // available transferTo accountIds
+        int numAccounts = accounts.size();
+        LinkedList<Integer> availableToAccountIds = getIndexList(numAccounts); // available transferTo accountIds
 
         // scale to percentage
         accounts.forEach(
@@ -70,21 +72,22 @@ public class TransferEvent implements Serializable {
             }
         );
 
-        List<Transfer> transfers = new LinkedList<>();
+        LinkedList<Transfer> transfers = new LinkedList<>();
 
-        for (int i = 0; i < accounts.size(); i++) {
+        long startTimeNano = System.nanoTime();
+        for (int i = 0; i < numAccounts; i++) {
             Account from = accounts.get(i);
             while (from.getAvailableOutDegree() != 0) {
                 int skippedCount = 0;
                 for (int j = 0; j < availableToAccountIds.size(); j++) {
                     int toIndex = availableToAccountIds.get(j);
                     Account to = accounts.get(toIndex);
-                    if (toIndex == i || cannotTransfer(from, to) || !distanceProbOK(j - i)) {
+                    if (toIndex == i || cannotTransfer(from, to)) {
                         skippedCount++;
                         continue;
                     }
                     long numTransfers = Math.min(multiplicityDist.nextDegree(),
-                                                 Math.min(from.getAvailableOutDegree(), to.getAvailableInDegree()));
+                                                    Math.min(from.getAvailableOutDegree(), to.getAvailableInDegree()));
                     for (int mindex = 0; mindex < numTransfers; mindex++) {
                         transfers.add(Transfer.createTransferAndReturn(randomFarm, from, to, mindex,
                                                 amountRandom.nextDouble() * DatagenParams.tsfMaxAmount));
@@ -105,6 +108,10 @@ public class TransferEvent implements Serializable {
                 //                       + "availableToAccountIds " + availableToAccountIds.size());
             }
         }
+        long endTimeNano = System.nanoTime();
+        long elapsedTimeNano = endTimeNano - startTimeNano;
+        double elapsedTimeMillis = (double) elapsedTimeNano / 1_000_000;
+        System.out.println("Big loop time (ms): " + elapsedTimeMillis);
         return transfers;
     }
 
@@ -120,7 +127,6 @@ public class TransferEvent implements Serializable {
     // Transfer to self is not allowed
     private boolean cannotTransfer(Account from, Account to) {
         return from.getDeletionDate() < to.getCreationDate() + DatagenParams.activityDelta
-            || from.getCreationDate() + DatagenParams.activityDelta > to.getDeletionDate()
-            || from.equals(to) || from.getAvailableOutDegree() == 0 || to.getAvailableInDegree() == 0;
+            || from.getCreationDate() + DatagenParams.activityDelta > to.getDeletionDate();
     }
 }
