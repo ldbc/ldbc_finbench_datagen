@@ -7,26 +7,34 @@ import ldbc.finbench.datagen.util.{DatagenStage, Logging}
 import ldbc.finbench.datagen.syntax._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{Column, DataFrame, Dataset, Row, SparkSession}
-import org.apache.spark.sql.functions.{col, date_format, date_trunc, from_unixtime, lit, to_timestamp}
+import org.apache.spark.sql.functions.{
+  col,
+  date_format,
+  date_trunc,
+  from_unixtime,
+  lit,
+  to_timestamp
+}
 import scopt.OptionParser
 import shapeless.lens
 
 // Note: transformation is not used now. Data conversion is done by python scripts.
 object TransformationStage extends DatagenStage with Logging {
-  private val options: Map[String, String] = Map("header" -> "true", "delimiter" -> "|")
+  private val options: Map[String, String] =
+    Map("header" -> "true", "delimiter" -> "|")
 
   case class Args(
-                   outputDir: String = "out",
-                   bulkloadPortion: Double = 0.0,
-                   keepImplicitDeletes: Boolean = false,
-                   simulationStart: Long = 0,
-                   simulationEnd: Long = 0,
-                   irFormat: String = "csv",
-                   format: String = "csv",
-                   formatOptions: Map[String, String] = Map.empty,
-                   epochMillis: Boolean = false,
-                   batchPeriod: String = "day"
-                 )
+      outputDir: String = "out",
+      bulkloadPortion: Double = 0.0,
+      keepImplicitDeletes: Boolean = false,
+      simulationStart: Long = 0,
+      simulationEnd: Long = 0,
+      irFormat: String = "csv",
+      format: String = "csv",
+      formatOptions: Map[String, String] = Map.empty,
+      epochMillis: Boolean = false,
+      batchPeriod: String = "day"
+  )
 
   override type ArgsType = Args
 
@@ -54,7 +62,9 @@ object TransformationStage extends DatagenStage with Logging {
       help('h', "help").text("prints this usage text")
     }
     val parsedArgs =
-      parser.parse(args, Args()).getOrElse(throw new RuntimeException("Invalid arguments"))
+      parser
+        .parse(args, Args())
+        .getOrElse(throw new RuntimeException("Invalid arguments"))
 
     run(parsedArgs)
   }
@@ -69,7 +79,11 @@ object TransformationStage extends DatagenStage with Logging {
 
     val simulationStart = Dictionaries.dates.getSimulationStart
     val simulationEnd = Dictionaries.dates.getSimulationEnd
-    val bulkLoadThreshold = calculateBulkLoadThreshold(args.bulkloadPortion, simulationStart, simulationEnd)
+    val bulkLoadThreshold = calculateBulkLoadThreshold(
+      args.bulkloadPortion,
+      simulationStart,
+      simulationEnd
+    )
 
     //    val batch_id = (col: Column) => date_format(date_trunc(args.batchPeriod, to_timestamp(col / lit(1000L))), batchPeriodFormat(args.batchPeriod))
     //
@@ -104,24 +118,38 @@ object TransformationStage extends DatagenStage with Logging {
     //    }
 
     val readRaw = (target: String) => {
-      spark.read.format(args.irFormat)
+      spark.read
+        .format(args.irFormat)
         .options(options)
         .option("inferSchema", "true")
         .load(s"$rawPathPrefix/$target/*.csv")
     }
 
-
     val extractSnapshot = (df: DataFrame) => {
-      df.filter($"creationDate" < lit(bulkLoadThreshold)
-        && (!lit(filterDeletion) || $"deletionDate" >= lit(bulkLoadThreshold)))
+      df.filter(
+        $"creationDate" < lit(bulkLoadThreshold)
+          && (!lit(filterDeletion) || $"deletionDate" >= lit(bulkLoadThreshold))
+      )
       //        .select(_: _*)
     }
 
     val transferSnapshot = extractSnapshot(readRaw("transfer"))
       //      .select("fromId", "toId", "multiplicityId", "createTime", "deleteTime", "amount", "isExplicitDeleted")
       //      .map(extractSnapshot)
-      .withColumn("createTime", from_unixtime(col("createTime") / 1000, batchPeriodFormat(args.batchPeriod)))
-      .withColumn("deleteTime", from_unixtime(col("deleteTime") / 1000, batchPeriodFormat(args.batchPeriod)))
+      .withColumn(
+        "createTime",
+        from_unixtime(
+          col("createTime") / 1000,
+          batchPeriodFormat(args.batchPeriod)
+        )
+      )
+      .withColumn(
+        "deleteTime",
+        from_unixtime(
+          col("deleteTime") / 1000,
+          batchPeriodFormat(args.batchPeriod)
+        )
+      )
       .orderBy("createTime", "deleteTime")
     write(transferSnapshot, (outputPathPrefix / "transfer").toString)
 
@@ -144,22 +172,32 @@ object TransformationStage extends DatagenStage with Logging {
   //      cols.filter(!rawCols.contains(_))
   //  }
   private def write(data: DataFrame, path: String): Unit = {
-    data.toDF().coalesce(1)
-      .write.format("csv").options(options).option("encoding", "UTF-8")
-      .mode("overwrite").save(path)
+    data
+      .toDF()
+      .coalesce(1)
+      .write
+      .format("csv")
+      .options(options)
+      .option("encoding", "UTF-8")
+      .mode("overwrite")
+      .save(path)
   }
 
-  private def calculateBulkLoadThreshold(bulkLoadPortion: Double, simulationStart: Long, simulationEnd: Long) = {
+  private def calculateBulkLoadThreshold(
+      bulkLoadPortion: Double,
+      simulationStart: Long,
+      simulationEnd: Long
+  ) = {
     (simulationEnd - ((simulationEnd - simulationStart) * (1 - bulkLoadPortion)).toLong)
   }
 
   private def batchPeriodFormat(batchPeriod: String) = batchPeriod match {
-    case "year" => "yyyy"
-    case "month" => "yyyy-MM"
-    case "day" => "yyyy-MM-dd"
-    case "hour" => "yyyy-MM-dd'T'hh"
-    case "minute" => "yyyy-MM-dd'T'hh:mm"
-    case "second" => "yyyy-MM-dd'T'hh:mm:ss"
+    case "year"        => "yyyy"
+    case "month"       => "yyyy-MM"
+    case "day"         => "yyyy-MM-dd"
+    case "hour"        => "yyyy-MM-dd'T'hh"
+    case "minute"      => "yyyy-MM-dd'T'hh:mm"
+    case "second"      => "yyyy-MM-dd'T'hh:mm:ss"
     case "millisecond" => "yyyy-MM-dd'T'hh:mm:ss.SSS"
     case _ => throw new IllegalArgumentException("Unrecognized partition key")
   }

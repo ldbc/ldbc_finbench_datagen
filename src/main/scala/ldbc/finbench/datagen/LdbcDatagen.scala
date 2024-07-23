@@ -11,22 +11,22 @@ object LdbcDatagen extends SparkApp with Logging {
   val appName = "LDBC FinBench Datagen for Spark"
 
   case class Args(
-                   scaleFactor: String = "0.01",
-                   scaleFactorXml: String = "",
-                   params: Map[String, String] = Map.empty,
-                   paramFile: Option[String] = None,
-                   outputDir: String = "out",
-                   bulkloadPortion: Double = 0.97,
-                   keepImplicitDeletes: Boolean = false,
-                   batchPeriod: String = "second",
-                   numPartitions: Option[Int] = None,
-                   irFormat: String = "csv",
-                   format: String = "csv",
-                   formatOptions: Map[String, String] = Map.empty,
-                   epochMillis: Boolean = false,
-                   generateFactors: Boolean = true,
-                   factorFormat: String = "parquet"
-                 )
+      scaleFactor: String = "0.01",
+      scaleFactorXml: String = "",
+      params: Map[String, String] = Map.empty,
+      paramFile: Option[String] = None,
+      outputDir: String = "out",
+      bulkloadPortion: Double = 0.97,
+      keepImplicitDeletes: Boolean = false,
+      batchPeriod: String = "second",
+      numPartitions: Option[Int] = None,
+      irFormat: String = "csv",
+      format: String = "csv",
+      formatOptions: Map[String, String] = Map.empty,
+      epochMillis: Boolean = false,
+      generateFactors: Boolean = true,
+      factorFormat: String = "parquet"
+  )
 
   override type ArgsType = Args
 
@@ -48,7 +48,9 @@ object LdbcDatagen extends SparkApp with Logging {
 
       opt[Map[String, String]]('p', "params")
         .action((x, c) => args.params.set(c)(x))
-        .text("Key=value params passed to the generator. Takes precedence over --param-file")
+        .text(
+          "Key=value params passed to the generator. Takes precedence over --param-file"
+        )
 
       opt[String]('P', "param-file")
         .action((x, c) => args.paramFile.set(c)(Some(x)))
@@ -72,11 +74,14 @@ object LdbcDatagen extends SparkApp with Logging {
       opt[String]("batch-period")
         .action((x, c) => args.batchPeriod.set(c)(x))
         .text(
-          "Period of the batches in BI mode. Possible values: year, month, day, hour. Default: day")
+          "Period of the batches in BI mode. Possible values: year, month, day, hour. Default: day"
+        )
 
       opt[String]('f', "format")
         .action((x, c) => args.format.set(c)(x))
-        .text("Output format. Currently, Spark Datasource formats are supported, such as 'csv', 'parquet' or 'orc'.")
+        .text(
+          "Output format. Currently, Spark Datasource formats are supported, such as 'csv', 'parquet' or 'orc'."
+        )
 
       opt[Unit]("keep-implicit-deletes")
         .action((x, c) => args.keepImplicitDeletes.set(c)(true))
@@ -108,7 +113,9 @@ object LdbcDatagen extends SparkApp with Logging {
         .text("Use longs with millis since Unix epoch instead of native dates")
     }
 
-    val parsedArgs = parser.parse(args, Args()).getOrElse(throw new RuntimeException("Invalid arguments"))
+    val parsedArgs = parser
+      .parse(args, Args())
+      .getOrElse(throw new RuntimeException("Invalid arguments"))
 
     run(parsedArgs)
   }

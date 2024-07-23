@@ -4,7 +4,6 @@ import org.apache.spark.sql.{SparkSession, functions => F}
 import org.apache.spark.sql.functions.max
 import org.apache.spark.sql.functions.lit
 
-
 object AccountItemsGenerator {
   def generateAccountItems(implicit spark: SparkSession): Unit = {
     import spark.implicits._
@@ -27,27 +26,35 @@ object AccountItemsGenerator {
       .option("delimiter", "|")
       .load("./out/raw/withdraw/*.csv")
 
-    val combinedRDD = transferRDD.select($"fromId", $"toId", $"amount".cast("double"))
+    val combinedRDD = transferRDD
+      .select($"fromId", $"toId", $"amount".cast("double"))
       .union(withdrawRDD.select($"fromId", $"toId", $"amount".cast("double")))
 
-    val maxAmountRDD = combinedRDD.groupBy($"fromId", $"toId")
+    val maxAmountRDD = combinedRDD
+      .groupBy($"fromId", $"toId")
       .agg(max($"amount").alias("maxAmount"))
 
-    val accountItemsRDD = maxAmountRDD.groupBy($"fromId")
+    val accountItemsRDD = maxAmountRDD
+      .groupBy($"fromId")
       .agg(F.collect_list(F.array($"toId", $"maxAmount")).alias("items"))
       .select($"fromId".alias("account_id"), $"items")
       .sort($"account_id")
 
-    val transformedAccountItemsRDD = accountItemsRDD.withColumn(
-      "items",
-      F.expr("transform(items, array -> concat('[', concat_ws(',', array), ']'))")
-    ).withColumn(
-      "items",
-      F.concat_ws(",", $"items")
-    ).withColumn(
-      "items",
-      F.concat(lit("["), $"items", lit("]"))
-    )
+    val transformedAccountItemsRDD = accountItemsRDD
+      .withColumn(
+        "items",
+        F.expr(
+          "transform(items, array -> concat('[', concat_ws(',', array), ']'))"
+        )
+      )
+      .withColumn(
+        "items",
+        F.concat_ws(",", $"items")
+      )
+      .withColumn(
+        "items",
+        F.concat(lit("["), $"items", lit("]"))
+      )
 
     transformedAccountItemsRDD
       .coalesce(1)
