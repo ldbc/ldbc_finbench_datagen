@@ -83,52 +83,52 @@ object FactorGenerationStage extends DatagenStage {
   // execute factorization process
   // TODO: finish all
   override def run(args: Args) = {
-    parameterCuration
+    parameterCuration(args)
   }
 
-  def parameterCuration(implicit spark: SparkSession) = {
+  def parameterCuration(args: Args)(implicit spark: SparkSession) = {
     import spark.implicits._
 
     val transferRDD = spark.read
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
       .option("header", "true")
       .option("delimiter", "|")
-      .load("./out/raw/transfer/*.csv")
+      .load(s"${args.outputDir}/raw/transfer/*.csv")
       .select($"fromId", $"toId", $"amount".cast("double"), $"createTime")
 
     val withdrawRDD = spark.read
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
       .option("header", "true")
       .option("delimiter", "|")
-      .load("./out/raw/withdraw/*.csv")
+      .load(s"${args.outputDir}/raw/withdraw/*.csv")
       .select($"fromId", $"toId", $"amount".cast("double"), $"createTime")
 
     val depositRDD = spark.read
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
       .option("header", "true")
       .option("delimiter", "|")
-      .load("./out/raw/deposit/*.csv")
+      .load(s"${args.outputDir}/raw/deposit/*.csv")
       .select($"accountId", $"loanId")
 
     val personInvestRDD = spark.read
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
       .option("header", "true")
       .option("delimiter", "|")
-      .load("./out/raw/personInvest/*.csv")
+      .load(s"${args.outputDir}/raw/personInvest/*.csv")
       .select($"investorId", $"companyId", $"createTime")
 
     val OwnRDD = spark.read
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
       .option("header", "true")
       .option("delimiter", "|")
-      .load("./out/raw/personOwnAccount/*.csv")
+      .load(s"${args.outputDir}/raw/personOwnAccount/*.csv")
       .select($"personId", $"accountId")
 
     val personGuaranteeRDD = spark.read
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
       .option("header", "true")
       .option("delimiter", "|")
-      .load("./out/raw/personGuarantee/*.csv")
+      .load(s"${args.outputDir}/raw/personGuarantee/*.csv")
       .select($"fromId", $"toId", $"createTime")
 
     def transformItems(df: DataFrame, groupByCol: String, selectCol: String): DataFrame = {
@@ -204,7 +204,7 @@ object FactorGenerationStage extends DatagenStage {
       .option("header", "true")
       .option("delimiter", "|")
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .save("./out/factor_table/person_invest_company")
+      .save(s"${args.outputDir}/factor_table/person_invest_company")
 
     val transferItRDD = transferRDD.select($"fromId", $"toId", $"amount".cast("double"))
 
@@ -216,7 +216,7 @@ object FactorGenerationStage extends DatagenStage {
       .option("header", "true")
       .option("delimiter", "|")
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .save("./out/factor_table/account_transfer_out_items")
+      .save(s"${args.outputDir}/factor_table/account_transfer_out_items")
 
     val transferInAccountItemsRDD = transformItems(transferItRDD, "toId", "fromId")
 
@@ -226,7 +226,7 @@ object FactorGenerationStage extends DatagenStage {
       .option("header", "true")
       .option("delimiter", "|")
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .save("./out/factor_table/account_transfer_in_items")
+      .save(s"${args.outputDir}/factor_table/account_transfer_in_items")
 
     val transferOutLRDD = transferItRDD.select($"fromId", $"toId")
       .groupBy($"fromId")
@@ -244,7 +244,7 @@ object FactorGenerationStage extends DatagenStage {
       .option("header", "true")
       .option("delimiter", "|")
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .save("./out/factor_table/account_transfer_out_list")
+      .save(s"${args.outputDir}/factor_table/account_transfer_out_list")
 
     val fromAccounts = transferRDD.select($"fromId".alias("account_id"), $"toId".alias("corresponding_account_id"), $"createTime")
     val toAccounts = transferRDD.select($"toId".alias("account_id"), $"fromId".alias("corresponding_account_id"), $"createTime")
@@ -262,7 +262,7 @@ object FactorGenerationStage extends DatagenStage {
       .option("header", "true")
       .option("delimiter", "|")
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .save("./out/factor_table/account_in_out_count")
+      .save(s"${args.outputDir}/factor_table/account_in_out_count")
 
     val transferAccountListRDD = accountListRDD.withColumn(
       "account_list",
@@ -275,9 +275,10 @@ object FactorGenerationStage extends DatagenStage {
       .option("header", "true")
       .option("delimiter", "|")
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .save("./out/factor_table/account_in_out_list")
+      .save(s"${args.outputDir}/factor_table/account_in_out_list")
 
     val transferInTimeRDD = transferRDD.select(col("toId"), col("createTime"))
+    val withdrawInTimeRDD = withdrawRDD.select(col("toId"), col("createTime"))
     val personGuaranteeTimeRDD = personGuaranteeRDD.select(col("fromId"), col("createTime"))
     val InvestInTimeRDD = personInvestRDD.select(col("investorId"), col("createTime"))
     val transferOutTimeRDD = transferRDD.select(col("fromId"), col("createTime"))
@@ -291,7 +292,7 @@ object FactorGenerationStage extends DatagenStage {
       .option("header", "true")
       .option("delimiter", "|")
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .save("./out/factor_table/account_in_out_month")
+      .save(s"${args.outputDir}/factor_table/account_in_out_month")
 
     val transferInPivotRDD = processByMonth(transferInTimeRDD, "toId", "createTime", "account_id")
 
@@ -300,7 +301,16 @@ object FactorGenerationStage extends DatagenStage {
       .option("header", "true")
       .option("delimiter", "|")
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .save("./out/factor_table/transfer_in_month")
+      .save(s"${args.outputDir}/factor_table/transfer_in_month")
+
+    val withdrawInPivotRDD = processByMonth(withdrawInTimeRDD, "toId", "createTime", "account_id")
+
+    withdrawInPivotRDD
+      .write
+      .option("header", "true")
+      .option("delimiter", "|")
+      .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
+      .save(s"${args.outputDir}/factor_table/withdraw_in_month")
 
     val personGuaranteePivotRDD = processByMonth(personGuaranteeTimeRDD, "fromId", "createTime", "person_id")
 
@@ -309,7 +319,7 @@ object FactorGenerationStage extends DatagenStage {
       .option("header", "true")
       .option("delimiter", "|")
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .save("./out/factor_table/person_guarantee_month")
+      .save(s"${args.outputDir}/factor_table/person_guarantee_month")
 
     val InvestInPivotRDD = processByMonth(InvestInTimeRDD, "investorId", "createTime", "person_id")
 
@@ -318,7 +328,7 @@ object FactorGenerationStage extends DatagenStage {
       .option("header", "true")
       .option("delimiter", "|")
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .save("./out/factor_table/invest_month")
+      .save(s"${args.outputDir}/factor_table/invest_month")
 
     val transferOutPivotRDD = processByMonth(transferOutTimeRDD, "fromId", "createTime", "account_id")
 
@@ -327,7 +337,7 @@ object FactorGenerationStage extends DatagenStage {
       .option("header", "true")
       .option("delimiter", "|")
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .save("./out/factor_table/transfer_out_month")
+      .save(s"${args.outputDir}/factor_table/transfer_out_month")
 
     val pivotRDD = processByMonth(transactionsRDD, "fromId", "createTime", "account_id")
 
@@ -336,7 +346,7 @@ object FactorGenerationStage extends DatagenStage {
       .option("header", "true")
       .option("delimiter", "|")
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .save("./out/factor_table/trans_withdraw_month")
+      .save(s"${args.outputDir}/factor_table/trans_withdraw_month")
 
     val withdrawInRDD = withdrawRDD.select($"fromId", $"toId", $"amount".cast("double"))
     val combinedRDD = transferItRDD.union(withdrawInRDD)
@@ -350,7 +360,7 @@ object FactorGenerationStage extends DatagenStage {
       .option("header", "true")
       .option("delimiter", "|")
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .save("./out/factor_table/trans_withdraw_items")
+      .save(s"${args.outputDir}/factor_table/trans_withdraw_items")
 
     transformedWithdrawInItemsRDD
       .coalesce(1)
@@ -358,7 +368,7 @@ object FactorGenerationStage extends DatagenStage {
       .option("header", "true")
       .option("delimiter", "|")
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .save("./out/factor_table/account_withdraw_in_items")
+      .save(s"${args.outputDir}/factor_table/account_withdraw_in_items")
 
     val transferOutAmountRDD = transferItRDD.select($"fromId", $"amount".cast("double"))
     val transferInAmountRDD = transferItRDD.select($"toId", $"amount".cast("double"))
@@ -375,7 +385,7 @@ object FactorGenerationStage extends DatagenStage {
       .option("header", "true")
       .option("delimiter", "|")
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .save("./out/factor_table/trans_withdraw_bucket")
+      .save(s"${args.outputDir}/factor_table/trans_withdraw_bucket")
 
     val withdrawInBucketCountsRDD = bucketAndCount(withdrawInBucketAmountRDD, "toId", "amount", "account_id")
 
@@ -384,7 +394,7 @@ object FactorGenerationStage extends DatagenStage {
       .option("header", "true")
       .option("delimiter", "|")
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .save("./out/factor_table/withdraw_in_bucket")
+      .save(s"${args.outputDir}/factor_table/withdraw_in_bucket")
     val transferInBucketCountsRDD = bucketAndCount(transferInAmountRDD, "toId", "amount", "account_id")
 
     transferInBucketCountsRDD
@@ -392,7 +402,7 @@ object FactorGenerationStage extends DatagenStage {
       .option("header", "true")
       .option("delimiter", "|")
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .save("./out/factor_table/transfer_in_bucket")
+      .save(s"${args.outputDir}/factor_table/transfer_in_bucket")
 
     val transferOutBucketCountsRDD = bucketAndCount(transferOutAmountRDD, "fromId", "amount", "account_id")
 
@@ -401,7 +411,7 @@ object FactorGenerationStage extends DatagenStage {
       .option("header", "true")
       .option("delimiter", "|")
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .save("./out/factor_table/transfer_out_bucket")
+      .save(s"${args.outputDir}/factor_table/transfer_out_bucket")
 
     val PersonOwnAccountRDD = OwnRDD.select($"personId", $"accountId")
       .groupBy("personId")
@@ -413,7 +423,7 @@ object FactorGenerationStage extends DatagenStage {
       .option("header", "true")
       .option("delimiter", "|")
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .save("./out/factor_table/person_account_list")
+      .save(s"${args.outputDir}/factor_table/person_account_list")
 
     val PersonGuaranteeListRDD = personGuaranteeRDD.select($"fromId", $"toId")
       .groupBy("fromId")
@@ -432,14 +442,14 @@ object FactorGenerationStage extends DatagenStage {
       .option("header", "true")
       .option("delimiter", "|")
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .save("./out/factor_table/person_guarantee_list")
+      .save(s"${args.outputDir}/factor_table/person_guarantee_list")
 
     PersonGuaranteeCount
       .write
       .option("header", "true")
       .option("delimiter", "|")
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .save("./out/factor_table/person_guarantee_count")
+      .save(s"${args.outputDir}/factor_table/person_guarantee_count")
 
     val loanAccountListRDD = depositRDD.groupBy("loanId")
       .agg(coalesce(collect_set("accountId"), array()).alias("account_list"))
@@ -450,7 +460,7 @@ object FactorGenerationStage extends DatagenStage {
       .option("header", "true")
       .option("delimiter", "|")
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .save("./out/factor_table/loan_account_list")
+      .save(s"${args.outputDir}/factor_table/loan_account_list")
 
     val transactionsSumRDD = transferInAmountRDD
       .union(withdrawRDD.select(col("toId"), col("amount").cast("double")))
@@ -465,7 +475,7 @@ object FactorGenerationStage extends DatagenStage {
       .option("header", "true")
       .option("delimiter", "|")
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .save("./out/factor_table/upstream_amount")
+      .save(s"${args.outputDir}/factor_table/upstream_amount")
 
   }
 }
