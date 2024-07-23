@@ -5,7 +5,7 @@ import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 
 public class DatagenContext {
 
-    private static volatile boolean initialized = false;
+    private static transient volatile boolean initialized = false;
 
     public static synchronized void initialize(DatagenConfiguration conf) {
         if (!initialized) {
