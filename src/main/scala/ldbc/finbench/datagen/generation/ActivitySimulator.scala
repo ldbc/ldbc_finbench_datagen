@@ -1,5 +1,6 @@
 package ldbc.finbench.datagen.generation
 
+import ldbc.finbench.datagen.config.DatagenConfiguration
 import ldbc.finbench.datagen.entities.nodes._
 import ldbc.finbench.datagen.generation.generators.{ActivityGenerator, SparkCompanyGenerator, SparkMediumGenerator, SparkPersonGenerator}
 import ldbc.finbench.datagen.generation.serializers.ActivitySerializer
@@ -35,10 +36,10 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession) extends Wri
   private val mediumPartitions = Some(Math.min(Math.ceil(mediumNum.toDouble / blockSize).toLong, parallelism).toInt)
 
 
-  def simulate(): Unit = {
-    val personRdd: RDD[Person] = SparkPersonGenerator(personNum, blockSize, personPartitions)
-    val companyRdd: RDD[Company] = SparkCompanyGenerator(companyNum, blockSize, companyPartitions)
-    val mediumRdd: RDD[Medium] = SparkMediumGenerator(mediumNum, blockSize, mediumPartitions)
+  def simulate(config: DatagenConfiguration): Unit = {
+    val personRdd: RDD[Person] = SparkPersonGenerator(personNum, config, blockSize, personPartitions)
+    val companyRdd: RDD[Company] = SparkCompanyGenerator(companyNum, config, blockSize, companyPartitions)
+    val mediumRdd: RDD[Medium] = SparkMediumGenerator(mediumNum, config, blockSize, mediumPartitions)
     log.info(s"[Simulation] Person RDD partitions: ${personRdd.getNumPartitions}")
     log.info(s"[Simulation] Company RDD partitions: ${companyRdd.getNumPartitions}")
     log.info(s"[Simulation] Medium RDD partitions: ${mediumRdd.getNumPartitions}")

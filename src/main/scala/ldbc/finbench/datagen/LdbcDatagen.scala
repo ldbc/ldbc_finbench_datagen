@@ -1,17 +1,11 @@
 package ldbc.finbench.datagen
 
-import ldbc.finbench.datagen.config.{ConfigParser, DatagenConfiguration}
 import ldbc.finbench.datagen.factors.FactorGenerationStage
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries
-import ldbc.finbench.datagen.generation.{DatagenContext, GenerationStage}
+import ldbc.finbench.datagen.generation.GenerationStage
 import ldbc.finbench.datagen.transformation.TransformationStage
 import ldbc.finbench.datagen.util.{Logging, SparkApp}
-import org.apache.hadoop.fs.{FSDataInputStream, FileSystem, Path}
 import shapeless.lens
-
-import java.net.URI
-import java.util.Properties
-import scala.collection.JavaConverters._
 
 object LdbcDatagen extends SparkApp with Logging {
   val appName = "LDBC FinBench Datagen for Spark"
@@ -120,10 +114,6 @@ object LdbcDatagen extends SparkApp with Logging {
   }
 
   override def run(args: ArgsType): Unit = {
-    // build and initialize the configs
-    val config = buildConfig(args)
-    DatagenContext.initialize(config)
-
     val generationArgs = GenerationStage.Args(
       scaleFactor = args.scaleFactor,
       outputDir = args.outputDir,
@@ -141,29 +131,5 @@ object LdbcDatagen extends SparkApp with Logging {
       log.info("[Main] Starting factoring stage")
       FactorGenerationStage.run(factorArgs)
     }
-  }
-
-
-  private def buildConfig(args: Args): DatagenConfiguration = {
-    val conf = new java.util.HashMap[String, String]
-    val props = new Properties() // Read default values at first
-    props.load(getClass.getClassLoader.getResourceAsStream("params_default.ini"))
-    conf.putAll(props.asScala.asJava)
-
-    for {paramsFile <- args.paramFile} conf.putAll(ConfigParser.readConfig(openPropFileStream(URI.create(paramsFile))))
-
-    for {(k, v) <- args.params} conf.put(k, v)
-
-    for {partitions <- args.numPartitions} conf.put("spark.partitions", partitions.toString) // Following params will overwrite the values in params_default
-    conf.putAll(ConfigParser.scaleFactorConf(args.scaleFactorXml, args.scaleFactor)) // put scale factor conf
-    conf.put("generator.outputDir", args.outputDir)
-    conf.put("generator.format", args.format)
-
-    new DatagenConfiguration(conf)
-  }
-
-  private def openPropFileStream(uri: URI): FSDataInputStream = {
-    val fs = FileSystem.get(uri, spark.sparkContext.hadoopConfiguration)
-    fs.open(new Path(uri.getPath))
   }
 }

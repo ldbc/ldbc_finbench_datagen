@@ -1,10 +1,12 @@
 # project env files
 .DS_Store
 *.iml
+*.log
 target/
 .idea/
 .vscode/
 .metals/
+.bloop/
 
 # local generated data
 out*/
@@ -14,6 +16,9 @@ out*.tar.gz
 # tune
 tune/
 tune.log
+
+# scripts
+scripts/*.log
 
 sf*/
 sf*.tar
