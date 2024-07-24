@@ -40,12 +40,7 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
             p.getCityName
           )
         }
-        spark
-          .createDataFrame(rawPersons)
-          .write
-          .format(sink.format.toString)
-          .options(options)
-          .save((pathPrefix / "person").toString)
+        rawPersons.coalesce(1).saveAsTextFile((pathPrefix / "person").toString)
       },
       SparkUI.jobAsync("Write Person", "Write Person own account") {
         val rawPersonOwnAccount = self.flatMap { p =>
@@ -59,12 +54,9 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
             )
           }
         }
-        spark
-          .createDataFrame(rawPersonOwnAccount)
-          .write
-          .format(sink.format.toString)
-          .options(options)
-          .save((pathPrefix / "personOwnAccount").toString)
+        rawPersonOwnAccount
+          .coalesce(1)
+          .saveAsTextFile((pathPrefix / "personOwnAccount").toString)
       },
       SparkUI.jobAsync("Write Person", "Write Person guarantee") {
         val rawPersonGuarantee = self.flatMap { p =>
@@ -77,12 +69,9 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
             )
           }
         }
-        spark
-          .createDataFrame(rawPersonGuarantee)
-          .write
-          .format(sink.format.toString)
-          .options(options)
-          .save((pathPrefix / "personGuarantee").toString)
+        rawPersonGuarantee
+          .coalesce(1)
+          .saveAsTextFile((pathPrefix / "personGuarantee").toString)
       },
       SparkUI.jobAsync("Write Person", "Write Person apply loan") {
         val rawPersonLoan = self.flatMap { p =>
@@ -96,12 +85,9 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
             )
           }
         }
-        spark
-          .createDataFrame(rawPersonLoan)
-          .write
-          .format(sink.format.toString)
-          .options(options)
-          .save((pathPrefix / "personApplyLoan").toString)
+        rawPersonLoan
+          .coalesce(1)
+          .saveAsTextFile((pathPrefix / "personApplyLoan").toString)
       }
     )
     futures
@@ -126,12 +112,9 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
             c.getUrl
           )
         }
-        spark
-          .createDataFrame(rawCompanies)
-          .write
-          .format(sink.format.toString)
-          .options(options)
-          .save((pathPrefix / "company").toString)
+        rawCompanies
+          .coalesce(1)
+          .saveAsTextFile((pathPrefix / "company").toString)
       },
       SparkUI.jobAsync("Write Company", "Write Company own account") {
         val rawCompanyOwnAccount = self.flatMap { c =>
@@ -145,12 +128,9 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
             )
           }
         }
-        spark
-          .createDataFrame(rawCompanyOwnAccount)
-          .write
-          .format(sink.format.toString)
-          .options(options)
-          .save((pathPrefix / "companyOwnAccount").toString)
+        rawCompanyOwnAccount
+          .coalesce(1)
+          .saveAsTextFile((pathPrefix / "companyOwnAccount").toString)
       },
       SparkUI.jobAsync("Write Company", "Write Company guarantee") {
         val rawCompanyGuarantee = self.flatMap { c =>
@@ -163,12 +143,9 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
             )
           }
         }
-        spark
-          .createDataFrame(rawCompanyGuarantee)
-          .write
-          .format(sink.format.toString)
-          .options(options)
-          .save((pathPrefix / "companyGuarantee").toString)
+        rawCompanyGuarantee
+          .coalesce(1)
+          .saveAsTextFile((pathPrefix / "companyGuarantee").toString)
       },
       SparkUI.jobAsync("Write Company", "Write Company apply loan") {
         val rawCompanyLoan = self.flatMap { c =>
@@ -182,12 +159,9 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
             )
           }
         }
-        spark
-          .createDataFrame(rawCompanyLoan)
-          .write
-          .format(sink.format.toString)
-          .options(options)
-          .save((pathPrefix / "companyApplyLoan").toString)
+        rawCompanyLoan
+          .coalesce(1)
+          .saveAsTextFile((pathPrefix / "companyApplyLoan").toString)
       }
     )
     futures
@@ -209,12 +183,7 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
             m.getRiskLevel
           )
         }
-        spark
-          .createDataFrame(rawMedium)
-          .write
-          .format(sink.format.toString)
-          .options(options)
-          .save((pathPrefix / "medium").toString)
+        rawMedium.coalesce(1).saveAsTextFile((pathPrefix / "medium").toString)
 
         val rawSignIn = signIns.map { si: SignIn =>
           SignInRaw(
@@ -227,12 +196,7 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
             si.getLocation
           )
         }
-        spark
-          .createDataFrame(rawSignIn)
-          .write
-          .format(sink.format.toString)
-          .options(options)
-          .save((pathPrefix / "signIn").toString)
+        rawSignIn.coalesce(1).saveAsTextFile((pathPrefix / "signIn").toString)
       }
     )
     futures
@@ -262,12 +226,7 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
             a.getOwnerType.toString
           )
         }
-        spark
-          .createDataFrame(rawAccount)
-          .write
-          .format(sink.format.toString)
-          .options(options)
-          .save((pathPrefix / "account").toString)
+        rawAccount.coalesce(1).saveAsTextFile((pathPrefix / "account").toString)
 
         val rawTransfer = transfers.map { t =>
           TransferRaw(
@@ -284,12 +243,9 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
             t.getGoodsType
           )
         }
-        spark
-          .createDataFrame(rawTransfer)
-          .write
-          .format(sink.format.toString)
-          .options(options)
-          .save((pathPrefix / "transfer").toString)
+        rawTransfer
+          .coalesce(1)
+          .saveAsTextFile((pathPrefix / "transfer").toString)
       }
     )
     futures
@@ -313,12 +269,9 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
             w.isExplicitlyDeleted
           )
         }
-        spark
-          .createDataFrame(rawWithdraw)
-          .write
-          .format(sink.format.toString)
-          .options(options)
-          .save((pathPrefix / "withdraw").toString)
+        rawWithdraw
+          .coalesce(1)
+          .saveAsTextFile((pathPrefix / "withdraw").toString)
       }
     )
     futures
@@ -330,36 +283,30 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
 
     val futures = Seq(
       SparkUI.jobAsync("Write invest", "Write Person Invest") {
-        val personInvest = self.filter(_.isLeft).map(_.left.get)
-        spark
-          .createDataFrame(personInvest.map { pic =>
-            PersonInvestCompanyRaw(
-              pic.getPerson.getPersonId,
-              pic.getCompany.getCompanyId,
-              pic.getCreationDate,
-              pic.getRatio
-            )
-          })
-          .write
-          .format(sink.format.toString)
-          .options(options)
-          .save((pathPrefix / "personInvest").toString)
+        val personInvest = self.filter(_.isLeft).map(_.left.get).map { pic =>
+          PersonInvestCompanyRaw(
+            pic.getPerson.getPersonId,
+            pic.getCompany.getCompanyId,
+            pic.getCreationDate,
+            pic.getRatio
+          )
+        }
+        personInvest
+          .coalesce(1)
+          .saveAsTextFile((pathPrefix / "personInvest").toString)
       },
       SparkUI.jobAsync("Write invest", "Write Company Invest") {
-        val companyInvest = self.filter(_.isRight).map(_.right.get)
-        spark
-          .createDataFrame(companyInvest.map { cic =>
-            CompanyInvestCompanyRaw(
-              cic.getFromCompany.getCompanyId,
-              cic.getToCompany.getCompanyId,
-              cic.getCreationDate,
-              cic.getRatio
-            )
-          })
-          .write
-          .format(sink.format.toString)
-          .options(options)
-          .save((pathPrefix / "companyInvest").toString)
+        val companyInvest = self.filter(_.isRight).map(_.right.get).map { cic =>
+          CompanyInvestCompanyRaw(
+            cic.getFromCompany.getCompanyId,
+            cic.getToCompany.getCompanyId,
+            cic.getCreationDate,
+            cic.getRatio
+          )
+        }
+        companyInvest
+          .coalesce(1)
+          .saveAsTextFile((pathPrefix / "companyInvest").toString)
       }
     )
     futures
@@ -384,29 +331,21 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
             f"${l.getInterestRate}%.3f"
           )
         }
-        spark
-          .createDataFrame(rawLoan)
-          .write
-          .format(sink.format.toString)
-          .options(options)
-          .save((pathPrefix / "loan").toString)
+        rawLoan.coalesce(1).saveAsTextFile((pathPrefix / "loan").toString)
 
-        val rawDeposit = deposits.map { d: Deposit =>
-          DepositRaw(
-            d.getLoan.getLoanId,
-            d.getAccount.getAccountId,
-            d.getCreationDate,
-            d.getDeletionDate,
-            formattedDouble(d.getAmount),
-            d.isExplicitlyDeleted
-          )
-        }
-        spark
-          .createDataFrame(rawDeposit)
-          .write
-          .format(sink.format.toString)
-          .options(options)
-          .save((pathPrefix / "deposit").toString)
+        val rawDeposit = deposits
+          .map { d: Deposit =>
+            DepositRaw(
+              d.getLoan.getLoanId,
+              d.getAccount.getAccountId,
+              d.getCreationDate,
+              d.getDeletionDate,
+              formattedDouble(d.getAmount),
+              d.isExplicitlyDeleted
+            )
+          }
+          .map(_.toString)
+        rawDeposit.saveAsTextFile((pathPrefix / "deposit").toString)
 
         val rawRepay = repays.map { r: Repay =>
           RepayRaw(
@@ -418,12 +357,7 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
             r.isExplicitlyDeleted
           )
         }
-        spark
-          .createDataFrame(rawRepay)
-          .write
-          .format(sink.format.toString)
-          .options(options)
-          .save((pathPrefix / "repay").toString)
+        rawRepay.coalesce(1).saveAsTextFile((pathPrefix / "repay").toString)
 
         val rawLoanTransfer = loantransfers.map { t: Transfer =>
           TransferRaw(
@@ -440,12 +374,9 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
             t.getGoodsType
           )
         }
-        spark
-          .createDataFrame(rawLoanTransfer)
-          .write
-          .format(sink.format.toString)
-          .options(options)
-          .save((pathPrefix / "loantransfer").toString)
+        rawLoanTransfer
+          .coalesce(1)
+          .saveAsTextFile((pathPrefix / "loantransfer").toString)
       }
     )
     futures

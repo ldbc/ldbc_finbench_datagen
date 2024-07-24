@@ -60,6 +60,13 @@ def run_local(
 
     final_spark_conf = {
         **({'spark.default.parallelism': str(parallelism)} if parallelism else {}),
+        **({'spark.shuffle.compress': 'true'}),
+        **({'spark.shuffle.spill.compress': 'true'}),
+        **({'spark.serializer': 'org.apache.spark.serializer.KryoSerializer'}),
+        **({'spark.executor.extraJavaOptions': '-XX:+UseG1GC'}),
+        **({'spark.storage.memoryMapThreshold': '512m'}),
+        **({'spark.sql.inMemoryColumnarStorage.compressed': 'true'}),
+        **({'spark.sql.inMemoryColumnarStorage.batchSize': '1000000'}),
         **spark_conf
     }
 

@@ -17,7 +17,11 @@ object raw {
       birthday: Long,
       country: String,
       city: String
-  )
+  ) {
+    override def toString: String = {
+      s"$id|$createTime|$name|$isBlocked|$gender|$birthday|$country|$city"
+    }
+  }
 
   // define Account entity
   case class AccountRaw(
@@ -36,7 +40,11 @@ object raw {
       OutDegree: Long,
       isExplicitDeleted: Boolean,
       Owner: String
-  )
+  ) {
+    override def toString: String = {
+      s"$id|$createTime|$deleteTime|$isBlocked|${`type`}|$nickname|$phonenum|$email|$freqLoginType|$lastLoginTime|$accountLevel|$inDegree|$OutDegree|$isExplicitDeleted|$Owner"
+    }
+  }
 
   // define Company entity
   case class CompanyRaw(
@@ -49,7 +57,11 @@ object raw {
       business: String,
       description: String,
       url: String
-  )
+  ) {
+    override def toString: String = {
+      s"$id|$createTime|$name|$isBlocked|$country|$city|$business|$description|$url"
+    }
+  }
 
   // define Loan entity
   case class LoanRaw(
@@ -59,7 +71,11 @@ object raw {
       balance: String,
       usage: String,
       interestRate: String
-  )
+  ) {
+    override def toString: String = {
+      s"$id|$createTime|$loanAmount|$balance|$usage|$interestRate"
+    }
+  }
 
   // define Medium entity
   case class MediumRaw(
@@ -69,7 +85,11 @@ object raw {
       isBlocked: Boolean,
       lastLogin: Long,
       riskLevel: String,
-  )
+  ) {
+    override def toString: String = {
+      s"$id|$createTime|${`type`}|$isBlocked|$lastLogin|$riskLevel"
+    }
+  }
 
   // define PersonApplyLoan relationship
   case class PersonApplyLoanRaw(
@@ -78,7 +98,11 @@ object raw {
       loanAmount: String,
       createTime: Long,
       org: String
-  )
+  ) {
+    override def toString: String = {
+      s"$personId|$loanId|$loanAmount|$createTime|$org"
+    }
+  }
 
   // define CompanyApplyLoan relationship
   case class CompanyApplyLoanRaw(
@@ -87,7 +111,11 @@ object raw {
       loanAmount: String,
       createTime: Long,
       org: String
-  )
+  ) {
+    override def toString: String = {
+      s"$companyId|$loanId|$loanAmount|$createTime|$org"
+    }
+  }
 
   // define PersonInvestCompany relationship
   case class PersonInvestCompanyRaw(
@@ -95,7 +123,11 @@ object raw {
       companyId: Long,
       createTime: Long,
       ratio: Double
-  )
+  ) {
+    override def toString: String = {
+      s"$investorId|$companyId|$createTime|$ratio"
+    }
+  }
 
   // define CompanyInvestCompany relationship
   case class CompanyInvestCompanyRaw(
@@ -103,7 +135,11 @@ object raw {
       companyId: Long,
       createTime: Long,
       ratio: Double
-  )
+  ) {
+    override def toString: String = {
+      s"$investorId|$companyId|$createTime|$ratio"
+    }
+  }
 
   // define PersonGuaranteePerson relationship
   case class PersonGuaranteePersonRaw(
@@ -111,7 +147,11 @@ object raw {
       toId: Long,
       createTime: Long,
       relation: String
-  )
+  ) {
+    override def toString: String = {
+      s"$fromId|$toId|$createTime|$relation"
+    }
+  }
 
   // define CompanyGuarantee relationship
   case class CompanyGuaranteeCompanyRaw(
@@ -119,7 +159,11 @@ object raw {
       toId: Long,
       createTime: Long,
       relation: String
-  )
+  ) {
+    override def toString: String = {
+      s"$fromId|$toId|$createTime|$relation"
+    }
+  }
 
   //define PersonOwnAccount relationship
   case class PersonOwnAccountRaw(
@@ -128,7 +172,11 @@ object raw {
       createTime: Long,
       deleteTime: Long,
       isExplicitDeleted: Boolean
-  )
+  ) {
+    override def toString: String = {
+      s"$personId|$accountId|$createTime|$deleteTime|$isExplicitDeleted"
+    }
+  }
 
   // define CompanyOwnAccount relationship
   case class CompanyOwnAccountRaw(
@@ -137,7 +185,11 @@ object raw {
       createTime: Long,
       deleteTime: Long,
       isExplicitDeleted: Boolean
-  )
+  ) {
+    override def toString: String = {
+      s"$companyId|$accountId|$createTime|$deleteTime|$isExplicitDeleted"
+    }
+  }
 
   // define Transfer relationship
   case class TransferRaw(
@@ -152,7 +204,11 @@ object raw {
       comment: String,
       payType: String,
       goodsType: String
-  )
+  ) {
+    override def toString: String = {
+      s"$fromId|$toId|$multiplicityId|$createTime|$deleteTime|$amount|$isExplicitDeleted|$orderNum|$comment|$payType|$goodsType"
+    }
+  }
 
   // define Withdraw relationship
   case class WithdrawRaw(
@@ -165,7 +221,11 @@ object raw {
       deleteTime: Long,
       amount: String,
       isExplicitDeleted: Boolean
-  )
+  ) {
+    override def toString: String = {
+      s"$fromId|$toId|$fromType|$toType|$multiplicityId|$createTime|$deleteTime|$amount|$isExplicitDeleted"
+    }
+  }
 
   // define Repay relationship
   case class RepayRaw(
@@ -175,7 +235,11 @@ object raw {
       deleteTime: Long,
       amount: String,
       isExplicitDeleted: Boolean
-  )
+  ) {
+    override def toString: String = {
+      s"$accountId|$loanId|$createTime|$deleteTime|$amount|$isExplicitDeleted"
+    }
+  }
 
   // define Deposit relationship
   case class DepositRaw(
@@ -185,7 +249,11 @@ object raw {
       deleteTime: Long,
       amount: String,
       isExplicitDeleted: Boolean
-  )
+  ) {
+    override def toString: String = {
+      s"$loanId|$accountId|$createTime|$deleteTime|$amount|$isExplicitDeleted"
+    }
+  }
 
   // define SignIn relationship
   case class SignInRaw(
@@ -196,5 +264,9 @@ object raw {
       deleteTime: Long,
       isExplicitDeleted: Boolean,
       location: String
-  )
+  ) {
+    override def toString: String = {
+      s"$mediumId|$accountId|$multiplicityId|$createTime|$deleteTime|$isExplicitDeleted|$location"
+    }
+  }
 }
