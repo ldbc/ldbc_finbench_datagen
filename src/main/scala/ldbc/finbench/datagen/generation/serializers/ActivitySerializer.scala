@@ -47,7 +47,7 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
           .options(options)
           .save((pathPrefix / "person").toString)
       },
-      SparkUI.jobAsync("Write Person", "Write Person own account") {
+      SparkUI.jobAsync("Write Person own account", "Write Person own account") {
         val rawPersonOwnAccount = self.flatMap { p =>
           p.getPersonOwnAccounts.asScala.map { poa =>
             PersonOwnAccountRaw(
@@ -66,7 +66,7 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
           .options(options)
           .save((pathPrefix / "personOwnAccount").toString)
       },
-      SparkUI.jobAsync("Write Person", "Write Person guarantee") {
+      SparkUI.jobAsync("Write Person guarantee", "Write Person guarantee") {
         val rawPersonGuarantee = self.flatMap { p =>
           p.getGuaranteeSrc.asScala.map { pgp: PersonGuaranteePerson =>
             PersonGuaranteePersonRaw(
@@ -84,7 +84,7 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
           .options(options)
           .save((pathPrefix / "personGuarantee").toString)
       },
-      SparkUI.jobAsync("Write Person", "Write Person apply loan") {
+      SparkUI.jobAsync("Write Person apply loan", "Write Person apply loan") {
         val rawPersonLoan = self.flatMap { p =>
           p.getPersonApplyLoans.asScala.map { pal: PersonApplyLoan =>
             PersonApplyLoanRaw(
@@ -133,26 +133,27 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
           .options(options)
           .save((pathPrefix / "company").toString)
       },
-      SparkUI.jobAsync("Write Company", "Write Company own account") {
-        val rawCompanyOwnAccount = self.flatMap { c =>
-          c.getCompanyOwnAccounts.asScala.map { coa =>
-            CompanyOwnAccountRaw(
-              c.getCompanyId,
-              coa.getAccount.getAccountId,
-              coa.getCreationDate,
-              coa.getDeletionDate,
-              coa.isExplicitlyDeleted
-            )
+      SparkUI
+        .jobAsync("Write Company own account", "Write Company own account") {
+          val rawCompanyOwnAccount = self.flatMap { c =>
+            c.getCompanyOwnAccounts.asScala.map { coa =>
+              CompanyOwnAccountRaw(
+                c.getCompanyId,
+                coa.getAccount.getAccountId,
+                coa.getCreationDate,
+                coa.getDeletionDate,
+                coa.isExplicitlyDeleted
+              )
+            }
           }
-        }
-        spark
-          .createDataFrame(rawCompanyOwnAccount)
-          .write
-          .format(sink.format.toString)
-          .options(options)
-          .save((pathPrefix / "companyOwnAccount").toString)
-      },
-      SparkUI.jobAsync("Write Company", "Write Company guarantee") {
+          spark
+            .createDataFrame(rawCompanyOwnAccount)
+            .write
+            .format(sink.format.toString)
+            .options(options)
+            .save((pathPrefix / "companyOwnAccount").toString)
+        },
+      SparkUI.jobAsync("Write Company guarantee", "Write Company guarantee") {
         val rawCompanyGuarantee = self.flatMap { c =>
           c.getGuaranteeSrc.asScala.map { cgc: CompanyGuaranteeCompany =>
             CompanyGuaranteeCompanyRaw(
@@ -170,7 +171,7 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
           .options(options)
           .save((pathPrefix / "companyGuarantee").toString)
       },
-      SparkUI.jobAsync("Write Company", "Write Company apply loan") {
+      SparkUI.jobAsync("Write Company apply loan", "Write Company apply loan") {
         val rawCompanyLoan = self.flatMap { c =>
           c.getCompanyApplyLoans.asScala.map { cal: CompanyApplyLoan =>
             CompanyApplyLoanRaw(
@@ -198,7 +199,7 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
   ): Seq[Future[Unit]] = {
 
     val futures = Seq(
-      SparkUI.jobAsync("Write media", "Write Medium") {
+      SparkUI.jobAsync("Write medum", "Write Medium") {
         val rawMedium = media.map { m: Medium =>
           MediumRaw(
             m.getMediumId,
@@ -215,7 +216,8 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
           .format(sink.format.toString)
           .options(options)
           .save((pathPrefix / "medium").toString)
-
+      },
+      SparkUI.jobAsync("Write media signin", "Write Medium sign in") {
         val rawSignIn = signIns.map { si: SignIn =>
           SignInRaw(
             si.getMedium.getMediumId,
@@ -268,7 +270,8 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
           .format(sink.format.toString)
           .options(options)
           .save((pathPrefix / "account").toString)
-
+      },
+      SparkUI.jobAsync("Write Account transfer", "Write Account transfer") {
         val rawTransfer = transfers.map { t =>
           TransferRaw(
             t.getFromAccount.getAccountId,
@@ -329,7 +332,7 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
   )(implicit spark: SparkSession): Seq[Future[Unit]] = {
 
     val futures = Seq(
-      SparkUI.jobAsync("Write invest", "Write Person Invest") {
+      SparkUI.jobAsync("Write person invest", "Write Person Invest") {
         val personInvest = self.filter(_.isLeft).map(_.left.get)
         spark
           .createDataFrame(personInvest.map { pic =>
@@ -345,7 +348,7 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
           .options(options)
           .save((pathPrefix / "personInvest").toString)
       },
-      SparkUI.jobAsync("Write invest", "Write Company Invest") {
+      SparkUI.jobAsync("Write company invest", "Write Company Invest") {
         val companyInvest = self.filter(_.isRight).map(_.right.get)
         spark
           .createDataFrame(companyInvest.map { cic =>
@@ -390,7 +393,8 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
           .format(sink.format.toString)
           .options(options)
           .save((pathPrefix / "loan").toString)
-
+      },
+      SparkUI.jobAsync("Write loan desposit", "Write Loan desposit") {
         val rawDeposit = deposits.map { d: Deposit =>
           DepositRaw(
             d.getLoan.getLoanId,
@@ -407,7 +411,8 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
           .format(sink.format.toString)
           .options(options)
           .save((pathPrefix / "deposit").toString)
-
+      },
+      SparkUI.jobAsync("Write loan repay", "Write Loan repay") {
         val rawRepay = repays.map { r: Repay =>
           RepayRaw(
             r.getAccount.getAccountId,
@@ -424,7 +429,8 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
           .format(sink.format.toString)
           .options(options)
           .save((pathPrefix / "repay").toString)
-
+      },
+      SparkUI.jobAsync("Write loan transfer", "Write Loan transfer") {
         val rawLoanTransfer = loantransfers.map { t: Transfer =>
           TransferRaw(
             t.getFromAccount.getAccountId,

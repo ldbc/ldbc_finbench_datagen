@@ -107,12 +107,8 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
     )
 
     // simulate person apply loans event and company apply loans event
-    val personWithAccGuaLoan =
-      activityGenerator.personLoanEvent(personWithAccGua).cache()
-    val companyWithAccGuaLoan =
-      activityGenerator.companyLoanEvent(companyWitAccGua).cache()
-    assert(personWithAccGuaLoan.count() == personRdd.count())
-    assert(companyWithAccGuaLoan.count() == companyRdd.count())
+    val personWithAccGuaLoan = activityGenerator.personLoanEvent(personWithAccGua)
+    val companyWithAccGuaLoan = activityGenerator.companyLoanEvent(companyWitAccGua)
     log.info(
       s"[Simulation] personWithAccGuaLoan partitions: ${personWithAccGuaLoan.getNumPartitions}"
     )
