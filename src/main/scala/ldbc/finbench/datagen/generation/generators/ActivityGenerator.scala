@@ -171,9 +171,7 @@ class ActivityGenerator()(implicit spark: SparkSession)
   }
 
   def personGuaranteeEvent(personRDD: RDD[Person]): RDD[Person] = {
-    val personGuaranteeEvent = new PersonGuaranteeEvent(
-      DatagenParams.personGuaranteeFraction
-    )
+    val personGuaranteeEvent = new PersonGuaranteeEvent
     personRDD.mapPartitions(persons => {
       val personsWithGua = personGuaranteeEvent.personGuarantee(
         persons.toList.asJava,
@@ -184,9 +182,7 @@ class ActivityGenerator()(implicit spark: SparkSession)
   }
 
   def companyGuaranteeEvent(companyRDD: RDD[Company]): RDD[Company] = {
-    val companyGuaranteeEvent = new CompanyGuaranteeEvent(
-      DatagenParams.companyGuaranteeFraction
-    )
+    val companyGuaranteeEvent = new CompanyGuaranteeEvent
     companyRDD.mapPartitions(companies => {
       val companyWithGua = companyGuaranteeEvent.companyGuarantee(
         companies.toList.asJava,
@@ -197,7 +193,7 @@ class ActivityGenerator()(implicit spark: SparkSession)
   }
 
   def personLoanEvent(personRDD: RDD[Person]): RDD[Person] = {
-    val personLoanEvent = new PersonLoanEvent(DatagenParams.personLoanFraction)
+    val personLoanEvent = new PersonLoanEvent
     personRDD.mapPartitions(persons => {
       val personsWithLoan = personLoanEvent.personLoan(
         persons.toList.asJava,
@@ -209,9 +205,7 @@ class ActivityGenerator()(implicit spark: SparkSession)
   }
 
   def companyLoanEvent(companyRDD: RDD[Company]): RDD[Company] = {
-    val companyLoanEvent = new CompanyLoanEvent(
-      DatagenParams.companyLoanFraction
-    )
+    val companyLoanEvent = new CompanyLoanEvent
     companyRDD.mapPartitions(companies => {
       val companyWithLoan = companyLoanEvent.companyLoan(
         companies.toList.asJava,
@@ -261,7 +255,7 @@ class ActivityGenerator()(implicit spark: SparkSession)
 
   // TODO: rewrite it with account centric
   def withdrawEvent(accountRDD: RDD[Account]): RDD[Withdraw] = {
-    val withdrawEvent = new WithdrawEvent(DatagenParams.accountWithdrawFraction)
+    val withdrawEvent = new WithdrawEvent
     val cards =
       accountRDD.filter(_.getType == "debit card").collect().toList.asJava
     accountRDD.mapPartitions(sources => {

@@ -19,8 +19,8 @@ public class WithdrawEvent implements Serializable {
     private final Map<String, AtomicLong> multiplicityMap;
     private final double probWithdraw;
 
-    public WithdrawEvent(double probWithdraw) {
-        this.probWithdraw = probWithdraw;
+    public WithdrawEvent() {
+        this.probWithdraw = DatagenParams.accountWithdrawFraction;
         randomFarm = new RandomGeneratorFarm();
         randIndex = new Random(DatagenParams.defaultSeed);
         amountRandom = new Random(DatagenParams.defaultSeed);
