@@ -42,18 +42,16 @@ public class LoanGenerator implements Serializable {
         randomFarm.resetRandomGenerators(seed);
     }
 
-    // Loan createDate is set when applying for a loan
     public Loan generateLoan(long creationDate, String type, int blockId) {
         long loanId = composeLoanId(nextId++, creationDate, type, blockId);
         double loanAmount =
             randomFarm.get(RandomGeneratorFarm.Aspect.LOAN_AMOUNT).nextInt((int) (loanAmountMax - loanAmountMin))
                 + loanAmountMin;
-        long maxDegree = Math.min(degreeDistribution.nextDegree(), DatagenParams.tsfMaxNumDegree);
+        long maxDegree = Math.min(degreeDistribution.nextDegree(), DatagenParams.transferMaxDegree);
         String usage =
             Dictionaries.loanUsages.getUniformDistRandomText(randomFarm.get(RandomGeneratorFarm.Aspect.LOAN_USAGE));
         double interestRate =
             randomFarm.get(RandomGeneratorFarm.Aspect.LOAN_INTEREST_RATE).nextDouble() * DatagenParams.maxLoanInterest;
-        // Balance equals to the quota in a new loan
         return new Loan(loanId, loanAmount, loanAmount, creationDate, maxDegree, usage, interestRate);
     }
 

@@ -1,7 +1,6 @@
 package ldbc.finbench.datagen.generation.events;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import ldbc.finbench.datagen.entities.edges.CompanyApplyLoan;

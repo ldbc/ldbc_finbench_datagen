@@ -63,7 +63,7 @@ public class AccountGenerator implements Serializable {
         account.setAccountId(accountId);
 
         // Set inDegree
-        long maxInDegree = Math.min(degreeDistribution.nextDegree(), DatagenParams.tsfMaxNumDegree);
+        long maxInDegree = Math.min(degreeDistribution.nextDegree(), DatagenParams.transferMaxDegree);
         account.setMaxInDegree(maxInDegree);
         account.setRawMaxInDegree(maxInDegree);
 
