@@ -200,7 +200,7 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
       persons: RDD[Person],
       companies: RDD[Company]
   ): RDD[Loan] = {
-    val personLoans = persons.flatMap(person => person.getLoans.asScala)
+    val personLoans = persons.flatMap(person => person.getPersonApplyLoans.asScala.map(_.getLoan))
     val companyLoans = companies.flatMap(company => company.getCompanyApplyLoans.asScala.map(_.getLoan))
     personLoans.union(companyLoans)
   }

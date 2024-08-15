@@ -26,7 +26,6 @@ public class PersonApplyLoan implements DynamicActivity, Serializable {
 
     public static void createPersonApplyLoan(long creationDate, Person person, Loan loan, String organization) {
         PersonApplyLoan personApplyLoan = new PersonApplyLoan(person, loan, creationDate, 0, false, organization);
-        person.getLoans().add(loan);
         person.getPersonApplyLoans().add(personApplyLoan);
         loan.setOwnerType(PersonOrCompany.PERSON);
         loan.setOwnerPerson(person);
