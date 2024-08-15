@@ -17,7 +17,7 @@ public class CompanyGuaranteeEvent implements Serializable {
     private final Random randIndex;
     private final Random targetsToGuaranteeRandom;
 
-    public CompanyGuaranteeEvent()  {
+    public CompanyGuaranteeEvent() {
         randomFarm = new RandomGeneratorFarm();
         randIndex = new Random(DatagenParams.defaultSeed);
         targetsToGuaranteeRandom = new Random(DatagenParams.defaultSeed);
@@ -34,8 +34,8 @@ public class CompanyGuaranteeEvent implements Serializable {
         resetState(blockId);
 
         Collections.shuffle(companies, randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_GURANTEE_SHUFFLE));
-        int numCompaniesToTake = (int)(companies.size() * DatagenParams.companyGuaranteeFraction);
-        for(int i = 0; i < numCompaniesToTake; i++) {
+        int numCompaniesToTake = (int) (companies.size() * DatagenParams.companyGuaranteeFraction);
+        for (int i = 0; i < numCompaniesToTake; i++) {
             Company from = companies.get(i);
             int targetsToGuarantee = targetsToGuaranteeRandom.nextInt(DatagenParams.maxTargetsToGuarantee);
             for (int j = 0; j < targetsToGuarantee; j++) {
