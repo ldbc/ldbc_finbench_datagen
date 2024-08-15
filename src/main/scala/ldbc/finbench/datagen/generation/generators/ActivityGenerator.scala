@@ -158,7 +158,7 @@ class ActivityGenerator()(implicit spark: SparkSession)
       .asJava
 
     val signInEvent = new SignInEvent
-    val signRels = mediumRDD.mapPartitionsWithIndex((index, mediums) => {
+    mediumRDD.mapPartitionsWithIndex((index, mediums) => {
       mediums.flatMap(medium => {
         signInEvent
           .signIn(
@@ -169,7 +169,6 @@ class ActivityGenerator()(implicit spark: SparkSession)
           .asScala
       })
     })
-    signRels
   }
 
   def personGuaranteeEvent(personRDD: RDD[Person]): RDD[Person] = {
@@ -257,17 +256,26 @@ class ActivityGenerator()(implicit spark: SparkSession)
 
   // TODO: rewrite it with account centric
   def withdrawEvent(accountRDD: RDD[Account]): RDD[Withdraw] = {
-    val withdrawEvent = new WithdrawEvent
     val cards =
       accountRDD.filter(_.getType == "debit card").collect().toList.asJava
-    accountRDD.mapPartitions(sources => {
-      val withdrawList = withdrawEvent.withdraw(
-        sources.toList.asJava,
-        cards,
-        TaskContext.getPartitionId()
+    val withdrawEvent = new WithdrawEvent
+    accountRDD
+      .sample(
+        withReplacement = false,
+        DatagenParams.accountWithdrawFraction,
+        sampleRandom.nextLong()
       )
-      for { withdraw <- withdrawList.iterator().asScala } yield withdraw
-    })
+      .mapPartitionsWithIndex((index, sources) => {
+        sources.flatMap(source => {
+          withdrawEvent
+            .withdraw(
+              source,
+              cards,
+              index
+            )
+            .asScala
+        })
+      })
   }
 
   // TODO: rewrite it with loan centric

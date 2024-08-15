@@ -67,6 +67,7 @@ public class RandomGeneratorFarm implements Serializable {
         // edge: withdraw
         ACCOUNT_WHETHER_WITHDRAW,
         WITHDRAW_DATE,
+        WITHDRAW_AMOUNT,
 
         // edge: signin
         SIGNIN_DATE,
