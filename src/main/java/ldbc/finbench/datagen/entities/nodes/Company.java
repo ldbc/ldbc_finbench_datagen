@@ -2,6 +2,7 @@ package ldbc.finbench.datagen.entities.nodes;
 
 import java.io.Serializable;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import ldbc.finbench.datagen.entities.edges.CompanyApplyLoan;
@@ -22,15 +23,15 @@ public class Company implements Serializable {
     private String url;
     private final List<CompanyOwnAccount> companyOwnAccounts;
     private final List<CompanyInvestCompany> companyInvestCompanies;
-    private final HashSet<CompanyGuaranteeCompany> guaranteeSrc;
-    private final HashSet<CompanyGuaranteeCompany> guaranteeDst;
+    private final LinkedHashSet<CompanyGuaranteeCompany> guaranteeSrc;
+    private final LinkedHashSet<CompanyGuaranteeCompany> guaranteeDst;
     private final List<CompanyApplyLoan> companyApplyLoans;
 
     public Company() {
         companyOwnAccounts = new LinkedList<>();
         companyInvestCompanies = new LinkedList<>();
-        guaranteeSrc = new HashSet<>();
-        guaranteeDst = new HashSet<>();
+        guaranteeSrc = new LinkedHashSet<>();
+        guaranteeDst = new LinkedHashSet<>();
         companyApplyLoans = new LinkedList<>();
     }
 
