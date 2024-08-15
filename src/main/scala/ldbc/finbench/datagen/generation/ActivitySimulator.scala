@@ -23,7 +23,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 // TODO:
 //  - refactor using common GraphDef to make the code less verbose
-//  - repartition with the partition option
 class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
     extends Writer[RawSink]
     with Serializable
@@ -105,8 +104,10 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
     )
 
     // simulate person apply loans event and company apply loans event
-    val personWithAccGuaLoan = activityGenerator.personLoanEvent(personWithAccGua)
-    val companyWithAccGuaLoan = activityGenerator.companyLoanEvent(companyWitAccGua)
+    val personWithAccGuaLoan =
+      activityGenerator.personLoanEvent(personWithAccGua)
+    val companyWithAccGuaLoan =
+      activityGenerator.companyLoanEvent(companyWitAccGua)
     log.info(
       s"[Simulation] personWithAccGuaLoan partitions: ${personWithAccGuaLoan.getNumPartitions}"
     )
@@ -200,8 +201,12 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
       persons: RDD[Person],
       companies: RDD[Company]
   ): RDD[Loan] = {
-    val personLoans = persons.flatMap(person => person.getPersonApplyLoans.asScala.map(_.getLoan))
-    val companyLoans = companies.flatMap(company => company.getCompanyApplyLoans.asScala.map(_.getLoan))
+    val personLoans = persons.flatMap(person =>
+      person.getPersonApplyLoans.asScala.map(_.getLoan)
+    )
+    val companyLoans = companies.flatMap(company =>
+      company.getCompanyApplyLoans.asScala.map(_.getLoan)
+    )
     personLoans.union(companyLoans)
   }
 }

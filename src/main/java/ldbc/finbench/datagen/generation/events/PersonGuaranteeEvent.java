@@ -34,7 +34,7 @@ public class PersonGuaranteeEvent implements Serializable {
             Person from = persons.get(pickPersonRand.nextInt(persons.size()));
             int targetsToGuarantee = numGuaranteesRand.nextInt(DatagenParams.maxTargetsToGuarantee);
             for (int j = 0; j < targetsToGuarantee; j++) {
-                Person to = persons.get(randIndex.nextInt(persons.size())); // Choose a random person
+                Person to = persons.get(randIndex.nextInt(persons.size()));
                 if (from.canGuarantee(to)) {
                     PersonGuaranteePerson.createPersonGuaranteePerson(randomFarm, from, to);
                 }

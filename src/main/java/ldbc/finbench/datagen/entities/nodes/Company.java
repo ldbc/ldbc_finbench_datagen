@@ -20,11 +20,11 @@ public class Company implements Serializable {
     private String business;
     private String description;
     private String url;
-    private List<CompanyOwnAccount> companyOwnAccounts;
-    private List<CompanyInvestCompany> companyInvestCompanies;
-    private HashSet<CompanyGuaranteeCompany> guaranteeSrc;
-    private HashSet<CompanyGuaranteeCompany> guaranteeDst;
-    private List<CompanyApplyLoan> companyApplyLoans;
+    private final List<CompanyOwnAccount> companyOwnAccounts;
+    private final List<CompanyInvestCompany> companyInvestCompanies;
+    private final HashSet<CompanyGuaranteeCompany> guaranteeSrc;
+    private final HashSet<CompanyGuaranteeCompany> guaranteeDst;
+    private final List<CompanyApplyLoan> companyApplyLoans;
 
     public Company() {
         companyOwnAccounts = new LinkedList<>();
@@ -50,11 +50,7 @@ public class Company implements Serializable {
 
     public boolean canGuarantee(Company to) {
         // can not: equal, guarantee the same company twice, guarantee cyclically
-        if (this.equals(to) || guaranteeSrc.contains(to) || guaranteeDst.contains(to)) {
-            return false;
-        }
-
-        return true;
+        return !this.equals(to) && !guaranteeSrc.contains(to) && !guaranteeDst.contains(to);
     }
 
     public long getCompanyId() {
