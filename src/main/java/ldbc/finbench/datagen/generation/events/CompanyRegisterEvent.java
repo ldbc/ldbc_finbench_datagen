@@ -25,13 +25,13 @@ public class CompanyRegisterEvent implements Serializable {
         resetState(blockId);
         accountGenerator.resetState(blockId);
         Random numAccRand = randomFarm.get(RandomGeneratorFarm.Aspect.NUM_ACCOUNTS_PER_COMPANY);
-        companies.forEach(company -> {
+        for (Company company : companies) {
             int numAccounts = numAccRand.nextInt(DatagenParams.maxAccountsPerOwner);
             for (int i = 0; i < Math.max(1, numAccounts); i++) {
                 Account account = accountGenerator.generateAccount(company.getCreationDate(), "company", blockId);
                 CompanyOwnAccount.createCompanyOwnAccount(company, account, account.getCreationDate());
             }
-        });
+        }
 
         return companies;
     }

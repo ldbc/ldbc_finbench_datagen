@@ -33,7 +33,7 @@ public class CompanyGuaranteeEvent implements Serializable {
         for (int i = 0; i < numCompaniesToTake; i++) {
             Company from = companies.get(pickCompanyRand.nextInt(companies.size()));
             int numGuarantees = numGuaranteesRand.nextInt(DatagenParams.maxTargetsToGuarantee);
-            for (int j = 0; j < numGuarantees; j++) {
+            for (int j = 0; j < Math.max(1,numGuarantees); j++) {
                 Company to = companies.get(randIndex.nextInt(companies.size()));
                 if (from.canGuarantee(to)) {
                     CompanyGuaranteeCompany.createCompanyGuaranteeCompany(dateRand, from, to);

@@ -23,12 +23,12 @@ public class CompanyOwnAccount implements DynamicActivity, Serializable {
     }
 
     public static void createCompanyOwnAccount(Company company, Account account, long creationDate) {
+        account.setOwnerType(PersonOrCompany.COMPANY);
+        account.setCompanyOwner(company);
         CompanyOwnAccount companyOwnAccount =
             new CompanyOwnAccount(company, account, creationDate, account.getDeletionDate(),
                                   account.isExplicitlyDeleted());
         company.getCompanyOwnAccounts().add(companyOwnAccount);
-        account.setOwnerType(PersonOrCompany.COMPANY);
-        account.setCompanyOwner(company);
     }
 
     public Company getCompany() {

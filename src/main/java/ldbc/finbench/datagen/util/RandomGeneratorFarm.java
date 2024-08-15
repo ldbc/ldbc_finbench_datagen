@@ -72,6 +72,8 @@ public class RandomGeneratorFarm implements Serializable {
         SIGNIN_DATE,
         SIGNIN_COUNTRY,
         SIGNIN_CITY,
+        NUM_ACCOUNTS_SIGNIN_PER_MEDIUM,
+        MULTIPLICITY_SIGNIN,
 
         // edge: person own account
         PERSON_OWN_ACCOUNT_DATE,

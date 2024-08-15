@@ -145,28 +145,30 @@ class ActivityGenerator()(implicit spark: SparkSession)
       mediumRDD: RDD[Medium],
       accountRDD: RDD[Account]
   ): RDD[SignIn] = {
-    val mediumParts = mediumRDD.partitions.length
-    val accountSampleList = new util.ArrayList[util.List[Account]](mediumParts)
-    for (i <- 1 to mediumParts) {
-      val sampleAccounts = accountRDD.sample(
+    val accountSampleList = accountRDD
+      .sample(
         withReplacement = false,
-        DatagenParams.accountSignedInFraction / mediumParts,
+        DatagenParams.accountSignedInFraction,
         sampleRandom.nextLong()
       )
-      accountSampleList.add(sampleAccounts.collect().toList.asJava)
-    }
+      .collect()
+      .grouped(accountRDD.partitions.length)
+      .map(_.toList.asJava)
+      .toList
+      .asJava
 
     val signInEvent = new SignInEvent
-    val signRels = mediumRDD.mapPartitions(mediums => {
-      val partitionId = TaskContext.getPartitionId()
-      val signInList = signInEvent.signIn(
-        mediums.toList.asJava,
-        accountSampleList.get(partitionId),
-        partitionId
-      )
-      for { signIn <- signInList.iterator().asScala } yield signIn
+    val signRels = mediumRDD.mapPartitionsWithIndex((index, mediums) => {
+      mediums.flatMap(medium => {
+        signInEvent
+          .signIn(
+            medium,
+            accountSampleList.get(index),
+            index
+          )
+          .asScala
+      })
     })
-
     signRels
   }
 

@@ -17,7 +17,6 @@ public class PersonGuaranteeEvent implements Serializable {
         randIndex = new Random(DatagenParams.defaultSeed);
     }
 
-
     private void resetState(int seed) {
         randomFarm.resetRandomGenerators(seed);
         randIndex.setSeed(seed);
@@ -28,12 +27,12 @@ public class PersonGuaranteeEvent implements Serializable {
 
         Random pickPersonRand = randomFarm.get(RandomGeneratorFarm.Aspect.PICK_PERSON_GUARANTEE);
         Random numGuaranteesRand = randomFarm.get(RandomGeneratorFarm.Aspect.NUM_GUARANTEES_PER_PERSON);
-        int numPersonsToTake = (int)(persons.size() * DatagenParams.personGuaranteeFraction);
+        int numPersonsToTake = (int) (persons.size() * DatagenParams.personGuaranteeFraction);
 
         for (int i = 0; i < numPersonsToTake; i++) {
             Person from = persons.get(pickPersonRand.nextInt(persons.size()));
-            int targetsToGuarantee = numGuaranteesRand.nextInt(DatagenParams.maxTargetsToGuarantee);
-            for (int j = 0; j < targetsToGuarantee; j++) {
+            int numGuarantees = numGuaranteesRand.nextInt(DatagenParams.maxTargetsToGuarantee);
+            for (int j = 0; j < Math.max(1, numGuarantees); j++) {
                 Person to = persons.get(randIndex.nextInt(persons.size()));
                 if (from.canGuarantee(to)) {
                     PersonGuaranteePerson.createPersonGuaranteePerson(randomFarm, from, to);
