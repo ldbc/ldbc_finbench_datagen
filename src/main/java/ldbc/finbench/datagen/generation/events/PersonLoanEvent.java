@@ -1,8 +1,8 @@
 package ldbc.finbench.datagen.generation.events;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import ldbc.finbench.datagen.entities.edges.PersonApplyLoan;
 import ldbc.finbench.datagen.entities.nodes.Loan;
 import ldbc.finbench.datagen.entities.nodes.Person;
@@ -26,18 +26,18 @@ public class PersonLoanEvent implements Serializable {
         resetState(blockId);
         loanGenerator.resetState(blockId);
 
-        Collections.shuffle(persons, randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_LOAN_SHUFFLE));
-        int numPersonsToTake = (int)(persons.size() * DatagenParams.personLoanFraction);
+        Random pickPersonRand = randomFarm.get(RandomGeneratorFarm.Aspect.PICK_PERSON_FOR_LOAN);
+        Random numLoansRand = randomFarm.get(RandomGeneratorFarm.Aspect.NUM_LOANS_PER_PERSON);
+        Random dateRand = randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_APPLY_LOAN_DATE);
+        Random orgRand = randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_APPLY_LOAN_ORGANIZATION);
+        int numPersonsToTake = (int) (persons.size() * DatagenParams.personLoanFraction);
+
         for (int i = 0; i < numPersonsToTake; i++) {
-            Person from = persons.get(i);
-            int numLoans =
-                randomFarm.get(RandomGeneratorFarm.Aspect.NUM_LOANS_PER_PERSON).nextInt(DatagenParams.maxLoans);
+            Person from = persons.get(pickPersonRand.nextInt(persons.size()));
+            int numLoans = numLoansRand.nextInt(DatagenParams.maxLoans);
             for (int j = 0; j < Math.max(1, numLoans); j++) {
-                long applyDate =
-                    Dictionaries.dates.randomPersonToLoanDate(
-                        randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_APPLY_LOAN_DATE), from);
-                String organization = Dictionaries.loanOrganizations.getUniformDistRandomText(
-                    randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_APPLY_LOAN_ORGANIZATION));
+                long applyDate = Dictionaries.dates.randomPersonToLoanDate(dateRand, from);
+                String organization = Dictionaries.loanOrganizations.getUniformDistRandomText(orgRand);
                 Loan to = loanGenerator.generateLoan(applyDate, "person", blockId);
                 PersonApplyLoan.createPersonApplyLoan(applyDate, from, to, organization);
             }

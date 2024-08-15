@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 import java.util.Random;
 import java.util.TreeMap;
 
@@ -15,7 +16,7 @@ public class CommonTextDictionary {
 
         try {
             InputStreamReader inputStreamReader = new InputStreamReader(
-                getClass().getResourceAsStream(filePath), StandardCharsets.UTF_8);
+                Objects.requireNonNull(getClass().getResourceAsStream(filePath)), StandardCharsets.UTF_8);
             BufferedReader dictionary = new BufferedReader(inputStreamReader);
             String line;
             long totalNum = 0;
