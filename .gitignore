@@ -19,6 +19,7 @@ tune.log
 
 # scripts
 scripts/*.log
+scripts/*.png
 
 sf*/
 sf*.tar

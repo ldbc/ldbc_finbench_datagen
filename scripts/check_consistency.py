@@ -10,9 +10,10 @@ def get_md5_list(subdir, dir):
     md5_list = []
     csvs = glob.glob("{}/{}/*.csv".format(dir, subdir))
     for csv in csvs:
-        with open(csv, 'rb') as f:
+        with open(csv, "rb") as f:
             md5_list.append(hashlib.md5(f.read()).hexdigest())
     return sorted(md5_list)
+
 
 def check_multiple_files(subdir, dir1, dir2):
     dir1_list = get_md5_list(subdir, dir1)
@@ -29,11 +30,22 @@ def check_consistency(dir1, dir2):
     max_len0 = max(max([len(d) for d in common_subdirs]), len(headers[0]))
     max_len1 = max(len(dir1), len(headers[1]))
     max_len2 = max(len(dir2), len(headers[2]))
-    max_len3 = max(len("same"), len("different"), len("skipped for more than one file"), len(headers[3]))
+    max_len3 = max(
+        len("same"),
+        len("different"),
+        len("skipped for more than one file"),
+        len(headers[3]),
+    )
 
     def align_print(col0: str, col1: str, col2: str, col3: str):
-        print(print_templ.format(col0.center(max_len0), col1.center(max_len1), col2.center(max_len2),
-                                 col3.center(max_len3)))
+        print(
+            print_templ.format(
+                col0.center(max_len0),
+                col1.center(max_len1),
+                col2.center(max_len2),
+                col3.center(max_len3),
+            )
+        )
 
     align_print(headers[0], headers[1], headers[2], headers[3])
     for subdir in sorted(common_subdirs):
@@ -43,7 +55,7 @@ def check_consistency(dir1, dir2):
             align_print(subdir, dir1, dir2, "different")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     dir1 = sys.argv[1]
     dir2 = sys.argv[2]
     check_consistency(dir1, dir2)
