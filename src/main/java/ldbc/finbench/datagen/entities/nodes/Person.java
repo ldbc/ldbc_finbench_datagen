@@ -1,7 +1,9 @@
 package ldbc.finbench.datagen.entities.nodes;
 
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import ldbc.finbench.datagen.entities.edges.PersonApplyLoan;
 import ldbc.finbench.datagen.entities.edges.PersonGuaranteePerson;
@@ -18,22 +20,18 @@ public class Person implements Serializable {
     private long birthday;
     private int countryId;
     private int cityId;
-    private List<Account> accounts;
-    private List<Loan> loans;
     private List<PersonOwnAccount> personOwnAccounts;
     private List<PersonInvestCompany> personInvestCompanies;
-    private List<PersonGuaranteePerson> guaranteeSrc;
-    private List<PersonGuaranteePerson> guaranteeDst;
+    private final LinkedHashSet<PersonGuaranteePerson> guaranteeSrc;
+    private final LinkedHashSet<PersonGuaranteePerson> guaranteeDst;
     private List<PersonApplyLoan> personApplyLoans;
 
     public Person() {
-        accounts = new ArrayList<>();
-        loans = new ArrayList<>();
-        personOwnAccounts = new ArrayList<>();
-        personInvestCompanies = new ArrayList<>();
-        guaranteeSrc = new ArrayList<>();
-        guaranteeDst = new ArrayList<>();
-        personApplyLoans = new ArrayList<>();
+        personOwnAccounts = new LinkedList<>();
+        personInvestCompanies = new LinkedList<>();
+        guaranteeSrc = new LinkedHashSet<>();
+        guaranteeDst = new LinkedHashSet<>();
+        personApplyLoans = new LinkedList<>();
     }
 
     @Override
@@ -45,23 +43,14 @@ public class Person implements Serializable {
         return false;
     }
 
+    @Override
+    public int hashCode() {
+        return Long.hashCode(personId);
+    }
+
     public boolean canGuarantee(Person to) {
-        if (this.getPersonId() == to.getPersonId()) {
-            return false;
-        }
-        // can not guarantee the same person twice
-        for (PersonGuaranteePerson guarantee : guaranteeSrc) {
-            if (guarantee.getToPerson().getPersonId() == to.getPersonId()) {
-                return false;
-            }
-        }
-        // can not guarantee cyclically
-        for (PersonGuaranteePerson guarantee : guaranteeDst) {
-            if (guarantee.getFromPerson().getPersonId() == to.getPersonId()) {
-                return false;
-            }
-        }
-        return true;
+        // can not: equal, guarantee the same person twice, guarantee cyclically
+        return !this.equals(to) && !guaranteeSrc.contains(to) && !guaranteeDst.contains(to);
     }
 
     public long getPersonId() {
@@ -96,20 +85,12 @@ public class Person implements Serializable {
         this.personInvestCompanies = personInvestCompanies;
     }
 
-    public List<PersonGuaranteePerson> getGuaranteeSrc() {
+    public HashSet<PersonGuaranteePerson> getGuaranteeSrc() {
         return guaranteeSrc;
     }
 
-    public void setGuaranteeSrc(List<PersonGuaranteePerson> guaranteeSrc) {
-        this.guaranteeSrc = guaranteeSrc;
-    }
-
-    public List<PersonGuaranteePerson> getGuaranteeDst() {
+    public HashSet<PersonGuaranteePerson> getGuaranteeDst() {
         return guaranteeDst;
-    }
-
-    public void setGuaranteeDst(List<PersonGuaranteePerson> guaranteeDst) {
-        this.guaranteeDst = guaranteeDst;
     }
 
     public List<PersonApplyLoan> getPersonApplyLoans() {
@@ -134,22 +115,6 @@ public class Person implements Serializable {
 
     public void setBlocked(boolean blocked) {
         isBlocked = blocked;
-    }
-
-    public List<Account> getAccounts() {
-        return accounts;
-    }
-
-    public void setAccounts(List<Account> accounts) {
-        this.accounts = accounts;
-    }
-
-    public List<Loan> getLoans() {
-        return loans;
-    }
-
-    public void setLoans(List<Loan> loans) {
-        this.loans = loans;
     }
 
     public String getGender() {

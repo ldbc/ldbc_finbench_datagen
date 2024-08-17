@@ -1,49 +1,44 @@
 package ldbc.finbench.datagen.generation.events;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import ldbc.finbench.datagen.entities.edges.PersonGuaranteePerson;
 import ldbc.finbench.datagen.entities.nodes.Person;
 import ldbc.finbench.datagen.generation.DatagenParams;
-import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class PersonGuaranteeEvent implements Serializable {
     private final RandomGeneratorFarm randomFarm;
     private final Random randIndex;
-    private final Random targetsToGuaranteeRandom;
-    private final double probGuarantee;
 
-    public PersonGuaranteeEvent(double probGuarantee) {
-        this.probGuarantee = probGuarantee;
+    public PersonGuaranteeEvent() {
         randomFarm = new RandomGeneratorFarm();
         randIndex = new Random(DatagenParams.defaultSeed);
-        targetsToGuaranteeRandom = new Random(DatagenParams.defaultSeed);
     }
-
 
     private void resetState(int seed) {
         randomFarm.resetRandomGenerators(seed);
         randIndex.setSeed(seed);
-        targetsToGuaranteeRandom.setSeed(seed);
     }
 
     public List<Person> personGuarantee(List<Person> persons, int blockId) {
         resetState(blockId);
 
-        persons.forEach(person -> {
-            if (randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_WHETHER_GURANTEE).nextDouble() < probGuarantee) {
-                int targetsToGuarantee = targetsToGuaranteeRandom.nextInt(DatagenParams.maxTargetsToGuarantee);
-                for (int j = 0; j < targetsToGuarantee; j++) {
-                    Person toPerson = persons.get(randIndex.nextInt(persons.size())); // Choose a random person
-                    if (person.canGuarantee(toPerson)) {
-                        PersonGuaranteePerson.createPersonGuaranteePerson(randomFarm, person, toPerson);
-                    }
+        Random pickPersonRand = randomFarm.get(RandomGeneratorFarm.Aspect.PICK_PERSON_GUARANTEE);
+        Random numGuaranteesRand = randomFarm.get(RandomGeneratorFarm.Aspect.NUM_GUARANTEES_PER_PERSON);
+        int numPersonsToTake = (int) (persons.size() * DatagenParams.personGuaranteeFraction);
+
+        for (int i = 0; i < numPersonsToTake; i++) {
+            Person from = persons.get(pickPersonRand.nextInt(persons.size()));
+            int numGuarantees = numGuaranteesRand.nextInt(DatagenParams.maxTargetsToGuarantee);
+            for (int j = 0; j < Math.max(1, numGuarantees); j++) {
+                Person to = persons.get(randIndex.nextInt(persons.size()));
+                if (from.canGuarantee(to)) {
+                    PersonGuaranteePerson.createPersonGuaranteePerson(randomFarm, from, to);
                 }
             }
-        });
+        }
 
         return persons;
     }

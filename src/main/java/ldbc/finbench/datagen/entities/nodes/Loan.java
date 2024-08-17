@@ -43,6 +43,11 @@ public class Loan implements Serializable, Comparable<Loan> {
     }
 
     @Override
+    public int hashCode() {
+        return Long.hashCode(loanId);
+    }
+
+    @Override
     public int compareTo(Loan o) {
         return Long.compare(loanId, o.getLoanId());
     }

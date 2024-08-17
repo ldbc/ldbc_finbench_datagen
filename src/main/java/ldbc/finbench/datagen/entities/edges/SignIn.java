@@ -1,7 +1,6 @@
 package ldbc.finbench.datagen.entities.edges;
 
 import java.io.Serializable;
-import java.util.Random;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 import ldbc.finbench.datagen.entities.nodes.Account;
 import ldbc.finbench.datagen.entities.nodes.Medium;
@@ -15,7 +14,7 @@ public class SignIn implements DynamicActivity, Serializable {
     private long deletionDate;
     private int countryId;
     private int cityId;
-    private long multiplicityId;
+    private final long multiplicityId;
     private boolean isExplicitlyDeleted;
 
     public SignIn(Medium medium, Account account, int mid, long creationDate, long deletionDate,
@@ -85,10 +84,6 @@ public class SignIn implements DynamicActivity, Serializable {
         return multiplicityId;
     }
 
-    public void setMultiplicityId(long multiplicityId) {
-        this.multiplicityId = multiplicityId;
-    }
-
     @Override
     public boolean isExplicitlyDeleted() {
         return isExplicitlyDeleted;
@@ -98,16 +93,8 @@ public class SignIn implements DynamicActivity, Serializable {
         isExplicitlyDeleted = explicitlyDeleted;
     }
 
-    public int getCountryId() {
-        return countryId;
-    }
-
     public void setCountryId(int countryId) {
         this.countryId = countryId;
-    }
-
-    public int getCityId() {
-        return cityId;
     }
 
     public void setCityId(int cityId) {

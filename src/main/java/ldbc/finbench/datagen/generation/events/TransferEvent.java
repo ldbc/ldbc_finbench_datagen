@@ -21,8 +21,8 @@ public class TransferEvent implements Serializable {
     private final DegreeDistribution multiplicityDist;
     private double partRatio;
 
-    public TransferEvent(double partRatio) {
-        this.partRatio = partRatio;
+    public TransferEvent() {
+        this.partRatio = 1.0 / DatagenParams.transferShuffleTimes;
         randomFarm = new RandomGeneratorFarm();
         randIndex = new Random(DatagenParams.defaultSeed);
         shuffleRandom = new Random(DatagenParams.defaultSeed);
@@ -87,7 +87,7 @@ public class TransferEvent implements Serializable {
                                                  Math.min(from.getAvailableOutDegree(), to.getAvailableInDegree()));
                     for (int mindex = 0; mindex < numTransfers; mindex++) {
                         transfers.add(Transfer.createTransferAndReturn(randomFarm, from, to, mindex,
-                                                amountRandom.nextDouble() * DatagenParams.tsfMaxAmount));
+                                                amountRandom.nextDouble() * DatagenParams.transferMaxAmount));
                     }
                     if (to.getAvailableInDegree() == 0) {
                         availableToAccountIds.remove(j);
@@ -109,12 +109,12 @@ public class TransferEvent implements Serializable {
     }
 
     private boolean distanceProbOK(int distance) {
-        if (DatagenParams.tsfGenerationMode.equals("loose")) {
+        if (DatagenParams.transferGenerationMode.equals("loose")) {
             return true;
         }
         double randProb = randomFarm.get(RandomGeneratorFarm.Aspect.UNIFORM).nextDouble();
-        double prob = Math.pow(DatagenParams.tsfBaseProbCorrelated, Math.abs(distance));
-        return ((randProb < prob) || (randProb < DatagenParams.tsfLimitProCorrelated));
+        double prob = Math.pow(DatagenParams.transferBaseProbCorrelated, Math.abs(distance));
+        return ((randProb < prob) || (randProb < DatagenParams.transferLimitProCorrelated));
     }
 
     // Transfer to self is not allowed

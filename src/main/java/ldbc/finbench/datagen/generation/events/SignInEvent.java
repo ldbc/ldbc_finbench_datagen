@@ -1,7 +1,7 @@
 package ldbc.finbench.datagen.generation.events;
 
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import ldbc.finbench.datagen.entities.edges.SignIn;
@@ -13,42 +13,39 @@ import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 public class SignInEvent implements Serializable {
     private final RandomGeneratorFarm randomFarm;
     private final Random randIndex;
-    private final Random multiplicityRandom;
-    private final Random accountsToSignRandom;
 
     public SignInEvent() {
         randomFarm = new RandomGeneratorFarm();
         randIndex = new Random(DatagenParams.defaultSeed);
-        multiplicityRandom = new Random(DatagenParams.defaultSeed);
-        accountsToSignRandom = new Random(DatagenParams.defaultSeed);
     }
 
     private void resetState(int seed) {
         randomFarm.resetRandomGenerators(seed);
         randIndex.setSeed(seed);
-        multiplicityRandom.setSeed(seed);
-        accountsToSignRandom.setSeed(seed);
     }
 
-    public List<SignIn> signIn(List<Medium> media, List<Account> accounts, int blockId) {
+    public List<SignIn> signIn(List<Medium> mediums, List<Account> accounts, int blockId) {
         resetState(blockId);
-        List<SignIn> signIns = new ArrayList<>();
-        for (Medium medium : media) {
-            int numAccountsToSign = accountsToSignRandom.nextInt(DatagenParams.maxAccountToSignIn);
-            int signedCount = 0;
-            while (signedCount < numAccountsToSign) {
+
+        Random accountsToSignRand = randomFarm.get(RandomGeneratorFarm.Aspect.NUM_ACCOUNTS_SIGNIN_PER_MEDIUM);
+        Random multiplicityRandom = randomFarm.get(RandomGeneratorFarm.Aspect.MULTIPLICITY_SIGNIN);
+        int numAccountsToSign = accountsToSignRand.nextInt(DatagenParams.maxAccountToSignIn);
+
+        List<SignIn> signIns = new LinkedList<>();
+        for (Medium medium : mediums) {
+            for (int i = 0; i < Math.max(1, numAccountsToSign); i++) {
                 Account accountToSign = accounts.get(randIndex.nextInt(accounts.size()));
                 if (cannotSignIn(medium, accountToSign)) {
                     continue;
                 }
                 int numSignIn = multiplicityRandom.nextInt(DatagenParams.maxSignInPerPair);
-                for (int mid = 0; mid < numSignIn; mid++) {
+                for (int mid = 0; mid < Math.max(1, numSignIn); mid++) {
                     SignIn signIn = SignIn.createSignIn(mid, randomFarm, medium, accountToSign);
                     signIns.add(signIn);
                 }
-                signedCount++;
             }
         }
+
         return signIns;
     }
 

@@ -26,13 +26,12 @@ public class PersonOwnAccount implements DynamicActivity, Serializable {
 
     public static void createPersonOwnAccount(Person person, Account account, long creationDate) {
         // Delete when account is deleted
+        account.setOwnerType(PersonOrCompany.PERSON);
+        account.setPersonOwner(person);
         PersonOwnAccount personOwnAccount = new PersonOwnAccount(person, account, creationDate,
                                                                  account.getDeletionDate(),
                                                                  account.isExplicitlyDeleted());
-        person.getAccounts().add(account);
         person.getPersonOwnAccounts().add(personOwnAccount);
-        account.setOwnerType(PersonOrCompany.PERSON);
-        account.setPersonOwner(person);
     }
 
     public Person getPerson() {

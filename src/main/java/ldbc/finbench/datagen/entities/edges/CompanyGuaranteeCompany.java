@@ -36,16 +36,8 @@ public class CompanyGuaranteeCompany implements DynamicActivity, Serializable {
         return fromCompany;
     }
 
-    public void setFromCompany(Company fromCompany) {
-        this.fromCompany = fromCompany;
-    }
-
     public Company getToCompany() {
         return toCompany;
-    }
-
-    public void setToCompany(Company toCompany) {
-        this.toCompany = toCompany;
     }
 
     @Override
@@ -77,9 +69,5 @@ public class CompanyGuaranteeCompany implements DynamicActivity, Serializable {
 
     public String getRelationship() {
         return relationship;
-    }
-
-    public void setRelationship(String relationship) {
-        this.relationship = relationship;
     }
 }

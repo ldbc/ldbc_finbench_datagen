@@ -23,7 +23,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 // TODO:
 //  - refactor using common GraphDef to make the code less verbose
-//  - repartition with the partition option
 class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
     extends Writer[RawSink]
     with Serializable
@@ -72,9 +71,7 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
       s"[Simulation] Medium RDD partitions: ${mediumRdd.getNumPartitions}"
     )
 
-    // =========================================
     // Person and company related activities
-    // =========================================
     val personWithAccounts = activityGenerator.personRegisterEvent(
       personRdd
     ) // simulate person register event
@@ -107,8 +104,10 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
     )
 
     // simulate person apply loans event and company apply loans event
-    val personWithAccGuaLoan = activityGenerator.personLoanEvent(personWithAccGua)
-    val companyWithAccGuaLoan = activityGenerator.companyLoanEvent(companyWitAccGua)
+    val personWithAccGuaLoan =
+      activityGenerator.personLoanEvent(personWithAccGua)
+    val companyWithAccGuaLoan =
+      activityGenerator.companyLoanEvent(companyWitAccGua)
     log.info(
       s"[Simulation] personWithAccGuaLoan partitions: ${personWithAccGuaLoan.getNumPartitions}"
     )
@@ -116,9 +115,7 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
       s"[Simulation] companyWithAccGuaLoan partitions: ${companyWithAccGuaLoan.getNumPartitions}"
     )
 
-    // =========================================
     // Account related activities
-    // =========================================
     val accountRdd =
       mergeAccounts(personWithAccounts, companyWithAccounts) // merge
     log.info(
@@ -140,9 +137,7 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
       s"[Simulation] withdraw RDD partitions: ${withdrawRdd.getNumPartitions}"
     )
 
-    // =========================================
     // Loan related activities
-    // =========================================
     val loanRdd =
       mergeLoans(personWithAccGuaLoan, companyWithAccGuaLoan) // merge
     log.info(s"[Simulation] Loan RDD partitions: ${loanRdd.getNumPartitions}")
@@ -154,9 +149,7 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
         s"loanTrasfers RDD partitions: ${loanTrasfersRdd.getNumPartitions}"
     )
 
-    // =========================================
     // Serialize
-    // =========================================
     val allFutures =
       activitySerializer.writePersonWithActivities(personWithAccGuaLoan) ++
         activitySerializer.writeCompanyWithActivities(companyWithAccGuaLoan) ++
@@ -208,8 +201,12 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
       persons: RDD[Person],
       companies: RDD[Company]
   ): RDD[Loan] = {
-    val personLoans = persons.flatMap(person => person.getLoans.asScala)
-    val companyLoans = companies.flatMap(company => company.getLoans.asScala)
+    val personLoans = persons.flatMap(person =>
+      person.getPersonApplyLoans.asScala.map(_.getLoan)
+    )
+    val companyLoans = companies.flatMap(company =>
+      company.getCompanyApplyLoans.asScala.map(_.getLoan)
+    )
     personLoans.union(companyLoans)
   }
 }

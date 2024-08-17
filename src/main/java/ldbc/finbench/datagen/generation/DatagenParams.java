@@ -45,15 +45,15 @@ public class DatagenParams {
     public static int maxAccountsPerOwner = 0;
     public static String tsfDegreeDistribution;
     public static String tsfMultiplicityDistribution;
-    public static long tsfMinNumDegree = 0;
-    public static long tsfMaxNumDegree = 0;
-    public static int tsfMinMultiplicity = 0;
-    public static int tsfMaxMultiplicity = 0;
-    public static double tsfBaseProbCorrelated = 0.0;
-    public static double tsfLimitProCorrelated = 0.0;
-    public static long tsfMaxAmount = 0;
-    public static String tsfGenerationMode;
-    public static int tsfShuffleTimes;
+    public static long transferMinDegree = 0;
+    public static long transferMaxDegree = 0;
+    public static int transferMinMultiplicity = 0;
+    public static int transferMaxMultiplicity = 0;
+    public static double transferBaseProbCorrelated = 0.0;
+    public static double transferLimitProCorrelated = 0.0;
+    public static long transferMaxAmount = 0;
+    public static String transferGenerationMode;
+    public static int transferShuffleTimes;
     public static double accountWithdrawFraction = 0.0;
     public static int maxWithdrawals = 0;
     public static long withdrawMaxAmount = 0;
@@ -104,16 +104,16 @@ public class DatagenParams {
             maxAccountsPerOwner = intConf(conf, "own.maxAccounts");
 
             tsfDegreeDistribution = stringConf(conf, "transfer.degreeDistribution");
-            tsfMinNumDegree = longConf(conf, "transfer.minNumDegree");
-            tsfMaxNumDegree = longConf(conf, "transfer.maxNumDegree");
+            transferMinDegree = longConf(conf, "transfer.minNumDegree");
+            transferMaxDegree = longConf(conf, "transfer.maxNumDegree");
             tsfMultiplicityDistribution = stringConf(conf, "transfer.multiplicityDistribution");
-            tsfMinMultiplicity = intConf(conf, "transfer.minMultiplicity");
-            tsfMaxMultiplicity = intConf(conf, "transfer.maxMultiplicity");
-            tsfBaseProbCorrelated = doubleConf(conf, "transfer.baseProbCorrelated");
-            tsfLimitProCorrelated = doubleConf(conf, "transfer.limitProCorrelated");
-            tsfMaxAmount = longConf(conf, "transfer.maxAmount");
-            tsfGenerationMode = stringConf(conf, "transfer.generationMode");
-            tsfShuffleTimes = intConf(conf, "transfer.shuffleTimes");
+            transferMinMultiplicity = intConf(conf, "transfer.minMultiplicity");
+            transferMaxMultiplicity = intConf(conf, "transfer.maxMultiplicity");
+            transferBaseProbCorrelated = doubleConf(conf, "transfer.baseProbCorrelated");
+            transferLimitProCorrelated = doubleConf(conf, "transfer.limitProCorrelated");
+            transferMaxAmount = longConf(conf, "transfer.maxAmount");
+            transferGenerationMode = stringConf(conf, "transfer.generationMode");
+            transferShuffleTimes = intConf(conf, "transfer.shuffleTimes");
 
             accountWithdrawFraction = doubleConf(conf, "withdraw.accountWithdrawFraction");
             maxWithdrawals = intConf(conf, "withdraw.maxWithdrawals");
@@ -144,7 +144,7 @@ public class DatagenParams {
             System.out.println(" ... Num Companies " + numCompanies);
             System.out.println(" ... Start Year " + startYear);
             System.out.println(" ... Num Years " + numYears);
-            System.out.println(" ... Max degree of Powerlaw " + tsfMaxNumDegree);
+            System.out.println(" ... Max degree of Powerlaw " + transferMaxDegree);
         } catch (Exception e) {
             System.out.println("Error reading scale factors or conf");
             System.err.println(e.getMessage());
@@ -174,8 +174,9 @@ public class DatagenParams {
 
     public static DegreeDistribution getInDegreeDistribution() {
         if (tsfDegreeDistribution.equals("powerlaw")) {
-            return new PowerLawFormulaDistribution(DatagenParams.inDegreeRegressionFile, DatagenParams.tsfMinNumDegree,
-                                                   DatagenParams.tsfMaxNumDegree);
+            return new PowerLawFormulaDistribution(DatagenParams.inDegreeRegressionFile,
+                                                   DatagenParams.transferMinDegree,
+                                                   DatagenParams.transferMaxDegree);
         } else if (tsfDegreeDistribution.equals("powerlawbucket")) {
             return new PowerLawBucketsDistribution();
         } else {
@@ -185,8 +186,9 @@ public class DatagenParams {
 
     public static DegreeDistribution getOutDegreeDistribution() {
         if (tsfDegreeDistribution.equals("powerlaw")) {
-            return new PowerLawFormulaDistribution(DatagenParams.outDegreeRegressionFile, DatagenParams.tsfMinNumDegree,
-                                                   DatagenParams.tsfMaxNumDegree);
+            return new PowerLawFormulaDistribution(DatagenParams.outDegreeRegressionFile,
+                                                   DatagenParams.transferMinDegree,
+                                                   DatagenParams.transferMaxDegree);
         } else if (tsfDegreeDistribution.equals("powerlawbucket")) {
             return new PowerLawBucketsDistribution();
         } else {
@@ -197,7 +199,8 @@ public class DatagenParams {
     public static DegreeDistribution getTsfMultiplicityDistribution() {
         if (tsfMultiplicityDistribution.equals("powerlaw")) {
             return new PowerLawFormulaDistribution(DatagenParams.multiplictyPowerlawRegFile,
-                                                   DatagenParams.tsfMinMultiplicity, DatagenParams.tsfMaxMultiplicity);
+                                                   DatagenParams.transferMinMultiplicity,
+                                                   DatagenParams.transferMaxMultiplicity);
         } else if (tsfMultiplicityDistribution.equals("powerlawbucket")) {
             return new PowerLawBucketsDistribution();
         } else {
