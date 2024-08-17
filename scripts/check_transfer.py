@@ -1,16 +1,23 @@
 import glob
+import sys
 from collections import Counter
 
 import matplotlib.pyplot as plt
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import desc, countDistinct
 
-spark = SparkSession.builder.appName("profile").getOrCreate()
+spark = (
+    SparkSession.builder.appName("profile")
+    .config("spark.driver.memory", "200g")
+    .getOrCreate()
+)
 
 
 def readAllEdges(path):
-    dataframes = [spark.read.option("delimiter", "|").csv(csv, header=True, inferSchema=True) for csv in
-                  glob.glob(path)]
+    dataframes = [
+        spark.read.option("delimiter", "|").csv(csv, header=True, inferSchema=True)
+        for csv in glob.glob(path)
+    ]
     allTransfer = dataframes[0]
     for idx, dataframe in enumerate(dataframes):
         if idx == 0:
@@ -41,7 +48,7 @@ def draw_degree(inDegrees, outDegrees):
     ind.set_ylabel("Count")
     ind.set_xlim(0, xMax)
     ind.set_ylim(0, yMax)
-    ind.plot(inDegreeX, inDegreeY, color='blue', label='inDegree')
+    ind.plot(inDegreeX, inDegreeY, color="blue", label="inDegree")
     ind.legend()
 
     outd = fig.add_subplot(1, 2, 2)
@@ -50,20 +57,30 @@ def draw_degree(inDegrees, outDegrees):
     outd.set_ylabel("Count")
     outd.set_xlim(0, xMax)
     outd.set_ylim(0, yMax)
-    outd.plot(outDegreeX, outDegreeY, color='red', label='outDegree')
+    outd.plot(outDegreeX, outDegreeY, color="red", label="outDegree")
     outd.legend()
 
     plt.plot()
     plt.show()
+    plt.savefig("scripts/transfer_degree_distribution.png")
 
 
 # You can use this script to check if the in-degree and out-degree of each account is correct
 if __name__ == "__main__":
-    allTransferEdges = readAllEdges("./out/raw/transfer/*.csv")
+    prefix = sys.argv[1]
+    allTransferEdges = readAllEdges("{}/transfer/*.csv".format(prefix))
 
-    in_degrees = allTransferEdges.groupBy("toId").count().withColumnRenamed("count", "in_degree")
-    out_degrees = allTransferEdges.groupBy("fromId").count().withColumnRenamed("count", "out_degree")
-    multiplicity = allTransferEdges.groupBy("fromId", "toId").agg(countDistinct("multiplicityId").alias("multiplicity"))
+    in_degrees = (
+        allTransferEdges.groupBy("toId").count().withColumnRenamed("count", "in_degree")
+    )
+    out_degrees = (
+        allTransferEdges.groupBy("fromId")
+        .count()
+        .withColumnRenamed("count", "out_degree")
+    )
+    multiplicity = allTransferEdges.groupBy("fromId", "toId").agg(
+        countDistinct("multiplicityId").alias("multiplicity")
+    )
 
     # Show top 20
     in_degrees.orderBy(desc("in_degree")).show(10)
@@ -71,7 +88,12 @@ if __name__ == "__main__":
     multiplicity.orderBy(desc("multiplicity")).show(10)
 
     # Calculate and print metrics
-    numAccounts = allTransferEdges.select("fromId").union(allTransferEdges.select("toId")).distinct().count()
+    numAccounts = (
+        allTransferEdges.select("fromId")
+        .union(allTransferEdges.select("toId"))
+        .distinct()
+        .count()
+    )
     numTransfers = allTransferEdges.count()
     demultipled = multiplicity.count()
     print("Num of accounts: {}".format(numAccounts))
@@ -81,5 +103,7 @@ if __name__ == "__main__":
 
     # Draw powerlaw distribution of the degrees
     inDegrees = [row["in_degree"] for row in in_degrees.select("in_degree").collect()]
-    outDegrees = [row["out_degree"] for row in out_degrees.select("out_degree").collect()]
+    outDegrees = [
+        row["out_degree"] for row in out_degrees.select("out_degree").collect()
+    ]
     draw_degree(inDegrees, outDegrees)
