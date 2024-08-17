@@ -64,9 +64,6 @@ def run_local(
         **({'spark.shuffle.spill.compress': 'true'}),
         **({'spark.serializer': 'org.apache.spark.serializer.KryoSerializer'}),
         **({'spark.executor.extraJavaOptions': '-XX:+UseG1GC'}),
-        **({'spark.storage.memoryMapThreshold': '512m'}),
-        **({'spark.sql.inMemoryColumnarStorage.compressed': 'true'}),
-        **({'spark.sql.inMemoryColumnarStorage.batchSize': '1000000'}),
         **spark_conf
     }
 
