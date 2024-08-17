@@ -36,8 +36,7 @@ public class SignIn implements DynamicActivity, Serializable {
         // Set country and city
         int countryId =
             Dictionaries.places.getCountryForPerson(randomFarm.get(RandomGeneratorFarm.Aspect.SIGNIN_COUNTRY));
-        signIn.setCountryId(
-            Dictionaries.places.getCountryForPerson(randomFarm.get(RandomGeneratorFarm.Aspect.SIGNIN_COUNTRY)));
+        signIn.setCountryId(countryId);
         signIn.setCityId(
             Dictionaries.places.getRandomCity(randomFarm.get(RandomGeneratorFarm.Aspect.SIGNIN_CITY), countryId));
 

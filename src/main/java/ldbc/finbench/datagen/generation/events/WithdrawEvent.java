@@ -34,14 +34,14 @@ public class WithdrawEvent implements Serializable {
         return atomicInt.getAndIncrement();
     }
 
-    public List<Withdraw> withdraw(Account from, List<Account> cards, int blockId) {
+    public List<Withdraw> withdraw(List<Account> sources, List<Account> cards, int blockId) {
         resetState(blockId);
 
         Random amountRand = randomFarm.get(RandomGeneratorFarm.Aspect.WITHDRAW_AMOUNT);
         Random dateRand = randomFarm.get(RandomGeneratorFarm.Aspect.WITHDRAW_DATE);
 
         List<Withdraw> withdraws = new LinkedList<>();
-        if (!from.getType().equals("debit card")) {
+        for (Account from : sources) {
             int count = 0;
             while (count++ < DatagenParams.maxWithdrawals) {
                 Account to = cards.get(randIndex.nextInt(cards.size()));

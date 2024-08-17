@@ -24,7 +24,7 @@ public class SignInEvent implements Serializable {
         randIndex.setSeed(seed);
     }
 
-    public List<SignIn> signIn(Medium medium, List<Account> accounts, int blockId) {
+    public List<SignIn> signIn(List<Medium> mediums, List<Account> accounts, int blockId) {
         resetState(blockId);
 
         Random accountsToSignRand = randomFarm.get(RandomGeneratorFarm.Aspect.NUM_ACCOUNTS_SIGNIN_PER_MEDIUM);
@@ -32,15 +32,17 @@ public class SignInEvent implements Serializable {
         int numAccountsToSign = accountsToSignRand.nextInt(DatagenParams.maxAccountToSignIn);
 
         List<SignIn> signIns = new LinkedList<>();
-        for (int i = 0; i < Math.max(1, numAccountsToSign); i++) {
-            Account accountToSign = accounts.get(randIndex.nextInt(accounts.size()));
-            if (cannotSignIn(medium, accountToSign)) {
-                continue;
-            }
-            int numSignIn = multiplicityRandom.nextInt(DatagenParams.maxSignInPerPair);
-            for (int mid = 0; mid < Math.max(1, numSignIn); mid++) {
-                SignIn signIn = SignIn.createSignIn(mid, randomFarm, medium, accountToSign);
-                signIns.add(signIn);
+        for (Medium medium : mediums) {
+            for (int i = 0; i < Math.max(1, numAccountsToSign); i++) {
+                Account accountToSign = accounts.get(randIndex.nextInt(accounts.size()));
+                if (cannotSignIn(medium, accountToSign)) {
+                    continue;
+                }
+                int numSignIn = multiplicityRandom.nextInt(DatagenParams.maxSignInPerPair);
+                for (int mid = 0; mid < Math.max(1, numSignIn); mid++) {
+                    SignIn signIn = SignIn.createSignIn(mid, randomFarm, medium, accountToSign);
+                    signIns.add(signIn);
+                }
             }
         }
 
