@@ -55,7 +55,8 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
               poa.getAccount.getAccountId,
               poa.getCreationDate,
               poa.getDeletionDate,
-              poa.isExplicitlyDeleted
+              poa.isExplicitlyDeleted,
+              poa.getComment
             )
           }
         }
@@ -73,7 +74,8 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
               pgp.getFromPerson.getPersonId,
               pgp.getToPerson.getPersonId,
               pgp.getCreationDate,
-              pgp.getRelationship
+              pgp.getRelationship,
+              pgp.getComment
             )
           }
         }
@@ -92,7 +94,8 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
               pal.getLoan.getLoanId,
               formattedDouble(pal.getLoan.getLoanAmount),
               pal.getCreationDate,
-              pal.getOrganization
+              pal.getOrganization,
+              pal.getComment
             )
           }
         }
@@ -142,7 +145,8 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
                 coa.getAccount.getAccountId,
                 coa.getCreationDate,
                 coa.getDeletionDate,
-                coa.isExplicitlyDeleted
+                coa.isExplicitlyDeleted,
+                coa.getComment
               )
             }
           }
@@ -160,7 +164,8 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
               cgc.getFromCompany.getCompanyId,
               cgc.getToCompany.getCompanyId,
               cgc.getCreationDate,
-              cgc.getRelationship
+              cgc.getRelationship,
+              cgc.getComment
             )
           }
         }
@@ -179,7 +184,8 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
               cal.getLoan.getLoanId,
               formattedDouble(cal.getLoan.getLoanAmount),
               cal.getCreationDate,
-              cal.getOrganization
+              cal.getOrganization,
+              cal.getComment
             )
           }
         }
@@ -226,7 +232,8 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
             si.getCreationDate,
             si.getDeletionDate,
             si.isExplicitlyDeleted,
-            si.getLocation
+            si.getLocation,
+            si.getComment
           )
         }
         spark
@@ -313,7 +320,8 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
             w.getCreationDate,
             w.getDeletionDate,
             formattedDouble(w.getAmount),
-            w.isExplicitlyDeleted
+            w.isExplicitlyDeleted,
+            w.getComment
           )
         }
         spark
@@ -340,7 +348,8 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
               pic.getPerson.getPersonId,
               pic.getCompany.getCompanyId,
               pic.getCreationDate,
-              pic.getRatio
+              pic.getRatio,
+              pic.getComment
             )
           })
           .write
@@ -356,7 +365,8 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
               cic.getFromCompany.getCompanyId,
               cic.getToCompany.getCompanyId,
               cic.getCreationDate,
-              cic.getRatio
+              cic.getRatio,
+              cic.getComment
             )
           })
           .write
@@ -402,7 +412,8 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
             d.getCreationDate,
             d.getDeletionDate,
             formattedDouble(d.getAmount),
-            d.isExplicitlyDeleted
+            d.isExplicitlyDeleted,
+            d.getComment
             )
         }
         spark
@@ -420,7 +431,8 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
             r.getCreationDate,
             r.getDeletionDate,
             formattedDouble(r.getAmount),
-            r.isExplicitlyDeleted
+            r.isExplicitlyDeleted,
+            r.getComment
             )
         }
         spark

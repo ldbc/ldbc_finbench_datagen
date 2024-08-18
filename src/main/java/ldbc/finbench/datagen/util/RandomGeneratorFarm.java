@@ -60,7 +60,6 @@ public class RandomGeneratorFarm implements Serializable {
         // edge: transfer
         TRANSFER_DATE,
         TRANSFER_ORDERNUM,
-        TRANSFER_COMMENT,
         TRANSFER_PAYTYPE,
         TRANSFER_GOODSTYPE,
 
@@ -108,6 +107,8 @@ public class RandomGeneratorFarm implements Serializable {
         COMPANY_APPLY_LOAN_DATE,
         COMPANY_APPLY_LOAN_ORGANIZATION,
 
+        // common: comment field
+        COMMON_COMMENT,
         UNIFORM,
         NUM_ASPECT                  // This must be always the last one.
     }

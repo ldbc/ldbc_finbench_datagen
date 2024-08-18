@@ -37,9 +37,6 @@ public class WithdrawEvent implements Serializable {
     public List<Withdraw> withdraw(List<Account> sources, List<Account> cards, int blockId) {
         resetState(blockId);
 
-        Random amountRand = randomFarm.get(RandomGeneratorFarm.Aspect.WITHDRAW_AMOUNT);
-        Random dateRand = randomFarm.get(RandomGeneratorFarm.Aspect.WITHDRAW_DATE);
-
         List<Withdraw> withdraws = new LinkedList<>();
         for (Account from : sources) {
             int count = 0;
@@ -48,8 +45,7 @@ public class WithdrawEvent implements Serializable {
                 if (cannotWithdraw(from, to)) {
                     continue;
                 }
-                withdraws.add(Withdraw.createWithdraw(dateRand, from, to, getMultiplicityIdAndInc(from, to),
-                                                      amountRand.nextDouble() * DatagenParams.withdrawMaxAmount));
+                withdraws.add(Withdraw.createWithdraw(randomFarm, from, to, getMultiplicityIdAndInc(from, to)));
             }
         }
         return withdraws;

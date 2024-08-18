@@ -29,7 +29,6 @@ public class PersonLoanEvent implements Serializable {
         Random pickPersonRand = randomFarm.get(RandomGeneratorFarm.Aspect.PICK_PERSON_FOR_LOAN);
         Random numLoansRand = randomFarm.get(RandomGeneratorFarm.Aspect.NUM_LOANS_PER_PERSON);
         Random dateRand = randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_APPLY_LOAN_DATE);
-        Random orgRand = randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_APPLY_LOAN_ORGANIZATION);
         int numPersonsToTake = (int) (persons.size() * DatagenParams.personLoanFraction);
 
         for (int i = 0; i < numPersonsToTake; i++) {
@@ -37,9 +36,8 @@ public class PersonLoanEvent implements Serializable {
             int numLoans = numLoansRand.nextInt(DatagenParams.maxLoans);
             for (int j = 0; j < Math.max(1, numLoans); j++) {
                 long applyDate = Dictionaries.dates.randomPersonToLoanDate(dateRand, from);
-                String organization = Dictionaries.loanOrganizations.getUniformDistRandomText(orgRand);
                 Loan to = loanGenerator.generateLoan(applyDate, "person", blockId);
-                PersonApplyLoan.createPersonApplyLoan(applyDate, from, to, organization);
+                PersonApplyLoan.createPersonApplyLoan(randomFarm, applyDate, from, to);
             }
         }
 

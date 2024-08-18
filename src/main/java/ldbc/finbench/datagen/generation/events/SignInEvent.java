@@ -40,7 +40,7 @@ public class SignInEvent implements Serializable {
                 }
                 int numSignIn = multiplicityRandom.nextInt(DatagenParams.maxSignInPerPair);
                 for (int mid = 0; mid < Math.max(1, numSignIn); mid++) {
-                    SignIn signIn = SignIn.createSignIn(mid, randomFarm, medium, accountToSign);
+                    SignIn signIn = SignIn.createSignIn(randomFarm, mid, medium, accountToSign);
                     signIns.add(signIn);
                 }
             }

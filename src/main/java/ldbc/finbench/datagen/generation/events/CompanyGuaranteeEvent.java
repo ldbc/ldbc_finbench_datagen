@@ -27,16 +27,16 @@ public class CompanyGuaranteeEvent implements Serializable {
 
         Random pickCompanyRand = randomFarm.get(RandomGeneratorFarm.Aspect.PICK_COMPANY_GUARANTEE);
         Random numGuaranteesRand = randomFarm.get(RandomGeneratorFarm.Aspect.NUM_GUARANTEES_PER_COMPANY);
-        Random dateRand = randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_GUARANTEE_DATE);
+
         int numCompaniesToTake = (int) (companies.size() * DatagenParams.companyGuaranteeFraction);
 
         for (int i = 0; i < numCompaniesToTake; i++) {
             Company from = companies.get(pickCompanyRand.nextInt(companies.size()));
             int numGuarantees = numGuaranteesRand.nextInt(DatagenParams.maxTargetsToGuarantee);
-            for (int j = 0; j < Math.max(1,numGuarantees); j++) {
+            for (int j = 0; j < Math.max(1, numGuarantees); j++) {
                 Company to = companies.get(randIndex.nextInt(companies.size()));
                 if (from.canGuarantee(to)) {
-                    CompanyGuaranteeCompany.createCompanyGuaranteeCompany(dateRand, from, to);
+                    CompanyGuaranteeCompany.createCompanyGuaranteeCompany(randomFarm, from, to);
                 }
             }
         }

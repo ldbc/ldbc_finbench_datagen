@@ -29,7 +29,6 @@ public class CompanyLoanEvent implements Serializable {
         Random pickCompanyRand = randomFarm.get(RandomGeneratorFarm.Aspect.PICK_COMPANY_FOR_LOAN);
         Random numLoansRand = randomFarm.get(RandomGeneratorFarm.Aspect.NUM_LOANS_PER_COMPANY);
         Random dateRand = randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_APPLY_LOAN_DATE);
-        Random orgRand = randomFarm.get(RandomGeneratorFarm.Aspect.COMPANY_APPLY_LOAN_ORGANIZATION);
 
         int numCompaniesToTake = (int) (companies.size() * DatagenParams.companyLoanFraction);
         for (int i = 0; i < numCompaniesToTake; i++) {
@@ -38,8 +37,7 @@ public class CompanyLoanEvent implements Serializable {
             for (int j = 0; j < Math.max(1, numLoans); j++) {
                 long applyDate = Dictionaries.dates.randomCompanyToLoanDate(dateRand, from);
                 Loan to = loanGenerator.generateLoan(applyDate, "company", blockId);
-                String organization = Dictionaries.loanOrganizations.getUniformDistRandomText(orgRand);
-                CompanyApplyLoan.createCompanyApplyLoan(applyDate, from, to, organization);
+                CompanyApplyLoan.createCompanyApplyLoan(randomFarm, applyDate, from, to);
             }
         }
 
