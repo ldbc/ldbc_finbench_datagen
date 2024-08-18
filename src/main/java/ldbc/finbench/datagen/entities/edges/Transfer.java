@@ -2,8 +2,10 @@ package ldbc.finbench.datagen.entities.edges;
 
 import java.io.Serializable;
 import java.util.Comparator;
+import java.util.Random;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 import ldbc.finbench.datagen.entities.nodes.Account;
+import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
@@ -31,14 +33,14 @@ public class Transfer implements DynamicActivity, Serializable {
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static Transfer createTransferAndReturn(RandomGeneratorFarm farm, Account from, Account to,
-                                                   long multiplicityId,
-                                                   double amount) {
+    public static Transfer createTransfer(RandomGeneratorFarm farm, Account from, Account to,
+                                          long multiplicityId) {
         long deleteDate = Math.min(from.getDeletionDate(), to.getDeletionDate());
         long creationDate =
             Dictionaries.dates.randomAccountToAccountDate(farm.get(RandomGeneratorFarm.Aspect.TRANSFER_DATE), from, to,
                                                           deleteDate);
         boolean willDelete = from.isExplicitlyDeleted() && to.isExplicitlyDeleted();
+        double amount = farm.get(RandomGeneratorFarm.Aspect.TRANSFER_AMOUNT).nextDouble() * DatagenParams.transferMaxAmount;
         Transfer transfer = new Transfer(from, to, amount, creationDate, deleteDate, multiplicityId, willDelete);
 
         // Set ordernum
@@ -66,9 +68,9 @@ public class Transfer implements DynamicActivity, Serializable {
         return transfer;
     }
 
-    public static Transfer createLoanTransferAndReturn(RandomGeneratorFarm farm, Account from, Account to,
-                                                       long multiplicityId,
-                                                       double amount) {
+    public static Transfer createLoanTransfer(RandomGeneratorFarm farm, Account from, Account to,
+                                              long multiplicityId,
+                                              double amount) {
         long deleteDate = Math.min(from.getDeletionDate(), to.getDeletionDate());
         long creationDate =
             Dictionaries.dates.randomAccountToAccountDate(farm.get(RandomGeneratorFarm.Aspect.LOAN_SUBEVENTS_DATE),

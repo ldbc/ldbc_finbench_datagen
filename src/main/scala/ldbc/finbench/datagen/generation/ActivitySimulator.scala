@@ -78,7 +78,7 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
 
     // Account related activities
     val accountRdd =
-      mergeAccounts(personWithAccounts, companyWithAccounts) // merge
+      mergeAccountsAndShuffleDegrees(personWithAccounts, companyWithAccounts) // merge
     log.info(
       s"[Simulation] Account RDD partitions: ${accountRdd.getNumPartitions}"
     )
@@ -130,7 +130,7 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
     Await.result(Future.sequence(allFutures), Duration.Inf)
   }
 
-  private def mergeAccounts(
+  private def mergeAccountsAndShuffleDegrees(
       persons: RDD[Person],
       companies: RDD[Company]
   ): RDD[Account] = {

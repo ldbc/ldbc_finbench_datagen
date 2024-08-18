@@ -59,6 +59,7 @@ public class RandomGeneratorFarm implements Serializable {
 
         // edge: transfer
         TRANSFER_DATE,
+        TRANSFER_AMOUNT,
         TRANSFER_ORDERNUM,
         TRANSFER_COMMENT,
         TRANSFER_PAYTYPE,
