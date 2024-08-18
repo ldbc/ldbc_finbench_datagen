@@ -18,7 +18,7 @@ public class TransferEvent implements Serializable {
     private final Random shuffleRandom;
     private final Random amountRandom;
     private final DegreeDistribution multiplicityDist;
-    private double partRatio;
+    private final double partRatio;
 
     public TransferEvent() {
         this.partRatio = 1.0 / DatagenParams.transferShuffleTimes;
@@ -84,7 +84,8 @@ public class TransferEvent implements Serializable {
                                                  Math.min(from.getAvailableOutDegree(), to.getAvailableInDegree()));
                     for (int mindex = 0; mindex < numTransfers; mindex++) {
                         transfers.add(Transfer.createTransferAndReturn(randomFarm, from, to, mindex,
-                                                amountRandom.nextDouble() * DatagenParams.transferMaxAmount));
+                                                                       amountRandom.nextDouble()
+                                                                           * DatagenParams.transferMaxAmount));
                     }
                     if (to.getAvailableInDegree() == 0) {
                         availableToAccountIds.remove(j);

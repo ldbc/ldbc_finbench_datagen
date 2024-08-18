@@ -16,29 +16,33 @@ public class SignIn implements DynamicActivity, Serializable {
     private int cityId;
     private final long multiplicityId;
     private final boolean isExplicitlyDeleted;
+    private final String comment;
 
     public SignIn(Medium medium, Account account, int mid, long creationDate, long deletionDate,
-                  boolean isExplicitlyDeleted) {
+                  boolean isExplicitlyDeleted, String comment) {
         this.medium = medium;
         this.account = account;
         this.multiplicityId = mid;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
+        this.comment = comment;
     }
 
-    public static SignIn createSignIn(int mid, RandomGeneratorFarm randomFarm, Medium medium, Account account) {
+    public static SignIn createSignIn(RandomGeneratorFarm farm, int mid, Medium medium, Account account) {
         long creationDate =
-            Dictionaries.dates.randomMediumToAccountDate(randomFarm.get(RandomGeneratorFarm.Aspect.SIGNIN_DATE), medium,
+            Dictionaries.dates.randomMediumToAccountDate(farm.get(RandomGeneratorFarm.Aspect.SIGNIN_DATE), medium,
                                                          account, account.getDeletionDate());
+        String comment =
+            Dictionaries.randomTexts.getUniformDistRandomText(farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
         SignIn signIn = new SignIn(medium, account, mid, creationDate, account.getDeletionDate(),
-                                   account.isExplicitlyDeleted());
+                                   account.isExplicitlyDeleted(), comment);
         // Set country and city
         int countryId =
-            Dictionaries.places.getCountryForPerson(randomFarm.get(RandomGeneratorFarm.Aspect.SIGNIN_COUNTRY));
+            Dictionaries.places.getCountryForPerson(farm.get(RandomGeneratorFarm.Aspect.SIGNIN_COUNTRY));
         signIn.setCountryId(countryId);
         signIn.setCityId(
-            Dictionaries.places.getRandomCity(randomFarm.get(RandomGeneratorFarm.Aspect.SIGNIN_CITY), countryId));
+            Dictionaries.places.getRandomCity(farm.get(RandomGeneratorFarm.Aspect.SIGNIN_CITY), countryId));
 
         medium.getSignIns().add(signIn);
         account.getSignIns().add(signIn);
@@ -83,5 +87,9 @@ public class SignIn implements DynamicActivity, Serializable {
 
     public String getLocation() {
         return Dictionaries.places.getPlaceName(countryId) + " -> " + Dictionaries.places.getPlaceName(cityId);
+    }
+
+    public String getComment() {
+        return comment;
     }
 }

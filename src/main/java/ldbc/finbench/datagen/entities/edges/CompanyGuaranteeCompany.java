@@ -5,6 +5,7 @@ import java.util.Random;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 import ldbc.finbench.datagen.entities.nodes.Company;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
+import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class CompanyGuaranteeCompany implements DynamicActivity, Serializable {
     private final Company fromCompany;
@@ -13,22 +14,28 @@ public class CompanyGuaranteeCompany implements DynamicActivity, Serializable {
     private final long deletionDate;
     private final boolean isExplicitlyDeleted;
     private final String relationship;
+    private final String comment;
 
     public CompanyGuaranteeCompany(Company fromCompany, Company toCompany,
-                                   long creationDate, long deletionDate, boolean isExplicitlyDeleted, String relation) {
+                                   long creationDate, long deletionDate, boolean isExplicitlyDeleted, String relation,
+                                   String comment) {
         this.fromCompany = fromCompany;
         this.toCompany = toCompany;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
         this.relationship = relation;
+        this.comment = comment;
     }
 
-    public static void createCompanyGuaranteeCompany(Random random, Company fromCompany, Company toCompany) {
-        long creationDate = Dictionaries.dates.randomCompanyToCompanyDate(random, fromCompany, toCompany);
+    public static void createCompanyGuaranteeCompany(RandomGeneratorFarm farm, Company fromCompany, Company toCompany) {
+        Random dateRand = farm.get(RandomGeneratorFarm.Aspect.COMPANY_GUARANTEE_DATE);
+        long creationDate = Dictionaries.dates.randomCompanyToCompanyDate(dateRand, fromCompany, toCompany);
+        String comment =
+            Dictionaries.randomTexts.getUniformDistRandomText(farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
         CompanyGuaranteeCompany companyGuaranteeCompany = new CompanyGuaranteeCompany(fromCompany,
                                                                                       toCompany, creationDate, 0, false,
-                                                                                      "business associate");
+                                                                                      "business associate", comment);
         fromCompany.getGuaranteeSrc().add(companyGuaranteeCompany);
         toCompany.getGuaranteeDst().add(companyGuaranteeCompany);
     }
@@ -58,5 +65,9 @@ public class CompanyGuaranteeCompany implements DynamicActivity, Serializable {
 
     public String getRelationship() {
         return relationship;
+    }
+
+    public String getComment() {
+        return comment;
     }
 }

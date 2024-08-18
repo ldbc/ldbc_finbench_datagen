@@ -30,7 +30,7 @@ public class PersonRegisterEvent implements Serializable {
             int numAccounts = numAccRand.nextInt(DatagenParams.maxAccountsPerOwner);
             for (int i = 0; i < Math.max(1, numAccounts); i++) {
                 Account account = accountGenerator.generateAccount(person.getCreationDate(), "person", blockId);
-                PersonOwnAccount.createPersonOwnAccount(person, account, account.getCreationDate());
+                PersonOwnAccount.createPersonOwnAccount(randomFarm, person, account, account.getCreationDate());
             }
         }
 
