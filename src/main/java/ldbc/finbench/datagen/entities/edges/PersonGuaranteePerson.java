@@ -13,24 +13,30 @@ public class PersonGuaranteePerson implements DynamicActivity, Serializable {
     private final long deletionDate;
     private final boolean isExplicitlyDeleted;
     private final String relationship;
+    private final String comment;
 
     public PersonGuaranteePerson(Person fromPerson, Person toPerson,
-                                 long creationDate, long deletionDate, boolean isExplicitlyDeleted, String relation) {
+                                 long creationDate, long deletionDate, boolean isExplicitlyDeleted, String relation,
+                                 String comment) {
         this.fromPerson = fromPerson;
         this.toPerson = toPerson;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
         this.relationship = relation;
+        this.comment = comment;
     }
 
-    public static void createPersonGuaranteePerson(RandomGeneratorFarm randomFarm, Person fromPerson, Person toPerson) {
+    public static void createPersonGuaranteePerson(RandomGeneratorFarm farm, Person fromPerson, Person toPerson) {
         long creationDate = Dictionaries.dates.randomPersonToPersonDate(
-            randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_GUARANTEE_DATE), fromPerson, toPerson);
+            farm.get(RandomGeneratorFarm.Aspect.PERSON_GUARANTEE_DATE), fromPerson, toPerson);
         String relation = Dictionaries.guaranteeRelationships.getDistributedText(
-            randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_GUARANTEE_RELATIONSHIP));
+            farm.get(RandomGeneratorFarm.Aspect.PERSON_GUARANTEE_RELATIONSHIP));
+        String comment =
+            Dictionaries.randomTexts.getUniformDistRandomTextForComments(
+                farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
         PersonGuaranteePerson personGuaranteePerson =
-            new PersonGuaranteePerson(fromPerson, toPerson, creationDate, 0, false, relation);
+            new PersonGuaranteePerson(fromPerson, toPerson, creationDate, 0, false, relation, comment);
         fromPerson.getGuaranteeSrc().add(personGuaranteePerson);
         toPerson.getGuaranteeDst().add(personGuaranteePerson);
     }
@@ -60,5 +66,9 @@ public class PersonGuaranteePerson implements DynamicActivity, Serializable {
 
     public String getRelationship() {
         return relationship;
+    }
+
+    public String getComment() {
+        return comment;
     }
 }

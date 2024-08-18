@@ -5,6 +5,8 @@ import ldbc.finbench.datagen.entities.DynamicActivity;
 import ldbc.finbench.datagen.entities.nodes.Account;
 import ldbc.finbench.datagen.entities.nodes.Company;
 import ldbc.finbench.datagen.entities.nodes.PersonOrCompany;
+import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
+import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class CompanyOwnAccount implements DynamicActivity, Serializable {
     private final Company company;
@@ -12,22 +14,28 @@ public class CompanyOwnAccount implements DynamicActivity, Serializable {
     private final long creationDate;
     private final long deletionDate;
     private final boolean isExplicitlyDeleted;
+    private final String comment;
 
     public CompanyOwnAccount(Company company, Account account, long creationDate, long deletionDate,
-                             boolean isExplicitlyDeleted) {
+                             boolean isExplicitlyDeleted, String comment) {
         this.company = company;
         this.account = account;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
+        this.comment = comment;
     }
 
-    public static void createCompanyOwnAccount(Company company, Account account, long creationDate) {
+    public static void createCompanyOwnAccount(RandomGeneratorFarm farm, Company company, Account account,
+                                               long creationDate) {
         account.setOwnerType(PersonOrCompany.COMPANY);
         account.setCompanyOwner(company);
+        String comment =
+            Dictionaries.randomTexts.getUniformDistRandomTextForComments(
+                farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
         CompanyOwnAccount companyOwnAccount =
             new CompanyOwnAccount(company, account, creationDate, account.getDeletionDate(),
-                                  account.isExplicitlyDeleted());
+                                  account.isExplicitlyDeleted(), comment);
         company.getCompanyOwnAccounts().add(companyOwnAccount);
     }
 
@@ -52,5 +60,9 @@ public class CompanyOwnAccount implements DynamicActivity, Serializable {
     @Override
     public boolean isExplicitlyDeleted() {
         return isExplicitlyDeleted;
+    }
+
+    public String getComment() {
+        return comment;
     }
 }

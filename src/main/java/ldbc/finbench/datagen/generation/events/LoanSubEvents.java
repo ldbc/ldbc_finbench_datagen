@@ -85,9 +85,7 @@ public class LoanSubEvents implements Serializable {
             return;
         }
         double amount = amountRandom.nextDouble() * loan.getBalance();
-        Deposit deposit =
-            Deposit.createDeposit(randomFarm.get(RandomGeneratorFarm.Aspect.LOAN_SUBEVENTS_DATE), loan, account,
-                                  amount);
+        Deposit deposit = Deposit.createDeposit(randomFarm, loan, account, amount);
         deposits.add(deposit);
     }
 
@@ -96,10 +94,8 @@ public class LoanSubEvents implements Serializable {
         if (loan.getLoanAmount() == loan.getBalance() || cannotRepay(account, loan)) {
             return;
         }
-
         double amount = amountRandom.nextDouble() * (loan.getLoanAmount() - loan.getBalance());
-        Repay repay =
-            Repay.createRepay(randomFarm.get(RandomGeneratorFarm.Aspect.LOAN_SUBEVENTS_DATE), account, loan, amount);
+        Repay repay = Repay.createRepay(randomFarm, account, loan, amount);
         repays.add(repay);
     }
 

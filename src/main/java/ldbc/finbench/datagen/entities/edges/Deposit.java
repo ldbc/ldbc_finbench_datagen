@@ -1,11 +1,11 @@
 package ldbc.finbench.datagen.entities.edges;
 
 import java.io.Serializable;
-import java.util.Random;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 import ldbc.finbench.datagen.entities.nodes.Account;
 import ldbc.finbench.datagen.entities.nodes.Loan;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
+import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class Deposit implements DynamicActivity, Serializable {
     private final Loan loan;
@@ -14,22 +14,29 @@ public class Deposit implements DynamicActivity, Serializable {
     private final long creationDate;
     private final long deletionDate;
     private final boolean isExplicitlyDeleted;
+    private final String comment;
 
     public Deposit(Loan loan, Account account, double amount, long creationDate, long deletionDate,
-                   boolean isExplicitlyDeleted) {
+                   boolean isExplicitlyDeleted, String comment) {
         this.loan = loan;
         this.account = account;
         this.amount = amount;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
+        this.comment = comment;
     }
 
-    public static Deposit createDeposit(Random random, Loan loan, Account account, double amount) {
+    public static Deposit createDeposit(RandomGeneratorFarm farm, Loan loan, Account account, double amount) {
         long creationDate =
-            Dictionaries.dates.randomLoanToAccountDate(random, loan, account, account.getDeletionDate());
+            Dictionaries.dates.randomLoanToAccountDate(farm.get(RandomGeneratorFarm.Aspect.LOAN_SUBEVENTS_DATE), loan,
+                                                       account, account.getDeletionDate());
+        String comment =
+            Dictionaries.randomTexts.getUniformDistRandomTextForComments(
+                farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
         Deposit deposit =
-            new Deposit(loan, account, amount, creationDate, account.getDeletionDate(), account.isExplicitlyDeleted());
+            new Deposit(loan, account, amount, creationDate, account.getDeletionDate(), account.isExplicitlyDeleted(),
+                        comment);
         loan.addDeposit(deposit);
         account.getDeposits().add(deposit);
 
@@ -61,5 +68,9 @@ public class Deposit implements DynamicActivity, Serializable {
     @Override
     public boolean isExplicitlyDeleted() {
         return isExplicitlyDeleted;
+    }
+
+    public String getComment() {
+        return comment;
     }
 }

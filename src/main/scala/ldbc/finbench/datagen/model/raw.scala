@@ -77,7 +77,8 @@ object raw {
       loanId: Long,
       loanAmount: String,
       createTime: Long,
-      org: String
+      org: String,
+      comment: String
   )
 
   // define CompanyApplyLoan relationship
@@ -86,7 +87,8 @@ object raw {
       loanId: Long,
       loanAmount: String,
       createTime: Long,
-      org: String
+      org: String,
+      comment: String
   )
 
   // define PersonInvestCompany relationship
@@ -94,7 +96,8 @@ object raw {
       investorId: Long,
       companyId: Long,
       createTime: Long,
-      ratio: Double
+      ratio: Double,
+      comment: String
   )
 
   // define CompanyInvestCompany relationship
@@ -102,7 +105,8 @@ object raw {
       investorId: Long,
       companyId: Long,
       createTime: Long,
-      ratio: Double
+      ratio: Double,
+      comment: String
   )
 
   // define PersonGuaranteePerson relationship
@@ -110,7 +114,8 @@ object raw {
       fromId: Long,
       toId: Long,
       createTime: Long,
-      relation: String
+      relation: String,
+      comment: String
   )
 
   // define CompanyGuarantee relationship
@@ -118,7 +123,8 @@ object raw {
       fromId: Long,
       toId: Long,
       createTime: Long,
-      relation: String
+      relation: String,
+      comment: String
   )
 
   //define PersonOwnAccount relationship
@@ -127,7 +133,8 @@ object raw {
       accountId: Long,
       createTime: Long,
       deleteTime: Long,
-      isExplicitDeleted: Boolean
+      isExplicitDeleted: Boolean,
+      comment: String
   )
 
   // define CompanyOwnAccount relationship
@@ -136,7 +143,8 @@ object raw {
       accountId: Long,
       createTime: Long,
       deleteTime: Long,
-      isExplicitDeleted: Boolean
+      isExplicitDeleted: Boolean,
+      comment: String
   )
 
   // define Transfer relationship
@@ -164,7 +172,8 @@ object raw {
       createTime: Long,
       deleteTime: Long,
       amount: String,
-      isExplicitDeleted: Boolean
+      isExplicitDeleted: Boolean,
+      comment: String
   )
 
   // define Repay relationship
@@ -174,7 +183,8 @@ object raw {
       createTime: Long,
       deleteTime: Long,
       amount: String,
-      isExplicitDeleted: Boolean
+      isExplicitDeleted: Boolean,
+      comment: String
   )
 
   // define Deposit relationship
@@ -184,7 +194,8 @@ object raw {
       createTime: Long,
       deleteTime: Long,
       amount: String,
-      isExplicitDeleted: Boolean
+      isExplicitDeleted: Boolean,
+      comment: String
   )
 
   // define SignIn relationship
@@ -195,6 +206,7 @@ object raw {
       createTime: Long,
       deleteTime: Long,
       isExplicitDeleted: Boolean,
-      location: String
+      location: String,
+      comment: String
   )
 }
