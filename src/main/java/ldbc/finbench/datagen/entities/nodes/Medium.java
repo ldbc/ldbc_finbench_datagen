@@ -8,9 +8,8 @@ import ldbc.finbench.datagen.entities.edges.SignIn;
 public class Medium implements Serializable {
     private long mediumId;
     private String mediumName;
-    private List<SignIn> signIns;
+    private final List<SignIn> signIns;
     private long creationDate;
-    //private long maxDegree;
     private boolean isBlocked;
     private long lastLogin;
     private String riskLevel;
@@ -25,6 +24,20 @@ public class Medium implements Serializable {
         this.mediumName = mediumName;
         this.creationDate = creationDate;
         this.isBlocked = isBlocked;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Medium) {
+            Medium other = (Medium) obj;
+            return mediumId == other.mediumId;
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Long.hashCode(mediumId);
     }
 
     public long getMediumId() {
@@ -47,10 +60,6 @@ public class Medium implements Serializable {
         return signIns;
     }
 
-    public void setSignIns(List<SignIn> signIns) {
-        this.signIns = signIns;
-    }
-
     public long getCreationDate() {
         return creationDate;
     }
@@ -58,7 +67,6 @@ public class Medium implements Serializable {
     public void setCreationDate(long creationDate) {
         this.creationDate = creationDate;
     }
-
 
     public boolean isBlocked() {
         return isBlocked;

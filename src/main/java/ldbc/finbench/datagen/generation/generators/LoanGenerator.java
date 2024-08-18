@@ -18,7 +18,7 @@ public class LoanGenerator implements Serializable {
         this.loanAmountMin = DatagenParams.minLoanAmount;
         this.loanAmountMax = DatagenParams.maxLoanAmount;
         this.randomFarm = new RandomGeneratorFarm();
-        this.degreeDistribution = DatagenParams.getInDegreeDistribution();
+        this.degreeDistribution = DatagenParams.getDegreeDistribution();
         this.degreeDistribution.initialize();
     }
 

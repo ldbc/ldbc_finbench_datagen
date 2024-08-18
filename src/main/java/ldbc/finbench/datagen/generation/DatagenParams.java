@@ -43,8 +43,8 @@ public class DatagenParams {
     public static long activityDelta = 0;
     public static int companyDescriptionMaxLength = 0;
     public static int maxAccountsPerOwner = 0;
-    public static String tsfDegreeDistribution;
-    public static String tsfMultiplicityDistribution;
+    public static String transferDegreeDistribution;
+    public static String transferMultiplicityDistribution;
     public static long transferMinDegree = 0;
     public static long transferMaxDegree = 0;
     public static int transferMinMultiplicity = 0;
@@ -103,10 +103,10 @@ public class DatagenParams {
             companyDescriptionMaxLength = intConf(conf, "company.maxDescriptionLength");
             maxAccountsPerOwner = intConf(conf, "own.maxAccounts");
 
-            tsfDegreeDistribution = stringConf(conf, "transfer.degreeDistribution");
+            transferDegreeDistribution = stringConf(conf, "transfer.degreeDistribution");
             transferMinDegree = longConf(conf, "transfer.minNumDegree");
             transferMaxDegree = longConf(conf, "transfer.maxNumDegree");
-            tsfMultiplicityDistribution = stringConf(conf, "transfer.multiplicityDistribution");
+            transferMultiplicityDistribution = stringConf(conf, "transfer.multiplicityDistribution");
             transferMinMultiplicity = intConf(conf, "transfer.minMultiplicity");
             transferMaxMultiplicity = intConf(conf, "transfer.maxMultiplicity");
             transferBaseProbCorrelated = doubleConf(conf, "transfer.baseProbCorrelated");
@@ -172,39 +172,27 @@ public class DatagenParams {
         return Math.log10(mean * numPersons / 2 + numPersons);
     }
 
-    public static DegreeDistribution getInDegreeDistribution() {
-        if (tsfDegreeDistribution.equals("powerlaw")) {
+    public static DegreeDistribution getDegreeDistribution() {
+        if (transferDegreeDistribution.equals("powerlaw")) {
             return new PowerLawFormulaDistribution(DatagenParams.inDegreeRegressionFile,
                                                    DatagenParams.transferMinDegree,
                                                    DatagenParams.transferMaxDegree);
-        } else if (tsfDegreeDistribution.equals("powerlawbucket")) {
+        } else if (transferDegreeDistribution.equals("powerlawbucket")) {
             return new PowerLawBucketsDistribution();
         } else {
-            throw new IllegalStateException("Unexpected inDegree distribution: " + tsfDegreeDistribution);
+            throw new IllegalStateException("Unexpected inDegree distribution: " + transferDegreeDistribution);
         }
     }
 
-    public static DegreeDistribution getOutDegreeDistribution() {
-        if (tsfDegreeDistribution.equals("powerlaw")) {
-            return new PowerLawFormulaDistribution(DatagenParams.outDegreeRegressionFile,
-                                                   DatagenParams.transferMinDegree,
-                                                   DatagenParams.transferMaxDegree);
-        } else if (tsfDegreeDistribution.equals("powerlawbucket")) {
-            return new PowerLawBucketsDistribution();
-        } else {
-            throw new IllegalStateException("Unexpected outDegree distribution: " + tsfDegreeDistribution);
-        }
-    }
-
-    public static DegreeDistribution getTsfMultiplicityDistribution() {
-        if (tsfMultiplicityDistribution.equals("powerlaw")) {
+    public static DegreeDistribution getTransferMultiplicityDistribution() {
+        if (transferMultiplicityDistribution.equals("powerlaw")) {
             return new PowerLawFormulaDistribution(DatagenParams.multiplictyPowerlawRegFile,
                                                    DatagenParams.transferMinMultiplicity,
                                                    DatagenParams.transferMaxMultiplicity);
-        } else if (tsfMultiplicityDistribution.equals("powerlawbucket")) {
+        } else if (transferMultiplicityDistribution.equals("powerlawbucket")) {
             return new PowerLawBucketsDistribution();
         } else {
-            throw new IllegalStateException("Unexpected multiplicty distribution: " + tsfMultiplicityDistribution);
+            throw new IllegalStateException("Unexpected multiplicty distribution: " + transferMultiplicityDistribution);
         }
     }
 }

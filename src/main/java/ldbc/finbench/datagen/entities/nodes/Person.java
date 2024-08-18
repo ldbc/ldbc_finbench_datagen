@@ -20,11 +20,11 @@ public class Person implements Serializable {
     private long birthday;
     private int countryId;
     private int cityId;
-    private List<PersonOwnAccount> personOwnAccounts;
-    private List<PersonInvestCompany> personInvestCompanies;
+    private final List<PersonOwnAccount> personOwnAccounts;
+    private final List<PersonInvestCompany> personInvestCompanies;
     private final LinkedHashSet<PersonGuaranteePerson> guaranteeSrc;
     private final LinkedHashSet<PersonGuaranteePerson> guaranteeDst;
-    private List<PersonApplyLoan> personApplyLoans;
+    private final List<PersonApplyLoan> personApplyLoans;
 
     public Person() {
         personOwnAccounts = new LinkedList<>();
@@ -73,16 +73,8 @@ public class Person implements Serializable {
         return personOwnAccounts;
     }
 
-    public void setPersonOwnAccounts(List<PersonOwnAccount> personOwnAccounts) {
-        this.personOwnAccounts = personOwnAccounts;
-    }
-
     public List<PersonInvestCompany> getPersonInvestCompanies() {
         return personInvestCompanies;
-    }
-
-    public void setPersonInvestCompanies(List<PersonInvestCompany> personInvestCompanies) {
-        this.personInvestCompanies = personInvestCompanies;
     }
 
     public HashSet<PersonGuaranteePerson> getGuaranteeSrc() {
@@ -95,10 +87,6 @@ public class Person implements Serializable {
 
     public List<PersonApplyLoan> getPersonApplyLoans() {
         return personApplyLoans;
-    }
-
-    public void setPersonApplyLoans(List<PersonApplyLoan> personApplyLoans) {
-        this.personApplyLoans = personApplyLoans;
     }
 
     public long getCreationDate() {
@@ -133,21 +121,12 @@ public class Person implements Serializable {
         this.birthday = birthday;
     }
 
-
-    public int getCountryId() {
-        return countryId;
-    }
-
     public void setCountryId(int countryId) {
         this.countryId = countryId;
     }
 
     public String getCountryName() {
         return Dictionaries.places.getPlaceName(countryId);
-    }
-
-    public int getCityId() {
-        return cityId;
     }
 
     public void setCityId(int cityId) {

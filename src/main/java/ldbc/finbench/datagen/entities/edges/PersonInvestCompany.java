@@ -8,12 +8,12 @@ import ldbc.finbench.datagen.entities.nodes.Person;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 
 public class PersonInvestCompany implements DynamicActivity, Serializable {
-    private Person person;
-    private Company company;
+    private final Person person;
+    private final Company company;
     private double ratio;
-    private long creationDate;
-    private long deletionDate;
-    private boolean isExplicitlyDeleted;
+    private final long creationDate;
+    private final long deletionDate;
+    private final boolean isExplicitlyDeleted;
 
     public PersonInvestCompany(Person person, Company company,
                                long creationDate, long deletionDate, double ratio, boolean isExplicitlyDeleted) {
@@ -44,24 +44,12 @@ public class PersonInvestCompany implements DynamicActivity, Serializable {
         return ratio;
     }
 
-    public void setRatio(double ratio) {
-        this.ratio = ratio;
-    }
-
     public Company getCompany() {
         return company;
     }
 
-    public void setCompany(Company company) {
-        this.company = company;
-    }
-
     public Person getPerson() {
         return person;
-    }
-
-    public void setPerson(Person person) {
-        this.person = person;
     }
 
     @Override
@@ -69,25 +57,13 @@ public class PersonInvestCompany implements DynamicActivity, Serializable {
         return creationDate;
     }
 
-    public void setCreationDate(long creationDate) {
-        this.creationDate = creationDate;
-    }
-
     @Override
     public long getDeletionDate() {
         return deletionDate;
     }
 
-    public void setDeletionDate(long deletionDate) {
-        this.deletionDate = deletionDate;
-    }
-
     @Override
     public boolean isExplicitlyDeleted() {
         return isExplicitlyDeleted;
-    }
-
-    public void setExplicitlyDeleted(boolean explicitlyDeleted) {
-        isExplicitlyDeleted = explicitlyDeleted;
     }
 }

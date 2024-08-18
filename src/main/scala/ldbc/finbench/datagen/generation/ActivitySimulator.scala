@@ -2,12 +2,7 @@ package ldbc.finbench.datagen.generation
 
 import ldbc.finbench.datagen.config.DatagenConfiguration
 import ldbc.finbench.datagen.entities.nodes._
-import ldbc.finbench.datagen.generation.generators.{
-  ActivityGenerator,
-  SparkCompanyGenerator,
-  SparkMediumGenerator,
-  SparkPersonGenerator
-}
+import ldbc.finbench.datagen.generation.generators.{ActivityGenerator, SparkCompanyGenerator, SparkMediumGenerator, SparkPersonGenerator}
 import ldbc.finbench.datagen.generation.serializers.ActivitySerializer
 import ldbc.finbench.datagen.io.Writer
 import ldbc.finbench.datagen.io.raw.RawSink
@@ -17,72 +12,42 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{Future, Await}
-import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
-// TODO:
-//  - refactor using common GraphDef to make the code less verbose
 class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
     extends Writer[RawSink]
     with Serializable
     with Logging {
-  private val parallelism = spark.sparkContext.defaultParallelism
   private val blockSize: Int = DatagenParams.blockSize
 
   private val activityGenerator = new ActivityGenerator()
   private val activitySerializer = new ActivitySerializer(sink)
 
-  private val personNum: Long = DatagenParams.numPersons
-  private val personPartitions = Some(
-    Math
-      .min(Math.ceil(personNum.toDouble / blockSize).toLong, parallelism)
-      .toInt
-  )
-
-  private val companyNum: Long = DatagenParams.numCompanies
-  private val companyPartitions = Some(
-    Math
-      .min(Math.ceil(companyNum.toDouble / blockSize).toLong, parallelism)
-      .toInt
-  )
-
-  private val mediumNum: Long = DatagenParams.numMediums
-  private val mediumPartitions = Some(
-    Math
-      .min(Math.ceil(mediumNum.toDouble / blockSize).toLong, parallelism)
-      .toInt
-  )
-
   def simulate(config: DatagenConfiguration): Unit = {
-    val personRdd: RDD[Person] =
-      SparkPersonGenerator(personNum, config, blockSize, personPartitions)
-    val companyRdd: RDD[Company] =
-      SparkCompanyGenerator(companyNum, config, blockSize, companyPartitions)
-    val mediumRdd: RDD[Medium] =
-      SparkMediumGenerator(mediumNum, config, blockSize, mediumPartitions)
+    val personRdd =
+      SparkPersonGenerator(DatagenParams.numPersons, config, blockSize)
+    val companyRdd =
+      SparkCompanyGenerator(DatagenParams.numCompanies, config, blockSize)
+    val mediumRdd =
+      SparkMediumGenerator(DatagenParams.numMediums, config, blockSize)
     log.info(
-      s"[Simulation] Person RDD partitions: ${personRdd.getNumPartitions}"
-    )
-    log.info(
-      s"[Simulation] Company RDD partitions: ${companyRdd.getNumPartitions}"
-    )
-    log.info(
-      s"[Simulation] Medium RDD partitions: ${mediumRdd.getNumPartitions}"
+      s"[Simulation] Person RDD partitions: ${personRdd.getNumPartitions}, "
+        + s"Company RDD partitions: ${companyRdd.getNumPartitions}, "
+        + s"Medium RDD partitions: ${mediumRdd.getNumPartitions}"
     )
 
     // Person and company related activities
     val personWithAccounts = activityGenerator.personRegisterEvent(
       personRdd
-    ) // simulate person register event
-    log.info(
-      s"[Simulation] personWithAccounts partitions: ${personWithAccounts.getNumPartitions}"
     )
     val companyWithAccounts = activityGenerator.companyRegisterEvent(
       companyRdd
-    ) // simulate company register event
+    )
     log.info(
-      s"[Simulation] companyWithAccounts partitions: ${companyWithAccounts.getNumPartitions}"
+      s"[Simulation] personWithAccounts partitions: ${personWithAccounts.getNumPartitions}, "
+        + s"companyWithAccounts partitions: ${companyWithAccounts.getNumPartitions}"
     )
 
     // simulate person or company invest company event
@@ -97,10 +62,8 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
     val companyWitAccGua =
       activityGenerator.companyGuaranteeEvent(companyWithAccounts)
     log.info(
-      s"[Simulation] personWithAccGua partitions: ${personWithAccGua.getNumPartitions}"
-    )
-    log.info(
-      s"[Simulation] companyWitAccGua partitions: ${companyWitAccGua.getNumPartitions}"
+      s"[Simulation] personWithAccGua partitions: ${personWithAccGua.getNumPartitions}, "
+        + s"companyWitAccGua partitions: ${companyWitAccGua.getNumPartitions}"
     )
 
     // simulate person apply loans event and company apply loans event
@@ -109,10 +72,8 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
     val companyWithAccGuaLoan =
       activityGenerator.companyLoanEvent(companyWitAccGua)
     log.info(
-      s"[Simulation] personWithAccGuaLoan partitions: ${personWithAccGuaLoan.getNumPartitions}"
-    )
-    log.info(
-      s"[Simulation] companyWithAccGuaLoan partitions: ${companyWithAccGuaLoan.getNumPartitions}"
+      s"[Simulation] personWithAccGuaLoan partitions: ${personWithAccGuaLoan.getNumPartitions}, "
+        + s"companyWithAccGuaLoan partitions: ${companyWithAccGuaLoan.getNumPartitions}"
     )
 
     // Account related activities
@@ -131,10 +92,8 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
       s"[Simulation] signIn RDD partitions: ${signInRdd.getNumPartitions}"
     )
     log.info(
-      s"[Simulation] transfer RDD partitions: ${mergedTransfers.getNumPartitions}"
-    )
-    log.info(
-      s"[Simulation] withdraw RDD partitions: ${withdrawRdd.getNumPartitions}"
+      s"[Simulation] transfer RDD partitions: ${mergedTransfers.getNumPartitions}, "
+        + s"withdraw RDD partitions: ${withdrawRdd.getNumPartitions}"
     )
 
     // Loan related activities
@@ -150,22 +109,23 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
     )
 
     // Serialize
-    val allFutures =
-      activitySerializer.writePersonWithActivities(personWithAccGuaLoan) ++
-        activitySerializer.writeCompanyWithActivities(companyWithAccGuaLoan) ++
-        activitySerializer.writeMediumWithActivities(mediumRdd, signInRdd) ++
-        activitySerializer.writeAccountWithActivities(
-          accountRdd,
-          mergedTransfers
-        ) ++
-        activitySerializer.writeWithdraw(withdrawRdd) ++
-        activitySerializer.writeInvest(investRdd) ++
-        activitySerializer.writeLoanActivities(
-          loanRdd,
-          depositsRdd,
-          repaysRdd,
-          loanTrasfersRdd
-        )
+    val allFutures = Seq(
+      activitySerializer.writePersonWithActivities(personWithAccGuaLoan),
+      activitySerializer.writeCompanyWithActivities(companyWithAccGuaLoan),
+      activitySerializer.writeMediumWithActivities(mediumRdd, signInRdd),
+      activitySerializer.writeAccountWithActivities(
+        accountRdd,
+        mergedTransfers
+      ),
+      activitySerializer.writeWithdraw(withdrawRdd),
+      activitySerializer.writeInvest(investRdd),
+      activitySerializer.writeLoanActivities(
+        loanRdd,
+        depositsRdd,
+        repaysRdd,
+        loanTrasfersRdd
+      )
+    ).flatten
 
     Await.result(Future.sequence(allFutures), Duration.Inf)
   }
@@ -174,16 +134,13 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
       persons: RDD[Person],
       companies: RDD[Company]
   ): RDD[Account] = {
-    val personAccounts = persons.flatMap(person =>
-      person.getPersonOwnAccounts.asScala.map(_.getAccount)
-    )
-    val companyAccounts = companies.flatMap(company =>
-      company.getCompanyOwnAccounts.asScala.map(_.getAccount)
-    )
-    val allAccounts = personAccounts
+    val personAccounts =
+      persons.flatMap(_.getPersonOwnAccounts.asScala.map(_.getAccount))
+    val companyAccounts =
+      companies.flatMap(_.getCompanyOwnAccounts.asScala.map(_.getAccount))
+    personAccounts
       .union(companyAccounts)
       .mapPartitions(iter => shuffleDegrees(iter.toList).iterator)
-    allAccounts
   }
 
   private def shuffleDegrees(accounts: List[Account]): List[Account] = {
@@ -201,12 +158,10 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
       persons: RDD[Person],
       companies: RDD[Company]
   ): RDD[Loan] = {
-    val personLoans = persons.flatMap(person =>
-      person.getPersonApplyLoans.asScala.map(_.getLoan)
-    )
-    val companyLoans = companies.flatMap(company =>
-      company.getCompanyApplyLoans.asScala.map(_.getLoan)
-    )
+    val personLoans =
+      persons.flatMap(_.getPersonApplyLoans.asScala.map(_.getLoan))
+    val companyLoans =
+      companies.flatMap(_.getCompanyApplyLoans.asScala.map(_.getLoan))
     personLoans.union(companyLoans)
   }
 }
