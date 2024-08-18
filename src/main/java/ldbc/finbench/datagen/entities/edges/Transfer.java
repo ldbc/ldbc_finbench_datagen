@@ -2,7 +2,6 @@ package ldbc.finbench.datagen.entities.edges;
 
 import java.io.Serializable;
 import java.util.Comparator;
-import java.util.Random;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 import ldbc.finbench.datagen.entities.nodes.Account;
 import ldbc.finbench.datagen.generation.DatagenParams;
@@ -40,7 +39,8 @@ public class Transfer implements DynamicActivity, Serializable {
             Dictionaries.dates.randomAccountToAccountDate(farm.get(RandomGeneratorFarm.Aspect.TRANSFER_DATE), from, to,
                                                           deleteDate);
         boolean willDelete = from.isExplicitlyDeleted() && to.isExplicitlyDeleted();
-        double amount = farm.get(RandomGeneratorFarm.Aspect.TRANSFER_AMOUNT).nextDouble() * DatagenParams.transferMaxAmount;
+        double amount =
+            farm.get(RandomGeneratorFarm.Aspect.TRANSFER_AMOUNT).nextDouble() * DatagenParams.transferMaxAmount;
         Transfer transfer = new Transfer(from, to, amount, creationDate, deleteDate, multiplicityId, willDelete);
 
         // Set ordernum
