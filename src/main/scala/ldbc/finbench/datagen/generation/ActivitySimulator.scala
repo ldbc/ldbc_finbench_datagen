@@ -109,22 +109,23 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
     )
 
     // Serialize
-    val allFutures =
-      activitySerializer.writePersonWithActivities(personWithAccGuaLoan) ++
-        activitySerializer.writeCompanyWithActivities(companyWithAccGuaLoan) ++
-        activitySerializer.writeMediumWithActivities(mediumRdd, signInRdd) ++
-        activitySerializer.writeAccountWithActivities(
-          accountRdd,
-          mergedTransfers
-        ) ++
-        activitySerializer.writeWithdraw(withdrawRdd) ++
-        activitySerializer.writeInvest(investRdd) ++
-        activitySerializer.writeLoanActivities(
-          loanRdd,
-          depositsRdd,
-          repaysRdd,
-          loanTrasfersRdd
-        )
+    val allFutures = Seq(
+      activitySerializer.writePersonWithActivities(personWithAccGuaLoan),
+      activitySerializer.writeCompanyWithActivities(companyWithAccGuaLoan),
+      activitySerializer.writeMediumWithActivities(mediumRdd, signInRdd),
+      activitySerializer.writeAccountWithActivities(
+        accountRdd,
+        mergedTransfers
+      ),
+      activitySerializer.writeWithdraw(withdrawRdd),
+      activitySerializer.writeInvest(investRdd),
+      activitySerializer.writeLoanActivities(
+        loanRdd,
+        depositsRdd,
+        repaysRdd,
+        loanTrasfersRdd
+      )
+    ).flatten
 
     Await.result(Future.sequence(allFutures), Duration.Inf)
   }
@@ -133,16 +134,13 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
       persons: RDD[Person],
       companies: RDD[Company]
   ): RDD[Account] = {
-    val personAccounts = persons.flatMap(person =>
-      person.getPersonOwnAccounts.asScala.map(_.getAccount)
-    )
-    val companyAccounts = companies.flatMap(company =>
-      company.getCompanyOwnAccounts.asScala.map(_.getAccount)
-    )
-    val allAccounts = personAccounts
+    val personAccounts =
+      persons.flatMap(_.getPersonOwnAccounts.asScala.map(_.getAccount))
+    val companyAccounts =
+      companies.flatMap(_.getCompanyOwnAccounts.asScala.map(_.getAccount))
+    personAccounts
       .union(companyAccounts)
       .mapPartitions(iter => shuffleDegrees(iter.toList).iterator)
-    allAccounts
   }
 
   private def shuffleDegrees(accounts: List[Account]): List[Account] = {
@@ -160,12 +158,10 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
       persons: RDD[Person],
       companies: RDD[Company]
   ): RDD[Loan] = {
-    val personLoans = persons.flatMap(person =>
-      person.getPersonApplyLoans.asScala.map(_.getLoan)
-    )
-    val companyLoans = companies.flatMap(company =>
-      company.getCompanyApplyLoans.asScala.map(_.getLoan)
-    )
+    val personLoans =
+      persons.flatMap(_.getPersonApplyLoans.asScala.map(_.getLoan))
+    val companyLoans =
+      companies.flatMap(_.getCompanyApplyLoans.asScala.map(_.getLoan))
     personLoans.union(companyLoans)
   }
 }

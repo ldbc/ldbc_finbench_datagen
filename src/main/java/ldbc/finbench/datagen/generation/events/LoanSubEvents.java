@@ -3,6 +3,7 @@ package ldbc.finbench.datagen.generation.events;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -40,9 +41,9 @@ public class LoanSubEvents implements Serializable {
         actionRandom = new Random(DatagenParams.defaultSeed);
         amountRandom = new Random(DatagenParams.defaultSeed);
         targetAccounts = targets;
-        deposits = new ArrayList<>();
-        repays = new ArrayList<>();
-        transfers = new ArrayList<>();
+        deposits = new LinkedList<>();
+        repays = new LinkedList<>();
+        transfers = new LinkedList<>();
         // Add all defined subevents to the consumers list
         consumers = Arrays.asList(this::depositSubEvent,
                                   this::repaySubEvent,

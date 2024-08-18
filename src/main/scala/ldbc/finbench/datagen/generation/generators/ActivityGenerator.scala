@@ -5,11 +5,9 @@ import ldbc.finbench.datagen.entities.nodes._
 import ldbc.finbench.datagen.generation.DatagenParams
 import ldbc.finbench.datagen.generation.events._
 import ldbc.finbench.datagen.util.Logging
-import org.apache.spark.TaskContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
-import java.util
 import scala.collection.JavaConverters._
 import scala.collection.SortedMap
 
@@ -84,7 +82,7 @@ class ActivityGenerator()(implicit spark: SparkSession)
     companyWithAccount
   }
 
-  // TODO: rewrite it with company centric
+  // TODO: rewrite it with company centric and invide the person investors and company investors
   def investEvent(
       personRDD: RDD[Person],
       companyRDD: RDD[Company]
@@ -268,23 +266,25 @@ class ActivityGenerator()(implicit spark: SparkSession)
       loanRDD: RDD[Loan],
       accountRDD: RDD[Account]
   ): (RDD[Deposit], RDD[Repay], RDD[Transfer]) = {
-    val fraction = DatagenParams.loanInvolvedAccountsFraction
-    val loanParts = loanRDD.partitions.length
-    val accountSampleList = new util.ArrayList[util.List[Account]](loanParts)
-    for (i <- 1 to loanParts) {
-      val sampleAccounts = accountRDD.sample(
+    val sampledAccounts = accountRDD
+      .sample(
         withReplacement = false,
-        fraction / loanParts,
+        DatagenParams.loanInvolvedAccountsFraction,
         sampleRandom.nextLong()
       )
-      accountSampleList.add(sampleAccounts.collect().toList.asJava)
-    }
+      .collect()
+      .toList
+
+    val accountSampleList = sampledAccounts
+      .grouped(sampledAccounts.size / loanRDD.partitions.length)
+      .map(_.asJava)
+      .toList
+      .asJava
 
     // TODO: optimize the map function with the Java-Scala part.
-    val afterLoanActions = loanRDD.mapPartitions(loans => {
-      val partitionId = TaskContext.getPartitionId()
-      val loanSubEvents = new LoanSubEvents(accountSampleList.get(partitionId))
-      loanSubEvents.afterLoanApplied(loans.toList.asJava, partitionId)
+    val afterLoanActions = loanRDD.mapPartitionsWithIndex((index, loans) => {
+      val loanSubEvents = new LoanSubEvents(accountSampleList.get(index))
+      loanSubEvents.afterLoanApplied(loans.toList.asJava, index)
       Iterator(
         (
           loanSubEvents.getDeposits.asScala,
@@ -292,12 +292,12 @@ class ActivityGenerator()(implicit spark: SparkSession)
           loanSubEvents.getTransfers.asScala
         )
       )
-    })
+    }).cache()
 
-    val deposits = afterLoanActions.map(_._1).flatMap(deposits => deposits)
-    val repays = afterLoanActions.map(_._2).flatMap(repays => repays)
-    val transfers = afterLoanActions.map(_._3).flatMap(transfers => transfers)
-
-    (deposits, repays, transfers)
+    (
+      afterLoanActions.flatMap(_._1),
+      afterLoanActions.flatMap(_._2),
+      afterLoanActions.flatMap(_._3)
+    )
   }
 }
