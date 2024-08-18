@@ -32,7 +32,8 @@ public class PersonApplyLoan implements DynamicActivity, Serializable {
         String organization = Dictionaries.loanOrganizations.getUniformDistRandomText(
             farm.get(RandomGeneratorFarm.Aspect.PERSON_APPLY_LOAN_ORGANIZATION));
         String comment =
-            Dictionaries.randomTexts.getUniformDistRandomText(farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
+            Dictionaries.randomTexts.getUniformDistRandomTextForComments(
+                farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
         loan.setOwnerType(PersonOrCompany.PERSON);
         loan.setOwnerPerson(person);
         PersonApplyLoan personApplyLoan =

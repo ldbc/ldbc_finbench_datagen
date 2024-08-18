@@ -33,7 +33,8 @@ public class PersonGuaranteePerson implements DynamicActivity, Serializable {
         String relation = Dictionaries.guaranteeRelationships.getDistributedText(
             farm.get(RandomGeneratorFarm.Aspect.PERSON_GUARANTEE_RELATIONSHIP));
         String comment =
-            Dictionaries.randomTexts.getUniformDistRandomText(farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
+            Dictionaries.randomTexts.getUniformDistRandomTextForComments(
+                farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
         PersonGuaranteePerson personGuaranteePerson =
             new PersonGuaranteePerson(fromPerson, toPerson, creationDate, 0, false, relation, comment);
         fromPerson.getGuaranteeSrc().add(personGuaranteePerson);

@@ -32,7 +32,8 @@ public class PersonOwnAccount implements DynamicActivity, Serializable {
         account.setOwnerType(PersonOrCompany.PERSON);
         account.setPersonOwner(person);
         String comment =
-            Dictionaries.randomTexts.getUniformDistRandomText(farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
+            Dictionaries.randomTexts.getUniformDistRandomTextForComments(
+                farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
         PersonOwnAccount personOwnAccount = new PersonOwnAccount(person, account, creationDate,
                                                                  account.getDeletionDate(),
                                                                  account.isExplicitlyDeleted(),

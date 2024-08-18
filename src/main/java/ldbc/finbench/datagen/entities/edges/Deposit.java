@@ -32,7 +32,8 @@ public class Deposit implements DynamicActivity, Serializable {
             Dictionaries.dates.randomLoanToAccountDate(farm.get(RandomGeneratorFarm.Aspect.LOAN_SUBEVENTS_DATE), loan,
                                                        account, account.getDeletionDate());
         String comment =
-            Dictionaries.randomTexts.getUniformDistRandomText(farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
+            Dictionaries.randomTexts.getUniformDistRandomTextForComments(
+                farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
         Deposit deposit =
             new Deposit(loan, account, amount, creationDate, account.getDeletionDate(), account.isExplicitlyDeleted(),
                         comment);

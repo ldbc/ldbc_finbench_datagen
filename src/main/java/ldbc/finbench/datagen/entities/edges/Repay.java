@@ -32,7 +32,8 @@ public class Repay implements DynamicActivity, Serializable {
             Dictionaries.dates.randomAccountToLoanDate(farm.get(RandomGeneratorFarm.Aspect.LOAN_SUBEVENTS_DATE),
                                                        account, loan, account.getDeletionDate());
         String comment =
-            Dictionaries.randomTexts.getUniformDistRandomText(farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
+            Dictionaries.randomTexts.getUniformDistRandomTextForComments(
+                farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
         Repay repay = new Repay(account, loan, amount, creationDate, account.getDeletionDate(),
                                 account.isExplicitlyDeleted(), comment);
         loan.addRepay(repay);

@@ -47,7 +47,8 @@ public class Transfer implements DynamicActivity, Serializable {
 
         // Set comment
         String comment =
-            Dictionaries.randomTexts.getUniformDistRandomText(farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
+            Dictionaries.randomTexts.getUniformDistRandomTextForComments(
+                farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
         transfer.setComment(comment);
 
         // Set payType
@@ -83,7 +84,8 @@ public class Transfer implements DynamicActivity, Serializable {
 
         // Set comment
         String comment =
-            Dictionaries.randomTexts.getUniformDistRandomText(farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
+            Dictionaries.randomTexts.getUniformDistRandomTextForComments(
+                farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
         transfer.setComment(comment);
 
         // Set payType
