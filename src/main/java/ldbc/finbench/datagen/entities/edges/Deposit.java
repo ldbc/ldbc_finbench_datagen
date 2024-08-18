@@ -8,12 +8,12 @@ import ldbc.finbench.datagen.entities.nodes.Loan;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 
 public class Deposit implements DynamicActivity, Serializable {
-    private Loan loan;
-    private Account account;
-    private double amount;
-    private long creationDate;
-    private long deletionDate;
-    private boolean isExplicitlyDeleted;
+    private final Loan loan;
+    private final Account account;
+    private final double amount;
+    private final long creationDate;
+    private final long deletionDate;
+    private final boolean isExplicitlyDeleted;
 
     public Deposit(Loan loan, Account account, double amount, long creationDate, long deletionDate,
                    boolean isExplicitlyDeleted) {
@@ -40,24 +40,12 @@ public class Deposit implements DynamicActivity, Serializable {
         return amount;
     }
 
-    public void setAmount(double amount) {
-        this.amount = amount;
-    }
-
     public Loan getLoan() {
         return loan;
     }
 
-    public void setLoan(Loan loan) {
-        this.loan = loan;
-    }
-
     public Account getAccount() {
         return account;
-    }
-
-    public void setAccount(Account account) {
-        this.account = account;
     }
 
     @Override
@@ -65,25 +53,13 @@ public class Deposit implements DynamicActivity, Serializable {
         return creationDate;
     }
 
-    public void setCreationDate(long creationDate) {
-        this.creationDate = creationDate;
-    }
-
     @Override
     public long getDeletionDate() {
         return deletionDate;
     }
 
-    public void setDeletionDate(long deletionDate) {
-        this.deletionDate = deletionDate;
-    }
-
     @Override
     public boolean isExplicitlyDeleted() {
         return isExplicitlyDeleted;
-    }
-
-    public void setExplicitlyDeleted(boolean explicitlyDeleted) {
-        isExplicitlyDeleted = explicitlyDeleted;
     }
 }

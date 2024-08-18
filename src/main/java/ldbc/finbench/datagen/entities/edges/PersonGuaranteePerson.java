@@ -1,19 +1,18 @@
 package ldbc.finbench.datagen.entities.edges;
 
 import java.io.Serializable;
-import java.util.Random;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 import ldbc.finbench.datagen.entities.nodes.Person;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class PersonGuaranteePerson implements DynamicActivity, Serializable {
-    private Person fromPerson;
-    private Person toPerson;
-    private long creationDate;
-    private long deletionDate;
-    private boolean isExplicitlyDeleted;
-    private String relationship;
+    private final Person fromPerson;
+    private final Person toPerson;
+    private final long creationDate;
+    private final long deletionDate;
+    private final boolean isExplicitlyDeleted;
+    private final String relationship;
 
     public PersonGuaranteePerson(Person fromPerson, Person toPerson,
                                  long creationDate, long deletionDate, boolean isExplicitlyDeleted, String relation) {
@@ -40,16 +39,8 @@ public class PersonGuaranteePerson implements DynamicActivity, Serializable {
         return fromPerson;
     }
 
-    public void setFromPerson(Person fromPerson) {
-        this.fromPerson = fromPerson;
-    }
-
     public Person getToPerson() {
         return toPerson;
-    }
-
-    public void setToPerson(Person toPerson) {
-        this.toPerson = toPerson;
     }
 
     @Override
@@ -57,17 +48,9 @@ public class PersonGuaranteePerson implements DynamicActivity, Serializable {
         return creationDate;
     }
 
-    public void setCreationDate(long creationDate) {
-        this.creationDate = creationDate;
-    }
-
     @Override
     public long getDeletionDate() {
         return deletionDate;
-    }
-
-    public void setDeletionDate(long deletionDate) {
-        this.deletionDate = deletionDate;
     }
 
     @Override
@@ -75,15 +58,7 @@ public class PersonGuaranteePerson implements DynamicActivity, Serializable {
         return isExplicitlyDeleted;
     }
 
-    public void setExplicitlyDeleted(boolean explicitlyDeleted) {
-        isExplicitlyDeleted = explicitlyDeleted;
-    }
-
     public String getRelationship() {
         return relationship;
-    }
-
-    public void setRelationship(String relationship) {
-        this.relationship = relationship;
     }
 }

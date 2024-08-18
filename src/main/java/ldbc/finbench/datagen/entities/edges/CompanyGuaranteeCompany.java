@@ -7,12 +7,12 @@ import ldbc.finbench.datagen.entities.nodes.Company;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 
 public class CompanyGuaranteeCompany implements DynamicActivity, Serializable {
-    private Company fromCompany;
-    private Company toCompany;
-    private long creationDate;
-    private long deletionDate;
-    private boolean isExplicitlyDeleted;
-    private String relationship;
+    private final Company fromCompany;
+    private final Company toCompany;
+    private final long creationDate;
+    private final long deletionDate;
+    private final boolean isExplicitlyDeleted;
+    private final String relationship;
 
     public CompanyGuaranteeCompany(Company fromCompany, Company toCompany,
                                    long creationDate, long deletionDate, boolean isExplicitlyDeleted, String relation) {
@@ -27,7 +27,8 @@ public class CompanyGuaranteeCompany implements DynamicActivity, Serializable {
     public static void createCompanyGuaranteeCompany(Random random, Company fromCompany, Company toCompany) {
         long creationDate = Dictionaries.dates.randomCompanyToCompanyDate(random, fromCompany, toCompany);
         CompanyGuaranteeCompany companyGuaranteeCompany = new CompanyGuaranteeCompany(fromCompany,
-                toCompany, creationDate, 0, false, "business associate");
+                                                                                      toCompany, creationDate, 0, false,
+                                                                                      "business associate");
         fromCompany.getGuaranteeSrc().add(companyGuaranteeCompany);
         toCompany.getGuaranteeDst().add(companyGuaranteeCompany);
     }
@@ -45,26 +46,14 @@ public class CompanyGuaranteeCompany implements DynamicActivity, Serializable {
         return creationDate;
     }
 
-    public void setCreationDate(long creationDate) {
-        this.creationDate = creationDate;
-    }
-
     @Override
     public long getDeletionDate() {
         return deletionDate;
     }
 
-    public void setDeletionDate(long deletionDate) {
-        this.deletionDate = deletionDate;
-    }
-
     @Override
     public boolean isExplicitlyDeleted() {
         return isExplicitlyDeleted;
-    }
-
-    public void setExplicitlyDeleted(boolean explicitlyDeleted) {
-        isExplicitlyDeleted = explicitlyDeleted;
     }
 
     public String getRelationship() {

@@ -30,13 +30,13 @@ public class Account implements Serializable {
     private Person personOwner;
     private Company companyOwner;
     private boolean isExplicitlyDeleted;
-    private List<Transfer> transferIns;
-    private List<Transfer> transferOuts;
-    private List<Transfer> loanTransfers;
-    private List<Withdraw> withdraws;
-    private List<Deposit> deposits;
-    private List<Repay> repays;
-    private List<SignIn> signIns;
+    private final List<Transfer> transferIns;
+    private final List<Transfer> transferOuts;
+    private final List<Transfer> loanTransfers;
+    private final List<Withdraw> withdraws;
+    private final List<Deposit> deposits;
+    private final List<Repay> repays;
+    private final List<SignIn> signIns;
 
     public Account() {
         transferIns = new ArrayList<>();
@@ -48,36 +48,6 @@ public class Account implements Serializable {
         signIns = new ArrayList<>();
     }
 
-    /*public Account(Account acc) {
-        transferIns = new ArrayList<>();
-        transferOuts = new ArrayList<>();
-        loanTransfers = new ArrayList<>();
-        withdraws = new ArrayList<>();
-        repays = new ArrayList<>();
-        deposits = new ArrayList<>();
-        signIns = new ArrayList<>();
-
-        accountId = acc.getAccountId();
-        type = acc.getType();
-        creationDate = acc.getCreationDate();
-        deletionDate = acc.getDeletionDate();
-        rawMaxInDegree = acc.getRawMaxInDegree();
-        rawMaxOutDegree = acc.getRawMaxOutDegree();
-        maxInDegree = acc.getMaxInDegree();
-        maxOutDegree = acc.getMaxOutDegree();
-        isBlocked = acc.isBlocked();
-        ownerType = acc.getOwnerType();
-        personOwner = acc.getPersonOwner();
-        companyOwner = acc.getCompanyOwner();
-        isExplicitlyDeleted = acc.isExplicitlyDeleted();
-        // Do not assign transfers
-        loanTransfers.addAll(acc.getLoanTransfers());
-        withdraws.addAll(acc.getWithdraws());
-        deposits.addAll(acc.getDeposits());
-        repays.addAll(acc.getRepays());
-        signIns.addAll(acc.getSignIns());
-    }*/
-
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof Account) {
@@ -85,6 +55,11 @@ public class Account implements Serializable {
             return accountId == other.accountId;
         }
         return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Long.hashCode(accountId);
     }
 
     public long getAvailableInDegree() {
@@ -115,48 +90,24 @@ public class Account implements Serializable {
         return transferIns;
     }
 
-    public void setTransferIns(List<Transfer> transferIns) {
-        this.transferIns = transferIns;
-    }
-
     public List<Transfer> getTransferOuts() {
         return transferOuts;
-    }
-
-    public void setTransferOuts(List<Transfer> transferIns) {
-        this.transferOuts = transferIns;
     }
 
     public List<Transfer> getLoanTransfers() {
         return loanTransfers;
     }
 
-    public void setLoanTransfers(List<Transfer> loanTransfers) {
-        this.loanTransfers = loanTransfers;
-    }
-
     public List<Withdraw> getWithdraws() {
         return withdraws;
-    }
-
-    public void setWithdraws(List<Withdraw> withdraws) {
-        this.withdraws = withdraws;
     }
 
     public List<Deposit> getDeposits() {
         return deposits;
     }
 
-    public void setDeposits(List<Deposit> deposits) {
-        this.deposits = deposits;
-    }
-
     public List<Repay> getRepays() {
         return repays;
-    }
-
-    public void setRepays(List<Repay> repays) {
-        this.repays = repays;
     }
 
     public long getCreationDate() {
@@ -231,16 +182,8 @@ public class Account implements Serializable {
         isExplicitlyDeleted = explicitlyDeleted;
     }
 
-    public Person getPersonOwner() {
-        return personOwner;
-    }
-
     public void setPersonOwner(Person personOwner) {
         this.personOwner = personOwner;
-    }
-
-    public Company getCompanyOwner() {
-        return companyOwner;
     }
 
     public void setCompanyOwner(Company companyOwner) {
@@ -250,12 +193,6 @@ public class Account implements Serializable {
     public List<SignIn> getSignIns() {
         return signIns;
     }
-
-    public void setSignIns(List<SignIn> signIns) {
-        this.signIns = signIns;
-    }
-
-
 
     public String getNickname() {
         return nickname;

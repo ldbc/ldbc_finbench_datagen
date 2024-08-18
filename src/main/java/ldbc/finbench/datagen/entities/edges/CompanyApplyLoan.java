@@ -1,20 +1,18 @@
 package ldbc.finbench.datagen.entities.edges;
 
 import java.io.Serializable;
-import java.util.Random;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 import ldbc.finbench.datagen.entities.nodes.Company;
 import ldbc.finbench.datagen.entities.nodes.Loan;
 import ldbc.finbench.datagen.entities.nodes.PersonOrCompany;
-import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 
 public class CompanyApplyLoan implements DynamicActivity, Serializable {
-    private Company company;
-    private Loan loan;
-    private long creationDate;
-    private long deletionDate;
-    private boolean isExplicitlyDeleted;
-    private String organization;
+    private final Company company;
+    private final Loan loan;
+    private final long creationDate;
+    private final long deletionDate;
+    private final boolean isExplicitlyDeleted;
+    private final String organization;
 
     public CompanyApplyLoan(Company company, Loan loan, long creationDate, long deletionDate,
                             boolean isExplicitlyDeleted, String organization) {
@@ -37,16 +35,8 @@ public class CompanyApplyLoan implements DynamicActivity, Serializable {
         return company;
     }
 
-    public void setCompany(Company company) {
-        this.company = company;
-    }
-
     public Loan getLoan() {
         return loan;
-    }
-
-    public void setLoan(Loan loan) {
-        this.loan = loan;
     }
 
     @Override
@@ -54,17 +44,9 @@ public class CompanyApplyLoan implements DynamicActivity, Serializable {
         return creationDate;
     }
 
-    public void setCreationDate(long creationDate) {
-        this.creationDate = creationDate;
-    }
-
     @Override
     public long getDeletionDate() {
         return deletionDate;
-    }
-
-    public void setDeletionDate(long deletionDate) {
-        this.deletionDate = deletionDate;
     }
 
     @Override
@@ -72,15 +54,7 @@ public class CompanyApplyLoan implements DynamicActivity, Serializable {
         return isExplicitlyDeleted;
     }
 
-    public void setExplicitlyDeleted(boolean explicitlyDeleted) {
-        isExplicitlyDeleted = explicitlyDeleted;
-    }
-
     public String getOrganization() {
         return organization;
-    }
-
-    public void setOrganization(String organization) {
-        this.organization = organization;
     }
 }

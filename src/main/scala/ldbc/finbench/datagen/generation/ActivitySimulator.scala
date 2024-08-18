@@ -16,8 +16,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
-// TODO:
-//  - refactor using common GraphDef to make the code less verbose
 class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
     extends Writer[RawSink]
     with Serializable
@@ -35,27 +33,21 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
     val mediumRdd =
       SparkMediumGenerator(DatagenParams.numMediums, config, blockSize)
     log.info(
-      s"[Simulation] Person RDD partitions: ${personRdd.getNumPartitions}"
-    )
-    log.info(
-      s"[Simulation] Company RDD partitions: ${companyRdd.getNumPartitions}"
-    )
-    log.info(
-      s"[Simulation] Medium RDD partitions: ${mediumRdd.getNumPartitions}"
+      s"[Simulation] Person RDD partitions: ${personRdd.getNumPartitions}, "
+        + s"Company RDD partitions: ${companyRdd.getNumPartitions}, "
+        + s"Medium RDD partitions: ${mediumRdd.getNumPartitions}"
     )
 
     // Person and company related activities
     val personWithAccounts = activityGenerator.personRegisterEvent(
       personRdd
-    ) // simulate person register event
-    log.info(
-      s"[Simulation] personWithAccounts partitions: ${personWithAccounts.getNumPartitions}"
     )
     val companyWithAccounts = activityGenerator.companyRegisterEvent(
       companyRdd
-    ) // simulate company register event
+    )
     log.info(
-      s"[Simulation] companyWithAccounts partitions: ${companyWithAccounts.getNumPartitions}"
+      s"[Simulation] personWithAccounts partitions: ${personWithAccounts.getNumPartitions}, "
+        + s"companyWithAccounts partitions: ${companyWithAccounts.getNumPartitions}"
     )
 
     // simulate person or company invest company event
@@ -70,10 +62,8 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
     val companyWitAccGua =
       activityGenerator.companyGuaranteeEvent(companyWithAccounts)
     log.info(
-      s"[Simulation] personWithAccGua partitions: ${personWithAccGua.getNumPartitions}"
-    )
-    log.info(
-      s"[Simulation] companyWitAccGua partitions: ${companyWitAccGua.getNumPartitions}"
+      s"[Simulation] personWithAccGua partitions: ${personWithAccGua.getNumPartitions}, "
+        + s"companyWitAccGua partitions: ${companyWitAccGua.getNumPartitions}"
     )
 
     // simulate person apply loans event and company apply loans event
@@ -82,10 +72,8 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
     val companyWithAccGuaLoan =
       activityGenerator.companyLoanEvent(companyWitAccGua)
     log.info(
-      s"[Simulation] personWithAccGuaLoan partitions: ${personWithAccGuaLoan.getNumPartitions}"
-    )
-    log.info(
-      s"[Simulation] companyWithAccGuaLoan partitions: ${companyWithAccGuaLoan.getNumPartitions}"
+      s"[Simulation] personWithAccGuaLoan partitions: ${personWithAccGuaLoan.getNumPartitions}, "
+        + s"companyWithAccGuaLoan partitions: ${companyWithAccGuaLoan.getNumPartitions}"
     )
 
     // Account related activities
@@ -104,10 +92,8 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
       s"[Simulation] signIn RDD partitions: ${signInRdd.getNumPartitions}"
     )
     log.info(
-      s"[Simulation] transfer RDD partitions: ${mergedTransfers.getNumPartitions}"
-    )
-    log.info(
-      s"[Simulation] withdraw RDD partitions: ${withdrawRdd.getNumPartitions}"
+      s"[Simulation] transfer RDD partitions: ${mergedTransfers.getNumPartitions}, "
+        + s"withdraw RDD partitions: ${withdrawRdd.getNumPartitions}"
     )
 
     // Loan related activities

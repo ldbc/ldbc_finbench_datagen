@@ -8,14 +8,14 @@ import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class SignIn implements DynamicActivity, Serializable {
-    private Medium medium;
-    private Account account;
-    private long creationDate;
-    private long deletionDate;
+    private final Medium medium;
+    private final Account account;
+    private final long creationDate;
+    private final long deletionDate;
     private int countryId;
     private int cityId;
     private final long multiplicityId;
-    private boolean isExplicitlyDeleted;
+    private final boolean isExplicitlyDeleted;
 
     public SignIn(Medium medium, Account account, int mid, long creationDate, long deletionDate,
                   boolean isExplicitlyDeleted) {
@@ -50,16 +50,8 @@ public class SignIn implements DynamicActivity, Serializable {
         return medium;
     }
 
-    public void setMedium(Medium medium) {
-        this.medium = medium;
-    }
-
     public Account getAccount() {
         return account;
-    }
-
-    public void setAccount(Account account) {
-        this.account = account;
     }
 
     @Override
@@ -67,17 +59,9 @@ public class SignIn implements DynamicActivity, Serializable {
         return creationDate;
     }
 
-    public void setCreationDate(long creationDate) {
-        this.creationDate = creationDate;
-    }
-
     @Override
     public long getDeletionDate() {
         return deletionDate;
-    }
-
-    public void setDeletionDate(long deletionDate) {
-        this.deletionDate = deletionDate;
     }
 
     public long getMultiplicityId() {
@@ -87,10 +71,6 @@ public class SignIn implements DynamicActivity, Serializable {
     @Override
     public boolean isExplicitlyDeleted() {
         return isExplicitlyDeleted;
-    }
-
-    public void setExplicitlyDeleted(boolean explicitlyDeleted) {
-        isExplicitlyDeleted = explicitlyDeleted;
     }
 
     public void setCountryId(int countryId) {

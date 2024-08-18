@@ -16,7 +16,7 @@ LDBC FinBench specification document.
 
 ### Data Schema
 
-![Schema](https://github.com/ldbc/ldbc_finbench_docs/blob/main/figures/data-schema.png)
+![Schema](./data-schema.png)
 
 ### Implementation
 
