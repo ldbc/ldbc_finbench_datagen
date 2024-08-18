@@ -43,18 +43,16 @@ class ActivityGenerator()(implicit spark: SparkSession)
         (a: SortedMap[Long, Person], b: SortedMap[Long, Person]) => a ++ b
       )
       .mapPartitions(groups => {
-        val personRegisterGroups = for { (block, persons) <- groups } yield {
-          personRegisterEvent.personRegister(
-            persons.values.toList.asJava,
-            accountGenerator,
-            block.toInt
-          )
+        groups.flatMap { case (block, persons) =>
+          personRegisterEvent
+            .personRegister(
+              persons.values.toList.asJava,
+              accountGenerator,
+              block.toInt
+            )
+            .iterator()
+            .asScala
         }
-
-        for {
-          personOwnAccounts <- personRegisterGroups
-          personOwnAccount <- personOwnAccounts.iterator().asScala
-        } yield personOwnAccount
       })
     personWithAccount
   }
@@ -72,18 +70,16 @@ class ActivityGenerator()(implicit spark: SparkSession)
         (a: SortedMap[Long, Company], b: SortedMap[Long, Company]) => a ++ b
       )
       .mapPartitions(groups => {
-        val companyRegisterGroups = for { (block, companies) <- groups } yield {
-          companyRegisterGen.companyRegister(
-            companies.values.toList.asJava,
-            accountGenerator,
-            block.toInt
-          )
+        groups.flatMap { case (block, companies) =>
+          companyRegisterGen
+            .companyRegister(
+              companies.values.toList.asJava,
+              accountGenerator,
+              block.toInt
+            )
+            .iterator()
+            .asScala
         }
-
-        for {
-          companyOwnAccounts <- companyRegisterGroups
-          companyOwnAccount <- companyOwnAccounts.iterator().asScala
-        } yield companyOwnAccount
       })
     companyWithAccount
   }

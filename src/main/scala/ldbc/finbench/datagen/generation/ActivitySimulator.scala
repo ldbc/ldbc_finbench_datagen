@@ -2,12 +2,7 @@ package ldbc.finbench.datagen.generation
 
 import ldbc.finbench.datagen.config.DatagenConfiguration
 import ldbc.finbench.datagen.entities.nodes._
-import ldbc.finbench.datagen.generation.generators.{
-  ActivityGenerator,
-  SparkCompanyGenerator,
-  SparkMediumGenerator,
-  SparkPersonGenerator
-}
+import ldbc.finbench.datagen.generation.generators.{ActivityGenerator, SparkCompanyGenerator, SparkMediumGenerator, SparkPersonGenerator}
 import ldbc.finbench.datagen.generation.serializers.ActivitySerializer
 import ldbc.finbench.datagen.io.Writer
 import ldbc.finbench.datagen.io.raw.RawSink
@@ -17,9 +12,9 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{Future, Await}
-import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 // TODO:
 //  - refactor using common GraphDef to make the code less verbose
@@ -27,40 +22,18 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
     extends Writer[RawSink]
     with Serializable
     with Logging {
-  private val parallelism = spark.sparkContext.defaultParallelism
   private val blockSize: Int = DatagenParams.blockSize
 
   private val activityGenerator = new ActivityGenerator()
   private val activitySerializer = new ActivitySerializer(sink)
 
-  private val personNum: Long = DatagenParams.numPersons
-  private val personPartitions = Some(
-    Math
-      .min(Math.ceil(personNum.toDouble / blockSize).toLong, parallelism)
-      .toInt
-  )
-
-  private val companyNum: Long = DatagenParams.numCompanies
-  private val companyPartitions = Some(
-    Math
-      .min(Math.ceil(companyNum.toDouble / blockSize).toLong, parallelism)
-      .toInt
-  )
-
-  private val mediumNum: Long = DatagenParams.numMediums
-  private val mediumPartitions = Some(
-    Math
-      .min(Math.ceil(mediumNum.toDouble / blockSize).toLong, parallelism)
-      .toInt
-  )
-
   def simulate(config: DatagenConfiguration): Unit = {
-    val personRdd: RDD[Person] =
-      SparkPersonGenerator(personNum, config, blockSize, personPartitions)
-    val companyRdd: RDD[Company] =
-      SparkCompanyGenerator(companyNum, config, blockSize, companyPartitions)
-    val mediumRdd: RDD[Medium] =
-      SparkMediumGenerator(mediumNum, config, blockSize, mediumPartitions)
+    val personRdd =
+      SparkPersonGenerator(DatagenParams.numPersons, config, blockSize)
+    val companyRdd =
+      SparkCompanyGenerator(DatagenParams.numCompanies, config, blockSize)
+    val mediumRdd =
+      SparkMediumGenerator(DatagenParams.numMediums, config, blockSize)
     log.info(
       s"[Simulation] Person RDD partitions: ${personRdd.getNumPartitions}"
     )
