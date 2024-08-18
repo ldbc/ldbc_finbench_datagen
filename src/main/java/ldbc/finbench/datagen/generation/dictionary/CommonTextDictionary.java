@@ -16,7 +16,7 @@ public class CommonTextDictionary {
 
         try {
             InputStreamReader inputStreamReader = new InputStreamReader(
-                Objects.requireNonNull(getClass().getResourceAsStream(filePath)), StandardCharsets.UTF_8);
+                    Objects.requireNonNull(getClass().getResourceAsStream(filePath)), StandardCharsets.UTF_8);
             BufferedReader dictionary = new BufferedReader(inputStreamReader);
             String line;
             long totalNum = 0;
@@ -35,5 +35,11 @@ public class CommonTextDictionary {
     public String getUniformDistRandomText(Random random) {
         long nameIndex = random.nextInt(resources.size());
         return resources.get(nameIndex);
+    }
+
+    public String getUniformDistRandomTextForComment(Random random) {
+        long index1 = random.nextInt(resources.size());
+        long index2 = random.nextInt(resources.size());
+        return resources.get(index1) + " " + resources.get(index2);
     }
 }
