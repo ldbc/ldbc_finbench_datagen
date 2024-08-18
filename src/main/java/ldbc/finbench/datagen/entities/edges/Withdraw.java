@@ -38,7 +38,7 @@ public class Withdraw implements DynamicActivity, Serializable {
         double amount =
             farm.get(RandomGeneratorFarm.Aspect.WITHDRAW_AMOUNT).nextDouble() * DatagenParams.withdrawMaxAmount;
         String comment =
-            Dictionaries.randomTexts.getUniformDistRandomTextForComment(farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
+            Dictionaries.randomTexts.getUniformDistRandomText(farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
         Withdraw withdraw =
             new Withdraw(from, to, amount, creationDate, deleteDate, multiplicityId, willDelete, comment);
         from.getWithdraws().add(withdraw);

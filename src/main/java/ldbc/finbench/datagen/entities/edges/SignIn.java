@@ -34,7 +34,7 @@ public class SignIn implements DynamicActivity, Serializable {
             Dictionaries.dates.randomMediumToAccountDate(farm.get(RandomGeneratorFarm.Aspect.SIGNIN_DATE), medium,
                                                          account, account.getDeletionDate());
         String comment =
-            Dictionaries.randomTexts.getUniformDistRandomTextForComment(farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
+            Dictionaries.randomTexts.getUniformDistRandomText(farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
         SignIn signIn = new SignIn(medium, account, mid, creationDate, account.getDeletionDate(),
                                    account.isExplicitlyDeleted(), comment);
         // Set country and city

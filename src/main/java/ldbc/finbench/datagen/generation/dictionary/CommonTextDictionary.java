@@ -33,11 +33,7 @@ public class CommonTextDictionary {
     }
 
     public String getUniformDistRandomText(Random random) {
-        long nameIndex = random.nextInt(resources.size());
-        return resources.get(nameIndex);
-    }
-
-    public String getUniformDistRandomTextForComment(Random random) {
+        // Randomly select two resources and concatenate them to flatten the dataset
         long index1 = random.nextInt(resources.size());
         long index2 = random.nextInt(resources.size());
         return resources.get(index1) + " " + resources.get(index2);

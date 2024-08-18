@@ -32,7 +32,7 @@ public class CompanyGuaranteeCompany implements DynamicActivity, Serializable {
         Random dateRand = farm.get(RandomGeneratorFarm.Aspect.COMPANY_GUARANTEE_DATE);
         long creationDate = Dictionaries.dates.randomCompanyToCompanyDate(dateRand, fromCompany, toCompany);
         String comment =
-            Dictionaries.randomTexts.getUniformDistRandomTextForComment(farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
+            Dictionaries.randomTexts.getUniformDistRandomText(farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
         CompanyGuaranteeCompany companyGuaranteeCompany = new CompanyGuaranteeCompany(fromCompany,
                                                                                       toCompany, creationDate, 0, false,
                                                                                       "business associate", comment);
