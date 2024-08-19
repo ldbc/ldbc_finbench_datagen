@@ -72,15 +72,15 @@
     <scale_factor name="1">
         <property>
             <name>generator.numPersons</name>
-            <value>80000</value>
+            <value>20000</value>
         </property>
         <property>
             <name>generator.numCompanies</name>
-            <value>40000</value>
+            <value>20000</value>
         </property>
         <property>
             <name>generator.numMediums</name>
-            <value>100000</value>
+            <value>40000</value>
         </property>
         <property>
             <name>transfer.minNumDegree</name>
@@ -92,7 +92,7 @@
         </property>
     </scale_factor>
 
-    <scale_factor name="3">
+    <!-- <scale_factor name="3">
         <property>
             <name>generator.numPersons</name>
             <value>240000</value>
@@ -113,7 +113,7 @@
             <name>transfer.maxNumDegree</name>
             <value>1000</value>
         </property>
-    </scale_factor>
+    </scale_factor> -->
 
     <scale_factor name="10">
         <property>
