@@ -118,15 +118,15 @@
     <scale_factor name="10">
         <property>
             <name>generator.numPersons</name>
-            <value>600000</value>
+            <value>200000</value>
         </property>
         <property>
             <name>generator.numCompanies</name>
-            <value>300000</value>
+            <value>200000</value>
         </property>
         <property>
             <name>generator.numMediums</name>
-            <value>2000000</value>
+            <value>350000</value>
         </property>
         <property>
             <name>transfer.minNumDegree</name>
