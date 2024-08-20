@@ -64,6 +64,7 @@ def run_local(
         **({'spark.shuffle.spill.compress': 'true'}),
         **({'spark.serializer': 'org.apache.spark.serializer.KryoSerializer'}),
         **({'spark.executor.extraJavaOptions': '-XX:+UseG1GC'}),
+        **({'spark.driver.maxResultSize': '5g'}),
         # **({'spark.executor.extraJavaOptions': '-verbose:gc -XX:+UseG1GC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps'}),
         **spark_conf
     }
