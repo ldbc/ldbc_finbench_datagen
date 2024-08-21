@@ -142,6 +142,7 @@ public class DatagenParams {
 
             System.out.println(" ... Num Persons " + numPersons);
             System.out.println(" ... Num Companies " + numCompanies);
+            System.out.println(" ... Num Mediums " + numMediums);
             System.out.println(" ... Start Year " + startYear);
             System.out.println(" ... Num Years " + numYears);
             System.out.println(" ... Max degree of Powerlaw " + transferMaxDegree);

@@ -72,15 +72,15 @@
     <scale_factor name="1">
         <property>
             <name>generator.numPersons</name>
-            <value>80000</value>
+            <value>20000</value>
         </property>
         <property>
             <name>generator.numCompanies</name>
-            <value>40000</value>
+            <value>20000</value>
         </property>
         <property>
             <name>generator.numMediums</name>
-            <value>100000</value>
+            <value>40000</value>
         </property>
         <property>
             <name>transfer.minNumDegree</name>
@@ -92,7 +92,7 @@
         </property>
     </scale_factor>
 
-    <scale_factor name="3">
+    <!-- <scale_factor name="3">
         <property>
             <name>generator.numPersons</name>
             <value>240000</value>
@@ -113,20 +113,20 @@
             <name>transfer.maxNumDegree</name>
             <value>1000</value>
         </property>
-    </scale_factor>
+    </scale_factor> -->
 
     <scale_factor name="10">
         <property>
             <name>generator.numPersons</name>
-            <value>600000</value>
+            <value>200000</value>
         </property>
         <property>
             <name>generator.numCompanies</name>
-            <value>300000</value>
+            <value>200000</value>
         </property>
         <property>
             <name>generator.numMediums</name>
-            <value>2000000</value>
+            <value>350000</value>
         </property>
         <property>
             <name>transfer.minNumDegree</name>
@@ -141,15 +141,15 @@
     <scale_factor name="30">
         <property>
             <name>generator.numPersons</name>
-            <value>1800000</value>
+            <value>600000</value>
         </property>
         <property>
             <name>generator.numCompanies</name>
-            <value>900000</value>
+            <value>600000</value>
         </property>
         <property>
             <name>generator.numMediums</name>
-            <value>6000000</value>
+            <value>1200000</value>
         </property>
         <property>
             <name>transfer.minNumDegree</name>
