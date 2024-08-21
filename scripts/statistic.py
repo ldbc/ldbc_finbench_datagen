@@ -10,7 +10,6 @@ def print_counts(counts):
 
 
 def count_entites(path):
-    path = os.path.join(path, "raw")
     counts = {}
     for subdir in os.listdir(path):
         subdir_path = os.path.join(path, subdir)

@@ -1,6 +1,7 @@
 package ldbc.finbench.datagen.generation.events;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Random;
 import ldbc.finbench.datagen.entities.edges.CompanyInvestCompany;
 import ldbc.finbench.datagen.entities.nodes.Company;
@@ -21,7 +22,7 @@ public class CompanyInvestEvent implements Serializable {
         randIndex.setSeed(seed);
     }
 
-    public CompanyInvestCompany companyInvest(Company investor, Company invested) {
-        return CompanyInvestCompany.createCompanyInvestCompany(randomFarm, investor, invested);
+    public void companyInvest(List<Company> investors, Company target) {
+        CompanyInvestCompany.createCompanyInvestCompany(randomFarm, investors, target);
     }
 }

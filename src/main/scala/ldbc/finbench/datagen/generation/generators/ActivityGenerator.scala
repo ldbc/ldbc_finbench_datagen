@@ -82,6 +82,63 @@ class ActivityGenerator()(implicit spark: SparkSession)
     companyWithAccount
   }
 
+  def newInvestEvent(
+      personRDD: RDD[Person],
+      companyRDD: RDD[Company]
+  ): Unit = {
+    val numInvestorsRandom = new scala.util.Random(DatagenParams.defaultSeed)
+    val personInvestEvent = new PersonInvestEvent()
+    val companyInvestEvent = new CompanyInvestEvent()
+
+    val targetsRDD = companyRDD
+      .sample(
+        withReplacement = false,
+        DatagenParams.companyInvestedFraction,
+        sampleRandom.nextLong()
+        )
+    val numTargets = targetsRDD.count().toInt
+
+    val numPersonInvestors = Array.fill(numTargets){
+    numInvestorsRandom.nextInt(
+      (DatagenParams.maxInvestors - DatagenParams.minInvestors + 1)
+      ) + DatagenParams.minInvestors
+    }.sum
+
+
+
+
+    val personInvestors = personRDD
+      .sample(
+        withReplacement = true,
+        numPersonInvestors.toDouble / DatagenParams.numPersons,
+        ).collect().grouped(numPersonInvestors/numTargets).toList
+
+    targetsRDD.mapPartitionsWithIndex((index, targets) => {
+        numInvestorsRandom.setSeed(index)
+        personInvestEvent.resetState(index)
+        companyInvestEvent.resetState(index)
+      personInvestors.
+        targets.map { target =>
+          personInvestEvent.personInvest(, target)
+
+          val numCompanyInvestors = numInvestorsRandom.nextInt(
+            DatagenParams.maxInvestors - DatagenParams.minInvestors + 1
+          ) + DatagenParams.minInvestors
+          val companies = companyRDD
+            .sample(
+              withReplacement = false,
+              numCompanyInvestors / DatagenParams.numCompanies,
+              index
+            )
+            .collect()
+            .toList
+            .asJava
+          companyInvestEvent.companyInvest(companies, target)
+        }
+      })
+
+  }
+
   // TODO: rewrite it with company centric and invide the person investors and company investors
   def investEvent(
       personRDD: RDD[Person],
@@ -98,6 +155,7 @@ class ActivityGenerator()(implicit spark: SparkSession)
       DatagenParams.companyInvestedFraction,
       sampleRandom.nextLong()
     )
+
     // Merge to either
     val personEitherRDD: RDD[EitherPersonOrCompany] =
       personRDD.map(person => Left(person))
@@ -282,17 +340,19 @@ class ActivityGenerator()(implicit spark: SparkSession)
       .asJava
 
     // TODO: optimize the map function with the Java-Scala part.
-    val afterLoanActions = loanRDD.mapPartitionsWithIndex((index, loans) => {
-      val loanSubEvents = new LoanSubEvents(accountSampleList.get(index))
-      loanSubEvents.afterLoanApplied(loans.toList.asJava, index)
-      Iterator(
-        (
-          loanSubEvents.getDeposits.asScala,
-          loanSubEvents.getRepays.asScala,
-          loanSubEvents.getTransfers.asScala
+    val afterLoanActions = loanRDD
+      .mapPartitionsWithIndex((index, loans) => {
+        val loanSubEvents = new LoanSubEvents(accountSampleList.get(index))
+        loanSubEvents.afterLoanApplied(loans.toList.asJava, index)
+        Iterator(
+          (
+            loanSubEvents.getDeposits.asScala,
+            loanSubEvents.getRepays.asScala,
+            loanSubEvents.getTransfers.asScala
+          )
         )
-      )
-    }).cache()
+      })
+      .cache()
 
     (
       afterLoanActions.flatMap(_._1),

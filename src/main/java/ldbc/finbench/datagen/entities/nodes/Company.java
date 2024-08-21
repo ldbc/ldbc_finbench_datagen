@@ -9,6 +9,7 @@ import ldbc.finbench.datagen.entities.edges.CompanyApplyLoan;
 import ldbc.finbench.datagen.entities.edges.CompanyGuaranteeCompany;
 import ldbc.finbench.datagen.entities.edges.CompanyInvestCompany;
 import ldbc.finbench.datagen.entities.edges.CompanyOwnAccount;
+import ldbc.finbench.datagen.entities.edges.PersonInvestCompany;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 
 public class Company implements Serializable {
@@ -22,6 +23,9 @@ public class Company implements Serializable {
     private String description;
     private String url;
     private final List<CompanyOwnAccount> companyOwnAccounts;
+    // invested by persons
+    private final List<PersonInvestCompany> personInvestCompanies;
+    // invested by companies
     private final List<CompanyInvestCompany> companyInvestCompanies;
     private final LinkedHashSet<CompanyGuaranteeCompany> guaranteeSrc;
     private final LinkedHashSet<CompanyGuaranteeCompany> guaranteeDst;
@@ -29,6 +33,7 @@ public class Company implements Serializable {
 
     public Company() {
         companyOwnAccounts = new LinkedList<>();
+        personInvestCompanies = new LinkedList<>();
         companyInvestCompanies = new LinkedList<>();
         guaranteeSrc = new LinkedHashSet<>();
         guaranteeDst = new LinkedHashSet<>();
@@ -72,6 +77,10 @@ public class Company implements Serializable {
 
     public List<CompanyOwnAccount> getCompanyOwnAccounts() {
         return companyOwnAccounts;
+    }
+
+    public List<PersonInvestCompany> getPersonInvestCompanies() {
+        return personInvestCompanies;
     }
 
     public List<CompanyInvestCompany> getCompanyInvestCompanies() {
