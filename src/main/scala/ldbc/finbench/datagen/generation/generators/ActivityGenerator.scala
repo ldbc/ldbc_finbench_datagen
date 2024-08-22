@@ -82,116 +82,86 @@ class ActivityGenerator()(implicit spark: SparkSession)
     companyWithAccount
   }
 
-  def newInvestEvent(
+  def investEvent(
       personRDD: RDD[Person],
       companyRDD: RDD[Company]
   ): Unit = {
-    val numInvestorsRandom = new scala.util.Random(DatagenParams.defaultSeed)
+    val persons = spark.sparkContext.broadcast(personRDD.collect().toList)
+    val companies = spark.sparkContext.broadcast(companyRDD.collect().toList)
+
     val personInvestEvent = new PersonInvestEvent()
     val companyInvestEvent = new CompanyInvestEvent()
 
-    val targetsRDD = companyRDD
+    companyRDD
       .sample(
         withReplacement = false,
         DatagenParams.companyInvestedFraction,
         sampleRandom.nextLong()
-        )
-    val numTargets = targetsRDD.count().toInt
-
-    val numPersonInvestors = Array.fill(numTargets){
-    numInvestorsRandom.nextInt(
-      (DatagenParams.maxInvestors - DatagenParams.minInvestors + 1)
-      ) + DatagenParams.minInvestors
-    }.sum
-
-
-
-
-    val personInvestors = personRDD
-      .sample(
-        withReplacement = true,
-        numPersonInvestors.toDouble / DatagenParams.numPersons,
-        ).collect().grouped(numPersonInvestors/numTargets).toList
-
-    targetsRDD.mapPartitionsWithIndex((index, targets) => {
-        numInvestorsRandom.setSeed(index)
+      )
+      .mapPartitionsWithIndex((index, targets) => {
         personInvestEvent.resetState(index)
         companyInvestEvent.resetState(index)
-      personInvestors.
-        targets.map { target =>
-          personInvestEvent.personInvest(, target)
-
-          val numCompanyInvestors = numInvestorsRandom.nextInt(
-            DatagenParams.maxInvestors - DatagenParams.minInvestors + 1
-          ) + DatagenParams.minInvestors
-          val companies = companyRDD
-            .sample(
-              withReplacement = false,
-              numCompanyInvestors / DatagenParams.numCompanies,
-              index
-            )
-            .collect()
-            .toList
-            .asJava
-          companyInvestEvent.companyInvest(companies, target)
-        }
+        personInvestEvent
+          .personInvestPartition(persons.value.asJava, targets.toList.asJava)
+        companyInvestEvent
+          .companyInvestPartition(companies.value.asJava, targets.toList.asJava)
+        targets.map(target => target.scaleInvestmentRatios())
       })
-
   }
 
-  // TODO: rewrite it with company centric and invide the person investors and company investors
-  def investEvent(
-      personRDD: RDD[Person],
-      companyRDD: RDD[Company]
-  ): RDD[EitherPersonInvestOrCompanyInvest] = {
-    val seedRandom = new scala.util.Random(DatagenParams.defaultSeed)
-    val numInvestorsRandom = new scala.util.Random(DatagenParams.defaultSeed)
-    val personInvestEvent = new PersonInvestEvent()
-    val companyInvestEvent = new CompanyInvestEvent()
-
-    // Sample some companies to be invested
-    val investedCompanyRDD = companyRDD.sample(
-      withReplacement = false,
-      DatagenParams.companyInvestedFraction,
-      sampleRandom.nextLong()
-    )
-
-    // Merge to either
-    val personEitherRDD: RDD[EitherPersonOrCompany] =
-      personRDD.map(person => Left(person))
-    val companyEitherRDD: RDD[EitherPersonOrCompany] =
-      companyRDD.map(company => Right(company))
-    val mergedEither = personEitherRDD.union(companyEitherRDD).collect().toList
-
-    // TODO: optimize the Spark process when large scale
-    investedCompanyRDD.flatMap(investedCompany => {
-      numInvestorsRandom.setSeed(seedRandom.nextInt())
-      sampleRandom.setSeed(seedRandom.nextInt())
-      personInvestEvent.resetState(seedRandom.nextInt())
-      companyInvestEvent.resetState(seedRandom.nextInt())
-
-      val numInvestors = numInvestorsRandom.nextInt(
-        DatagenParams.maxInvestors - DatagenParams.minInvestors + 1
-      ) + DatagenParams.minInvestors
-      // Note: check if fraction 0.1 has enough numInvestors to take
-      val investRels =
-        sampleRandom.shuffle(mergedEither).take(numInvestors).map {
-          case Left(person) =>
-            Left(personInvestEvent.personInvest(person, investedCompany))
-          case Right(company) =>
-            Right(companyInvestEvent.companyInvest(company, investedCompany))
-        }
-      val ratioSum = investRels.map {
-        case Left(personInvest)   => personInvest.getRatio
-        case Right(companyInvest) => companyInvest.getRatio
-      }.sum
-      investRels.foreach {
-        case Left(personInvest)   => personInvest.scaleRatio(ratioSum)
-        case Right(companyInvest) => companyInvest.scaleRatio(ratioSum)
-      }
-      investRels
-    })
-  }
+//  // TODO: rewrite it with company centric and invide the person investors and company investors
+//  def investEvent(
+//      personRDD: RDD[Person],
+//      companyRDD: RDD[Company]
+//  ): RDD[EitherPersonInvestOrCompanyInvest] = {
+//    val seedRandom = new scala.util.Random(DatagenParams.defaultSeed)
+//    val numInvestorsRandom = new scala.util.Random(DatagenParams.defaultSeed)
+//    val personInvestEvent = new PersonInvestEvent()
+//    val companyInvestEvent = new CompanyInvestEvent()
+//
+//    // Sample some companies to be invested
+//    val investedCompanyRDD = companyRDD.sample(
+//      withReplacement = false,
+//      DatagenParams.companyInvestedFraction,
+//      sampleRandom.nextLong()
+//    )
+//
+//    // Merge to either
+//    val personEitherRDD: RDD[EitherPersonOrCompany] =
+//      personRDD.map(person => Left(person))
+//    val companyEitherRDD: RDD[EitherPersonOrCompany] =
+//      companyRDD.map(company => Right(company))
+//    val mergedEither = personEitherRDD.union(companyEitherRDD).collect().toList
+//
+//    // TODO: optimize the Spark process when large scale
+//    investedCompanyRDD.flatMap(investedCompany => {
+//      numInvestorsRandom.setSeed(seedRandom.nextInt())
+//      sampleRandom.setSeed(seedRandom.nextInt())
+//      personInvestEvent.resetState(seedRandom.nextInt())
+//      companyInvestEvent.resetState(seedRandom.nextInt())
+//
+//      val numInvestors = numInvestorsRandom.nextInt(
+//        DatagenParams.maxInvestors - DatagenParams.minInvestors + 1
+//      ) + DatagenParams.minInvestors
+//      // Note: check if fraction 0.1 has enough numInvestors to take
+//      val investRels =
+//        sampleRandom.shuffle(mergedEither).take(numInvestors).map {
+//          case Left(person) =>
+//            Left(personInvestEvent.personInvest(person, investedCompany))
+//          case Right(company) =>
+//            Right(companyInvestEvent.companyInvest(company, investedCompany))
+//        }
+//      val ratioSum = investRels.map {
+//        case Left(personInvest)   => personInvest.getRatio
+//        case Right(companyInvest) => companyInvest.getRatio
+//      }.sum
+//      investRels.foreach {
+//        case Left(personInvest)   => personInvest.scaleRatio(ratioSum)
+//        case Right(companyInvest) => companyInvest.scaleRatio(ratioSum)
+//      }
+//      investRels
+//    })
+//  }
 
   def signInEvent(
       mediumRDD: RDD[Medium],

@@ -1,7 +1,6 @@
 package ldbc.finbench.datagen.entities.edges;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.Random;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 import ldbc.finbench.datagen.entities.nodes.Company;
@@ -30,19 +29,17 @@ public class PersonInvestCompany implements DynamicActivity, Serializable {
         this.comment = comment;
     }
 
-    public static void createPersonInvestCompany(RandomGeneratorFarm farm, List<Person> investors,
+    public static void createPersonInvestCompany(RandomGeneratorFarm farm, Person investor,
                                                  Company target) {
-        for (Person investor : investors) {
-            Random dateRandom = farm.get(RandomGeneratorFarm.Aspect.PERSON_INVEST_DATE);
-            long creationDate = Dictionaries.dates.randomPersonToCompanyDate(dateRandom, investor, target);
-            double ratio = farm.get(RandomGeneratorFarm.Aspect.INVEST_RATIO).nextDouble();
-            String comment =
-                Dictionaries.randomTexts.getUniformDistRandomTextForComments(
-                    farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
-            PersonInvestCompany personInvestCompany = new PersonInvestCompany(investor, target, creationDate, 0, ratio,
-                                                                              false, comment);
-            target.getPersonInvestCompanies().add(personInvestCompany);
-        }
+        Random dateRandom = farm.get(RandomGeneratorFarm.Aspect.PERSON_INVEST_DATE);
+        long creationDate = Dictionaries.dates.randomPersonToCompanyDate(dateRandom, investor, target);
+        double ratio = farm.get(RandomGeneratorFarm.Aspect.INVEST_RATIO).nextDouble();
+        String comment =
+            Dictionaries.randomTexts.getUniformDistRandomTextForComments(
+                farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
+        PersonInvestCompany personInvestCompany = new PersonInvestCompany(investor, target, creationDate, 0, ratio,
+                                                                          false, comment);
+        target.getPersonInvestCompanies().add(personInvestCompany);
     }
 
     public void scaleRatio(double sum) {

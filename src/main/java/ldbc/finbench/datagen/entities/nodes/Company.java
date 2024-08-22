@@ -87,6 +87,40 @@ public class Company implements Serializable {
         return companyInvestCompanies;
     }
 
+    public void scaleInvestmentRatios() {
+        double sum = 0;
+        for (PersonInvestCompany pic : personInvestCompanies) {
+            sum += pic.getRatio();
+        }
+        for (CompanyInvestCompany cic : companyInvestCompanies) {
+            sum += cic.getRatio();
+        }
+        for (PersonInvestCompany pic : personInvestCompanies) {
+            pic.scaleRatio(sum);
+        }
+        for (CompanyInvestCompany cic : companyInvestCompanies) {
+            cic.scaleRatio(sum);
+        }
+    }
+
+    public boolean hasInvestedBy(Company company) {
+        for (CompanyInvestCompany cic : companyInvestCompanies) {
+            if (cic.getFromCompany().equals(company)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean hasInvestedBy(Person person) {
+        for (PersonInvestCompany pic : personInvestCompanies) {
+            if (pic.getPerson().equals(person)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public HashSet<CompanyGuaranteeCompany> getGuaranteeSrc() {
         return guaranteeSrc;
     }

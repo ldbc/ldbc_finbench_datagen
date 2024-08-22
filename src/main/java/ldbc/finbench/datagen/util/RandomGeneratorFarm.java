@@ -83,8 +83,12 @@ public class RandomGeneratorFarm implements Serializable {
 
         // edge: person invest
         PERSON_INVEST_DATE,
+        NUMS_PERSON_INVEST,
+        PERSON_INVESTOR_SAMPLES,
         // edge: company invest
         COMPANY_INVEST_DATE,
+        NUMS_COMPANY_INVEST,
+        COMPANY_INVESTOR_SAMPLES,
         INVEST_RATIO,
 
         // edge: person guarantee
