@@ -94,17 +94,21 @@ class ActivityGenerator()(implicit spark: SparkSession)
         DatagenParams.companyInvestedFraction,
         sampleRandom.nextLong()
       )
-      .mapPartitionsWithIndex((index, targets) => {
+      .mapPartitionsWithIndex { (index, targets) =>
         personInvestEvent.resetState(index)
         companyInvestEvent.resetState(index)
         personInvestEvent
           .personInvestPartition(persons.value.asJava, targets.toList.asJava)
         companyInvestEvent
-          .companyInvestPartition(companies.value.asJava, targets.toList.asJava)
-        targets.map(target => target.scaleInvestmentRatios())
-      })
-
-    companyRDD
+          .companyInvestPartition(
+            companies.value.asJava,
+            targets.toList.asJava
+          )
+        targets.map { target =>
+          target.scaleInvestmentRatios()
+          target
+        }
+      }
   }
 
   def signInEvent(
