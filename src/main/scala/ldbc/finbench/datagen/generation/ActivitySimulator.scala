@@ -51,7 +51,7 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
     )
 
     // simulate person or company invest company event
-    activityGenerator.investEvent(personRdd, companyRdd)
+    val companyRddAfterInvest = activityGenerator.investEvent(personRdd, companyRdd)
 
     // simulate person guarantee person event and company guarantee company event
     val personWithAccGua =
@@ -108,7 +108,7 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
         mergedTransfers
       ),
       activitySerializer.writeWithdraw(withdrawRdd),
-      activitySerializer.writeInvest(companyRdd),
+      activitySerializer.writeInvest(companyRddAfterInvest),
       activitySerializer.writeLoanActivities(
         loanRdd,
         depositsRdd,

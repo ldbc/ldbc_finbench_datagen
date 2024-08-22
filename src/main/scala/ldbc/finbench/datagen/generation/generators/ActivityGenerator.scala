@@ -14,10 +14,6 @@ import scala.collection.SortedMap
 class ActivityGenerator()(implicit spark: SparkSession)
     extends Serializable
     with Logging {
-  // TODO: Move the type definitions to the some common place
-  type EitherPersonOrCompany = Either[Person, Company]
-  type EitherPersonInvestOrCompanyInvest =
-    Either[PersonInvestCompany, CompanyInvestCompany]
 
   val blockSize: Int = DatagenParams.blockSize
   val sampleRandom =
@@ -85,7 +81,7 @@ class ActivityGenerator()(implicit spark: SparkSession)
   def investEvent(
       personRDD: RDD[Person],
       companyRDD: RDD[Company]
-  ): Unit = {
+  ): RDD[Company] = {
     val persons = spark.sparkContext.broadcast(personRDD.collect().toList)
     val companies = spark.sparkContext.broadcast(companyRDD.collect().toList)
 
@@ -107,61 +103,9 @@ class ActivityGenerator()(implicit spark: SparkSession)
           .companyInvestPartition(companies.value.asJava, targets.toList.asJava)
         targets.map(target => target.scaleInvestmentRatios())
       })
-  }
 
-//  // TODO: rewrite it with company centric and invide the person investors and company investors
-//  def investEvent(
-//      personRDD: RDD[Person],
-//      companyRDD: RDD[Company]
-//  ): RDD[EitherPersonInvestOrCompanyInvest] = {
-//    val seedRandom = new scala.util.Random(DatagenParams.defaultSeed)
-//    val numInvestorsRandom = new scala.util.Random(DatagenParams.defaultSeed)
-//    val personInvestEvent = new PersonInvestEvent()
-//    val companyInvestEvent = new CompanyInvestEvent()
-//
-//    // Sample some companies to be invested
-//    val investedCompanyRDD = companyRDD.sample(
-//      withReplacement = false,
-//      DatagenParams.companyInvestedFraction,
-//      sampleRandom.nextLong()
-//    )
-//
-//    // Merge to either
-//    val personEitherRDD: RDD[EitherPersonOrCompany] =
-//      personRDD.map(person => Left(person))
-//    val companyEitherRDD: RDD[EitherPersonOrCompany] =
-//      companyRDD.map(company => Right(company))
-//    val mergedEither = personEitherRDD.union(companyEitherRDD).collect().toList
-//
-//    // TODO: optimize the Spark process when large scale
-//    investedCompanyRDD.flatMap(investedCompany => {
-//      numInvestorsRandom.setSeed(seedRandom.nextInt())
-//      sampleRandom.setSeed(seedRandom.nextInt())
-//      personInvestEvent.resetState(seedRandom.nextInt())
-//      companyInvestEvent.resetState(seedRandom.nextInt())
-//
-//      val numInvestors = numInvestorsRandom.nextInt(
-//        DatagenParams.maxInvestors - DatagenParams.minInvestors + 1
-//      ) + DatagenParams.minInvestors
-//      // Note: check if fraction 0.1 has enough numInvestors to take
-//      val investRels =
-//        sampleRandom.shuffle(mergedEither).take(numInvestors).map {
-//          case Left(person) =>
-//            Left(personInvestEvent.personInvest(person, investedCompany))
-//          case Right(company) =>
-//            Right(companyInvestEvent.companyInvest(company, investedCompany))
-//        }
-//      val ratioSum = investRels.map {
-//        case Left(personInvest)   => personInvest.getRatio
-//        case Right(companyInvest) => companyInvest.getRatio
-//      }.sum
-//      investRels.foreach {
-//        case Left(personInvest)   => personInvest.scaleRatio(ratioSum)
-//        case Right(companyInvest) => companyInvest.scaleRatio(ratioSum)
-//      }
-//      investRels
-//    })
-//  }
+    companyRDD
+  }
 
   def signInEvent(
       mediumRDD: RDD[Medium],
