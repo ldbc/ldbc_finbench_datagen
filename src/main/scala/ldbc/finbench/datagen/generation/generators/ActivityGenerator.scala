@@ -106,7 +106,6 @@ class ActivityGenerator()(implicit spark: SparkSession)
           )
         targets.map { target =>
           target.scaleInvestmentRatios()
-          target
         }
       }
   }

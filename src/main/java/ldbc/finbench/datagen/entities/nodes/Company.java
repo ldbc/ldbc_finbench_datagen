@@ -87,7 +87,7 @@ public class Company implements Serializable {
         return companyInvestCompanies;
     }
 
-    public void scaleInvestmentRatios() {
+    public Company scaleInvestmentRatios() {
         double sum = 0;
         for (PersonInvestCompany pic : personInvestCompanies) {
             sum += pic.getRatio();
@@ -101,6 +101,7 @@ public class Company implements Serializable {
         for (CompanyInvestCompany cic : companyInvestCompanies) {
             cic.scaleRatio(sum);
         }
+        return this;
     }
 
     public boolean hasInvestedBy(Company company) {
