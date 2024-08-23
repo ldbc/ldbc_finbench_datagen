@@ -38,7 +38,6 @@ public class PersonInvestEvent implements Serializable {
                 }
                 PersonInvestCompany.createPersonInvestCompany(randomFarm, investor, target);
             }
-            System.out.println("[personInvest]: person invest company " + numInvestors + " times");
         }
         return targets;
     }
