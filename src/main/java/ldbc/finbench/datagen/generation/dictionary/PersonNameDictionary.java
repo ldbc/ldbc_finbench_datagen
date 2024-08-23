@@ -6,7 +6,6 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
 import java.util.TreeMap;
-import ldbc.finbench.datagen.generation.DatagenParams;
 
 public class PersonNameDictionary {
     private final TreeMap<Long, String> personSurnames;

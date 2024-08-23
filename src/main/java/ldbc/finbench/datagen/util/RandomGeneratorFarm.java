@@ -59,6 +59,7 @@ public class RandomGeneratorFarm implements Serializable {
 
         // edge: transfer
         TRANSFER_DATE,
+        TRANSFER_AMOUNT,
         TRANSFER_ORDERNUM,
         TRANSFER_PAYTYPE,
         TRANSFER_GOODSTYPE,
@@ -82,8 +83,12 @@ public class RandomGeneratorFarm implements Serializable {
 
         // edge: person invest
         PERSON_INVEST_DATE,
+        NUMS_PERSON_INVEST,
+        CHOOSE_PERSON_INVESTOR,
         // edge: company invest
         COMPANY_INVEST_DATE,
+        NUMS_COMPANY_INVEST,
+        CHOOSE_COMPANY_INVESTOR,
         INVEST_RATIO,
 
         // edge: person guarantee

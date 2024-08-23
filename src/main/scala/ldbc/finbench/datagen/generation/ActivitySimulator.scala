@@ -51,10 +51,7 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
     )
 
     // simulate person or company invest company event
-    val investRdd = activityGenerator.investEvent(personRdd, companyRdd)
-    log.info(
-      s"[Simulation] invest RDD partitions: ${investRdd.getNumPartitions}"
-    )
+    val companyRddAfterInvest = activityGenerator.investEvent(personRdd, companyRdd)
 
     // simulate person guarantee person event and company guarantee company event
     val personWithAccGua =
@@ -78,21 +75,14 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
 
     // Account related activities
     val accountRdd =
-      mergeAccounts(personWithAccounts, companyWithAccounts) // merge
+      mergeAccountsAndShuffleDegrees(personWithAccounts, companyWithAccounts)
+    val signInRdd = activityGenerator.signInEvent(mediumRdd, accountRdd)
+    val mergedTransfers = activityGenerator.transferEvent(accountRdd)
+    val withdrawRdd = activityGenerator.withdrawEvent(accountRdd)
     log.info(
       s"[Simulation] Account RDD partitions: ${accountRdd.getNumPartitions}"
-    )
-    val signInRdd =
-      activityGenerator.signInEvent(mediumRdd, accountRdd) // simulate signIn
-    val mergedTransfers =
-      activityGenerator.transferEvent(accountRdd) // simulate transfer
-    val withdrawRdd =
-      activityGenerator.withdrawEvent(accountRdd) // simulate withdraw
-    log.info(
-      s"[Simulation] signIn RDD partitions: ${signInRdd.getNumPartitions}"
-    )
-    log.info(
-      s"[Simulation] transfer RDD partitions: ${mergedTransfers.getNumPartitions}, "
+        + s"[Simulation] signIn RDD partitions: ${signInRdd.getNumPartitions}"
+        + s"[Simulation] transfer RDD partitions: ${mergedTransfers.getNumPartitions}, "
         + s"withdraw RDD partitions: ${withdrawRdd.getNumPartitions}"
     )
 
@@ -118,19 +108,19 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
         mergedTransfers
       ),
       activitySerializer.writeWithdraw(withdrawRdd),
-      activitySerializer.writeInvest(investRdd),
+      activitySerializer.writeInvestCompanies(companyRddAfterInvest),
       activitySerializer.writeLoanActivities(
         loanRdd,
         depositsRdd,
         repaysRdd,
         loanTrasfersRdd
       )
-    ).flatten
+      ).flatten
 
     Await.result(Future.sequence(allFutures), Duration.Inf)
   }
 
-  private def mergeAccounts(
+  private def mergeAccountsAndShuffleDegrees(
       persons: RDD[Person],
       companies: RDD[Company]
   ): RDD[Account] = {

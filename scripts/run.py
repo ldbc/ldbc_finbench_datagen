@@ -65,6 +65,7 @@ def run_local(
         **({'spark.serializer': 'org.apache.spark.serializer.KryoSerializer'}),
         **({'spark.executor.extraJavaOptions': '-XX:+UseG1GC'}),
         **({'spark.driver.maxResultSize': '5g'}),
+        # **({'spark.driver.extraJavaOptions': '-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005'}), # Debug
         # **({'spark.executor.extraJavaOptions': '-verbose:gc -XX:+UseG1GC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps'}),
         **spark_conf
     }
