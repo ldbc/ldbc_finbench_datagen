@@ -14,10 +14,6 @@ import scala.collection.SortedMap
 class ActivityGenerator()(implicit spark: SparkSession)
     extends Serializable
     with Logging {
-  // TODO: Move the type definitions to the some common place
-  type EitherPersonOrCompany = Either[Person, Company]
-  type EitherPersonInvestOrCompanyInvest =
-    Either[PersonInvestCompany, CompanyInvestCompany]
 
   val blockSize: Int = DatagenParams.blockSize
   val sampleRandom =
@@ -82,57 +78,40 @@ class ActivityGenerator()(implicit spark: SparkSession)
     companyWithAccount
   }
 
-  // TODO: rewrite it with company centric and invide the person investors and company investors
   def investEvent(
       personRDD: RDD[Person],
       companyRDD: RDD[Company]
-  ): RDD[EitherPersonInvestOrCompanyInvest] = {
-    val seedRandom = new scala.util.Random(DatagenParams.defaultSeed)
-    val numInvestorsRandom = new scala.util.Random(DatagenParams.defaultSeed)
+  ): RDD[Company] = {
+    val persons = spark.sparkContext.broadcast(personRDD.collect().toList)
+    val companies = spark.sparkContext.broadcast(companyRDD.collect().toList)
+
     val personInvestEvent = new PersonInvestEvent()
     val companyInvestEvent = new CompanyInvestEvent()
 
-    // Sample some companies to be invested
-    val investedCompanyRDD = companyRDD.sample(
-      withReplacement = false,
-      DatagenParams.companyInvestedFraction,
-      sampleRandom.nextLong()
-    )
-    // Merge to either
-    val personEitherRDD: RDD[EitherPersonOrCompany] =
-      personRDD.map(person => Left(person))
-    val companyEitherRDD: RDD[EitherPersonOrCompany] =
-      companyRDD.map(company => Right(company))
-    val mergedEither = personEitherRDD.union(companyEitherRDD).collect().toList
-
-    // TODO: optimize the Spark process when large scale
-    investedCompanyRDD.flatMap(investedCompany => {
-      numInvestorsRandom.setSeed(seedRandom.nextInt())
-      sampleRandom.setSeed(seedRandom.nextInt())
-      personInvestEvent.resetState(seedRandom.nextInt())
-      companyInvestEvent.resetState(seedRandom.nextInt())
-
-      val numInvestors = numInvestorsRandom.nextInt(
-        DatagenParams.maxInvestors - DatagenParams.minInvestors + 1
-      ) + DatagenParams.minInvestors
-      // Note: check if fraction 0.1 has enough numInvestors to take
-      val investRels =
-        sampleRandom.shuffle(mergedEither).take(numInvestors).map {
-          case Left(person) =>
-            Left(personInvestEvent.personInvest(person, investedCompany))
-          case Right(company) =>
-            Right(companyInvestEvent.companyInvest(company, investedCompany))
-        }
-      val ratioSum = investRels.map {
-        case Left(personInvest)   => personInvest.getRatio
-        case Right(companyInvest) => companyInvest.getRatio
-      }.sum
-      investRels.foreach {
-        case Left(personInvest)   => personInvest.scaleRatio(ratioSum)
-        case Right(companyInvest) => companyInvest.scaleRatio(ratioSum)
+    companyRDD
+      .sample(
+        withReplacement = false,
+        DatagenParams.companyInvestedFraction,
+        sampleRandom.nextLong()
+      )
+      .mapPartitionsWithIndex { (index, targets) =>
+        personInvestEvent.resetState(index)
+        personInvestEvent
+          .personInvestPartition(persons.value.asJava, targets.toList.asJava)
+          .iterator()
+          .asScala
       }
-      investRels
-    })
+      .mapPartitionsWithIndex { (index, targets) =>
+        companyInvestEvent.resetState(index)
+        companyInvestEvent
+          .companyInvestPartition(
+            companies.value.asJava,
+            targets.toList.asJava
+          )
+          .iterator()
+          .asScala
+      }
+      .map(_.scaleInvestmentRatios())
   }
 
   def signInEvent(
@@ -282,17 +261,19 @@ class ActivityGenerator()(implicit spark: SparkSession)
       .asJava
 
     // TODO: optimize the map function with the Java-Scala part.
-    val afterLoanActions = loanRDD.mapPartitionsWithIndex((index, loans) => {
-      val loanSubEvents = new LoanSubEvents(accountSampleList.get(index))
-      loanSubEvents.afterLoanApplied(loans.toList.asJava, index)
-      Iterator(
-        (
-          loanSubEvents.getDeposits.asScala,
-          loanSubEvents.getRepays.asScala,
-          loanSubEvents.getTransfers.asScala
+    val afterLoanActions = loanRDD
+      .mapPartitionsWithIndex((index, loans) => {
+        val loanSubEvents = new LoanSubEvents(accountSampleList.get(index))
+        loanSubEvents.afterLoanApplied(loans.toList.asJava, index)
+        Iterator(
+          (
+            loanSubEvents.getDeposits.asScala,
+            loanSubEvents.getRepays.asScala,
+            loanSubEvents.getTransfers.asScala
+          )
         )
-      )
-    }).cache()
+      })
+      .cache()
 
     (
       afterLoanActions.flatMap(_._1),

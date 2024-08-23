@@ -1,6 +1,7 @@
 package ldbc.finbench.datagen.generation.events;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Random;
 import ldbc.finbench.datagen.entities.edges.PersonInvestCompany;
 import ldbc.finbench.datagen.entities.nodes.Company;
@@ -22,7 +23,26 @@ public class PersonInvestEvent implements Serializable {
         randIndex.setSeed(seed);
     }
 
-    public PersonInvestCompany personInvest(Person person, Company company) {
-        return PersonInvestCompany.createPersonInvestCompany(randomFarm, person, company);
+    public List<Company> personInvestPartition(List<Person> investors, List<Company> targets) {
+        Random numInvestorsRand = randomFarm.get(RandomGeneratorFarm.Aspect.NUMS_PERSON_INVEST);
+        Random chooseInvestorRand = randomFarm.get(RandomGeneratorFarm.Aspect.CHOOSE_PERSON_INVESTOR);
+        for (Company target : targets) {
+            int numInvestors = numInvestorsRand.nextInt(
+                DatagenParams.maxInvestors - DatagenParams.minInvestors + 1
+            ) + DatagenParams.minInvestors;
+            for (int i = 0; i < numInvestors; i++) {
+                int index = chooseInvestorRand.nextInt(investors.size());
+                Person investor = investors.get(index);
+                if (cannotInvest(investor, target)) {
+                    continue;
+                }
+                PersonInvestCompany.createPersonInvestCompany(randomFarm, investor, target);
+            }
+        }
+        return targets;
+    }
+
+    public boolean cannotInvest(Person investor, Company target) {
+        return target.hasInvestedBy(investor);
     }
 }

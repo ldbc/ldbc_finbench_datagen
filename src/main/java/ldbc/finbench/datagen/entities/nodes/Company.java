@@ -9,6 +9,7 @@ import ldbc.finbench.datagen.entities.edges.CompanyApplyLoan;
 import ldbc.finbench.datagen.entities.edges.CompanyGuaranteeCompany;
 import ldbc.finbench.datagen.entities.edges.CompanyInvestCompany;
 import ldbc.finbench.datagen.entities.edges.CompanyOwnAccount;
+import ldbc.finbench.datagen.entities.edges.PersonInvestCompany;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 
 public class Company implements Serializable {
@@ -22,6 +23,9 @@ public class Company implements Serializable {
     private String description;
     private String url;
     private final List<CompanyOwnAccount> companyOwnAccounts;
+    // invested by persons
+    private final List<PersonInvestCompany> personInvestCompanies;
+    // invested by companies
     private final List<CompanyInvestCompany> companyInvestCompanies;
     private final LinkedHashSet<CompanyGuaranteeCompany> guaranteeSrc;
     private final LinkedHashSet<CompanyGuaranteeCompany> guaranteeDst;
@@ -29,6 +33,7 @@ public class Company implements Serializable {
 
     public Company() {
         companyOwnAccounts = new LinkedList<>();
+        personInvestCompanies = new LinkedList<>();
         companyInvestCompanies = new LinkedList<>();
         guaranteeSrc = new LinkedHashSet<>();
         guaranteeDst = new LinkedHashSet<>();
@@ -74,8 +79,47 @@ public class Company implements Serializable {
         return companyOwnAccounts;
     }
 
+    public List<PersonInvestCompany> getPersonInvestCompanies() {
+        return personInvestCompanies;
+    }
+
     public List<CompanyInvestCompany> getCompanyInvestCompanies() {
         return companyInvestCompanies;
+    }
+
+    public Company scaleInvestmentRatios() {
+        double sum = 0;
+        for (PersonInvestCompany pic : personInvestCompanies) {
+            sum += pic.getRatio();
+        }
+        for (CompanyInvestCompany cic : companyInvestCompanies) {
+            sum += cic.getRatio();
+        }
+        for (PersonInvestCompany pic : personInvestCompanies) {
+            pic.scaleRatio(sum);
+        }
+        for (CompanyInvestCompany cic : companyInvestCompanies) {
+            cic.scaleRatio(sum);
+        }
+        return this;
+    }
+
+    public boolean hasInvestedBy(Company company) {
+        for (CompanyInvestCompany cic : companyInvestCompanies) {
+            if (cic.getFromCompany().equals(company)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean hasInvestedBy(Person person) {
+        for (PersonInvestCompany pic : personInvestCompanies) {
+            if (pic.getPerson().equals(person)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public HashSet<CompanyGuaranteeCompany> getGuaranteeSrc() {

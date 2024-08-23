@@ -29,19 +29,17 @@ public class PersonInvestCompany implements DynamicActivity, Serializable {
         this.comment = comment;
     }
 
-    public static PersonInvestCompany createPersonInvestCompany(RandomGeneratorFarm farm, Person person,
-                                                                Company company) {
+    public static void createPersonInvestCompany(RandomGeneratorFarm farm, Person investor,
+                                                 Company target) {
         Random dateRandom = farm.get(RandomGeneratorFarm.Aspect.PERSON_INVEST_DATE);
-        long creationDate = Dictionaries.dates.randomPersonToCompanyDate(dateRandom, person, company);
+        long creationDate = Dictionaries.dates.randomPersonToCompanyDate(dateRandom, investor, target);
         double ratio = farm.get(RandomGeneratorFarm.Aspect.INVEST_RATIO).nextDouble();
         String comment =
             Dictionaries.randomTexts.getUniformDistRandomTextForComments(
                 farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
-        PersonInvestCompany personInvestCompany = new PersonInvestCompany(person, company, creationDate, 0, ratio,
+        PersonInvestCompany personInvestCompany = new PersonInvestCompany(investor, target, creationDate, 0, ratio,
                                                                           false, comment);
-        person.getPersonInvestCompanies().add(personInvestCompany);
-
-        return personInvestCompany;
+        target.getPersonInvestCompanies().add(personInvestCompany);
     }
 
     public void scaleRatio(double sum) {

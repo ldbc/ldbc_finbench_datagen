@@ -16,7 +16,7 @@ public class CommonTextDictionary {
 
         try {
             InputStreamReader inputStreamReader = new InputStreamReader(
-                    Objects.requireNonNull(getClass().getResourceAsStream(filePath)), StandardCharsets.UTF_8);
+                Objects.requireNonNull(getClass().getResourceAsStream(filePath)), StandardCharsets.UTF_8);
             BufferedReader dictionary = new BufferedReader(inputStreamReader);
             String line;
             long totalNum = 0;

@@ -10,7 +10,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{Future, Await}
+import scala.concurrent.Future
 
 /** generate person and company activities
   */
@@ -111,12 +111,12 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
   }
 
   def writeCompanyWithActivities(
-      self: RDD[Company]
+      companiesRDD: RDD[Company]
   )(implicit spark: SparkSession): Seq[Future[Unit]] = {
 
     val futures = Seq(
       SparkUI.jobAsync("Write Company", "Write Company") {
-        val rawCompanies = self.map { c: Company =>
+        val rawCompanies = companiesRDD.map { c: Company =>
           CompanyRaw(
             c.getCompanyId,
             c.getCreationDate,
@@ -138,7 +138,7 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
       },
       SparkUI
         .jobAsync("Write Company own account", "Write Company own account") {
-          val rawCompanyOwnAccount = self.flatMap { c =>
+          val rawCompanyOwnAccount = companiesRDD.flatMap { c =>
             c.getCompanyOwnAccounts.asScala.map { coa =>
               CompanyOwnAccountRaw(
                 c.getCompanyId,
@@ -158,7 +158,7 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
             .save((pathPrefix / "companyOwnAccount").toString)
         },
       SparkUI.jobAsync("Write Company guarantee", "Write Company guarantee") {
-        val rawCompanyGuarantee = self.flatMap { c =>
+        val rawCompanyGuarantee = companiesRDD.flatMap { c =>
           c.getGuaranteeSrc.asScala.map { cgc: CompanyGuaranteeCompany =>
             CompanyGuaranteeCompanyRaw(
               cgc.getFromCompany.getCompanyId,
@@ -177,7 +177,7 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
           .save((pathPrefix / "companyGuarantee").toString)
       },
       SparkUI.jobAsync("Write Company apply loan", "Write Company apply loan") {
-        val rawCompanyLoan = self.flatMap { c =>
+        val rawCompanyLoan = companiesRDD.flatMap { c =>
           c.getCompanyApplyLoans.asScala.map { cal: CompanyApplyLoan =>
             CompanyApplyLoanRaw(
               cal.getCompany.getCompanyId,
@@ -214,7 +214,7 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
             m.isBlocked,
             m.getLastLogin,
             m.getRiskLevel
-            )
+          )
         }
         spark
           .createDataFrame(rawMedium)
@@ -269,7 +269,7 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
             a.getMaxOutDegree,
             a.isExplicitlyDeleted,
             a.getOwnerType.toString
-            )
+          )
         }
         spark
           .createDataFrame(rawAccount)
@@ -335,15 +335,13 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
     futures
   }
 
-  def writeInvest(
-      self: RDD[Either[PersonInvestCompany, CompanyInvestCompany]]
+  def writeInvestCompanies(
+      investedCompaniesRDD: RDD[Company]
   )(implicit spark: SparkSession): Seq[Future[Unit]] = {
-
     val futures = Seq(
       SparkUI.jobAsync("Write person invest", "Write Person Invest") {
-        val personInvest = self.filter(_.isLeft).map(_.left.get)
-        spark
-          .createDataFrame(personInvest.map { pic =>
+        val rawPersonInvestCompany = investedCompaniesRDD.flatMap { c =>
+          c.getPersonInvestCompanies.asScala.map { pic =>
             PersonInvestCompanyRaw(
               pic.getPerson.getPersonId,
               pic.getCompany.getCompanyId,
@@ -351,16 +349,22 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
               pic.getRatio,
               pic.getComment
             )
-          })
+          }
+        }
+        log.info(
+          "[Invest] PersonInvestCompany count: " + rawPersonInvestCompany
+            .count()
+        )
+        spark
+          .createDataFrame(rawPersonInvestCompany)
           .write
           .format(sink.format.toString)
           .options(options)
           .save((pathPrefix / "personInvest").toString)
       },
       SparkUI.jobAsync("Write company invest", "Write Company Invest") {
-        val companyInvest = self.filter(_.isRight).map(_.right.get)
-        spark
-          .createDataFrame(companyInvest.map { cic =>
+        val rawCompanyInvestCompany = investedCompaniesRDD.flatMap { c =>
+          c.getCompanyInvestCompanies.asScala.map { cic =>
             CompanyInvestCompanyRaw(
               cic.getFromCompany.getCompanyId,
               cic.getToCompany.getCompanyId,
@@ -368,7 +372,14 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
               cic.getRatio,
               cic.getComment
             )
-          })
+          }
+        }
+        log.info(
+          "[Invest] CompanyInvestCompany count: " + rawCompanyInvestCompany
+            .count()
+        )
+        spark
+          .createDataFrame(rawCompanyInvestCompany)
           .write
           .format(sink.format.toString)
           .options(options)
@@ -395,7 +406,7 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
             formattedDouble(l.getBalance),
             l.getUsage,
             f"${l.getInterestRate}%.3f"
-            )
+          )
         }
         spark
           .createDataFrame(rawLoan)
@@ -414,7 +425,7 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
             formattedDouble(d.getAmount),
             d.isExplicitlyDeleted,
             d.getComment
-            )
+          )
         }
         spark
           .createDataFrame(rawDeposit)
@@ -433,7 +444,7 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
             formattedDouble(r.getAmount),
             r.isExplicitlyDeleted,
             r.getComment
-            )
+          )
         }
         spark
           .createDataFrame(rawRepay)
