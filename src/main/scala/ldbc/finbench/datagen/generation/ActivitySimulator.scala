@@ -108,14 +108,14 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
         mergedTransfers
       ),
       activitySerializer.writeWithdraw(withdrawRdd),
-      activitySerializer.writeInvest(companyRddAfterInvest),
+      activitySerializer.writeInvestCompanies(companyRddAfterInvest),
       activitySerializer.writeLoanActivities(
         loanRdd,
         depositsRdd,
         repaysRdd,
         loanTrasfersRdd
       )
-    ).flatten
+      ).flatten
 
     Await.result(Future.sequence(allFutures), Duration.Inf)
   }

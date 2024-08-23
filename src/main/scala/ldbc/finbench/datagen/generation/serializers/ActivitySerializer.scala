@@ -111,12 +111,12 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
   }
 
   def writeCompanyWithActivities(
-      self: RDD[Company]
+      companiesRDD: RDD[Company]
   )(implicit spark: SparkSession): Seq[Future[Unit]] = {
 
     val futures = Seq(
       SparkUI.jobAsync("Write Company", "Write Company") {
-        val rawCompanies = self.map { c: Company =>
+        val rawCompanies = companiesRDD.map { c: Company =>
           CompanyRaw(
             c.getCompanyId,
             c.getCreationDate,
@@ -138,7 +138,7 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
       },
       SparkUI
         .jobAsync("Write Company own account", "Write Company own account") {
-          val rawCompanyOwnAccount = self.flatMap { c =>
+          val rawCompanyOwnAccount = companiesRDD.flatMap { c =>
             c.getCompanyOwnAccounts.asScala.map { coa =>
               CompanyOwnAccountRaw(
                 c.getCompanyId,
@@ -158,7 +158,7 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
             .save((pathPrefix / "companyOwnAccount").toString)
         },
       SparkUI.jobAsync("Write Company guarantee", "Write Company guarantee") {
-        val rawCompanyGuarantee = self.flatMap { c =>
+        val rawCompanyGuarantee = companiesRDD.flatMap { c =>
           c.getGuaranteeSrc.asScala.map { cgc: CompanyGuaranteeCompany =>
             CompanyGuaranteeCompanyRaw(
               cgc.getFromCompany.getCompanyId,
@@ -177,7 +177,7 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
           .save((pathPrefix / "companyGuarantee").toString)
       },
       SparkUI.jobAsync("Write Company apply loan", "Write Company apply loan") {
-        val rawCompanyLoan = self.flatMap { c =>
+        val rawCompanyLoan = companiesRDD.flatMap { c =>
           c.getCompanyApplyLoans.asScala.map { cal: CompanyApplyLoan =>
             CompanyApplyLoanRaw(
               cal.getCompany.getCompanyId,
@@ -335,41 +335,53 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
     futures
   }
 
-  def writeInvest(
-      self: RDD[Company]
+  def writeInvestCompanies(
+      investedCompaniesRDD: RDD[Company]
   )(implicit spark: SparkSession): Seq[Future[Unit]] = {
     val futures = Seq(
       SparkUI.jobAsync("Write person invest", "Write Person Invest") {
+        val rawPersonInvestCompany = investedCompaniesRDD.flatMap { c =>
+          printf(
+            "[Invest] Company %d, PersonInvestCompanies count: %d\n",
+            c.getCompanyId,
+            c.getPersonInvestCompanies.size()
+          )
+          c.getPersonInvestCompanies.asScala.map { pic =>
+            PersonInvestCompanyRaw(
+              pic.getPerson.getPersonId,
+              pic.getCompany.getCompanyId,
+              pic.getCreationDate,
+              pic.getRatio,
+              pic.getComment
+            )
+          }
+        }
         spark
-          .createDataFrame(self.flatMap { c =>
-            c.getPersonInvestCompanies.asScala.map { pic =>
-              PersonInvestCompanyRaw(
-                pic.getPerson.getPersonId,
-                pic.getCompany.getCompanyId,
-                pic.getCreationDate,
-                pic.getRatio,
-                pic.getComment
-              )
-            }
-          })
+          .createDataFrame(rawPersonInvestCompany)
           .write
           .format(sink.format.toString)
           .options(options)
           .save((pathPrefix / "personInvest").toString)
       },
       SparkUI.jobAsync("Write company invest", "Write Company Invest") {
+        val rawCompanyInvestCompany = investedCompaniesRDD.flatMap { c =>
+          printf(
+            "[Invest] Company %d, CompanyInvestCompanies count: %d\n",
+            c.getCompanyId,
+            c.getCompanyInvestCompanies.size()
+          )
+          c.getCompanyInvestCompanies.asScala.map { cic =>
+            CompanyInvestCompanyRaw(
+              cic.getFromCompany.getCompanyId,
+              cic.getToCompany.getCompanyId,
+              cic.getCreationDate,
+              cic.getRatio,
+              cic.getComment
+            )
+          }
+        }
         spark
-          .createDataFrame(self.flatMap { c =>
-            c.getCompanyInvestCompanies.asScala.map { cic =>
-              CompanyInvestCompanyRaw(
-                cic.getFromCompany.getCompanyId,
-                cic.getToCompany.getCompanyId,
-                cic.getCreationDate,
-                cic.getRatio,
-                cic.getComment
-              )
-            }
-          })
+          .createDataFrame(rawCompanyInvestCompany)
           .write
           .format(sink.format.toString)
           .options(options)
