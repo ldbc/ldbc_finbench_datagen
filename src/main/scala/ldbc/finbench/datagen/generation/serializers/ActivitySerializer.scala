@@ -341,10 +341,6 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
     val futures = Seq(
       SparkUI.jobAsync("Write person invest", "Write Person Invest") {
         val rawPersonInvestCompany = investedCompaniesRDD.flatMap { c =>
-          log.info(
-            "[Invest] Company " + c.getCompanyId + ", PersonInvestCompanies count: " +
-              c.getPersonInvestCompanies.size()
-          )
           c.getPersonInvestCompanies.asScala.map { pic =>
             PersonInvestCompanyRaw(
               pic.getPerson.getPersonId,
@@ -368,10 +364,6 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
       },
       SparkUI.jobAsync("Write company invest", "Write Company Invest") {
         val rawCompanyInvestCompany = investedCompaniesRDD.flatMap { c =>
-          log.info(
-            "[Invest] Company " + c.getCompanyId + ", CompanyInvestCompanies count: " +
-              c.getCompanyInvestCompanies.size()
-          )
           c.getCompanyInvestCompanies.asScala.map { cic =>
             CompanyInvestCompanyRaw(
               cic.getFromCompany.getCompanyId,
