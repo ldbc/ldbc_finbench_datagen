@@ -341,10 +341,9 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
     val futures = Seq(
       SparkUI.jobAsync("Write person invest", "Write Person Invest") {
         val rawPersonInvestCompany = investedCompaniesRDD.flatMap { c =>
-          printf(
-            "[Invest] Company %d, PersonInvestCompanies count: %d\n",
-            c.getCompanyId,
-            c.getPersonInvestCompanies.size()
+          log.info(
+            "[Invest] Company " + c.getCompanyId + ", PersonInvestCompanies count: " +
+              c.getPersonInvestCompanies.size()
           )
           c.getPersonInvestCompanies.asScala.map { pic =>
             PersonInvestCompanyRaw(
@@ -356,6 +355,10 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
             )
           }
         }
+        log.info(
+          "[Invest] PersonInvestCompany count: " + rawPersonInvestCompany
+            .count()
+        )
         spark
           .createDataFrame(rawPersonInvestCompany)
           .write
@@ -365,10 +368,9 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
       },
       SparkUI.jobAsync("Write company invest", "Write Company Invest") {
         val rawCompanyInvestCompany = investedCompaniesRDD.flatMap { c =>
-          printf(
-            "[Invest] Company %d, CompanyInvestCompanies count: %d\n",
-            c.getCompanyId,
-            c.getCompanyInvestCompanies.size()
+          log.info(
+            "[Invest] Company " + c.getCompanyId + ", CompanyInvestCompanies count: " +
+              c.getCompanyInvestCompanies.size()
           )
           c.getCompanyInvestCompanies.asScala.map { cic =>
             CompanyInvestCompanyRaw(
@@ -380,6 +382,10 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
             )
           }
         }
+        log.info(
+          "[Invest] CompanyInvestCompany count: " + rawCompanyInvestCompany
+            .count()
+        )
         spark
           .createDataFrame(rawCompanyInvestCompany)
           .write

@@ -136,7 +136,7 @@ object LdbcDatagen extends SparkApp with Logging {
         format = args.factorFormat
       )
       log.info("[Main] Starting factoring stage")
-       FactorGenerationStage.run(factorArgs)
+//       FactorGenerationStage.run(factorArgs)
     }
   }
 }

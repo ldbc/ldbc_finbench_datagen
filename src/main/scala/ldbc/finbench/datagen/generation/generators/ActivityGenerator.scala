@@ -96,18 +96,22 @@ class ActivityGenerator()(implicit spark: SparkSession)
       )
       .mapPartitionsWithIndex { (index, targets) =>
         personInvestEvent.resetState(index)
-        companyInvestEvent.resetState(index)
         personInvestEvent
           .personInvestPartition(persons.value.asJava, targets.toList.asJava)
+          .iterator()
+          .asScala
+      }
+      .mapPartitionsWithIndex { (index, targets) =>
+        companyInvestEvent.resetState(index)
         companyInvestEvent
           .companyInvestPartition(
             companies.value.asJava,
             targets.toList.asJava
           )
-        targets.map { target =>
-          target.scaleInvestmentRatios()
-        }
+          .iterator()
+          .asScala
       }
+      .map(_.scaleInvestmentRatios())
   }
 
   def signInEvent(

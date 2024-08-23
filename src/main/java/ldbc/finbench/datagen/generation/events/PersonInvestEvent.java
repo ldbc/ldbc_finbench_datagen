@@ -23,11 +23,7 @@ public class PersonInvestEvent implements Serializable {
         randIndex.setSeed(seed);
     }
 
-    public void personInvest(Person person, Company target) {
-        PersonInvestCompany.createPersonInvestCompany(randomFarm, person, target);
-    }
-
-    public void personInvestPartition(List<Person> investors, List<Company> targets) {
+    public List<Company> personInvestPartition(List<Person> investors, List<Company> targets) {
         Random numInvestorsRand = randomFarm.get(RandomGeneratorFarm.Aspect.NUMS_PERSON_INVEST);
         Random chooseInvestorRand = randomFarm.get(RandomGeneratorFarm.Aspect.CHOOSE_PERSON_INVESTOR);
         for (Company target : targets) {
@@ -44,6 +40,7 @@ public class PersonInvestEvent implements Serializable {
             }
             System.out.println("[personInvest]: person invest company " + numInvestors + " times");
         }
+        return targets;
     }
 
     public boolean cannotInvest(Person investor, Company target) {
