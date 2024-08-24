@@ -1,7 +1,6 @@
 package ldbc.finbench.datagen.generation.generators;
 
 import java.util.Iterator;
-import java.util.Random;
 import ldbc.finbench.datagen.entities.nodes.Medium;
 import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
@@ -41,7 +40,8 @@ public class MediumGenerator {
         medium.setMediumName(mediunName);
 
         // Set isBlocked
-        medium.setBlocked(randomFarm.get(RandomGeneratorFarm.Aspect.MEDIUM_BLOCKED).nextDouble() < DatagenParams.blockedMediumRatio);
+        medium.setBlocked(
+            randomFarm.get(RandomGeneratorFarm.Aspect.MEDIUM_BLOCKED).nextDouble() < DatagenParams.blockedMediumRatio);
 
         // Set lastLogin
         long lastLogin = Dictionaries.dates.randomMediumLastLogin(
