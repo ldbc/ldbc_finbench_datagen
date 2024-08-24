@@ -34,8 +34,10 @@ public class RandomGeneratorFarm implements Serializable {
 
         // vertex: medium
         MEDIUM_NAME,
+        MEDIUM_BLOCKED,
         MEDIUM_RISK_LEVEL,
-        MEDUIM_LAST_LOGIN_DATE,
+        MEDIUM_CREATION_DATE,
+        MEDIUM_LAST_LOGIN_DATE,
 
         // vertex: account
         ACCOUNT_TYPE,
