@@ -48,16 +48,10 @@ object GenerationStage extends DatagenStage with Logging {
         )
     }
 
-    // TODO: It's better to define multiple job groups.
-    SparkUI.job(
-      implicitly[ClassTag[ActivitySimulator]].runtimeClass.getSimpleName,
-      "serialize Finbench data"
-    ) {
-      val simulator = new ActivitySimulator(
-        RawSink(args.outputDir, format, args.partitionsOpt)
-      )
-      simulator.simulate(config)
-    }
+    val simulator = new ActivitySimulator(
+      RawSink(args.outputDir, format, args.partitionsOpt)
+    )
+    simulator.simulate(config)
   }
 
   private def buildConfig(args: Args): DatagenConfiguration = {
