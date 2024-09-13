@@ -244,25 +244,21 @@ class ActivityGenerator()(implicit spark: SparkSession)
       loanRDD: RDD[Loan],
       accountRDD: RDD[Account]
   ): (RDD[Deposit], RDD[Repay], RDD[Transfer]) = {
-    val sampledAccounts = accountRDD
-      .sample(
-        withReplacement = false,
-        DatagenParams.loanInvolvedAccountsFraction,
-        sampleRandom.nextLong()
-      )
-      .collect()
-      .toList
-
-    val accountSampleList = sampledAccounts
-      .grouped(sampledAccounts.size / loanRDD.partitions.length)
-      .map(_.asJava)
-      .toList
-      .asJava
+    val sampledAccounts = spark.sparkContext.broadcast(
+      accountRDD
+        .sample(
+          withReplacement = false,
+          DatagenParams.loanInvolvedAccountsFraction,
+          sampleRandom.nextLong()
+        )
+        .collect()
+        .toList
+    )
 
     // TODO: optimize the map function with the Java-Scala part.
     val afterLoanActions = loanRDD
       .mapPartitionsWithIndex((index, loans) => {
-        val loanSubEvents = new LoanSubEvents(accountSampleList.get(index))
+        val loanSubEvents = new LoanSubEvents(sampledAccounts.value.asJava)
         loanSubEvents.afterLoanApplied(loans.toList.asJava, index)
         Iterator(
           (
