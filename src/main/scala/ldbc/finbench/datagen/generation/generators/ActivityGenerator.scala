@@ -16,21 +16,18 @@ class ActivityGenerator()(implicit spark: SparkSession)
     with Logging {
 
   val blockSize: Int = DatagenParams.blockSize
-  val sampleRandom =
-    new scala.util.Random(
-      DatagenParams.defaultSeed
-    ) // Use a common sample random to avoid identical samples
-  val accountGenerator =
-    new AccountGenerator() // Use a common account generator to maintain the degree distribution
+  val sampleRandom = new scala.util.Random(DatagenParams.defaultSeed)
+  val accountGenerator = new AccountGenerator()
   val loanGenerator = new LoanGenerator()
 
-  def personRegisterEvent(personRDD: RDD[Person]): RDD[Person] = {
+  // including account, loan, guarantee
+  def personActivitiesEvent(personRDD: RDD[Person]): RDD[Person] = {
+    val personActivitiesEvent = new PersonActivitiesEvent
     val blocks = personRDD.zipWithUniqueId().map(row => (row._2, row._1)).map {
       case (k, v) => (k / blockSize, (k, v))
     }
-    val personRegisterEvent = new PersonRegisterEvent
 
-    val personWithAccount = blocks
+    val personWithAccountsLoansGuarantees = blocks
       .combineByKeyWithClassTag(
         personByRank => SortedMap(personByRank),
         (map: SortedMap[Long, Person], personByRank) => map + personByRank,
@@ -38,44 +35,48 @@ class ActivityGenerator()(implicit spark: SparkSession)
       )
       .mapPartitions(groups => {
         groups.flatMap { case (block, persons) =>
-          personRegisterEvent
-            .personRegister(
+          personActivitiesEvent
+            .personActivities(
               persons.values.toList.asJava,
               accountGenerator,
+              loanGenerator,
               block.toInt
             )
             .iterator()
             .asScala
         }
       })
-    personWithAccount
+
+    personWithAccountsLoansGuarantees
   }
 
-  def companyRegisterEvent(companyRDD: RDD[Company]): RDD[Company] = {
+  def companyActivitiesEvent(companyRDD: RDD[Company]): RDD[Company] = {
+    val companyActivitiesEvent = new CompanyActivitiesEvent
     val blocks = companyRDD.zipWithUniqueId().map(row => (row._2, row._1)).map {
       case (k, v) => (k / blockSize, (k, v))
     }
-    val companyRegisterGen = new CompanyRegisterEvent
 
-    val companyWithAccount = blocks
+    val companyWithAccountsLoansGuarantees = blocks
       .combineByKeyWithClassTag(
-        companyById => SortedMap(companyById),
-        (map: SortedMap[Long, Company], companyById) => map + companyById,
+        companyByRank => SortedMap(companyByRank),
+        (map: SortedMap[Long, Company], companyByRank) => map + companyByRank,
         (a: SortedMap[Long, Company], b: SortedMap[Long, Company]) => a ++ b
       )
       .mapPartitions(groups => {
         groups.flatMap { case (block, companies) =>
-          companyRegisterGen
-            .companyRegister(
+          companyActivitiesEvent
+            .companyActivities(
               companies.values.toList.asJava,
               accountGenerator,
+              loanGenerator,
               block.toInt
             )
             .iterator()
             .asScala
         }
       })
-    companyWithAccount
+
+    companyWithAccountsLoansGuarantees
   }
 
   def investEvent(
@@ -118,78 +119,23 @@ class ActivityGenerator()(implicit spark: SparkSession)
       mediumRDD: RDD[Medium],
       accountRDD: RDD[Account]
   ): RDD[SignIn] = {
-    val accountSampleList = accountRDD
-      .sample(
-        withReplacement = false,
-        DatagenParams.accountSignedInFraction,
-        sampleRandom.nextLong()
-      )
-      .collect()
-      .grouped(accountRDD.partitions.length)
-      .map(_.toList.asJava)
-      .toList
-      .asJava
+    val accountSampleList = spark.sparkContext.broadcast(
+      accountRDD
+        .sample(
+          withReplacement = false,
+          DatagenParams.accountSignedInFraction,
+          sampleRandom.nextLong()
+        )
+        .collect()
+        .toList
+    )
 
     val signInEvent = new SignInEvent
     mediumRDD.mapPartitionsWithIndex((index, mediums) => {
       signInEvent
         .signIn(
           mediums.toList.asJava,
-          accountSampleList.get(index),
-          index
-        )
-        .iterator()
-        .asScala
-    })
-  }
-
-  def personGuaranteeEvent(personRDD: RDD[Person]): RDD[Person] = {
-    val personGuaranteeEvent = new PersonGuaranteeEvent
-    personRDD.mapPartitionsWithIndex((index, persons) => {
-      personGuaranteeEvent
-        .personGuarantee(
-          persons.toList.asJava,
-          index
-        )
-        .iterator()
-        .asScala
-    })
-  }
-
-  def companyGuaranteeEvent(companyRDD: RDD[Company]): RDD[Company] = {
-    val companyGuaranteeEvent = new CompanyGuaranteeEvent
-    companyRDD.mapPartitionsWithIndex((index, companies) => {
-      companyGuaranteeEvent
-        .companyGuarantee(
-          companies.toList.asJava,
-          index
-        )
-        .iterator()
-        .asScala
-    })
-  }
-
-  def personLoanEvent(personRDD: RDD[Person]): RDD[Person] = {
-    val personLoanEvent = new PersonLoanEvent
-    personRDD.mapPartitionsWithIndex((index, persons) => {
-      personLoanEvent
-        .personLoan(
-          persons.toList.asJava,
-          loanGenerator,
-          index
-        )
-        .iterator()
-        .asScala
-    })
-  }
-
-  def companyLoanEvent(companyRDD: RDD[Company]): RDD[Company] = {
-    val companyLoanEvent = new CompanyLoanEvent
-    companyRDD.mapPartitionsWithIndex((index, companies) => {
-      companyLoanEvent
-        .companyLoan(
-          companies.toList.asJava,
-          loanGenerator,
+          accountSampleList.value.asJava,
           index
         )
         .iterator()
@@ -245,25 +191,21 @@ class ActivityGenerator()(implicit spark: SparkSession)
       loanRDD: RDD[Loan],
       accountRDD: RDD[Account]
   ): (RDD[Deposit], RDD[Repay], RDD[Transfer]) = {
-    val sampledAccounts = accountRDD
-      .sample(
-        withReplacement = false,
-        DatagenParams.loanInvolvedAccountsFraction,
-        sampleRandom.nextLong()
-      )
-      .collect()
-      .toList
-
-    val accountSampleList = sampledAccounts
-      .grouped(sampledAccounts.size / loanRDD.partitions.length)
-      .map(_.asJava)
-      .toList
-      .asJava
+    val sampledAccounts = spark.sparkContext.broadcast(
+      accountRDD
+        .sample(
+          withReplacement = false,
+          DatagenParams.loanInvolvedAccountsFraction,
+          sampleRandom.nextLong()
+        )
+        .collect()
+        .toList
+    )
 
     // TODO: optimize the map function with the Java-Scala part.
     val afterLoanActions = loanRDD
       .mapPartitionsWithIndex((index, loans) => {
-        val loanSubEvents = new LoanSubEvents(accountSampleList.get(index))
+        val loanSubEvents = new LoanSubEvents(sampledAccounts.value.asJava)
         loanSubEvents.afterLoanApplied(loans.toList.asJava, index)
         Iterator(
           (

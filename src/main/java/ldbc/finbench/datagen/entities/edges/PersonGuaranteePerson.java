@@ -38,7 +38,6 @@ public class PersonGuaranteePerson implements DynamicActivity, Serializable {
         PersonGuaranteePerson personGuaranteePerson =
             new PersonGuaranteePerson(fromPerson, toPerson, creationDate, 0, false, relation, comment);
         fromPerson.getGuaranteeSrc().add(personGuaranteePerson);
-        toPerson.getGuaranteeDst().add(personGuaranteePerson);
     }
 
     public Person getFromPerson() {

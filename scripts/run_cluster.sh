@@ -13,23 +13,24 @@ echo "start: " `date`
 # --conf "spark.dynamicAllocation.enabled=true" \
 # --conf "spark.dynamicAllocation.minExecutors=1" \
 # --conf "spark.dynamicAllocation.maxExecutors=10" \
-
 # --conf "spark.yarn.maximizeResourceAllocation=true" \
+# --conf "spark.memory.offHeap.enabled=true" \
+# --conf "spark.memory.offHeap.size=100g" \
 time spark-submit --master spark://finbench-large-00:7077 \
     --class ldbc.finbench.datagen.LdbcDatagen \
     --num-executors 2 \
-    --conf "spark.default.parallelism=640" \
+    --conf "spark.default.parallelism=800" \
     --conf "spark.network.timeout=100000" \
     --conf "spark.shuffle.compress=true" \
     --conf "spark.shuffle.spill.compress=true" \
     --conf "spark.serializer=org.apache.spark.serializer.KryoSerializer" \
-    --conf "spark.driver.memory=200g" \
-    --conf "spark.driver.maxResultSize=5g" \
-    --conf "spark.executor.memory=300g" \
-    --conf "spark.executor.memoryOverheadFactor=0.2" \
+    --conf "spark.driver.memory=100g" \
+    --conf "spark.driver.maxResultSize=0" \
+    --conf "spark.executor.memory=400g" \
+    --conf "spark.executor.memoryOverheadFactor=0.5" \
     --conf "spark.executor.extraJavaOptions=-XX:+UseG1GC" \
     ${LDBC_FINBENCH_DATAGEN_JAR} \
-    --scale-factor 30 \
+    --scale-factor 100 \
     --output-dir ${OUTPUT_DIR}
 
 echo "End: " `date`

@@ -26,7 +26,7 @@ public class PersonLoanEvent implements Serializable {
         resetState(blockId);
         loanGenerator.resetState(blockId);
 
-        Random pickPersonRand = randomFarm.get(RandomGeneratorFarm.Aspect.PICK_PERSON_FOR_LOAN);
+        Random pickPersonRand = randomFarm.get(RandomGeneratorFarm.Aspect.PICK_PERSON_LOAN);
         Random numLoansRand = randomFarm.get(RandomGeneratorFarm.Aspect.NUM_LOANS_PER_PERSON);
         Random dateRand = randomFarm.get(RandomGeneratorFarm.Aspect.PERSON_APPLY_LOAN_DATE);
         int numPersonsToTake = (int) (persons.size() * DatagenParams.personLoanFraction);

@@ -1,6 +1,8 @@
 package ldbc.finbench.datagen.util
 
-import org.apache.spark.{SparkConf, SparkEnv}
+import ldbc.finbench.datagen.entities.edges._
+import ldbc.finbench.datagen.entities.nodes._
+import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 
 trait SparkApp {
@@ -8,18 +10,15 @@ trait SparkApp {
 
   type ArgsType
 
-  /**
-    * execute the data generation process
+  /** execute the data generation process
     */
   def run(args: ArgsType): Unit
 
-  /**
-    * set the {@link SparkConf}
+  /** set the {@@linkSparkConf}
     */
   val sparkConf = setConf(new SparkConf(), defaultSparkConf)
 
-  /**
-    * spark entry {@link SparkSession}
+  /** spark entry {@@linkSparkSession}
     */
   implicit def spark: SparkSession =
     SparkSession
@@ -29,7 +28,9 @@ trait SparkApp {
       .config(sparkConf)
       .getOrCreate()
 
-  private def applySparkConf(sparkConf: Map[String, String])(builder: SparkSession.Builder) =
+  private def applySparkConf(sparkConf: Map[String, String])(
+      builder: SparkSession.Builder
+  ) =
     sparkConf.foldLeft(builder) { case (b, (k, v)) => b.config(k, v) }
 
   def setConf(sparkConf: SparkConf, conf: Map[String, String]): SparkConf = {
@@ -38,6 +39,47 @@ trait SparkApp {
         sparkConf.set(entry._1, entry._2)
       }
     })
+    // register kryo classes for nodes
+    sparkConf.registerKryoClasses(
+      Array(
+        classOf[Account],
+        classOf[Company],
+        classOf[Loan],
+        classOf[Medium],
+        classOf[Person]
+      )
+    )
+    registerKyroClasses(sparkConf)
+  }
+
+  def registerKyroClasses(sparkConf: SparkConf): SparkConf = {
+    // register kryo classes for nodes
+    sparkConf.registerKryoClasses(
+      Array(
+        classOf[Account],
+        classOf[Company],
+        classOf[Loan],
+        classOf[Medium],
+        classOf[Person]
+      )
+    )
+    // register kryo classes for edges
+    sparkConf.registerKryoClasses(
+      Array(
+        classOf[CompanyApplyLoan],
+        classOf[CompanyGuaranteeCompany],
+        classOf[CompanyInvestCompany],
+        classOf[CompanyOwnAccount],
+        classOf[PersonApplyLoan],
+        classOf[PersonGuaranteePerson],
+        classOf[PersonInvestCompany],
+        classOf[PersonOwnAccount],
+        classOf[Repay],
+        classOf[SignIn],
+        classOf[Transfer],
+        classOf[Withdraw]
+      )
+    )
     sparkConf
   }
 
