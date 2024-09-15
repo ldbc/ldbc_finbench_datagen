@@ -1,14 +1,12 @@
 package ldbc.finbench.datagen.generation
 
 import ldbc.finbench.datagen.config.{ConfigParser, DatagenConfiguration}
-import ldbc.finbench.datagen.generation.DatagenContext
 import ldbc.finbench.datagen.io.raw.{Csv, Parquet, RawSink}
 import ldbc.finbench.datagen.util._
 import org.apache.hadoop.fs.{FSDataInputStream, FileSystem, Path}
 
 import java.net.URI
 import java.util.Properties
-import scala.reflect.ClassTag
 import scala.collection.JavaConverters._
 
 object GenerationStage extends DatagenStage with Logging {

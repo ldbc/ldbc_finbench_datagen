@@ -104,7 +104,7 @@ public class RandomGeneratorFarm implements Serializable {
         COMPANY_GUARANTEE_DATE,
 
         // edge: person loan
-        PICK_PERSON_FOR_LOAN,
+        PICK_PERSON_LOAN,
         NUM_LOANS_PER_PERSON,
         PERSON_APPLY_LOAN_ORGANIZATION,
         PERSON_APPLY_LOAN_DATE,
