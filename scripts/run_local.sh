@@ -9,6 +9,9 @@ OUTPUT_DIR=out
 # run locally with spark-submit command
 # **({'spark.driver.extraJavaOptions': '-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005'}), # Debug
 # **({'spark.executor.extraJavaOptions': '-verbose:gc -XX:+UseG1GC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps'}),
+#    --conf "spark.memory.offHeap.enabled=true" \
+#    --conf "spark.memory.offHeap.size=100g" \
+#    --conf "spark.storage.memoryFraction=0" \
 time spark-submit --master local[*] \
     --class ldbc.finbench.datagen.LdbcDatagen \
     --driver-memory 500g \
@@ -16,11 +19,8 @@ time spark-submit --master local[*] \
     --conf "spark.shuffle.compress=true" \
     --conf "spark.shuffle.spill.compress=true" \
     --conf "spark.serializer=org.apache.spark.serializer.KryoSerializer" \
-    --conf "spark.memory.offHeap.enabled=true" \
-    --conf "spark.memory.offHeap.size=100g" \
-    --conf "spark.storage.memoryFraction=0" \
     --conf "spark.driver.maxResultSize=0" \
     --conf "spark.executor.extraJavaOptions=-XX:+UseG1GC" \
     ${LDBC_FINBENCH_DATAGEN_JAR} \
-    --scale-factor 30 \
+    --scale-factor 1 \
     --output-dir ${OUTPUT_DIR}
