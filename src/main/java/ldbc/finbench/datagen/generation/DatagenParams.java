@@ -53,7 +53,6 @@ public class DatagenParams {
     public static double transferLimitProCorrelated = 0.0;
     public static long transferMaxAmount = 0;
     public static String transferGenerationMode;
-    public static int transferShuffleTimes;
     public static double accountWithdrawFraction = 0.0;
     public static int maxWithdrawals = 0;
     public static long withdrawMaxAmount = 0;
@@ -113,7 +112,6 @@ public class DatagenParams {
             transferLimitProCorrelated = doubleConf(conf, "transfer.limitProCorrelated");
             transferMaxAmount = longConf(conf, "transfer.maxAmount");
             transferGenerationMode = stringConf(conf, "transfer.generationMode");
-            transferShuffleTimes = intConf(conf, "transfer.shuffleTimes");
 
             accountWithdrawFraction = doubleConf(conf, "withdraw.accountWithdrawFraction");
             maxWithdrawals = intConf(conf, "withdraw.maxWithdrawals");

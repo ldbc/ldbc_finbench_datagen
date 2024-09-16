@@ -12,10 +12,8 @@ import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 public class TransferEvent implements Serializable {
     private final RandomGeneratorFarm randomFarm;
     private final DegreeDistribution multiplicityDist;
-    private final double partRatio;
 
     public TransferEvent() {
-        this.partRatio = 1.0 / DatagenParams.transferShuffleTimes;
         randomFarm = new RandomGeneratorFarm();
         multiplicityDist = DatagenParams.getTransferMultiplicityDistribution();
         multiplicityDist.initialize();
@@ -37,14 +35,8 @@ public class TransferEvent implements Serializable {
     // Generation to parts will mess up the average degree(make it bigger than expected) caused by ceiling operations.
     // Also, it will mess up the long tail range of powerlaw distribution of degrees caused by 1 rounded to 2.
     // See the plot drawn by check_transfer.py for more details.
-    public List<Transfer> transferPart(List<Account> accounts, int blockId) {
+    public List<Transfer> transfer(List<Account> accounts, int blockId) {
         resetState(blockId);
-
-        // scale to percentage
-        for (Account account : accounts) {
-            account.setMaxOutDegree((long) Math.ceil(account.getRawMaxOutDegree() * partRatio));
-            account.setMaxInDegree((long) Math.ceil(account.getRawMaxInDegree() * partRatio));
-        }
 
         List<Transfer> transfers = new LinkedList<>();
         LinkedList<Integer> availableToAccountIds = getIndexList(accounts.size()); // available transferTo accountIds
@@ -77,8 +69,6 @@ public class TransferEvent implements Serializable {
                     System.out.println("[Transfer] All accounts skipped for " + from.getAccountId());
                     break; // end loop if all accounts are skipped
                 }
-                // System.out.println("Loop for " + from.getAccountId() + ", skippedCount: " + skippedCount + ", "
-                //                       + "availableToAccountIds " + availableToAccountIds.size());
             }
         }
         return transfers;

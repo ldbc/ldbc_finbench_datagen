@@ -202,18 +202,13 @@ class ActivityGenerator()(implicit spark: SparkSession)
   def transferEvent(accountRDD: RDD[Account]): RDD[Transfer] = {
     val transferEvent = new TransferEvent
 
-    Array
-      .fill(DatagenParams.transferShuffleTimes) {
-        accountRDD
-          .repartition(accountRDD.getNumPartitions)
-          .mapPartitionsWithIndex((index, accounts) => {
-            transferEvent
-              .transferPart(accounts.toList.asJava, index)
-              .iterator()
-              .asScala
-          })
-      }
-      .reduce(_ union _)
+    accountRDD
+      .mapPartitionsWithIndex((index, accounts) => {
+        transferEvent
+          .transfer(accounts.toList.asJava, index)
+          .iterator()
+          .asScala
+      })
   }
 
   // TODO: rewrite it with account centric
