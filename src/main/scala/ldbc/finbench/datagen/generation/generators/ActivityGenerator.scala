@@ -166,7 +166,7 @@ class ActivityGenerator()(implicit spark: SparkSession)
   def withdrawEvent(accountRDD: RDD[Account]): RDD[Withdraw] = {
     val withdrawEvent = new WithdrawEvent
 
-    val cards = accountRDD.filter(_.getType == "debit card").collect()
+    val cards = spark.sparkContext.broadcast(accountRDD.filter(_.getType == "debit card").collect().toList)
     accountRDD
       .filter(_.getType != "debit card")
       .sample(
@@ -178,7 +178,7 @@ class ActivityGenerator()(implicit spark: SparkSession)
         withdrawEvent
           .withdraw(
             sources.toList.asJava,
-            cards.toList.asJava,
+            cards.value.asJava,
             index
           )
           .iterator()

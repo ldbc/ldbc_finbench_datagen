@@ -32,6 +32,41 @@ public class Transfer implements DynamicActivity, Serializable {
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
+    public static void createTransferNew(RandomGeneratorFarm farm, Account from, Account to,
+                                          long multiplicityId) {
+        long deleteDate = Math.min(from.getDeletionDate(), to.getDeletionDate());
+        long creationDate =
+            Dictionaries.dates.randomAccountToAccountDate(farm.get(RandomGeneratorFarm.Aspect.TRANSFER_DATE), from, to,
+                                                          deleteDate);
+        boolean willDelete = from.isExplicitlyDeleted() && to.isExplicitlyDeleted();
+        double amount =
+            farm.get(RandomGeneratorFarm.Aspect.TRANSFER_AMOUNT).nextDouble() * DatagenParams.transferMaxAmount;
+        Transfer transfer = new Transfer(from, to, amount, creationDate, deleteDate, multiplicityId, willDelete);
+
+        // Set ordernum
+        String ordernum = Dictionaries.numbers.generateOrdernum(farm.get(RandomGeneratorFarm.Aspect.TRANSFER_ORDERNUM));
+        transfer.setOrdernum(ordernum);
+
+        // Set comment
+        String comment =
+            Dictionaries.randomTexts.getUniformDistRandomTextForComments(
+                farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
+        transfer.setComment(comment);
+
+        // Set payType
+        String paytype =
+            Dictionaries.transferTypes.getUniformDistRandomText(farm.get(RandomGeneratorFarm.Aspect.TRANSFER_PAYTYPE));
+        transfer.setPayType(paytype);
+
+        // Set goodsType
+        String goodsType =
+            Dictionaries.transferTypes.getUniformDistRandomText(
+                farm.get(RandomGeneratorFarm.Aspect.TRANSFER_GOODSTYPE));
+        transfer.setGoodsType(goodsType);
+
+        from.getTransferOuts().add(transfer);
+    }
+
     public static Transfer createTransfer(RandomGeneratorFarm farm, Account from, Account to,
                                           long multiplicityId) {
         long deleteDate = Math.min(from.getDeletionDate(), to.getDeletionDate());

@@ -30,6 +30,21 @@ public class Withdraw implements DynamicActivity, Serializable {
         this.comment = comment;
     }
 
+    public static void createWithdrawNew(RandomGeneratorFarm farm, Account from, Account to, long multiplicityId) {
+        Random dateRand = farm.get(RandomGeneratorFarm.Aspect.WITHDRAW_DATE);
+        long deleteDate = Math.min(from.getDeletionDate(), to.getDeletionDate());
+        long creationDate = Dictionaries.dates.randomAccountToAccountDate(dateRand, from, to, deleteDate);
+        boolean willDelete = from.isExplicitlyDeleted() && to.isExplicitlyDeleted();
+        double amount =
+            farm.get(RandomGeneratorFarm.Aspect.WITHDRAW_AMOUNT).nextDouble() * DatagenParams.withdrawMaxAmount;
+        String comment =
+            Dictionaries.randomTexts.getUniformDistRandomTextForComments(
+                farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
+        Withdraw withdraw =
+            new Withdraw(from, to, amount, creationDate, deleteDate, multiplicityId, willDelete, comment);
+        from.getWithdraws().add(withdraw);
+    }
+
     public static Withdraw createWithdraw(RandomGeneratorFarm farm, Account from, Account to, long multiplicityId) {
         Random dateRand = farm.get(RandomGeneratorFarm.Aspect.WITHDRAW_DATE);
         long deleteDate = Math.min(from.getDeletionDate(), to.getDeletionDate());
