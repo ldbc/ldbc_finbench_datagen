@@ -197,9 +197,7 @@ class ActivityGenerator()(implicit spark: SparkSession)
     })
   }
 
-  // Tries: StackOverflowError caused when merging accounts RDD causes, maybe due to deep RDD lineage
-  // TODO: rewrite it with account centric and figure out the StackOverflowError
-  def transferEvent(accountRDD: RDD[Account]): RDD[Transfer] = {
+  def transferEvent(accountRDD: RDD[Account]): RDD[Account] = {
     val transferEvent = new TransferEvent
 
     accountRDD

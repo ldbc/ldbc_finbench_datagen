@@ -37,10 +37,9 @@ public class TransferEvent implements Serializable {
     // Generation to parts will mess up the average degree(make it bigger than expected) caused by ceiling operations.
     // Also, it will mess up the long tail range of powerlaw distribution of degrees caused by 1 rounded to 2.
     // See the plot drawn by check_transfer.py for more details.
-    public List<Transfer> transfer(List<Account> accounts, int blockId) {
+    public List<Account> transfer(List<Account> accounts, int blockId) {
         resetState(blockId);
 
-        List<Transfer> transfers = new LinkedList<>();
         LinkedList<Integer> availableToAccountIds = getIndexList(accounts.size());
         maxSkippedCount = Math.min(maxSkippedCount, (int) (skippedRatio * accounts.size()));
 
@@ -58,12 +57,12 @@ public class TransferEvent implements Serializable {
         //                    continue;
         //                }
         //                long numTransfers = Math.min(multiplicityDist.nextDegree(),
-        //                                             Math.min(from.getAvailableOutDegree(), to.getAvailableInDegree()));
+        //                                             Math.min(from.getAvailableOutDegree(), to.getAvailableInDegree
+        //                                             ()));
         //                for (int mindex = 0; mindex < numTransfers; mindex++) {
         //                    transfers.add(Transfer.createTransfer(randomFarm, from, to, mindex));
         //                }
         //            }
-        //
         //        }
         for (int fromIndex = 0; fromIndex < accounts.size(); fromIndex++) {
             Account from = accounts.get(fromIndex);
@@ -79,7 +78,7 @@ public class TransferEvent implements Serializable {
                     long numTransfers = Math.min(multiplicityDist.nextDegree(),
                                                  Math.min(from.getAvailableOutDegree(), to.getAvailableInDegree()));
                     for (int mindex = 0; mindex < numTransfers; mindex++) {
-                        transfers.add(Transfer.createTransfer(randomFarm, from, to, mindex));
+                        Transfer.createTransfer(randomFarm, from, to, mindex);
                     }
                     if (to.getAvailableInDegree() == 0) {
                         availableToAccountIds.remove(j);
@@ -96,7 +95,7 @@ public class TransferEvent implements Serializable {
                 }
             }
         }
-        return transfers;
+        return accounts;
     }
 
     private boolean cannotTransfer(Account from, Account to) {

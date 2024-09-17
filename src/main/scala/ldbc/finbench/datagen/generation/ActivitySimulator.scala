@@ -25,6 +25,8 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
   private val activityGenerator = new ActivityGenerator()
   private val activitySerializer = new ActivitySerializer(sink)
 
+  // Tries: StackOverflowError caused when merging accounts RDD causes, maybe due to deep RDD lineage
+  // TODO: figure out the StackOverflowError issue
   def simulate(config: DatagenConfiguration): Unit = {
     val personRdd =
       SparkPersonGenerator(DatagenParams.numPersons, config, blockSize)
@@ -77,12 +79,11 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
     val accountRdd =
       mergeAccountsAndShuffleDegrees(personWithAccounts, companyWithAccounts)
     val signInRdd = activityGenerator.signInEvent(mediumRdd, accountRdd)
-    val mergedTransfers = activityGenerator.transferEvent(accountRdd)
+    val accountWithTransfer = activityGenerator.transferEvent(accountRdd)
     val withdrawRdd = activityGenerator.withdrawEvent(accountRdd)
     log.info(
       s"[Simulation] Account RDD partitions: ${accountRdd.getNumPartitions}"
         + s"[Simulation] signIn RDD partitions: ${signInRdd.getNumPartitions}"
-        + s"[Simulation] transfer RDD partitions: ${mergedTransfers.getNumPartitions}, "
         + s"withdraw RDD partitions: ${withdrawRdd.getNumPartitions}"
     )
 
@@ -103,10 +104,7 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
       activitySerializer.writePersonWithActivities(personWithAccGuaLoan),
       activitySerializer.writeCompanyWithActivities(companyWithAccGuaLoan),
       activitySerializer.writeMediumWithActivities(mediumRdd, signInRdd),
-      activitySerializer.writeAccountWithActivities(
-        accountRdd,
-        mergedTransfers
-      ),
+      activitySerializer.writeAccountWithActivities(accountWithTransfer),
       activitySerializer.writeWithdraw(withdrawRdd),
       activitySerializer.writeInvestCompanies(companyRddAfterInvest),
       activitySerializer.writeLoanActivities(

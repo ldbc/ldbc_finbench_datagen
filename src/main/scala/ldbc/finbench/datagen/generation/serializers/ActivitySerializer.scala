@@ -247,12 +247,12 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
     futures
   }
 
-  def writeAccountWithActivities(self: RDD[Account], transfers: RDD[Transfer])(
-      implicit spark: SparkSession
+  def writeAccountWithActivities(accountsRDD: RDD[Account])(implicit
+      spark: SparkSession
   ): Seq[Future[Unit]] = {
     val futures = Seq(
       SparkUI.jobAsync("Write Account", "Write Account") {
-        val rawAccount = self.map { a: Account =>
+        val rawAccount = accountsRDD.map { a: Account =>
           AccountRaw(
             a.getAccountId,
             a.getCreationDate,
@@ -279,20 +279,22 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
           .save((pathPrefix / "account").toString)
       },
       SparkUI.jobAsync("Write Account transfer", "Write Account transfer") {
-        val rawTransfer = transfers.map { t =>
-          TransferRaw(
-            t.getFromAccount.getAccountId,
-            t.getToAccount.getAccountId,
-            t.getMultiplicityId,
-            t.getCreationDate,
-            t.getDeletionDate,
-            formattedDouble(t.getAmount),
-            t.isExplicitlyDeleted,
-            t.getOrdernum,
-            t.getComment,
-            t.getPayType,
-            t.getGoodsType
-          )
+        val rawTransfer = accountsRDD.flatMap { acc =>
+          acc.getTransferOuts.asScala.map { t =>
+            TransferRaw(
+              t.getFromAccount.getAccountId,
+              t.getToAccount.getAccountId,
+              t.getMultiplicityId,
+              t.getCreationDate,
+              t.getDeletionDate,
+              formattedDouble(t.getAmount),
+              t.isExplicitlyDeleted,
+              t.getOrdernum,
+              t.getComment,
+              t.getPayType,
+              t.getGoodsType
+            )
+          }
         }
         spark
           .createDataFrame(rawTransfer)
