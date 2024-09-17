@@ -49,8 +49,8 @@ public class DatagenParams {
     public static long transferMaxDegree = 0;
     public static int transferMinMultiplicity = 0;
     public static int transferMaxMultiplicity = 0;
-    public static double transferBaseProbCorrelated = 0.0;
-    public static double transferLimitProCorrelated = 0.0;
+    //public static double transferBaseProbCorrelated = 0.0;
+    //public static double transferLimitProCorrelated = 0.0;
     public static long transferMaxAmount = 0;
     public static String transferGenerationMode;
     public static double accountWithdrawFraction = 0.0;
@@ -108,8 +108,8 @@ public class DatagenParams {
             transferMultiplicityDistribution = stringConf(conf, "transfer.multiplicityDistribution");
             transferMinMultiplicity = intConf(conf, "transfer.minMultiplicity");
             transferMaxMultiplicity = intConf(conf, "transfer.maxMultiplicity");
-            transferBaseProbCorrelated = doubleConf(conf, "transfer.baseProbCorrelated");
-            transferLimitProCorrelated = doubleConf(conf, "transfer.limitProCorrelated");
+            //transferBaseProbCorrelated = doubleConf(conf, "transfer.baseProbCorrelated");
+            //transferLimitProCorrelated = doubleConf(conf, "transfer.limitProCorrelated");
             transferMaxAmount = longConf(conf, "transfer.maxAmount");
             transferGenerationMode = stringConf(conf, "transfer.generationMode");
 

@@ -139,7 +139,6 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
       new scala.util.Random(TaskContext.getPartitionId()).shuffle(indegrees)
     accounts.zip(shuffled).foreach { case (account, shuffled) =>
       account.setMaxOutDegree(shuffled)
-      account.setRawMaxOutDegree(shuffled)
     }
     accounts
   }

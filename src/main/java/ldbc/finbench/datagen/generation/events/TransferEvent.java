@@ -12,6 +12,7 @@ import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 public class TransferEvent implements Serializable {
     private final RandomGeneratorFarm randomFarm;
     private final DegreeDistribution multiplicityDist;
+    private final float skippedRatio = 0.5f;
 
     public TransferEvent() {
         randomFarm = new RandomGeneratorFarm();
@@ -61,27 +62,19 @@ public class TransferEvent implements Serializable {
                         availableToAccountIds.remove(j);
                         j--;
                     }
+                    // TODO:
                     if (from.getAvailableOutDegree() == 0) {
                         break;
                     }
                 }
-                if (skippedCount == availableToAccountIds.size()) {
+                // end loop if all accounts are skipped
+                if (skippedCount >= availableToAccountIds.size() * skippedRatio) {
                     System.out.println("[Transfer] All accounts skipped for " + from.getAccountId());
-                    break; // end loop if all accounts are skipped
+                    break;
                 }
             }
         }
         return transfers;
-    }
-
-    // distanceProbOK is not applied to avoid rebundant computation
-    private boolean distanceProbOK(int distance) {
-        if (DatagenParams.transferGenerationMode.equals("loose")) {
-            return true;
-        }
-        double randProb = randomFarm.get(RandomGeneratorFarm.Aspect.UNIFORM).nextDouble();
-        double prob = Math.pow(DatagenParams.transferBaseProbCorrelated, Math.abs(distance));
-        return ((randProb < prob) || (randProb < DatagenParams.transferLimitProCorrelated));
     }
 
     // Transfer to self is not allowed

@@ -65,11 +65,7 @@ public class AccountGenerator implements Serializable {
         // Set inDegree
         long maxInDegree = Math.min(degreeDistribution.nextDegree(), DatagenParams.transferMaxDegree);
         account.setMaxInDegree(maxInDegree);
-        account.setRawMaxInDegree(maxInDegree);
-
-        // Set outDegree. Note: Leave outDegree as 0 for shuffle later
-        account.setMaxOutDegree(0);
-        account.setRawMaxOutDegree(0);
+        account.setMaxOutDegree(0); // Leave outDegree as 0 for shuffle later
 
         // Set deletionDate
         long deletionDate;
@@ -85,7 +81,7 @@ public class AccountGenerator implements Serializable {
         }
         account.setDeletionDate(deletionDate);
 
-        // Set type. TODO: the account type should be ranked by the type of account owner. Design a ranking function
+        // Set type. OPT: the account type should be ranked by the type of account owner. Design a ranking function
         String type =
             Dictionaries.accountTypes.getUniformDistRandomText(randFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_TYPE));
         account.setType(type);
