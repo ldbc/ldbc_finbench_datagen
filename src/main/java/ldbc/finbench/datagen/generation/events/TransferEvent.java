@@ -13,6 +13,7 @@ public class TransferEvent implements Serializable {
     private final RandomGeneratorFarm randomFarm;
     private final DegreeDistribution multiplicityDist;
     private final float skippedRatio = 0.5f;
+    private int maxSkippedCount = 10;
 
     public TransferEvent() {
         randomFarm = new RandomGeneratorFarm();
@@ -40,16 +41,38 @@ public class TransferEvent implements Serializable {
         resetState(blockId);
 
         List<Transfer> transfers = new LinkedList<>();
-        LinkedList<Integer> availableToAccountIds = getIndexList(accounts.size()); // available transferTo accountIds
+        LinkedList<Integer> availableToAccountIds = getIndexList(accounts.size());
+        maxSkippedCount = Math.min(maxSkippedCount, (int) (skippedRatio * accounts.size()));
 
-        for (int i = 0; i < accounts.size(); i++) {
-            Account from = accounts.get(i);
+        //        for (int i = 0; i < accounts.size(); i++) {
+        //            Account from = accounts.get(i);
+        //            int skippedCount = 0;
+        //            for (int j = i + 1; j < accounts.size(); j++) {
+        //                // termination
+        //                if (skippedCount >= maxSkippedCount || from.getAvailableOutDegree() == 0) {
+        //                    break;
+        //                }
+        //                Account to = accounts.get(j);
+        //                if (j == i || cannotTransfer(from, to)) {
+        //                    skippedCount++;
+        //                    continue;
+        //                }
+        //                long numTransfers = Math.min(multiplicityDist.nextDegree(),
+        //                                             Math.min(from.getAvailableOutDegree(), to.getAvailableInDegree()));
+        //                for (int mindex = 0; mindex < numTransfers; mindex++) {
+        //                    transfers.add(Transfer.createTransfer(randomFarm, from, to, mindex));
+        //                }
+        //            }
+        //
+        //        }
+        for (int fromIndex = 0; fromIndex < accounts.size(); fromIndex++) {
+            Account from = accounts.get(fromIndex);
             while (from.getAvailableOutDegree() != 0) {
                 int skippedCount = 0;
                 for (int j = 0; j < availableToAccountIds.size(); j++) {
                     int toIndex = availableToAccountIds.get(j);
                     Account to = accounts.get(toIndex);
-                    if (toIndex == i || cannotTransfer(from, to)) {
+                    if (toIndex == fromIndex || cannotTransfer(from, to)) {
                         skippedCount++;
                         continue;
                     }
@@ -62,14 +85,13 @@ public class TransferEvent implements Serializable {
                         availableToAccountIds.remove(j);
                         j--;
                     }
-                    // TODO:
                     if (from.getAvailableOutDegree() == 0) {
                         break;
                     }
                 }
-                // end loop if all accounts are skipped
-                if (skippedCount >= availableToAccountIds.size() * skippedRatio) {
-                    System.out.println("[Transfer] All accounts skipped for " + from.getAccountId());
+                // if (skippedCount == availableToAccountIds.size()) {
+                if (skippedCount >= maxSkippedCount) {
+                    // System.out.println("[Transfer] All accounts skipped for " + from.getAccountId());
                     break;
                 }
             }
@@ -77,7 +99,6 @@ public class TransferEvent implements Serializable {
         return transfers;
     }
 
-    // Transfer to self is not allowed
     private boolean cannotTransfer(Account from, Account to) {
         return from.getDeletionDate() < to.getCreationDate() + DatagenParams.activityDelta
             || from.getCreationDate() + DatagenParams.activityDelta > to.getDeletionDate()
