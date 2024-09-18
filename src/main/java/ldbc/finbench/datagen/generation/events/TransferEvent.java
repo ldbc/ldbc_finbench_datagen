@@ -60,10 +60,11 @@ public class TransferEvent implements Serializable {
         //                                             Math.min(from.getAvailableOutDegree(), to.getAvailableInDegree
         //                                             ()));
         //                for (int mindex = 0; mindex < numTransfers; mindex++) {
-        //                    transfers.add(Transfer.createTransfer(randomFarm, from, to, mindex));
+        //                    Transfer.createTransfer(randomFarm, from, to, mindex);
         //                }
         //            }
         //        }
+
         for (int fromIndex = 0; fromIndex < accounts.size(); fromIndex++) {
             Account from = accounts.get(fromIndex);
             while (from.getAvailableOutDegree() != 0) {
@@ -88,13 +89,13 @@ public class TransferEvent implements Serializable {
                         break;
                     }
                 }
-                // if (skippedCount == availableToAccountIds.size()) {
-                if (skippedCount >= maxSkippedCount) {
-                    // System.out.println("[Transfer] All accounts skipped for " + from.getAccountId());
-                    break;
+                if (skippedCount == accounts.size()) {
+                    //System.out.println("[Transfer] All accounts skipped for " + from.getAccountId());
+                    break; // end loop if all accounts are skipped
                 }
             }
         }
+
         return accounts;
     }
 
