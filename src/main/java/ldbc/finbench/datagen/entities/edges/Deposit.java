@@ -27,7 +27,7 @@ public class Deposit implements DynamicActivity, Serializable {
         this.comment = comment;
     }
 
-    public static Deposit createDeposit(RandomGeneratorFarm farm, Loan loan, Account account, double amount) {
+    public static void createDeposit(RandomGeneratorFarm farm, Loan loan, Account account, double amount) {
         long creationDate =
             Dictionaries.dates.randomLoanToAccountDate(farm.get(RandomGeneratorFarm.Aspect.LOAN_SUBEVENTS_DATE), loan,
                                                        account, account.getDeletionDate());
@@ -38,9 +38,7 @@ public class Deposit implements DynamicActivity, Serializable {
             new Deposit(loan, account, amount, creationDate, account.getDeletionDate(), account.isExplicitlyDeleted(),
                         comment);
         loan.addDeposit(deposit);
-        account.getDeposits().add(deposit);
-
-        return deposit;
+        //account.getDeposits().add(deposit);
     }
 
     public double getAmount() {

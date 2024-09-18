@@ -27,7 +27,7 @@ public class Repay implements DynamicActivity, Serializable {
         this.comment = comment;
     }
 
-    public static Repay createRepay(RandomGeneratorFarm farm, Account account, Loan loan, double amount) {
+    public static void createRepay(RandomGeneratorFarm farm, Account account, Loan loan, double amount) {
         long creationDate =
             Dictionaries.dates.randomAccountToLoanDate(farm.get(RandomGeneratorFarm.Aspect.LOAN_SUBEVENTS_DATE),
                                                        account, loan, account.getDeletionDate());
@@ -37,9 +37,7 @@ public class Repay implements DynamicActivity, Serializable {
         Repay repay = new Repay(account, loan, amount, creationDate, account.getDeletionDate(),
                                 account.isExplicitlyDeleted(), comment);
         loan.addRepay(repay);
-        account.getRepays().add(repay);
-
-        return repay;
+        //account.getRepays().add(repay);
     }
 
     public double getAmount() {

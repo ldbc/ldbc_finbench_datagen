@@ -1,6 +1,5 @@
 package ldbc.finbench.datagen.generation.generators
 
-import ldbc.finbench.datagen.entities.edges._
 import ldbc.finbench.datagen.entities.nodes._
 import ldbc.finbench.datagen.generation.DatagenParams
 import ldbc.finbench.datagen.generation.events._
@@ -161,11 +160,10 @@ class ActivityGenerator()(implicit spark: SparkSession)
     })
   }
 
-  // TODO: rewrite it with loan centric
   def afterLoanSubEvents(
       loanRDD: RDD[Loan],
       accountRDD: RDD[Account]
-  ): (RDD[Deposit], RDD[Repay], RDD[Transfer]) = {
+  ): (RDD[Loan]) = {
     val sampledAccounts = spark.sparkContext.broadcast(
       accountRDD
         .sample(
@@ -177,25 +175,18 @@ class ActivityGenerator()(implicit spark: SparkSession)
         .toList
     )
 
-    // TODO: optimize the map function with the Java-Scala part.
+    val loanSubEvents = new LoanSubEvents
     val afterLoanActions = loanRDD
       .mapPartitionsWithIndex((index, loans) => {
-        val loanSubEvents = new LoanSubEvents(sampledAccounts.value.asJava)
-        loanSubEvents.afterLoanApplied(loans.toList.asJava, index)
-        Iterator(
-          (
-            loanSubEvents.getDeposits.asScala,
-            loanSubEvents.getRepays.asScala,
-            loanSubEvents.getTransfers.asScala
+        loanSubEvents
+          .afterLoanApplied(
+            loans.toList.asJava,
+            sampledAccounts.value.asJava,
+            index
           )
-        )
+          .iterator()
+          .asScala
       })
-      .cache()
-
-    (
-      afterLoanActions.flatMap(_._1),
-      afterLoanActions.flatMap(_._2),
-      afterLoanActions.flatMap(_._3)
-    )
+    afterLoanActions
   }
 }
