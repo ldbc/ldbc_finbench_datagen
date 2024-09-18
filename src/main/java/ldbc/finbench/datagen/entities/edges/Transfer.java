@@ -65,7 +65,7 @@ public class Transfer implements DynamicActivity, Serializable {
         transfer.setGoodsType(goodsType);
 
         from.getTransferOuts().add(transfer);
-        //to.getTransferIns().add(transfer);
+        to.getTransferIns().add(transfer);
     }
 
     public static Transfer createLoanTransfer(RandomGeneratorFarm farm, Account from, Account to,
