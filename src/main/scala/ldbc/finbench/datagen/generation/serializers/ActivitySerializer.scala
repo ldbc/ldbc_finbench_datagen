@@ -302,29 +302,23 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
           .format(sink.format.toString)
           .options(options)
           .save((pathPrefix / "transfer").toString)
-      }
-    )
-    futures
-  }
-
-  def writeWithdraw(
-      self: RDD[Withdraw]
-  )(implicit spark: SparkSession): Seq[Future[Unit]] = {
-    val futures = Seq(
+      },
       SparkUI.jobAsync("Write withdraw", "Write Withdraw") {
-        val rawWithdraw = self.map { w =>
-          WithdrawRaw(
-            w.getFromAccount.getAccountId,
-            w.getToAccount.getAccountId,
-            w.getFromAccount.getType,
-            w.getToAccount.getType,
-            w.getMultiplicityId,
-            w.getCreationDate,
-            w.getDeletionDate,
-            formattedDouble(w.getAmount),
-            w.isExplicitlyDeleted,
-            w.getComment
-          )
+        val rawWithdraw = accountsRDD.flatMap { acc =>
+          acc.getWithdraws.asScala.map { w =>
+            WithdrawRaw(
+              w.getFromAccount.getAccountId,
+              w.getToAccount.getAccountId,
+              w.getFromAccount.getType,
+              w.getToAccount.getType,
+              w.getMultiplicityId,
+              w.getCreationDate,
+              w.getDeletionDate,
+              formattedDouble(w.getAmount),
+              w.isExplicitlyDeleted,
+              w.getComment
+            )
+          }
         }
         spark
           .createDataFrame(rawWithdraw)

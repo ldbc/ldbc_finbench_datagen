@@ -197,41 +197,59 @@ class ActivityGenerator()(implicit spark: SparkSession)
     })
   }
 
-  def transferEvent(accountRDD: RDD[Account]): RDD[Account] = {
-    val transferEvent = new TransferEvent
+  def accountActivitiesEvent(accountRDD: RDD[Account]): RDD[Account] = {
+    val accountActivitiesEvent = new AccountActivitiesEvent
+    val cards = spark.sparkContext.broadcast(
+      accountRDD.filter(_.getType == "debit card").collect().toList
+    )
 
-    accountRDD
-      .mapPartitionsWithIndex((index, accounts) => {
-        transferEvent
-          .transfer(accounts.toList.asJava, index)
-          .iterator()
-          .asScala
-      })
+    accountRDD.mapPartitionsWithIndex((index, accounts) => {
+      accountActivitiesEvent
+        .accountActivities(
+          accounts.toList.asJava,
+          cards.value.asJava,
+          index
+        )
+        .iterator()
+        .asScala
+    })
   }
 
-  // TODO: rewrite it with account centric
-  def withdrawEvent(accountRDD: RDD[Account]): RDD[Withdraw] = {
-    val withdrawEvent = new WithdrawEvent
-
-    val cards = accountRDD.filter(_.getType == "debit card").collect()
-    accountRDD
-      .filter(_.getType != "debit card")
-      .sample(
-        withReplacement = false,
-        DatagenParams.accountWithdrawFraction,
-        sampleRandom.nextLong()
-      )
-      .mapPartitionsWithIndex((index, sources) => {
-        withdrawEvent
-          .withdraw(
-            sources.toList.asJava,
-            cards.toList.asJava,
-            index
-          )
-          .iterator()
-          .asScala
-      })
-  }
+  //  def transferEvent(accountRDD: RDD[Account]): RDD[Account] = {
+  //    val transferEvent = new TransferEvent
+  //
+  //    accountRDD
+  //      .mapPartitionsWithIndex((index, accounts) => {
+  //        transferEvent
+  //          .transfer(accounts.toList.asJava, index)
+  //          .iterator()
+  //          .asScala
+  //      })
+  //  }
+  //
+  //  // TODO: rewrite it with account centric
+  //  def withdrawEvent(accountRDD: RDD[Account]): RDD[Withdraw] = {
+  //    val withdrawEvent = new WithdrawEvent
+  //
+  //    val cards = accountRDD.filter(_.getType == "debit card").collect()
+  //    accountRDD
+  //      .filter(_.getType != "debit card")
+  //      .sample(
+  //        withReplacement = false,
+  //        DatagenParams.accountWithdrawFraction,
+  //        sampleRandom.nextLong()
+  //      )
+  //      .mapPartitionsWithIndex((index, sources) => {
+  //        withdrawEvent
+  //          .withdraw(
+  //            sources.toList.asJava,
+  //            cards.toList.asJava,
+  //            index
+  //          )
+  //          .iterator()
+  //          .asScala
+  //      })
+  //  }
 
   // TODO: rewrite it with loan centric
   def afterLoanSubEvents(

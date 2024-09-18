@@ -32,7 +32,7 @@ public class Transfer implements DynamicActivity, Serializable {
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static Transfer createTransfer(RandomGeneratorFarm farm, Account from, Account to,
+    public static void createTransfer(RandomGeneratorFarm farm, Account from, Account to,
                                           long multiplicityId) {
         long deleteDate = Math.min(from.getDeletionDate(), to.getDeletionDate());
         long creationDate =
@@ -65,8 +65,7 @@ public class Transfer implements DynamicActivity, Serializable {
         transfer.setGoodsType(goodsType);
 
         from.getTransferOuts().add(transfer);
-        to.getTransferIns().add(transfer);
-        return transfer;
+        //to.getTransferIns().add(transfer);
     }
 
     public static Transfer createLoanTransfer(RandomGeneratorFarm farm, Account from, Account to,

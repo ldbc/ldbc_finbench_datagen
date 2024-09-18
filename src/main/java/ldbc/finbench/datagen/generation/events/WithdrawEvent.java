@@ -45,7 +45,7 @@ public class WithdrawEvent implements Serializable {
                 if (cannotWithdraw(from, to)) {
                     continue;
                 }
-                withdraws.add(Withdraw.createWithdraw(randomFarm, from, to, getMultiplicityIdAndInc(from, to)));
+                Withdraw.createWithdraw(randomFarm, from, to, getMultiplicityIdAndInc(from, to));
             }
         }
         return withdraws;

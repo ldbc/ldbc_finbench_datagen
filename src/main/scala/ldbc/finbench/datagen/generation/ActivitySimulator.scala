@@ -79,12 +79,10 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
     val accountRdd =
       mergeAccountsAndShuffleDegrees(personWithAccounts, companyWithAccounts)
     val signInRdd = activityGenerator.signInEvent(mediumRdd, accountRdd)
-    val accountWithTransfer = activityGenerator.transferEvent(accountRdd)
-    val withdrawRdd = activityGenerator.withdrawEvent(accountRdd)
+    val accountWithTransferWithdraw = activityGenerator.accountActivitiesEvent(accountRdd)
     log.info(
       s"[Simulation] Account RDD partitions: ${accountRdd.getNumPartitions}"
         + s"[Simulation] signIn RDD partitions: ${signInRdd.getNumPartitions}"
-        + s"withdraw RDD partitions: ${withdrawRdd.getNumPartitions}"
     )
 
     // Loan related activities
@@ -104,8 +102,7 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
       activitySerializer.writePersonWithActivities(personWithAccGuaLoan),
       activitySerializer.writeCompanyWithActivities(companyWithAccGuaLoan),
       activitySerializer.writeMediumWithActivities(mediumRdd, signInRdd),
-      activitySerializer.writeAccountWithActivities(accountWithTransfer),
-      activitySerializer.writeWithdraw(withdrawRdd),
+      activitySerializer.writeAccountWithActivities(accountWithTransferWithdraw),
       activitySerializer.writeInvestCompanies(companyRddAfterInvest),
       activitySerializer.writeLoanActivities(
         loanRdd,
