@@ -51,8 +51,8 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
         val rawPersonOwnAccount = self.flatMap { p =>
           p.getPersonOwnAccounts.asScala.map { poa =>
             PersonOwnAccountRaw(
-              p.getPersonId,
-              poa.getAccount.getAccountId,
+              poa.getPersonId,
+              poa.getAccountId,
               poa.getCreationDate,
               poa.getDeletionDate,
               poa.isExplicitlyDeleted,
@@ -71,8 +71,8 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
         val rawPersonGuarantee = self.flatMap { p =>
           p.getGuaranteeSrc.asScala.map { pgp: PersonGuaranteePerson =>
             PersonGuaranteePersonRaw(
-              pgp.getFromPerson.getPersonId,
-              pgp.getToPerson.getPersonId,
+              pgp.getFromPersonId,
+              pgp.getToPersonId,
               pgp.getCreationDate,
               pgp.getRelationship,
               pgp.getComment
@@ -90,9 +90,9 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
         val rawPersonLoan = self.flatMap { p =>
           p.getPersonApplyLoans.asScala.map { pal: PersonApplyLoan =>
             PersonApplyLoanRaw(
-              pal.getPerson.getPersonId,
-              pal.getLoan.getLoanId,
-              formattedDouble(pal.getLoan.getLoanAmount),
+              pal.getPersonId,
+              pal.getLoanId,
+              formattedDouble(pal.getLoanAmount),
               pal.getCreationDate,
               pal.getOrganization,
               pal.getComment
@@ -141,8 +141,8 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
           val rawCompanyOwnAccount = companiesRDD.flatMap { c =>
             c.getCompanyOwnAccounts.asScala.map { coa =>
               CompanyOwnAccountRaw(
-                c.getCompanyId,
-                coa.getAccount.getAccountId,
+                coa.getCompanyId,
+                coa.getAccountId,
                 coa.getCreationDate,
                 coa.getDeletionDate,
                 coa.isExplicitlyDeleted,
@@ -161,8 +161,8 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
         val rawCompanyGuarantee = companiesRDD.flatMap { c =>
           c.getGuaranteeSrc.asScala.map { cgc: CompanyGuaranteeCompany =>
             CompanyGuaranteeCompanyRaw(
-              cgc.getFromCompany.getCompanyId,
-              cgc.getToCompany.getCompanyId,
+              cgc.getFromCompanyId,
+              cgc.getToCompanyId,
               cgc.getCreationDate,
               cgc.getRelationship,
               cgc.getComment
@@ -180,9 +180,9 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
         val rawCompanyLoan = companiesRDD.flatMap { c =>
           c.getCompanyApplyLoans.asScala.map { cal: CompanyApplyLoan =>
             CompanyApplyLoanRaw(
-              cal.getCompany.getCompanyId,
-              cal.getLoan.getLoanId,
-              formattedDouble(cal.getLoan.getLoanAmount),
+              cal.getCompanyId,
+              cal.getLoanId,
+              formattedDouble(cal.getLoanAmount),
               cal.getCreationDate,
               cal.getOrganization,
               cal.getComment
@@ -200,8 +200,8 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
     futures
   }
 
-  def writeMediumWithActivities(media: RDD[Medium], signIns: RDD[SignIn])(
-      implicit spark: SparkSession
+  def writeMediumWithActivities(media: RDD[Medium])(implicit
+      spark: SparkSession
   ): Seq[Future[Unit]] = {
 
     val futures = Seq(
@@ -224,17 +224,19 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
           .save((pathPrefix / "medium").toString)
       },
       SparkUI.jobAsync("Write media signin", "Write Medium sign in") {
-        val rawSignIn = signIns.map { si: SignIn =>
-          SignInRaw(
-            si.getMedium.getMediumId,
-            si.getAccount.getAccountId,
-            si.getMultiplicityId,
-            si.getCreationDate,
-            si.getDeletionDate,
-            si.isExplicitlyDeleted,
-            si.getLocation,
-            si.getComment
-          )
+        val rawSignIn = media.flatMap { m =>
+          m.getSignIns.asScala.map { si =>
+            SignInRaw(
+              si.getMediumId,
+              si.getAccountId,
+              si.getMultiplicityId,
+              si.getCreationDate,
+              si.getDeletionDate,
+              si.isExplicitlyDeleted,
+              si.getLocation,
+              si.getComment
+            )
+          }
         }
         spark
           .createDataFrame(rawSignIn)
@@ -247,12 +249,12 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
     futures
   }
 
-  def writeAccountWithActivities(self: RDD[Account], transfers: RDD[Transfer])(
-      implicit spark: SparkSession
+  def writeAccountWithActivities(accountsRDD: RDD[Account])(implicit
+      spark: SparkSession
   ): Seq[Future[Unit]] = {
     val futures = Seq(
       SparkUI.jobAsync("Write Account", "Write Account") {
-        val rawAccount = self.map { a: Account =>
+        val rawAccount = accountsRDD.map { a: Account =>
           AccountRaw(
             a.getAccountId,
             a.getCreationDate,
@@ -279,20 +281,22 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
           .save((pathPrefix / "account").toString)
       },
       SparkUI.jobAsync("Write Account transfer", "Write Account transfer") {
-        val rawTransfer = transfers.map { t =>
-          TransferRaw(
-            t.getFromAccount.getAccountId,
-            t.getToAccount.getAccountId,
-            t.getMultiplicityId,
-            t.getCreationDate,
-            t.getDeletionDate,
-            formattedDouble(t.getAmount),
-            t.isExplicitlyDeleted,
-            t.getOrdernum,
-            t.getComment,
-            t.getPayType,
-            t.getGoodsType
-          )
+        val rawTransfer = accountsRDD.flatMap { acc =>
+          acc.getTransferOuts.asScala.map { t =>
+            TransferRaw(
+              t.getFromAccountId,
+              t.getToAccountId,
+              t.getMultiplicityId,
+              t.getCreationDate,
+              t.getDeletionDate,
+              formattedDouble(t.getAmount),
+              t.isExplicitlyDeleted,
+              t.getOrdernum,
+              t.getComment,
+              t.getPayType,
+              t.getGoodsType
+            )
+          }
         }
         spark
           .createDataFrame(rawTransfer)
@@ -300,29 +304,23 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
           .format(sink.format.toString)
           .options(options)
           .save((pathPrefix / "transfer").toString)
-      }
-    )
-    futures
-  }
-
-  def writeWithdraw(
-      self: RDD[Withdraw]
-  )(implicit spark: SparkSession): Seq[Future[Unit]] = {
-    val futures = Seq(
+      },
       SparkUI.jobAsync("Write withdraw", "Write Withdraw") {
-        val rawWithdraw = self.map { w =>
-          WithdrawRaw(
-            w.getFromAccount.getAccountId,
-            w.getToAccount.getAccountId,
-            w.getFromAccount.getType,
-            w.getToAccount.getType,
-            w.getMultiplicityId,
-            w.getCreationDate,
-            w.getDeletionDate,
-            formattedDouble(w.getAmount),
-            w.isExplicitlyDeleted,
-            w.getComment
-          )
+        val rawWithdraw = accountsRDD.flatMap { acc =>
+          acc.getWithdraws.asScala.map { w =>
+            WithdrawRaw(
+              w.getFromAccountId,
+              w.getToAccountId,
+              w.getFromAccountType,
+              w.getToAccountType,
+              w.getMultiplicityId,
+              w.getCreationDate,
+              w.getDeletionDate,
+              formattedDouble(w.getAmount),
+              w.isExplicitlyDeleted,
+              w.getComment
+            )
+          }
         }
         spark
           .createDataFrame(rawWithdraw)
@@ -343,8 +341,8 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
         val rawPersonInvestCompany = investedCompaniesRDD.flatMap { c =>
           c.getPersonInvestCompanies.asScala.map { pic =>
             PersonInvestCompanyRaw(
-              pic.getPerson.getPersonId,
-              pic.getCompany.getCompanyId,
+              pic.getPersonId,
+              pic.getCompanyId,
               pic.getCreationDate,
               pic.getRatio,
               pic.getComment
@@ -366,8 +364,8 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
         val rawCompanyInvestCompany = investedCompaniesRDD.flatMap { c =>
           c.getCompanyInvestCompanies.asScala.map { cic =>
             CompanyInvestCompanyRaw(
-              cic.getFromCompany.getCompanyId,
-              cic.getToCompany.getCompanyId,
+              cic.getFromCompanyId,
+              cic.getToCompanyId,
               cic.getCreationDate,
               cic.getRatio,
               cic.getComment
@@ -418,8 +416,8 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
       SparkUI.jobAsync("Write loan desposit", "Write Loan desposit") {
         val rawDeposit = deposits.map { d: Deposit =>
           DepositRaw(
-            d.getLoan.getLoanId,
-            d.getAccount.getAccountId,
+            d.getLoanId,
+            d.getAccountId,
             d.getCreationDate,
             d.getDeletionDate,
             formattedDouble(d.getAmount),
@@ -437,8 +435,8 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
       SparkUI.jobAsync("Write loan repay", "Write Loan repay") {
         val rawRepay = repays.map { r: Repay =>
           RepayRaw(
-            r.getAccount.getAccountId,
-            r.getLoan.getLoanId,
+            r.getAccountId,
+            r.getLoanId,
             r.getCreationDate,
             r.getDeletionDate,
             formattedDouble(r.getAmount),
@@ -456,8 +454,8 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
       SparkUI.jobAsync("Write loan transfer", "Write Loan transfer") {
         val rawLoanTransfer = loantransfers.map { t: Transfer =>
           TransferRaw(
-            t.getFromAccount.getAccountId,
-            t.getToAccount.getAccountId,
+            t.getFromAccountId,
+            t.getToAccountId,
             t.getMultiplicityId,
             t.getCreationDate,
             t.getDeletionDate,

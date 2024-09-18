@@ -106,7 +106,7 @@ public class Company implements Serializable {
 
     public boolean hasInvestedBy(Company company) {
         for (CompanyInvestCompany cic : companyInvestCompanies) {
-            if (cic.getFromCompany().equals(company)) {
+            if (cic.getFromCompanyId() == company.companyId) {
                 return true;
             }
         }
@@ -115,7 +115,7 @@ public class Company implements Serializable {
 
     public boolean hasInvestedBy(Person person) {
         for (PersonInvestCompany pic : personInvestCompanies) {
-            if (pic.getPerson().equals(person)) {
+            if (pic.getPersonId() == person.getPersonId()) {
                 return true;
             }
         }

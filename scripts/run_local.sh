@@ -11,7 +11,7 @@ OUTPUT_DIR=out
 # **({'spark.executor.extraJavaOptions': '-verbose:gc -XX:+UseG1GC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps'}),
 time spark-submit --master local[*] \
     --class ldbc.finbench.datagen.LdbcDatagen \
-    --driver-memory 500g \
+    --driver-memory 480g \
     --conf "spark.default.parallelism=500" \
     --conf "spark.shuffle.compress=true" \
     --conf "spark.shuffle.spill.compress=true" \
@@ -22,5 +22,5 @@ time spark-submit --master local[*] \
     --conf "spark.driver.maxResultSize=0" \
     --conf "spark.executor.extraJavaOptions=-XX:+UseG1GC" \
     ${LDBC_FINBENCH_DATAGEN_JAR} \
-    --scale-factor 30 \
+    --scale-factor 10 \
     --output-dir ${OUTPUT_DIR}

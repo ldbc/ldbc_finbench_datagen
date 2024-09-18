@@ -9,17 +9,19 @@ import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class CompanyOwnAccount implements DynamicActivity, Serializable {
-    private final Company company;
-    private final Account account;
+    private final long companyId;
+    private final long accountId;
     private final long creationDate;
     private final long deletionDate;
     private final boolean isExplicitlyDeleted;
     private final String comment;
+    private final Account account; // TODO: can be removed
 
     public CompanyOwnAccount(Company company, Account account, long creationDate, long deletionDate,
                              boolean isExplicitlyDeleted, String comment) {
-        this.company = company;
-        this.account = account;
+        this.companyId = company.getCompanyId();
+        this.accountId = account.getAccountId();
+        this.account = account; // TODO: can be removed
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
@@ -39,12 +41,12 @@ public class CompanyOwnAccount implements DynamicActivity, Serializable {
         company.getCompanyOwnAccounts().add(companyOwnAccount);
     }
 
-    public Company getCompany() {
-        return company;
+    public long getCompanyId() {
+        return companyId;
     }
 
-    public Account getAccount() {
-        return account;
+    public long getAccountId() {
+        return accountId;
     }
 
     @Override
@@ -64,5 +66,9 @@ public class CompanyOwnAccount implements DynamicActivity, Serializable {
 
     public String getComment() {
         return comment;
+    }
+
+    public Account getAccount() {
+        return account;
     }
 }
