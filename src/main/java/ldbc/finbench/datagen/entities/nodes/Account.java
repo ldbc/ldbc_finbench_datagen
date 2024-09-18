@@ -21,8 +21,6 @@ public class Account implements Serializable {
     private String freqLoginType;
     private long lastLoginTime;
     private String accountLevel;
-    private long rawMaxInDegree;
-    private long rawMaxOutDegree;
     private long maxInDegree; // max in degree before merging
     private long maxOutDegree; // max out degree before merging
     private boolean isBlocked;
@@ -116,22 +114,6 @@ public class Account implements Serializable {
 
     public void setCreationDate(long creationDate) {
         this.creationDate = creationDate;
-    }
-
-    public long getRawMaxInDegree() {
-        return rawMaxInDegree;
-    }
-
-    public void setRawMaxInDegree(long rawMaxInDegree) {
-        this.rawMaxInDegree = rawMaxInDegree;
-    }
-
-    public long getRawMaxOutDegree() {
-        return rawMaxOutDegree;
-    }
-
-    public void setRawMaxOutDegree(long rawMaxOutDegree) {
-        this.rawMaxOutDegree = rawMaxOutDegree;
     }
 
     public long getMaxInDegree() {

@@ -114,10 +114,10 @@ class ActivityGenerator()(implicit spark: SparkSession)
       .map(_.scaleInvestmentRatios())
   }
 
-  def signInEvent(
+  def mediumActivitesEvent(
       mediumRDD: RDD[Medium],
       accountRDD: RDD[Account]
-  ): RDD[SignIn] = {
+  ): RDD[Medium] = {
     val accountSampleList = accountRDD
       .sample(
         withReplacement = false,
@@ -197,47 +197,22 @@ class ActivityGenerator()(implicit spark: SparkSession)
     })
   }
 
-  // Tries: StackOverflowError caused when merging accounts RDD causes, maybe due to deep RDD lineage
-  // TODO: rewrite it with account centric and figure out the StackOverflowError
-  def transferEvent(accountRDD: RDD[Account]): RDD[Transfer] = {
-    val transferEvent = new TransferEvent
+  def accountActivitiesEvent(accountRDD: RDD[Account]): RDD[Account] = {
+    val accountActivitiesEvent = new AccountActivitiesEvent
+    val cards = spark.sparkContext.broadcast(
+      accountRDD.filter(_.getType == "debit card").collect().toList
+    )
 
-    Array
-      .fill(DatagenParams.transferShuffleTimes) {
-        accountRDD
-          .repartition(accountRDD.getNumPartitions)
-          .mapPartitionsWithIndex((index, accounts) => {
-            transferEvent
-              .transferPart(accounts.toList.asJava, index)
-              .iterator()
-              .asScala
-          })
-      }
-      .reduce(_ union _)
-  }
-
-  // TODO: rewrite it with account centric
-  def withdrawEvent(accountRDD: RDD[Account]): RDD[Withdraw] = {
-    val withdrawEvent = new WithdrawEvent
-
-    val cards = accountRDD.filter(_.getType == "debit card").collect()
-    accountRDD
-      .filter(_.getType != "debit card")
-      .sample(
-        withReplacement = false,
-        DatagenParams.accountWithdrawFraction,
-        sampleRandom.nextLong()
-      )
-      .mapPartitionsWithIndex((index, sources) => {
-        withdrawEvent
-          .withdraw(
-            sources.toList.asJava,
-            cards.toList.asJava,
-            index
-          )
-          .iterator()
-          .asScala
-      })
+    accountRDD.mapPartitionsWithIndex((index, accounts) => {
+      accountActivitiesEvent
+        .accountActivities(
+          accounts.toList.asJava,
+          cards.value.asJava,
+          index
+        )
+        .iterator()
+        .asScala
+    })
   }
 
   // TODO: rewrite it with loan centric

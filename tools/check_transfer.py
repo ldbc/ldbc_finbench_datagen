@@ -62,7 +62,7 @@ def draw_degree(inDegrees, outDegrees):
 
     plt.plot()
     plt.show()
-    plt.savefig("scripts/transfer_degree_distribution.png")
+    plt.savefig("logs/transfer_degree_distribution.png")
 
 
 # You can use this script to check if the in-degree and out-degree of each account is correct
