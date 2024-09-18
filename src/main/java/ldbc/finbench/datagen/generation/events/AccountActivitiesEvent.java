@@ -110,10 +110,10 @@ public class AccountActivitiesEvent implements Serializable {
             if (pickAccountForWithdrawal.nextDouble() < DatagenParams.accountWithdrawFraction) {
                 for (int count = 0; count < DatagenParams.maxWithdrawals; count++) {
                     Account to = cards.get(randIndex.nextInt(cards.size()));
-                    if (cannotWithdraw(from, to)) {
-                        continue;
+                    if (!cannotWithdraw(from, to)) {
+                        Withdraw.createWithdraw(randomFarm, from, to, getMultiplicityIdAndInc(from, to));
                     }
-                    Withdraw.createWithdraw(randomFarm, from, to, getMultiplicityIdAndInc(from, to));
+
                 }
             }
 
@@ -129,7 +129,8 @@ public class AccountActivitiesEvent implements Serializable {
     }
 
     private boolean cannotWithdraw(Account from, Account to) {
-        return from.getDeletionDate() < to.getCreationDate() + DatagenParams.activityDelta
+        return from.getType().equals("debit card")
+            || from.getDeletionDate() < to.getCreationDate() + DatagenParams.activityDelta
             || from.getCreationDate() + DatagenParams.activityDelta > to.getDeletionDate()
             || from.equals(to);
     }

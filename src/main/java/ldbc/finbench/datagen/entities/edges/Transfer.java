@@ -64,8 +64,9 @@ public class Transfer implements DynamicActivity, Serializable {
                 farm.get(RandomGeneratorFarm.Aspect.TRANSFER_GOODSTYPE));
         transfer.setGoodsType(goodsType);
 
+        // Attention: record the edge both in src and dst to meet degree distribution
         from.getTransferOuts().add(transfer);
-        //to.getTransferIns().add(transfer);
+        to.getTransferIns().add(transfer);
     }
 
     public static Transfer createLoanTransfer(RandomGeneratorFarm farm, Account from, Account to,
