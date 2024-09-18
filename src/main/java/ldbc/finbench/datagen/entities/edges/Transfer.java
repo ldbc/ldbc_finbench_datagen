@@ -9,8 +9,8 @@ import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class Transfer implements DynamicActivity, Serializable {
-    private final Account fromAccount;
-    private final Account toAccount;
+    private final long fromAccountId;
+    private final long toAccountId;
     private final double amount;
     private final long creationDate;
     private final long deletionDate;
@@ -23,8 +23,8 @@ public class Transfer implements DynamicActivity, Serializable {
 
     public Transfer(Account fromAccount, Account toAccount, double amount, long creationDate, long deletionDate,
                     long multiplicityId, boolean isExplicitlyDeleted) {
-        this.fromAccount = fromAccount;
-        this.toAccount = toAccount;
+        this.fromAccountId = fromAccount.getAccountId();
+        this.toAccountId = toAccount.getAccountId();
         this.amount = amount;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
@@ -108,7 +108,7 @@ public class Transfer implements DynamicActivity, Serializable {
     public static class FullComparator implements Comparator<Transfer> {
 
         public int compare(Transfer a, Transfer b) {
-            long res = (a.fromAccount.getAccountId() - b.fromAccount.getAccountId());
+            long res = (a.getFromAccountId() - b.getToAccountId());
             if (res > 0) {
                 return 1;
             }
@@ -131,12 +131,12 @@ public class Transfer implements DynamicActivity, Serializable {
         return amount;
     }
 
-    public Account getFromAccount() {
-        return fromAccount;
+    public long getFromAccountId() {
+        return fromAccountId;
     }
 
-    public Account getToAccount() {
-        return toAccount;
+    public long getToAccountId() {
+        return toAccountId;
     }
 
     public long getMultiplicityId() {
@@ -193,7 +193,7 @@ public class Transfer implements DynamicActivity, Serializable {
 
     @Override
     public String toString() {
-        return "Transfer{" + "fromAccount=" + fromAccount + ", toAccount=" + toAccount + ", amount=" + amount
+        return "Transfer{" + "fromAccount=" + fromAccountId + ", toAccount=" + toAccountId + ", amount=" + amount
             + ", creationDate=" + creationDate + ", deletionDate=" + deletionDate + ", multiplicityId=" + multiplicityId
             + ", isExplicitlyDeleted=" + isExplicitlyDeleted + '}';
     }

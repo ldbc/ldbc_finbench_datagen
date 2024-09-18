@@ -8,8 +8,8 @@ import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class CompanyGuaranteeCompany implements DynamicActivity, Serializable {
-    private final Company fromCompany;
-    private final Company toCompany;
+    private final long fromCompanyId;
+    private final long toCompanyId;
     private final long creationDate;
     private final long deletionDate;
     private final boolean isExplicitlyDeleted;
@@ -19,8 +19,8 @@ public class CompanyGuaranteeCompany implements DynamicActivity, Serializable {
     public CompanyGuaranteeCompany(Company fromCompany, Company toCompany,
                                    long creationDate, long deletionDate, boolean isExplicitlyDeleted, String relation,
                                    String comment) {
-        this.fromCompany = fromCompany;
-        this.toCompany = toCompany;
+        this.fromCompanyId = fromCompany.getCompanyId();
+        this.toCompanyId = toCompany.getCompanyId();
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
@@ -41,12 +41,12 @@ public class CompanyGuaranteeCompany implements DynamicActivity, Serializable {
         toCompany.getGuaranteeDst().add(companyGuaranteeCompany);
     }
 
-    public Company getFromCompany() {
-        return fromCompany;
+    public long getFromCompanyId() {
+        return fromCompanyId;
     }
 
-    public Company getToCompany() {
-        return toCompany;
+    public long getToCompanyId() {
+        return toCompanyId;
     }
 
     @Override
