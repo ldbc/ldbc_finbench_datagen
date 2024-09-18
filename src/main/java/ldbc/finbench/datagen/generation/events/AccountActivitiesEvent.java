@@ -53,9 +53,32 @@ public class AccountActivitiesEvent implements Serializable {
 
         LinkedList<Integer> availableToAccountIds = getIndexList(accounts.size());
         maxSkippedCount = Math.min(maxSkippedCount, (int) (skippedRatio * accounts.size()));
+
+        // Simplified version of transfer process
+        //        for (int i = 0; i < accounts.size(); i++) {
+        //            Account from = accounts.get(i);
+        //            int skippedCount = 0;
+        //            for (int j = i + 1; j < accounts.size(); j++) {
+        //                // termination
+        //                if (skippedCount >= maxSkippedCount || from.getAvailableOutDegree() == 0) {
+        //                    break;
+        //                }
+        //                Account to = accounts.get(j);
+        //                if (j == i || cannotTransfer(from, to)) {
+        //                    skippedCount++;
+        //                    continue;
+        //                }
+        //                long numTransfers = Math.min(multiplicityDist.nextDegree(),
+        //                                             Math.min(from.getAvailableOutDegree(), to.getAvailableInDegree
+        //                                             ()));
+        //                for (int mindex = 0; mindex < numTransfers; mindex++) {
+        //                    Transfer.createTransfer(randomFarm, from, to, mindex);
+        //                }
+        //            }
+        //        }
         for (int fromIndex = 0; fromIndex < accounts.size(); fromIndex++) {
             Account from = accounts.get(fromIndex);
-            // account transfer to other accounts
+            // TRANSFER: account transfer to other accounts
             while (from.getAvailableOutDegree() != 0) {
                 int skippedCount = 0;
                 for (int j = 0; j < availableToAccountIds.size(); j++) {
@@ -83,7 +106,7 @@ public class AccountActivitiesEvent implements Serializable {
                     break;
                 }
             }
-            // account withdraw to cards
+            // WITHDRAW: account withdraw to cards
             if (pickAccountForWithdrawal.nextDouble() < DatagenParams.accountWithdrawFraction) {
                 for (int count = 0; count < DatagenParams.maxWithdrawals; count++) {
                     Account to = cards.get(randIndex.nextInt(cards.size()));

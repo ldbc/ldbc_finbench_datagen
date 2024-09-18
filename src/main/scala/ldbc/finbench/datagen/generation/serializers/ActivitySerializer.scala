@@ -200,8 +200,8 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
     futures
   }
 
-  def writeMediumWithActivities(media: RDD[Medium], signIns: RDD[SignIn])(
-      implicit spark: SparkSession
+  def writeMediumWithActivities(media: RDD[Medium])(implicit
+      spark: SparkSession
   ): Seq[Future[Unit]] = {
 
     val futures = Seq(
@@ -224,17 +224,19 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
           .save((pathPrefix / "medium").toString)
       },
       SparkUI.jobAsync("Write media signin", "Write Medium sign in") {
-        val rawSignIn = signIns.map { si: SignIn =>
-          SignInRaw(
-            si.getMedium.getMediumId,
-            si.getAccount.getAccountId,
-            si.getMultiplicityId,
-            si.getCreationDate,
-            si.getDeletionDate,
-            si.isExplicitlyDeleted,
-            si.getLocation,
-            si.getComment
-          )
+        val rawSignIn = media.flatMap { m =>
+          m.getSignIns.asScala.map { si =>
+            SignInRaw(
+              si.getMedium.getMediumId,
+              si.getAccount.getAccountId,
+              si.getMultiplicityId,
+              si.getCreationDate,
+              si.getDeletionDate,
+              si.isExplicitlyDeleted,
+              si.getLocation,
+              si.getComment
+            )
+          }
         }
         spark
           .createDataFrame(rawSignIn)

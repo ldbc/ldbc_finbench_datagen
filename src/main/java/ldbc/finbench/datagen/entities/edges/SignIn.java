@@ -29,7 +29,7 @@ public class SignIn implements DynamicActivity, Serializable {
         this.comment = comment;
     }
 
-    public static SignIn createSignIn(RandomGeneratorFarm farm, int mid, Medium medium, Account account) {
+    public static void createSignIn(RandomGeneratorFarm farm, int mid, Medium medium, Account account) {
         long creationDate =
             Dictionaries.dates.randomMediumToAccountDate(farm.get(RandomGeneratorFarm.Aspect.SIGNIN_DATE), medium,
                                                          account, account.getDeletionDate());
@@ -47,8 +47,6 @@ public class SignIn implements DynamicActivity, Serializable {
 
         medium.getSignIns().add(signIn);
         account.getSignIns().add(signIn);
-
-        return signIn;
     }
 
     public Medium getMedium() {

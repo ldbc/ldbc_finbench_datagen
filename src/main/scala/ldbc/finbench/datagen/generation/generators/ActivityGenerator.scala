@@ -114,10 +114,10 @@ class ActivityGenerator()(implicit spark: SparkSession)
       .map(_.scaleInvestmentRatios())
   }
 
-  def signInEvent(
+  def mediumActivitesEvent(
       mediumRDD: RDD[Medium],
       accountRDD: RDD[Account]
-  ): RDD[SignIn] = {
+  ): RDD[Medium] = {
     val accountSampleList = accountRDD
       .sample(
         withReplacement = false,
@@ -214,42 +214,6 @@ class ActivityGenerator()(implicit spark: SparkSession)
         .asScala
     })
   }
-
-  //  def transferEvent(accountRDD: RDD[Account]): RDD[Account] = {
-  //    val transferEvent = new TransferEvent
-  //
-  //    accountRDD
-  //      .mapPartitionsWithIndex((index, accounts) => {
-  //        transferEvent
-  //          .transfer(accounts.toList.asJava, index)
-  //          .iterator()
-  //          .asScala
-  //      })
-  //  }
-  //
-  //  // TODO: rewrite it with account centric
-  //  def withdrawEvent(accountRDD: RDD[Account]): RDD[Withdraw] = {
-  //    val withdrawEvent = new WithdrawEvent
-  //
-  //    val cards = accountRDD.filter(_.getType == "debit card").collect()
-  //    accountRDD
-  //      .filter(_.getType != "debit card")
-  //      .sample(
-  //        withReplacement = false,
-  //        DatagenParams.accountWithdrawFraction,
-  //        sampleRandom.nextLong()
-  //      )
-  //      .mapPartitionsWithIndex((index, sources) => {
-  //        withdrawEvent
-  //          .withdraw(
-  //            sources.toList.asJava,
-  //            cards.toList.asJava,
-  //            index
-  //          )
-  //          .iterator()
-  //          .asScala
-  //      })
-  //  }
 
   // TODO: rewrite it with loan centric
   def afterLoanSubEvents(
