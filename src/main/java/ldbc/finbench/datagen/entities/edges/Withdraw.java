@@ -9,8 +9,10 @@ import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class Withdraw implements DynamicActivity, Serializable {
-    private final Account fromAccount;
-    private final Account toAccount;
+    private final long fromAccountId;
+    private final long toAccountId;
+    private final String fromAccountType;
+    private final String toAccountType;
     private final double amount;
     private final long creationDate;
     private final long deletionDate;
@@ -20,8 +22,10 @@ public class Withdraw implements DynamicActivity, Serializable {
 
     public Withdraw(Account fromAccount, Account toAccount, double amount, long creationDate, long deletionDate,
                     long multiplicityId, boolean isExplicitlyDeleted, String comment) {
-        this.fromAccount = fromAccount;
-        this.toAccount = toAccount;
+        this.fromAccountId = fromAccount.getAccountId();
+        this.toAccountId = toAccount.getAccountId();
+        this.fromAccountType = fromAccount.getType();
+        this.toAccountType = toAccount.getType();
         this.amount = amount;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
@@ -49,12 +53,20 @@ public class Withdraw implements DynamicActivity, Serializable {
         return amount;
     }
 
-    public Account getFromAccount() {
-        return fromAccount;
+    public long getFromAccountId() {
+        return fromAccountId;
     }
 
-    public Account getToAccount() {
-        return toAccount;
+    public long getToAccountId() {
+        return toAccountId;
+    }
+
+    public String getFromAccountType() {
+        return fromAccountType;
+    }
+
+    public String getToAccountType() {
+        return toAccountType;
     }
 
     @Override

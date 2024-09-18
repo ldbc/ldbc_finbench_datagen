@@ -9,8 +9,8 @@ import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class PersonInvestCompany implements DynamicActivity, Serializable {
-    private final Person person;
-    private final Company company;
+    private final long personId;
+    private final long companyId;
     private double ratio;
     private final long creationDate;
     private final long deletionDate;
@@ -20,8 +20,8 @@ public class PersonInvestCompany implements DynamicActivity, Serializable {
     public PersonInvestCompany(Person person, Company company,
                                long creationDate, long deletionDate, double ratio, boolean isExplicitlyDeleted,
                                String comment) {
-        this.person = person;
-        this.company = company;
+        this.personId = person.getPersonId();
+        this.companyId = company.getCompanyId();
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.ratio = ratio;
@@ -50,12 +50,12 @@ public class PersonInvestCompany implements DynamicActivity, Serializable {
         return ratio;
     }
 
-    public Company getCompany() {
-        return company;
+    public long getCompanyId() {
+        return companyId;
     }
 
-    public Person getPerson() {
-        return person;
+    public long getPersonId() {
+        return personId;
     }
 
     @Override

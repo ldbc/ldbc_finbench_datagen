@@ -9,23 +9,27 @@ import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class CompanyApplyLoan implements DynamicActivity, Serializable {
-    private final Company company;
-    private final Loan loan;
+    private final long companyId;
+    private final long loanId;
+    private final Loan loan; // TODO: can be removed
     private final long creationDate;
     private final long deletionDate;
     private final boolean isExplicitlyDeleted;
     private final String organization;
     private final String comment;
+    private final double loanAmount;
 
     public CompanyApplyLoan(Company company, Loan loan, long creationDate, long deletionDate,
                             boolean isExplicitlyDeleted, String organization, String comment) {
-        this.company = company;
+        this.companyId = company.getCompanyId();
+        this.loanId = loan.getLoanId();
         this.loan = loan;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
         this.organization = organization;
         this.comment = comment;
+        this.loanAmount = loan.getLoanAmount();
     }
 
     public static void createCompanyApplyLoan(RandomGeneratorFarm farm, long creationDate, Company company, Loan loan) {
@@ -41,8 +45,12 @@ public class CompanyApplyLoan implements DynamicActivity, Serializable {
         company.getCompanyApplyLoans().add(companyApplyLoan);
     }
 
-    public Company getCompany() {
-        return company;
+    public long getCompanyId() {
+        return companyId;
+    }
+
+    public long getLoanId() {
+        return loanId;
     }
 
     public Loan getLoan() {
@@ -70,5 +78,9 @@ public class CompanyApplyLoan implements DynamicActivity, Serializable {
 
     public String getComment() {
         return comment;
+    }
+
+    public double getLoanAmount() {
+        return loanAmount;
     }
 }

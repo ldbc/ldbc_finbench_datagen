@@ -8,8 +8,8 @@ import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class SignIn implements DynamicActivity, Serializable {
-    private final Medium medium;
-    private final Account account;
+    private final long mediumId;
+    private final long accountId;
     private final long creationDate;
     private final long deletionDate;
     private int countryId;
@@ -20,8 +20,8 @@ public class SignIn implements DynamicActivity, Serializable {
 
     public SignIn(Medium medium, Account account, int mid, long creationDate, long deletionDate,
                   boolean isExplicitlyDeleted, String comment) {
-        this.medium = medium;
-        this.account = account;
+        this.mediumId = medium.getMediumId();
+        this.accountId = account.getAccountId();
         this.multiplicityId = mid;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
@@ -49,12 +49,12 @@ public class SignIn implements DynamicActivity, Serializable {
         account.getSignIns().add(signIn);
     }
 
-    public Medium getMedium() {
-        return medium;
+    public long getMediumId() {
+        return mediumId;
     }
 
-    public Account getAccount() {
-        return account;
+    public long getAccountId() {
+        return accountId;
     }
 
     @Override
