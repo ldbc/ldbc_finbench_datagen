@@ -173,23 +173,23 @@ class ActivityGenerator()(implicit spark: SparkSession)
       loanRDD: RDD[Loan],
       accountRDD: RDD[Account]
   ): (RDD[Loan]) = {
-    val sampledAccounts = spark.sparkContext.broadcast(
-      accountRDD
+    val numPartition = loanRDD.getNumPartitions
+    loanRDD.mapPartitionsWithIndex((index, loans) => {
+      val sampledAccounts = accountRDD
         .sample(
           withReplacement = false,
-          DatagenParams.loanInvolvedAccountsFraction,
+          DatagenParams.loanInvolvedAccountsFraction / numPartition,
           sampleRandom.nextLong()
         )
         .collect()
         .toList
-    )
+        .asJava
 
-    loanRDD.mapPartitionsWithIndex((index, loans) => {
       val loanSubEvents = new LoanActivitiesEvents
       loanSubEvents
         .afterLoanApplied(
           loans.toList.asJava,
-          sampledAccounts.value.asJava,
+          sampledAccounts,
           index
         )
         .iterator()
