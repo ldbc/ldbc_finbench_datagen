@@ -175,18 +175,16 @@ class ActivityGenerator()(implicit spark: SparkSession)
         .toList
     )
 
-    val loanSubEvents = new LoanSubEvents
-    val afterLoanActions = loanRDD
-      .mapPartitionsWithIndex((index, loans) => {
-        loanSubEvents
-          .afterLoanApplied(
-            loans.toList.asJava,
-            sampledAccounts.value.asJava,
-            index
-          )
-          .iterator()
-          .asScala
-      })
-    afterLoanActions
+    loanRDD.mapPartitionsWithIndex((index, loans) => {
+      val loanSubEvents = new LoanActivitiesEvents
+      loanSubEvents
+        .afterLoanApplied(
+          loans.toList.asJava,
+          sampledAccounts.value.asJava,
+          index
+        )
+        .iterator()
+        .asScala
+    })
   }
 }

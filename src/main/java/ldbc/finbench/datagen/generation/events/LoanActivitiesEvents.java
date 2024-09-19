@@ -19,7 +19,7 @@ import ldbc.finbench.datagen.entities.nodes.PersonOrCompany;
 import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
-public class LoanSubEvents implements Serializable {
+public class LoanActivitiesEvents implements Serializable {
     private final RandomGeneratorFarm randomFarm;
     private final Random indexRandom;
     private final Random actionRandom;
@@ -29,7 +29,7 @@ public class LoanSubEvents implements Serializable {
     private final Map<String, AtomicLong> multiplicityMap;
     private List<Account> targetAccounts;
 
-    public LoanSubEvents() {
+    public LoanActivitiesEvents() {
         multiplicityMap = new ConcurrentHashMap<>();
         randomFarm = new RandomGeneratorFarm();
         indexRandom = new Random(DatagenParams.defaultSeed);
