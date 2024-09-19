@@ -53,16 +53,9 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
         + s"[Simulation] signIn RDD partitions: ${mediumWithSignInRdd.getNumPartitions}"
     )
 
-    val loanRdd =
-      mergeLoans(personWithAccGuaLoan, companyWithAccGuaLoan) // merge
-    log.info(s"[Simulation] Loan RDD partitions: ${loanRdd.getNumPartitions}")
-    val (depositsRdd, repaysRdd, loanTrasfersRdd) =
-      activityGenerator.afterLoanSubEvents(loanRdd, accountRdd)
-    log.info(
-      s"[Simulation] deposits RDD partitions: ${depositsRdd.getNumPartitions}, " +
-        s"repays RDD partitions: ${repaysRdd.getNumPartitions}, " +
-        s"loanTrasfers RDD partitions: ${loanTrasfersRdd.getNumPartitions}"
-    )
+    val loanRdd = mergeLoans(personWithAccGuaLoan, companyWithAccGuaLoan)
+    val loanWithActivitiesRdd = activityGenerator.afterLoanSubEvents(loanRdd, accountRdd)
+    log.info(s"[Simulation] Loan RDD partitions: ${loanWithActivitiesRdd.getNumPartitions}")
 
     // Serialize
     val allFutures = Seq(
@@ -71,12 +64,7 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
       activitySerializer.writeMediumWithActivities(mediumWithSignInRdd),
       activitySerializer.writeAccountWithActivities(accountWithTransferWithdraw),
       activitySerializer.writeInvestCompanies(companyRddAfterInvest),
-      activitySerializer.writeLoanActivities(
-        loanRdd,
-        depositsRdd,
-        repaysRdd,
-        loanTrasfersRdd
-      )
+      activitySerializer.writeLoanActivities(loanWithActivitiesRdd)
       ).flatten
 
     Await.result(Future.sequence(allFutures), Duration.Inf)

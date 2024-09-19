@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Comparator;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 import ldbc.finbench.datagen.entities.nodes.Account;
+import ldbc.finbench.datagen.entities.nodes.Loan;
 import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
@@ -69,8 +70,8 @@ public class Transfer implements DynamicActivity, Serializable {
         to.getTransferIns().add(transfer);
     }
 
-    public static Transfer createLoanTransfer(RandomGeneratorFarm farm, Account from, Account to,
-                                              long multiplicityId,
+    public static void createLoanTransfer(RandomGeneratorFarm farm, Account from, Account to,
+                                              Loan loan, long multiplicityId,
                                               double amount) {
         long deleteDate = Math.min(from.getDeletionDate(), to.getDeletionDate());
         long creationDate =
@@ -101,9 +102,9 @@ public class Transfer implements DynamicActivity, Serializable {
                 farm.get(RandomGeneratorFarm.Aspect.TRANSFER_GOODSTYPE));
         transfer.setGoodsType(goodsType);
 
-        from.getTransferOuts().add(transfer);
-        to.getTransferIns().add(transfer);
-        return transfer;
+        //from.getTransferOuts().add(transfer);
+        //to.getTransferIns().add(transfer);
+        loan.addLoanTransfer(transfer);
     }
 
     public static class FullComparator implements Comparator<Transfer> {

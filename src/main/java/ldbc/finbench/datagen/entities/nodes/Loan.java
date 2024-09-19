@@ -2,9 +2,11 @@ package ldbc.finbench.datagen.entities.nodes;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import ldbc.finbench.datagen.entities.edges.Deposit;
 import ldbc.finbench.datagen.entities.edges.Repay;
+import ldbc.finbench.datagen.entities.edges.Transfer;
 
 public class Loan implements Serializable, Comparable<Loan> {
     private long loanId;
@@ -19,6 +21,7 @@ public class Loan implements Serializable, Comparable<Loan> {
     private Company ownerCompany;
     private final List<Deposit> deposits;
     private final List<Repay> repays;
+    private final List<Transfer> loanTransfers;
 
     public Loan(long loanId, double loanAmount, double balance, long creationDate, long maxDegree,
                 String usage, double interestRate) {
@@ -29,8 +32,9 @@ public class Loan implements Serializable, Comparable<Loan> {
         this.maxDegree = maxDegree;
         this.usage = usage;
         this.interestRate = interestRate;
-        deposits = new ArrayList<>();
-        repays = new ArrayList<>();
+        deposits = new LinkedList<>();
+        repays = new LinkedList<>();
+        loanTransfers = new LinkedList<>();
     }
 
     @Override
@@ -116,6 +120,14 @@ public class Loan implements Serializable, Comparable<Loan> {
 
     public List<Repay> getRepays() {
         return repays;
+    }
+
+    public void addLoanTransfer(Transfer transfer) {
+        loanTransfers.add(transfer);
+    }
+
+    public List<Transfer> getLoanTransfers() {
+        return loanTransfers;
     }
 
     public Person getOwnerPerson() {
