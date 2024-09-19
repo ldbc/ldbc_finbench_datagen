@@ -45,46 +45,27 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
     )
     val companyRddAfterInvest = activityGenerator.investEvent(personRdd, companyRdd)
 
-    val accountRdd =
-      mergeAccountsAndShuffleDegrees(personWithAccGuaLoan, companyWithAccGuaLoan)
-    val signInRdd = activityGenerator.signInEvent(mediumRdd, accountRdd)
-    val mergedTransfers = activityGenerator.transferEvent(accountRdd)
-    val withdrawRdd = activityGenerator.withdrawEvent(accountRdd)
+    val accountRdd = mergeAccountsAndShuffleDegrees(personWithAccGuaLoan, companyWithAccGuaLoan)
+    val mediumWithSignInRdd = activityGenerator.mediumActivitesEvent(mediumRdd, accountRdd)
+    val accountWithTransferWithdraw = activityGenerator.accountActivitiesEvent(accountRdd)
     log.info(
       s"[Simulation] Account RDD partitions: ${accountRdd.getNumPartitions}"
-        + s"[Simulation] signIn RDD partitions: ${signInRdd.getNumPartitions}"
-        + s"[Simulation] transfer RDD partitions: ${mergedTransfers.getNumPartitions}, "
-        + s"withdraw RDD partitions: ${withdrawRdd.getNumPartitions}"
+        + s"[Simulation] signIn RDD partitions: ${mediumWithSignInRdd.getNumPartitions}"
     )
 
-    val loanRdd =
-      mergeLoans(personWithAccGuaLoan, companyWithAccGuaLoan) // merge
-    log.info(s"[Simulation] Loan RDD partitions: ${loanRdd.getNumPartitions}")
-    val (depositsRdd, repaysRdd, loanTrasfersRdd) =
-      activityGenerator.afterLoanSubEvents(loanRdd, accountRdd)
-    log.info(
-      s"[Simulation] deposits RDD partitions: ${depositsRdd.getNumPartitions}, " +
-        s"repays RDD partitions: ${repaysRdd.getNumPartitions}, " +
-        s"loanTrasfers RDD partitions: ${loanTrasfersRdd.getNumPartitions}"
-    )
+
+    val loanRdd = mergeLoans(personWithAccGuaLoan, companyWithAccGuaLoan)
+    val loanWithActivitiesRdd = activityGenerator.afterLoanSubEvents(loanRdd, accountRdd)
+    log.info(s"[Simulation] Loan RDD partitions: ${loanWithActivitiesRdd.getNumPartitions}")
 
     // Serialize
     val allFutures = Seq(
       activitySerializer.writePersonWithActivities(personWithAccGuaLoan),
       activitySerializer.writeCompanyWithActivities(companyWithAccGuaLoan),
-      activitySerializer.writeMediumWithActivities(mediumRdd, signInRdd),
-      activitySerializer.writeAccountWithActivities(
-        accountRdd,
-        mergedTransfers
-      ),
-      activitySerializer.writeWithdraw(withdrawRdd),
+      activitySerializer.writeMediumWithActivities(mediumWithSignInRdd),
+      activitySerializer.writeAccountWithActivities(accountWithTransferWithdraw),
       activitySerializer.writeInvestCompanies(companyRddAfterInvest),
-      activitySerializer.writeLoanActivities(
-        loanRdd,
-        depositsRdd,
-        repaysRdd,
-        loanTrasfersRdd
-      )
+      activitySerializer.writeLoanActivities(loanWithActivitiesRdd)
       ).flatten
 
     Await.result(Future.sequence(allFutures), Duration.Inf)
@@ -109,7 +90,6 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
       new scala.util.Random(TaskContext.getPartitionId()).shuffle(indegrees)
     accounts.zip(shuffled).foreach { case (account, shuffled) =>
       account.setMaxOutDegree(shuffled)
-      account.setRawMaxOutDegree(shuffled)
     }
     accounts
   }

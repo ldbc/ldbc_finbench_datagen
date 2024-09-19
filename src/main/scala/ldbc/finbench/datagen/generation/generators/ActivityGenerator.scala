@@ -1,6 +1,5 @@
 package ldbc.finbench.datagen.generation.generators
 
-import ldbc.finbench.datagen.entities.edges._
 import ldbc.finbench.datagen.entities.nodes._
 import ldbc.finbench.datagen.generation.DatagenParams
 import ldbc.finbench.datagen.generation.events._
@@ -115,10 +114,10 @@ class ActivityGenerator()(implicit spark: SparkSession)
       .map(_.scaleInvestmentRatios())
   }
 
-  def signInEvent(
+  def mediumActivitesEvent(
       mediumRDD: RDD[Medium],
       accountRDD: RDD[Account]
-  ): RDD[SignIn] = {
+  ): RDD[Medium] = {
     val accountSampleList = spark.sparkContext.broadcast(
       accountRDD
         .sample(
@@ -143,54 +142,28 @@ class ActivityGenerator()(implicit spark: SparkSession)
     })
   }
 
-  // Tries: StackOverflowError caused when merging accounts RDD causes, maybe due to deep RDD lineage
-  // TODO: rewrite it with account centric and figure out the StackOverflowError
-  def transferEvent(accountRDD: RDD[Account]): RDD[Transfer] = {
-    val transferEvent = new TransferEvent
+  def accountActivitiesEvent(accountRDD: RDD[Account]): RDD[Account] = {
+    val accountActivitiesEvent = new AccountActivitiesEvent
+    val cards = spark.sparkContext.broadcast(
+      accountRDD.filter(_.getType == "debit card").collect().toList
+    )
 
-    Array
-      .fill(DatagenParams.transferShuffleTimes) {
-        accountRDD
-          .repartition(accountRDD.getNumPartitions)
-          .mapPartitionsWithIndex((index, accounts) => {
-            transferEvent
-              .transferPart(accounts.toList.asJava, index)
-              .iterator()
-              .asScala
-          })
-      }
-      .reduce(_ union _)
+    accountRDD.mapPartitionsWithIndex((index, accounts) => {
+      accountActivitiesEvent
+        .accountActivities(
+          accounts.toList.asJava,
+          cards.value.asJava,
+          index
+        )
+        .iterator()
+        .asScala
+    })
   }
 
-  // TODO: rewrite it with account centric
-  def withdrawEvent(accountRDD: RDD[Account]): RDD[Withdraw] = {
-    val withdrawEvent = new WithdrawEvent
-
-    val cards = spark.sparkContext.broadcast(accountRDD.filter(_.getType == "debit card").collect().toList)
-    accountRDD
-      .filter(_.getType != "debit card")
-      .sample(
-        withReplacement = false,
-        DatagenParams.accountWithdrawFraction,
-        sampleRandom.nextLong()
-      )
-      .mapPartitionsWithIndex((index, sources) => {
-        withdrawEvent
-          .withdraw(
-            sources.toList.asJava,
-            cards.value.asJava,
-            index
-          )
-          .iterator()
-          .asScala
-      })
-  }
-
-  // TODO: rewrite it with loan centric
   def afterLoanSubEvents(
       loanRDD: RDD[Loan],
       accountRDD: RDD[Account]
-  ): (RDD[Deposit], RDD[Repay], RDD[Transfer]) = {
+  ): (RDD[Loan]) = {
     val sampledAccounts = spark.sparkContext.broadcast(
       accountRDD
         .sample(
@@ -202,25 +175,16 @@ class ActivityGenerator()(implicit spark: SparkSession)
         .toList
     )
 
-    // TODO: optimize the map function with the Java-Scala part.
-    val afterLoanActions = loanRDD
-      .mapPartitionsWithIndex((index, loans) => {
-        val loanSubEvents = new LoanSubEvents(sampledAccounts.value.asJava)
-        loanSubEvents.afterLoanApplied(loans.toList.asJava, index)
-        Iterator(
-          (
-            loanSubEvents.getDeposits.asScala,
-            loanSubEvents.getRepays.asScala,
-            loanSubEvents.getTransfers.asScala
-          )
+    loanRDD.mapPartitionsWithIndex((index, loans) => {
+      val loanSubEvents = new LoanActivitiesEvents
+      loanSubEvents
+        .afterLoanApplied(
+          loans.toList.asJava,
+          sampledAccounts.value.asJava,
+          index
         )
-      })
-      .cache()
-
-    (
-      afterLoanActions.flatMap(_._1),
-      afterLoanActions.flatMap(_._2),
-      afterLoanActions.flatMap(_._3)
-    )
+        .iterator()
+        .asScala
+    })
   }
 }

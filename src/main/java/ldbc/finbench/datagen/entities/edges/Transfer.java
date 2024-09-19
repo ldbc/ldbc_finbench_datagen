@@ -4,13 +4,14 @@ import java.io.Serializable;
 import java.util.Comparator;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 import ldbc.finbench.datagen.entities.nodes.Account;
+import ldbc.finbench.datagen.entities.nodes.Loan;
 import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class Transfer implements DynamicActivity, Serializable {
-    private final Account fromAccount;
-    private final Account toAccount;
+    private final long fromAccountId;
+    private final long toAccountId;
     private final double amount;
     private final long creationDate;
     private final long deletionDate;
@@ -23,8 +24,8 @@ public class Transfer implements DynamicActivity, Serializable {
 
     public Transfer(Account fromAccount, Account toAccount, double amount, long creationDate, long deletionDate,
                     long multiplicityId, boolean isExplicitlyDeleted) {
-        this.fromAccount = fromAccount;
-        this.toAccount = toAccount;
+        this.fromAccountId = fromAccount.getAccountId();
+        this.toAccountId = toAccount.getAccountId();
         this.amount = amount;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
@@ -32,7 +33,7 @@ public class Transfer implements DynamicActivity, Serializable {
         this.isExplicitlyDeleted = isExplicitlyDeleted;
     }
 
-    public static void createTransferNew(RandomGeneratorFarm farm, Account from, Account to,
+    public static void createTransfer(RandomGeneratorFarm farm, Account from, Account to,
                                           long multiplicityId) {
         long deleteDate = Math.min(from.getDeletionDate(), to.getDeletionDate());
         long creationDate =
@@ -64,48 +65,13 @@ public class Transfer implements DynamicActivity, Serializable {
                 farm.get(RandomGeneratorFarm.Aspect.TRANSFER_GOODSTYPE));
         transfer.setGoodsType(goodsType);
 
-        from.getTransferOuts().add(transfer);
-    }
-
-    public static Transfer createTransfer(RandomGeneratorFarm farm, Account from, Account to,
-                                          long multiplicityId) {
-        long deleteDate = Math.min(from.getDeletionDate(), to.getDeletionDate());
-        long creationDate =
-            Dictionaries.dates.randomAccountToAccountDate(farm.get(RandomGeneratorFarm.Aspect.TRANSFER_DATE), from, to,
-                                                          deleteDate);
-        boolean willDelete = from.isExplicitlyDeleted() && to.isExplicitlyDeleted();
-        double amount =
-            farm.get(RandomGeneratorFarm.Aspect.TRANSFER_AMOUNT).nextDouble() * DatagenParams.transferMaxAmount;
-        Transfer transfer = new Transfer(from, to, amount, creationDate, deleteDate, multiplicityId, willDelete);
-
-        // Set ordernum
-        String ordernum = Dictionaries.numbers.generateOrdernum(farm.get(RandomGeneratorFarm.Aspect.TRANSFER_ORDERNUM));
-        transfer.setOrdernum(ordernum);
-
-        // Set comment
-        String comment =
-            Dictionaries.randomTexts.getUniformDistRandomTextForComments(
-                farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
-        transfer.setComment(comment);
-
-        // Set payType
-        String paytype =
-            Dictionaries.transferTypes.getUniformDistRandomText(farm.get(RandomGeneratorFarm.Aspect.TRANSFER_PAYTYPE));
-        transfer.setPayType(paytype);
-
-        // Set goodsType
-        String goodsType =
-            Dictionaries.transferTypes.getUniformDistRandomText(
-                farm.get(RandomGeneratorFarm.Aspect.TRANSFER_GOODSTYPE));
-        transfer.setGoodsType(goodsType);
-
+        // Attention: record the edge both in src and dst to meet degree distribution
         from.getTransferOuts().add(transfer);
         to.getTransferIns().add(transfer);
-        return transfer;
     }
 
-    public static Transfer createLoanTransfer(RandomGeneratorFarm farm, Account from, Account to,
-                                              long multiplicityId,
+    public static void createLoanTransfer(RandomGeneratorFarm farm, Account from, Account to,
+                                              Loan loan, long multiplicityId,
                                               double amount) {
         long deleteDate = Math.min(from.getDeletionDate(), to.getDeletionDate());
         long creationDate =
@@ -136,15 +102,15 @@ public class Transfer implements DynamicActivity, Serializable {
                 farm.get(RandomGeneratorFarm.Aspect.TRANSFER_GOODSTYPE));
         transfer.setGoodsType(goodsType);
 
-        from.getTransferOuts().add(transfer);
-        to.getTransferIns().add(transfer);
-        return transfer;
+        //from.getTransferOuts().add(transfer);
+        //to.getTransferIns().add(transfer);
+        loan.addLoanTransfer(transfer);
     }
 
     public static class FullComparator implements Comparator<Transfer> {
 
         public int compare(Transfer a, Transfer b) {
-            long res = (a.fromAccount.getAccountId() - b.fromAccount.getAccountId());
+            long res = (a.getFromAccountId() - b.getToAccountId());
             if (res > 0) {
                 return 1;
             }
@@ -167,12 +133,12 @@ public class Transfer implements DynamicActivity, Serializable {
         return amount;
     }
 
-    public Account getFromAccount() {
-        return fromAccount;
+    public long getFromAccountId() {
+        return fromAccountId;
     }
 
-    public Account getToAccount() {
-        return toAccount;
+    public long getToAccountId() {
+        return toAccountId;
     }
 
     public long getMultiplicityId() {
@@ -229,7 +195,7 @@ public class Transfer implements DynamicActivity, Serializable {
 
     @Override
     public String toString() {
-        return "Transfer{" + "fromAccount=" + fromAccount + ", toAccount=" + toAccount + ", amount=" + amount
+        return "Transfer{" + "fromAccount=" + fromAccountId + ", toAccount=" + toAccountId + ", amount=" + amount
             + ", creationDate=" + creationDate + ", deletionDate=" + deletionDate + ", multiplicityId=" + multiplicityId
             + ", isExplicitlyDeleted=" + isExplicitlyDeleted + '}';
     }

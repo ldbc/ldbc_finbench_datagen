@@ -17,12 +17,12 @@ import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 public class AccountActivitiesEvent implements Serializable {
     private final RandomGeneratorFarm randomFarm;
     private final DegreeDistribution multiplicityDist;
-    private final double partRatio;
     private final Random randIndex;
     private final Map<String, AtomicLong> multiplicityMap;
+    private final float skippedRatio = 0.5f;
+    private int maxSkippedCount = 10;
 
     public AccountActivitiesEvent() {
-        this.partRatio = 1.0 / DatagenParams.transferShuffleTimes;
         randomFarm = new RandomGeneratorFarm();
         multiplicityDist = DatagenParams.getTransferMultiplicityDistribution();
         multiplicityDist.initialize();
@@ -51,29 +51,47 @@ public class AccountActivitiesEvent implements Serializable {
         resetState(blockId);
         Random pickAccountForWithdrawal = randomFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_WHETHER_WITHDRAW);
 
+        LinkedList<Integer> availableToAccountIds = getIndexList(accounts.size());
+        maxSkippedCount = Math.min(maxSkippedCount, (int) (skippedRatio * accounts.size()));
 
-        // scale to percentage
-        for (Account account : accounts) {
-            account.setMaxOutDegree((long) Math.ceil(account.getRawMaxOutDegree() * partRatio));
-            account.setMaxInDegree((long) Math.ceil(account.getRawMaxInDegree() * partRatio));
-        }
-        LinkedList<Integer> availableToAccountIds = getIndexList(accounts.size()); // available transferTo accountIds
-        for (int i = 0; i < accounts.size(); i++) {
-            Account from = accounts.get(i);
-            // account transfer to other accounts
+        // Simplified version of transfer process
+        //        for (int i = 0; i < accounts.size(); i++) {
+        //            Account from = accounts.get(i);
+        //            int skippedCount = 0;
+        //            for (int j = i + 1; j < accounts.size(); j++) {
+        //                // termination
+        //                if (skippedCount >= maxSkippedCount || from.getAvailableOutDegree() == 0) {
+        //                    break;
+        //                }
+        //                Account to = accounts.get(j);
+        //                if (j == i || cannotTransfer(from, to)) {
+        //                    skippedCount++;
+        //                    continue;
+        //                }
+        //                long numTransfers = Math.min(multiplicityDist.nextDegree(),
+        //                                             Math.min(from.getAvailableOutDegree(), to.getAvailableInDegree
+        //                                             ()));
+        //                for (int mindex = 0; mindex < numTransfers; mindex++) {
+        //                    Transfer.createTransfer(randomFarm, from, to, mindex);
+        //                }
+        //            }
+        //        }
+        for (int fromIndex = 0; fromIndex < accounts.size(); fromIndex++) {
+            Account from = accounts.get(fromIndex);
+            // TRANSFER: account transfer to other accounts
             while (from.getAvailableOutDegree() != 0) {
                 int skippedCount = 0;
                 for (int j = 0; j < availableToAccountIds.size(); j++) {
                     int toIndex = availableToAccountIds.get(j);
                     Account to = accounts.get(toIndex);
-                    if (toIndex == i || cannotTransfer(from, to)) {
+                    if (toIndex == fromIndex || cannotTransfer(from, to)) {
                         skippedCount++;
                         continue;
                     }
                     long numTransfers = Math.min(multiplicityDist.nextDegree(),
                                                  Math.min(from.getAvailableOutDegree(), to.getAvailableInDegree()));
                     for (int mindex = 0; mindex < numTransfers; mindex++) {
-                        Transfer.createTransferNew(randomFarm, from, to, mindex);
+                        Transfer.createTransfer(randomFarm, from, to, mindex);
                     }
                     if (to.getAvailableInDegree() == 0) {
                         availableToAccountIds.remove(j);
@@ -83,19 +101,18 @@ public class AccountActivitiesEvent implements Serializable {
                         break;
                     }
                 }
-                if (skippedCount == availableToAccountIds.size()) {
-                    System.out.println("[Transfer] All accounts skipped for " + from.getAccountId());
-                    break; // end loop if all accounts are skipped
+                if (skippedCount >= Math.min(maxSkippedCount, availableToAccountIds.size())) {
+                    // System.out.println("[Transfer] All accounts skipped for " + from.getAccountId());
+                    break;
                 }
             }
-            // account withdraw to cards
+            // WITHDRAW: account withdraw to cards
             if (pickAccountForWithdrawal.nextDouble() < DatagenParams.accountWithdrawFraction) {
                 for (int count = 0; count < DatagenParams.maxWithdrawals; count++) {
                     Account to = cards.get(randIndex.nextInt(cards.size()));
-                    if (cannotWithdraw(from, to)) {
-                        continue;
+                    if (!cannotWithdraw(from, to)) {
+                        Withdraw.createWithdraw(randomFarm, from, to, getMultiplicityIdAndInc(from, to));
                     }
-                    Withdraw.createWithdrawNew(randomFarm, from, to, getMultiplicityIdAndInc(from, to));
                 }
             }
 
@@ -111,7 +128,8 @@ public class AccountActivitiesEvent implements Serializable {
     }
 
     private boolean cannotWithdraw(Account from, Account to) {
-        return from.getDeletionDate() < to.getCreationDate() + DatagenParams.activityDelta
+        return from.getType().equals("debit card")
+            || from.getDeletionDate() < to.getCreationDate() + DatagenParams.activityDelta
             || from.getCreationDate() + DatagenParams.activityDelta > to.getDeletionDate()
             || from.equals(to);
     }
@@ -121,5 +139,4 @@ public class AccountActivitiesEvent implements Serializable {
         AtomicLong atomicInt = multiplicityMap.computeIfAbsent(key, k -> new AtomicLong());
         return atomicInt.getAndIncrement();
     }
-
 }

@@ -2,7 +2,6 @@ package ldbc.finbench.datagen.generation.events;
 
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -20,29 +19,22 @@ import ldbc.finbench.datagen.entities.nodes.PersonOrCompany;
 import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
-public class LoanSubEvents implements Serializable {
+public class LoanActivitiesEvents implements Serializable {
     private final RandomGeneratorFarm randomFarm;
     private final Random indexRandom;
     private final Random actionRandom;
     private final Random amountRandom;
     private final List<Consumer<Loan>> consumers;
-    private final List<Account> targetAccounts;
-    private final List<Deposit> deposits;
-    private final List<Repay> repays;
-    private final List<Transfer> transfers;
     // Note: Don't make it static. It will be accessed by different Spark workers, which makes multiplicity wrong.
     private final Map<String, AtomicLong> multiplicityMap;
+    private List<Account> targetAccounts;
 
-    public LoanSubEvents(List<Account> targets) {
+    public LoanActivitiesEvents() {
         multiplicityMap = new ConcurrentHashMap<>();
         randomFarm = new RandomGeneratorFarm();
         indexRandom = new Random(DatagenParams.defaultSeed);
         actionRandom = new Random(DatagenParams.defaultSeed);
         amountRandom = new Random(DatagenParams.defaultSeed);
-        targetAccounts = targets;
-        deposits = new LinkedList<>();
-        repays = new LinkedList<>();
-        transfers = new LinkedList<>();
         // Add all defined subevents to the consumers list
         consumers = Arrays.asList(this::depositSubEvent,
                                   this::repaySubEvent,
@@ -56,20 +48,9 @@ public class LoanSubEvents implements Serializable {
         amountRandom.setSeed(seed);
     }
 
-    public List<Deposit> getDeposits() {
-        return deposits;
-    }
-
-    public List<Repay> getRepays() {
-        return repays;
-    }
-
-    public List<Transfer> getTransfers() {
-        return transfers;
-    }
-
-    public void afterLoanApplied(List<Loan> loans, int blockId) {
+    public List<Loan> afterLoanApplied(List<Loan> loans, List<Account> targets, int blockId) {
         resetState(blockId);
+        targetAccounts = targets;
         for (Loan loan : loans) {
             int count = 0;
             while (count++ < DatagenParams.numLoanActions) {
@@ -77,26 +58,23 @@ public class LoanSubEvents implements Serializable {
                 consumer.accept(loan);
             }
         }
+        return loans;
     }
 
     private void depositSubEvent(Loan loan) {
         Account account = getAccount(loan);
-        if (loan.getBalance() == 0 || cannotDeposit(loan, account)) {
-            return;
+        if (!cannotDeposit(loan, account)) {
+            double amount = amountRandom.nextDouble() * loan.getBalance();
+            Deposit.createDeposit(randomFarm, loan, account, amount);
         }
-        double amount = amountRandom.nextDouble() * loan.getBalance();
-        Deposit deposit = Deposit.createDeposit(randomFarm, loan, account, amount);
-        deposits.add(deposit);
     }
 
     private void repaySubEvent(Loan loan) {
         Account account = getAccount(loan);
-        if (loan.getLoanAmount() == loan.getBalance() || cannotRepay(account, loan)) {
-            return;
+        if (!cannotRepay(account, loan)) {
+            double amount = amountRandom.nextDouble() * (loan.getLoanAmount() - loan.getBalance());
+            Repay.createRepay(randomFarm, account, loan, amount);
         }
-        double amount = amountRandom.nextDouble() * (loan.getLoanAmount() - loan.getBalance());
-        Repay repay = Repay.createRepay(randomFarm, account, loan, amount);
-        repays.add(repay);
     }
 
     public long getMultiplicityIdAndInc(Account from, Account to) {
@@ -111,17 +89,15 @@ public class LoanSubEvents implements Serializable {
         Account target = targetAccounts.get(indexRandom.nextInt(targetAccounts.size()));
         if (actionRandom.nextDouble() < 0.5) {
             if (!cannotTransfer(account, target)) {
-                transfers.add(
-                    Transfer.createLoanTransfer(randomFarm, account, target,
-                                                getMultiplicityIdAndInc(account, target),
-                                                amountRandom.nextDouble() * DatagenParams.transferMaxAmount));
+                Transfer.createLoanTransfer(randomFarm, account, target, loan,
+                                            getMultiplicityIdAndInc(account, target),
+                                            amountRandom.nextDouble() * DatagenParams.transferMaxAmount);
             }
         } else {
             if (!cannotTransfer(target, account)) {
-                transfers.add(
-                    Transfer.createLoanTransfer(randomFarm, target, account,
-                                                getMultiplicityIdAndInc(target, account),
-                                                amountRandom.nextDouble() * DatagenParams.transferMaxAmount));
+                Transfer.createLoanTransfer(randomFarm, target, account, loan,
+                                            getMultiplicityIdAndInc(target, account),
+                                            amountRandom.nextDouble() * DatagenParams.transferMaxAmount);
             }
         }
     }
@@ -132,11 +108,12 @@ public class LoanSubEvents implements Serializable {
     }
 
     public boolean cannotDeposit(Loan from, Account to) {
-        return from.getCreationDate() + DatagenParams.activityDelta > to.getDeletionDate();
+        return from.getBalance() == 0 || from.getCreationDate() + DatagenParams.activityDelta > to.getDeletionDate();
     }
 
     public boolean cannotRepay(Account from, Loan to) {
-        return from.getDeletionDate() < to.getCreationDate() + DatagenParams.activityDelta;
+        return to.getLoanAmount() == to.getBalance()
+            || from.getDeletionDate() < to.getCreationDate() + DatagenParams.activityDelta;
     }
 
     private Account getAccount(Loan loan) {

@@ -9,8 +9,9 @@ import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class PersonOwnAccount implements DynamicActivity, Serializable {
-    private final Person person;
-    private final Account account;
+    private final long personId;
+    private final long accountId;
+    private final Account account; // TODO: can be removed
     private final long creationDate;
     private final long deletionDate;
     private final boolean isExplicitlyDeleted;
@@ -18,8 +19,9 @@ public class PersonOwnAccount implements DynamicActivity, Serializable {
 
     public PersonOwnAccount(Person person, Account account, long creationDate, long deletionDate,
                             boolean isExplicitlyDeleted, String comment) {
-        this.person = person;
-        this.account = account;
+        this.personId = person.getPersonId();
+        this.accountId = account.getAccountId();
+        this.account = account; // TODO: can be removed
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
         this.isExplicitlyDeleted = isExplicitlyDeleted;
@@ -41,12 +43,12 @@ public class PersonOwnAccount implements DynamicActivity, Serializable {
         person.getPersonOwnAccounts().add(personOwnAccount);
     }
 
-    public Person getPerson() {
-        return person;
+    public long getPersonId() {
+        return personId;
     }
 
-    public Account getAccount() {
-        return account;
+    public long getAccountId() {
+        return accountId;
     }
 
     @Override
@@ -66,5 +68,9 @@ public class PersonOwnAccount implements DynamicActivity, Serializable {
 
     public String getComment() {
         return comment;
+    }
+
+    public Account getAccount() {
+        return account;
     }
 }

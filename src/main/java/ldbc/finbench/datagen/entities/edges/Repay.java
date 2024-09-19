@@ -8,8 +8,8 @@ import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class Repay implements DynamicActivity, Serializable {
-    private final Account account;
-    private final Loan loan;
+    private final long accountId;
+    private final long loanId;
     private final double amount;
     private final long creationDate;
     private final long deletionDate;
@@ -18,8 +18,8 @@ public class Repay implements DynamicActivity, Serializable {
 
     public Repay(Account account, Loan loan, double amount, long creationDate, long deletionDate,
                  boolean isExplicitlyDeleted, String comment) {
-        this.account = account;
-        this.loan = loan;
+        this.accountId = account.getAccountId();
+        this.loanId = loan.getLoanId();
         this.amount = amount;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
@@ -27,7 +27,7 @@ public class Repay implements DynamicActivity, Serializable {
         this.comment = comment;
     }
 
-    public static Repay createRepay(RandomGeneratorFarm farm, Account account, Loan loan, double amount) {
+    public static void createRepay(RandomGeneratorFarm farm, Account account, Loan loan, double amount) {
         long creationDate =
             Dictionaries.dates.randomAccountToLoanDate(farm.get(RandomGeneratorFarm.Aspect.LOAN_SUBEVENTS_DATE),
                                                        account, loan, account.getDeletionDate());
@@ -37,21 +37,19 @@ public class Repay implements DynamicActivity, Serializable {
         Repay repay = new Repay(account, loan, amount, creationDate, account.getDeletionDate(),
                                 account.isExplicitlyDeleted(), comment);
         loan.addRepay(repay);
-        account.getRepays().add(repay);
-
-        return repay;
+        //account.getRepays().add(repay);
     }
 
     public double getAmount() {
         return amount;
     }
 
-    public Account getAccount() {
-        return account;
+    public long getAccountId() {
+        return accountId;
     }
 
-    public Loan getLoan() {
-        return loan;
+    public long getLoanId() {
+        return loanId;
     }
 
     @Override
