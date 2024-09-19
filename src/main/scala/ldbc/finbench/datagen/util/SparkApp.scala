@@ -39,16 +39,6 @@ trait SparkApp {
         sparkConf.set(entry._1, entry._2)
       }
     })
-    // register kryo classes for nodes
-    sparkConf.registerKryoClasses(
-      Array(
-        classOf[Account],
-        classOf[Company],
-        classOf[Loan],
-        classOf[Medium],
-        classOf[Person]
-      )
-    )
     registerKyroClasses(sparkConf)
   }
 
