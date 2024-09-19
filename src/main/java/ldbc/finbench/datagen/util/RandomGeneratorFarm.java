@@ -34,8 +34,10 @@ public class RandomGeneratorFarm implements Serializable {
 
         // vertex: medium
         MEDIUM_NAME,
+        MEDIUM_BLOCKED,
         MEDIUM_RISK_LEVEL,
-        MEDUIM_LAST_LOGIN_DATE,
+        MEDIUM_CREATION_DATE,
+        MEDIUM_LAST_LOGIN_DATE,
 
         // vertex: account
         ACCOUNT_TYPE,
@@ -102,7 +104,7 @@ public class RandomGeneratorFarm implements Serializable {
         COMPANY_GUARANTEE_DATE,
 
         // edge: person loan
-        PICK_PERSON_FOR_LOAN,
+        PICK_PERSON_LOAN,
         NUM_LOANS_PER_PERSON,
         PERSON_APPLY_LOAN_ORGANIZATION,
         PERSON_APPLY_LOAN_DATE,

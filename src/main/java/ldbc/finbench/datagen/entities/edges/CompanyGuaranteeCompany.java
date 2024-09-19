@@ -38,7 +38,6 @@ public class CompanyGuaranteeCompany implements DynamicActivity, Serializable {
                                                                                       toCompany, creationDate, 0, false,
                                                                                       "business associate", comment);
         fromCompany.getGuaranteeSrc().add(companyGuaranteeCompany);
-        toCompany.getGuaranteeDst().add(companyGuaranteeCompany);
     }
 
     public long getFromCompanyId() {

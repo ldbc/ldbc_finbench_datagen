@@ -1,33 +1,13 @@
 package ldbc.finbench.datagen.factors
 
 import ldbc.finbench.datagen.util.DatagenStage
-import org.apache.spark.sql.{SparkSession, functions => F, DataFrame}
-import org.apache.spark.sql.expressions.Window
-import org.apache.spark.sql.functions.{col, countDistinct, row_number, var_pop}
-import org.apache.spark.sql.functions.max
-import org.apache.spark.sql.functions.lit
-import org.apache.spark.sql.functions.date_format
-import org.apache.spark.sql.functions.first
-import org.apache.spark.sql.functions.when
-import org.apache.spark.sql.functions.collect_set
-import org.apache.spark.sql.functions.array
-import org.apache.spark.sql.functions.coalesce
-import org.apache.spark.sql.functions.array_join
-import org.apache.spark.sql.functions.concat
-import org.apache.spark.sql.functions.sum
-import org.apache.spark.sql.functions.format_string
-import org.apache.spark.sql.functions.collect_list
-import org.apache.spark.sql.functions.concat_ws
-import org.apache.spark.sql.functions.size
-import org.apache.spark.sql.functions.expr
-import org.apache.spark.sql.types.{ArrayType, StringType}
-import org.graphframes.GraphFrame
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.{DataFrame, SparkSession, functions => F}
 import org.slf4j.{Logger, LoggerFactory}
 import scopt.OptionParser
 import shapeless.lens
 
 import scala.util.matching.Regex
-import ldbc.finbench.datagen.factors.AccountItemsGenerator
 
 object FactorGenerationStage extends DatagenStage {
 

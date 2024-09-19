@@ -1,7 +1,6 @@
 package ldbc.finbench.datagen.generation.generators;
 
 import java.util.Iterator;
-import java.util.Random;
 import ldbc.finbench.datagen.entities.nodes.Medium;
 import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
@@ -9,12 +8,10 @@ import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class MediumGenerator {
     private final RandomGeneratorFarm randomFarm;
-    private final Random blockRandom;
     private int nextId = 0;
 
     public MediumGenerator() {
         this.randomFarm = new RandomGeneratorFarm();
-        this.blockRandom = new Random(DatagenParams.defaultSeed);
     }
 
     private long composeMediumId(long id, long date) {
@@ -30,7 +27,7 @@ public class MediumGenerator {
 
         // Set creationDate
         long creationDate = Dictionaries.dates.randomMediumCreationDate(
-            randomFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_CREATION_DATE));
+            randomFarm.get(RandomGeneratorFarm.Aspect.MEDIUM_CREATION_DATE));
         medium.setCreationDate(creationDate);
 
         // Set mediumId
@@ -43,11 +40,12 @@ public class MediumGenerator {
         medium.setMediumName(mediunName);
 
         // Set isBlocked
-        medium.setBlocked(blockRandom.nextDouble() < DatagenParams.blockedMediumRatio);
+        medium.setBlocked(
+            randomFarm.get(RandomGeneratorFarm.Aspect.MEDIUM_BLOCKED).nextDouble() < DatagenParams.blockedMediumRatio);
 
         // Set lastLogin
         long lastLogin = Dictionaries.dates.randomMediumLastLogin(
-            randomFarm.get(RandomGeneratorFarm.Aspect.MEDUIM_LAST_LOGIN_DATE), creationDate);
+            randomFarm.get(RandomGeneratorFarm.Aspect.MEDIUM_LAST_LOGIN_DATE), creationDate);
         medium.setLastLogin(lastLogin);
 
         // Set riskLevel
@@ -60,7 +58,6 @@ public class MediumGenerator {
 
     private void resetState(int seed) {
         randomFarm.resetRandomGenerators(seed);
-        blockRandom.setSeed(seed);
     }
 
     public Iterator<Medium> generateMediumBlock(int blockId, int blockSize) {
