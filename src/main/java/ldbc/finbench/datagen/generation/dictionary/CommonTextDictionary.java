@@ -39,8 +39,8 @@ public class CommonTextDictionary {
 
     public String getUniformDistRandomTextForComments(Random random) {
         StringBuilder text = new StringBuilder();
-        for (int i = 0; i < 4; i++) {
-            text.append(random.nextInt(resources.size())).append(" ");
+        for (int i = 0; i < 5; i++) {
+            text.append(resources.get((long) random.nextInt(resources.size()))).append(" ");
         }
         return text.toString();
     }
