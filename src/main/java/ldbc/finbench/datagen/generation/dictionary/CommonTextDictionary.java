@@ -38,9 +38,10 @@ public class CommonTextDictionary {
     }
 
     public String getUniformDistRandomTextForComments(Random random) {
-        // Randomly select two resources and concatenate them to flatten the dataset
-        long index1 = random.nextInt(resources.size());
-        long index2 = random.nextInt(resources.size());
-        return resources.get(index1) + " " + resources.get(index2);
+        StringBuilder text = new StringBuilder();
+        for (int i = 0; i < 4; i++) {
+            text.append(random.nextInt(resources.size())).append(" ");
+        }
+        return text.toString();
     }
 }

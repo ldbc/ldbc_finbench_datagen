@@ -72,15 +72,15 @@
     <scale_factor name="1">
         <property>
             <name>generator.numPersons</name>
-            <value>20000</value>
+            <value>10000</value>
         </property>
         <property>
             <name>generator.numCompanies</name>
-            <value>20000</value>
+            <value>10000</value>
         </property>
         <property>
             <name>generator.numMediums</name>
-            <value>40000</value>
+            <value>20000</value>
         </property>
         <property>
             <name>transfer.minNumDegree</name>
