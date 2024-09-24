@@ -46,7 +46,7 @@ SELECT Account.id                       AS accountId,
        Account.accountLevel             AS accountLevel,
 FROM Account
 WHERE Account.createTime <= :start_date_long
-  AND Account.deleteTime > :start_date_long
+  -- AND Account.deleteTime > :start_date_long
 ORDER BY Account.createTime )
 TO ':output_dir/snapshot/Account.:output_format';
 
@@ -91,7 +91,8 @@ COPY
         Transfer.payType AS payType,
         Transfer.goodsType AS goodsType
     FROM Transfer
-    WHERE Transfer.createTime <= :start_date_long AND Transfer.deleteTime > :start_date_long
+    WHERE Transfer.createTime <= :start_date_long
+      -- AND Transfer.deleteTime > :start_date_long
     )
     UNION ALL
     (SELECT
@@ -104,7 +105,8 @@ COPY
         LoanTransfer.payType AS payType,
         LoanTransfer.goodsType AS goodsType
     FROM LoanTransfer
-    WHERE LoanTransfer.createTime <= :start_date_long  AND LoanTransfer.deleteTime > :start_date_long
+    WHERE LoanTransfer.createTime <= :start_date_long
+      -- AND LoanTransfer.deleteTime > :start_date_long
     )
     ORDER BY createTime
 )
@@ -119,7 +121,7 @@ SELECT Withdraw.fromId               AS fromId,
        epoch_ms(Withdraw.createTime) AS createTime
 FROM Withdraw
 WHERE Withdraw.createTime <= :start_date_long
-  AND Withdraw.deleteTime > :start_date_long
+  -- AND Withdraw.deleteTime > :start_date_long
 ORDER BY Withdraw.createTime )
 TO ':output_dir/snapshot/AccountWithdrawAccount.:output_format';
 
@@ -132,7 +134,7 @@ SELECT Repay.accountId            AS accountId,
        epoch_ms(Repay.createTime) AS createTime
 FROM Repay
 WHERE Repay.createTime <= :start_date_long
-  AND Repay.deleteTime > :start_date_long
+  -- AND Repay.deleteTime > :start_date_long
 ORDER BY Repay.createTime )
 TO ':output_dir/snapshot/AccountRepayLoan.:output_format';
 
@@ -145,7 +147,7 @@ SELECT Deposit.loanId               AS loanId,
        epoch_ms(Deposit.createTime) AS createTime
 FROM Deposit
 WHERE Deposit.createTime <= :start_date_long
-  AND Deposit.deleteTime > :start_date_long
+  -- AND Deposit.deleteTime > :start_date_long
 ORDER BY Deposit.createTime )
 TO ':output_dir/snapshot/LoanDepositAccount.:output_format';
 
@@ -158,7 +160,7 @@ SELECT SignIn.mediumId             AS mediumId,
        SignIn.location             AS location
 FROM SignIn
 WHERE SignIn.createTime <= :start_date_long
-  AND SignIn.deleteTime > :start_date_long
+  -- AND SignIn.deleteTime > :start_date_long
 ORDER BY SignIn.createTime )
 TO ':output_dir/snapshot/MediumSignInAccount.:output_format';
 
@@ -242,7 +244,7 @@ SELECT PersonOwnAccount.personId             AS personId,
        epoch_ms(PersonOwnAccount.createTime) AS createTime
 FROM PersonOwnAccount
 WHERE PersonOwnAccount.createTime <= :start_date_long
-  AND PersonOwnAccount.deleteTime > :start_date_long
+  -- AND PersonOwnAccount.deleteTime > :start_date_long
 ORDER BY PersonOwnAccount.createTime )
 TO ':output_dir/snapshot/PersonOwnAccount.:output_format';
 
@@ -254,6 +256,6 @@ SELECT CompanyOwnAccount.companyId            AS companyId,
        epoch_ms(CompanyOwnAccount.createTime) AS createTime
 FROM CompanyOwnAccount
 WHERE CompanyOwnAccount.createTime <= :start_date_long
-  AND CompanyOwnAccount.deleteTime > :start_date_long
+  -- AND CompanyOwnAccount.deleteTime > :start_date_long
 ORDER BY CompanyOwnAccount.createTime )
 TO ':output_dir/snapshot/CompanyOwnAccount.:output_format';
