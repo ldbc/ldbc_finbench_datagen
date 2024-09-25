@@ -414,8 +414,8 @@ class ActivitySerializer(sink: RawSink)(implicit spark: SparkSession)
         val rawDeposit = loanWithActivitiesRdd.flatMap { l =>
           l.getDeposits.asScala.map { d =>
             DepositRaw(
-              d.getAccountId,
               d.getLoanId,
+              d.getAccountId,
               d.getCreationDate,
               d.getDeletionDate,
               formattedDouble(d.getAmount),
