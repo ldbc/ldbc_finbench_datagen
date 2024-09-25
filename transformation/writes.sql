@@ -57,6 +57,7 @@ SELECT PersonOwnAccount.createTime AS createTime,
        Person.createTime           AS dependencyTime,
        PersonOwnAccount.personId   AS personId,
        PersonOwnAccount.accountId  AS accountId,
+       PersonOwnAccount.comment    AS comment,
        Account.type                AS accountType,
        Account.isBlocked           AS accountBlocked,
        Account.nickname            AS nickname,
@@ -82,6 +83,7 @@ SELECT CompanyOwnAccount.createTime AS createTime,
        Company.createTime           AS dependencyTime,
        CompanyOwnAccount.companyId  AS companyId,
        CompanyOwnAccount.accountId  AS accountId,
+       CompanyOwnAccount.comment    AS comment,
        Account.type                 AS accountType,
        Account.isBlocked            AS accountBlocked,
        Account.nickname             AS nickname,
@@ -111,7 +113,8 @@ SELECT PersonApplyLoan.createTime AS createTime,
        Loan.balance               AS balance,
        Loan.usage                 AS loanUsage,
        Loan.interestRate          AS interestRate,
-       PersonApplyLoan.org        AS org
+       PersonApplyLoan.org        AS org,
+       PersonApplyLoan.comment    AS comment
 FROM PersonApplyLoan,
      Person,
      Loan
@@ -133,7 +136,8 @@ SELECT CompanyApplyLoan.createTime AS createTime,
        Loan.balance                AS balance,
        Loan.usage                  AS loanUsage,
        Loan.interestRate           AS interestRate,
-       CompanyApplyLoan.org        AS org
+       CompanyApplyLoan.org        AS org,
+       CompanyApplyLoan.comment    AS comment
 FROM CompanyApplyLoan,
      Company,
      Loan
@@ -151,7 +155,8 @@ SELECT PersonInvest.createTime                         AS createTime,
        GREATEST(Person.createTime, Company.createTime) AS dependencyTime,
        PersonInvest.investorId                         AS investorId,
        PersonInvest.companyId                          AS companyId,
-       PersonInvest.ratio                              AS ratio
+       PersonInvest.ratio                              AS ratio,
+       PersonInvest.comment                            AS comment
 FROM PersonInvest,
      Person,
      Company
@@ -169,7 +174,8 @@ SELECT CompanyInvest.createTime                           AS createTime,
        GREATEST(Company1.createTime, Company2.createTime) AS dependencyTime,
        CompanyInvest.investorId                           AS investorId,
        CompanyInvest.companyId                            AS companyId,
-       CompanyInvest.ratio                                AS ratio
+       CompanyInvest.ratio                                AS ratio,
+       CompanyInvest.comment                              AS comment
 FROM CompanyInvest,
      Company AS Company1,
      Company AS Company2
@@ -187,7 +193,8 @@ SELECT PersonGuarantee.createTime                       AS createTime,
        GREATEST(Person1.createTime, Person2.createTime) AS dependencyTime,
        PersonGuarantee.fromId                           AS fromId,
        PersonGuarantee.toId                             AS toId,
-       PersonGuarantee.relation                         AS relation
+       PersonGuarantee.relation                         AS relation,
+       PersonGuarantee.comment                          AS comment
 FROM PersonGuarantee,
      Person AS Person1,
      Person AS Person2
@@ -205,7 +212,8 @@ SELECT CompanyGuarantee.createTime                        AS createTime,
        GREATEST(Company1.createTime, Company2.createTime) AS dependencyTime,
        CompanyGuarantee.fromId                            AS fromId,
        CompanyGuarantee.toId                              AS toId,
-       CompanyGuarantee.relation                          AS relation
+       CompanyGuarantee.relation                          AS relation,
+       CompanyGuarantee.comment                           AS comment
 FROM CompanyGuarantee,
      Company AS Company1,
      Company AS Company2
@@ -263,7 +271,10 @@ SELECT Withdraw.createTime                        AS createTime,
        GREATEST(Acc1.createTime, Acc2.createTime) AS dependencyTime,
        Withdraw.fromId                            AS fromId,
        Withdraw.toId                              AS toId,
-       Withdraw.amount                            AS amount
+       Withdraw.amount                            AS amount,
+       Withdraw.fromType                          AS fromType,
+       Withdraw.toType                            AS toType,
+       Withdraw.comment                           AS comment
 FROM Withdraw,
      Account AS Acc1,
      Account AS Acc2
@@ -274,14 +285,15 @@ ORDER BY Withdraw.createTime
     )
     TO ':output_dir/incremental/AddAccountWithdrawAccountWrite13.:output_format';
 
---- Insert 14: Deposits
+--- Insert 14: Repays
 COPY
 (
 SELECT Repay.createTime                              AS createTime,
        GREATEST(Account.createTime, Loan.createTime) AS dependencyTime,
        Repay.accountId                               AS account,
        Repay.loanId                                  AS loanId,
-       Repay.amount                                  AS amount
+       Repay.amount                                  AS amount,
+       Repay.comment                                 AS comment
 FROM Repay,
      Account,
      Loan
@@ -299,7 +311,8 @@ SELECT Deposit.createTime                            AS createTime,
        GREATEST(Account.createTime, Loan.createTime) AS dependencyTime,
        Deposit.accountId                             AS accountId,
        Deposit.loanId                                AS loanId,
-       Deposit.amount                                AS amount
+       Deposit.amount                                AS amount,
+       Deposit.comment                               AS comment
 FROM Deposit,
      Account,
      Loan
@@ -317,7 +330,8 @@ SELECT SignIn.createTime                               AS createTime,
        GREATEST(Account.createTime, Medium.createTime) AS dependencyTime,
        SignIn.mediumId                                 AS mediumId,
        SignIn.accountId                                AS accountId,
-       SignIn.location                                 AS location
+       SignIn.location                                 AS location,
+       SignIn.comment                                  AS comment
 FROM Medium,
      SignIn,
      Account

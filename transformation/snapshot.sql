@@ -117,8 +117,11 @@ COPY
 (
 SELECT Withdraw.fromId               AS fromId,
        Withdraw.toId                 AS toId,
+       Withdraw.fromType             AS fromType,
+       Withdraw.toType               AS toType,
        Withdraw.amount               AS amount,
-       epoch_ms(Withdraw.createTime) AS createTime
+       epoch_ms(Withdraw.createTime) AS createTime,
+       Withdraw.comment              AS comment
 FROM Withdraw
 WHERE Withdraw.createTime <= :start_date_long
   -- AND Withdraw.deleteTime > :start_date_long
@@ -131,7 +134,8 @@ COPY
 SELECT Repay.accountId            AS accountId,
        Repay.loanId               AS loanId,
        Repay.amount               AS amount,
-       epoch_ms(Repay.createTime) AS createTime
+       epoch_ms(Repay.createTime) AS createTime,
+       Repay.comment              AS comment
 FROM Repay
 WHERE Repay.createTime <= :start_date_long
   -- AND Repay.deleteTime > :start_date_long
@@ -144,7 +148,8 @@ COPY
 SELECT Deposit.loanId               AS loanId,
        Deposit.accountId            AS accountId,
        Deposit.amount               AS amount,
-       epoch_ms(Deposit.createTime) AS createTime
+       epoch_ms(Deposit.createTime) AS createTime,
+       Deposit.comment              AS comment
 FROM Deposit
 WHERE Deposit.createTime <= :start_date_long
   -- AND Deposit.deleteTime > :start_date_long
@@ -157,7 +162,8 @@ COPY
 SELECT SignIn.mediumId             AS mediumId,
        SignIn.accountId            AS accountId,
        epoch_ms(SignIn.createTime) AS createTime,
-       SignIn.location             AS location
+       SignIn.location             AS location,
+       SignIn.comment              AS comment
 FROM SignIn
 WHERE SignIn.createTime <= :start_date_long
   -- AND SignIn.deleteTime > :start_date_long
@@ -170,7 +176,8 @@ COPY
 SELECT PersonInvest.investorId           AS investorId,
        PersonInvest.companyId            AS companyId,
        PersonInvest.ratio                AS ratio,
-       epoch_ms(PersonInvest.createTime) AS createTime
+       epoch_ms(PersonInvest.createTime) AS createTime,
+       PersonInvest.comment              AS comment
 FROM PersonInvest
 WHERE PersonInvest.createTime <= :start_date_long
 ORDER BY PersonInvest.createTime )
@@ -182,7 +189,8 @@ COPY
 SELECT CompanyInvest.investorId           AS investorId,
        CompanyInvest.companyId            AS companyId,
        CompanyInvest.ratio                AS ratio,
-       epoch_ms(CompanyInvest.createTime) AS createTime
+       epoch_ms(CompanyInvest.createTime) AS createTime,
+       CompanyInvest.comment              AS comment
 FROM CompanyInvest
 WHERE CompanyInvest.createTime <= :start_date_long
 ORDER BY CompanyInvest.createTime )
@@ -193,8 +201,10 @@ COPY
 (
 SELECT PersonApplyLoan.personId             AS personId,
        PersonApplyLoan.loanId               AS loanId,
+       PersonApplyLoan.loanAmount           AS loanAmount,
        epoch_ms(PersonApplyLoan.createTime) AS createTime,
-       PersonApplyLoan.org                  AS org
+       PersonApplyLoan.org                  AS org,
+       PersonApplyLoan.comment              AS comment
 FROM PersonApplyLoan
 WHERE PersonApplyLoan.createTime <= :start_date_long
 ORDER BY PersonApplyLoan.createTime )
@@ -205,8 +215,10 @@ COPY
 (
 SELECT CompanyApplyLoan.companyId            AS companyId,
        CompanyApplyLoan.loanId               AS loanId,
+       CompanyApplyLoan.loanAmount           AS loanAmount,
        epoch_ms(CompanyApplyLoan.createTime) AS createTime,
-       CompanyApplyLoan.org                  AS org
+       CompanyApplyLoan.org                  AS org,
+       CompanyApplyLoan.comment              AS comment
 FROM CompanyApplyLoan
 WHERE CompanyApplyLoan.createTime <= :start_date_long
 ORDER BY CompanyApplyLoan.createTime )
@@ -218,7 +230,8 @@ COPY
 SELECT PersonGuarantee.fromId               AS fromId,
        PersonGuarantee.toId                 AS toId,
        epoch_ms(PersonGuarantee.createTime) AS createTime,
-       PersonGuarantee.relation             AS relation
+       PersonGuarantee.relation             AS relation,
+       PersonGuarantee.comment              AS comment
 FROM PersonGuarantee
 WHERE PersonGuarantee.createTime <= :start_date_long
 ORDER BY PersonGuarantee.createTime )
@@ -230,7 +243,8 @@ COPY
 SELECT CompanyGuarantee.fromId               AS fromId,
        CompanyGuarantee.toId                 AS toId,
        epoch_ms(CompanyGuarantee.createTime) AS createTime,
-       CompanyGuarantee.relation             AS relation
+       CompanyGuarantee.relation             AS relation,
+       CompanyGuarantee.comment              AS comment
 FROM CompanyGuarantee
 WHERE CompanyGuarantee.createTime <= :start_date_long
 ORDER BY CompanyGuarantee.createTime )
@@ -241,7 +255,8 @@ COPY
 (
 SELECT PersonOwnAccount.personId             AS personId,
        PersonOwnAccount.accountId            AS accountId,
-       epoch_ms(PersonOwnAccount.createTime) AS createTime
+       epoch_ms(PersonOwnAccount.createTime) AS createTime,
+       PersonOwnAccount.comment              AS comment
 FROM PersonOwnAccount
 WHERE PersonOwnAccount.createTime <= :start_date_long
   -- AND PersonOwnAccount.deleteTime > :start_date_long
@@ -253,7 +268,8 @@ COPY
 (
 SELECT CompanyOwnAccount.companyId            AS companyId,
        CompanyOwnAccount.accountId            AS accountId,
-       epoch_ms(CompanyOwnAccount.createTime) AS createTime
+       epoch_ms(CompanyOwnAccount.createTime) AS createTime,
+       CompanyOwnAccount.comment              AS comment
 FROM CompanyOwnAccount
 WHERE CompanyOwnAccount.createTime <= :start_date_long
   -- AND CompanyOwnAccount.deleteTime > :start_date_long
