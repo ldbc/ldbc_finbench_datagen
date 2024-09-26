@@ -22,8 +22,12 @@ THRESH_HOLD = 0
 THRESH_HOLD_6 = 0
 TRUNCATION_LIMIT = 10000
 BATCH_SIZE = 5000
-TRUNCATION_ORDER = "TIMESTAMP_ASCENDING"
 TIME_TRUNCATE = True
+
+if TIME_TRUNCATE:
+    TRUNCATION_ORDER = "TIMESTAMP_DESCENDING"
+else:
+    TRUNCATION_ORDER = "AMOUNT_DESCENDING"
 
 table_dir = '../../out/factor_table'
 out_dir = '../../out/substitute_parameters/'
@@ -137,7 +141,7 @@ def filter_neighbors(account_list, amount_bucket_df, num_list, account_id):
     for col in reversed(num_list):
         sum_num += rows_amount_bucket[col]
         if sum_num >= TRUNCATION_LIMIT:
-            header_at_limit = col
+            header_at_limit = int(col)
             break
 
     partial_apply = partial(filter_neighbors_with_truncate_threshold, amount_bucket_df=amount_bucket_df, num_list=num_list, header_at_limit=header_at_limit)
@@ -147,14 +151,13 @@ def filter_neighbors(account_list, amount_bucket_df, num_list, account_id):
 
 
 def filter_neighbors_with_truncate_threshold(item, amount_bucket_df, num_list, header_at_limit):
-
-    if header_at_limit != -1:
-        if item[1] > THRESH_HOLD_6 and item[1] >= header_at_limit:
+    
+    if item[1] > THRESH_HOLD_6:
+        if header_at_limit == -1:
             return item[0]
-    else:
-        if item[1] > THRESH_HOLD_6:
+        if (TIME_TRUNCATE and item[2] >= header_at_limit) or (not TIME_TRUNCATE and item[1] >= header_at_limit):
             return item[0]
-        
+    
     return None
 
 
@@ -170,11 +173,14 @@ def neighbors_with_truncate_threshold(transfer_in_amount, rows_account_list, row
     for col in reversed(num_list):
         sum_num += rows_amount_bucket[col]
         if sum_num >= TRUNCATION_LIMIT:
-            header_at_limit = col
+            header_at_limit = int(col)
             break
 
     if header_at_limit != -1:
-        return [t[0] for t in temp if t[1] >= header_at_limit]
+        if TIME_TRUNCATE:
+            return [t[0] for t in temp if t[2] >= header_at_limit]
+        else:
+            return [t[0] for t in temp if t[1] >= header_at_limit]
     else:
         return [t[0] for t in temp]
     
@@ -188,11 +194,14 @@ def neighbors_with_trancate(rows_account_list, rows_amount_bucket, num_list):
     for col in reversed(num_list):
         sum_num += rows_amount_bucket[col]
         if sum_num >= TRUNCATION_LIMIT:
-            header_at_limit = col
+            header_at_limit = int(col)
             break
 
     if header_at_limit != -1:
-        return [t[0] for t in rows_account_list if t[1] >= header_at_limit]
+        if TIME_TRUNCATE:
+            return [t[0] for t in rows_account_list if t[2] >= header_at_limit]
+        else:
+            return [t[0] for t in rows_account_list if t[1] >= header_at_limit]
     else:
         return [t[0] for t in rows_account_list]
 
