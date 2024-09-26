@@ -122,12 +122,14 @@ object FactorGenerationStage extends DatagenStage {
     ): DataFrame = {
       val itemAmountRDD = df
         .groupBy(groupByCol, selectCol)
-        .agg(max($"amount").alias("maxAmount"))
+        .agg(
+          max($"amount").alias("maxAmount"),
+          max($"createTime").alias("maxCreateTime") 
+        )
 
       val itemsRDD = itemAmountRDD
         .groupBy(groupByCol)
-        .agg(collect_list(array(col(selectCol), $"maxAmount")).alias("items"))
-        .select(col(groupByCol).alias("account_id"), $"items")
+        .agg(collect_list(array(col(selectCol), $"maxAmount", $"maxCreateTime")).alias("items")) 
 
       val accountItemsRDD = itemsRDD
         .withColumn(
@@ -197,9 +199,16 @@ object FactorGenerationStage extends DatagenStage {
         .groupBy(idCol, "year_month")
         .count()
 
-      val pivotRDD = byMonthRDD
+      val timestampedByMonthRDD = byMonthRDD
+        .withColumn(
+          "year_month_ts",
+          unix_timestamp(col("year_month"), "yyyy-MM") * 1000 
+        )
+        .drop("year_month") 
+
+      val pivotRDD = timestampedByMonthRDD
         .groupBy(idCol)
-        .pivot("year_month")
+        .pivot("year_month_ts") 
         .agg(first("count"))
         .na
         .fill(0)
@@ -220,7 +229,7 @@ object FactorGenerationStage extends DatagenStage {
       .save(s"${args.outputDir}/factor_table/person_invest_company")
 
     val transferItRDD =
-      transferRDD.select($"fromId", $"toId", $"amount".cast("double"))
+      transferRDD.select($"fromId", $"toId", $"amount".cast("double"), $"createTime")
 
     val transferOutAccountItemsRDD =
       transformItems(transferItRDD, "fromId", "toId")
@@ -381,7 +390,7 @@ object FactorGenerationStage extends DatagenStage {
       .save(s"${args.outputDir}/factor_table/trans_withdraw_month")
 
     val withdrawInRDD =
-      withdrawRDD.select($"fromId", $"toId", $"amount".cast("double"))
+      withdrawRDD.select($"fromId", $"toId", $"amount".cast("double"), $"createTime")
     val combinedRDD = transferItRDD.union(withdrawInRDD)
 
     val transformedAccountItemsRDD =
