@@ -3,6 +3,8 @@
 LDBC_FINBENCH_DATAGEN_JAR=target/ldbc_finbench_datagen-0.2.0-SNAPSHOT-jar-with-dependencies.jar
 OUTPUT_DIR=out
 
+# Note: generate factor tables with --generate-factors
+
 # run locally with the python script
 # time python3 scripts/run.py --jar $LDBC_FINBENCH_DATAGEN_JAR --main-class ldbc.finbench.datagen.LdbcDatagen --memory 500g -- --scale-factor 30 --output-dir ${OUTPUT_DIR}
 
