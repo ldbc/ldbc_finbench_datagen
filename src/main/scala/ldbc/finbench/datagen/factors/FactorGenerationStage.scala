@@ -1,5 +1,6 @@
 package ldbc.finbench.datagen.factors
 
+import ldbc.finbench.datagen.LdbcDatagen.log
 import ldbc.finbench.datagen.util.DatagenStage
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, SparkSession, functions => F}
@@ -10,7 +11,6 @@ import shapeless.lens
 import scala.util.matching.Regex
 
 object FactorGenerationStage extends DatagenStage {
-
   @transient lazy val log: Logger = LoggerFactory.getLogger(this.getClass)
 
   case class Args(
@@ -64,14 +64,14 @@ object FactorGenerationStage extends DatagenStage {
     run(parsedArgs)
   }
 
-  // execute factorization process
-  // TODO: finish all
+
   override def run(args: Args) = {
-    parameterCuration(args)
+    factortables(args)
   }
 
-  def parameterCuration(args: Args)(implicit spark: SparkSession) = {
+  def factortables(args: Args)(implicit spark: SparkSession) = {
     import spark.implicits._
+    log.info("[Main] Starting factoring stage")
 
     val transferRDD = spark.read
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
@@ -533,6 +533,5 @@ object FactorGenerationStage extends DatagenStage {
       .option("delimiter", "|")
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
       .save(s"${args.outputDir}/factor_table/upstream_amount")
-
   }
 }

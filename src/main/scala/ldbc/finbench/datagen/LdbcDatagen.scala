@@ -1,9 +1,7 @@
 package ldbc.finbench.datagen
 
 import ldbc.finbench.datagen.factors.FactorGenerationStage
-import ldbc.finbench.datagen.generation.dictionary.Dictionaries
 import ldbc.finbench.datagen.generation.GenerationStage
-import ldbc.finbench.datagen.transformation.TransformationStage
 import ldbc.finbench.datagen.util.{Logging, SparkApp}
 import shapeless.lens
 
@@ -24,7 +22,7 @@ object LdbcDatagen extends SparkApp with Logging {
       format: String = "csv",
       formatOptions: Map[String, String] = Map.empty,
       epochMillis: Boolean = false,
-      generateFactors: Boolean = true,
+      generateFactors: Boolean = false,
       factorFormat: String = "parquet"
   )
 
@@ -121,22 +119,22 @@ object LdbcDatagen extends SparkApp with Logging {
   }
 
   override def run(args: ArgsType): Unit = {
-    val generationArgs = GenerationStage.Args(
-      scaleFactor = args.scaleFactor,
-      outputDir = args.outputDir,
-      format = args.format,
-      partitionsOpt = args.numPartitions
-    )
-    log.info("[Main] Starting generation stage")
-    GenerationStage.run(generationArgs)
-
-    if (args.generateFactors) {
-      val factorArgs = FactorGenerationStage.Args(
-        outputDir = args.outputDir,
-        format = args.factorFormat
+    if (!args.generateFactors) {
+      GenerationStage.run(
+        GenerationStage.Args(
+          scaleFactor = args.scaleFactor,
+          outputDir = args.outputDir,
+          format = args.format,
+          partitionsOpt = args.numPartitions
+        )
       )
-      log.info("[Main] Starting factoring stage")
-//       FactorGenerationStage.run(factorArgs)
+    } else {
+      FactorGenerationStage.run(
+        FactorGenerationStage.Args(
+          outputDir = args.outputDir,
+          format = args.factorFormat
+        )
+      )
     }
   }
 }
