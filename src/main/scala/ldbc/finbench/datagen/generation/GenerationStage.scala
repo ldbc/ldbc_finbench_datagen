@@ -1,5 +1,6 @@
 package ldbc.finbench.datagen.generation
 
+import ldbc.finbench.datagen.LdbcDatagen.log
 import ldbc.finbench.datagen.config.{ConfigParser, DatagenConfiguration}
 import ldbc.finbench.datagen.io.raw.{Csv, Parquet, RawSink}
 import ldbc.finbench.datagen.util._
@@ -25,6 +26,7 @@ object GenerationStage extends DatagenStage with Logging {
   override type ArgsType = Args
 
   override def run(args: Args): Unit = {
+    log.info("[Main] Starting generation stage")
     // build and initialize the configs
     val config = buildConfig(args)
     // OPT: It is called in each SparkGenerator in Spark to initialize the context on the executors.
