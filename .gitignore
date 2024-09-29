@@ -25,4 +25,4 @@ sf*/
 sf*.tar
 sf*.tar.gz
 
-scripts/paramgen/__pycache__/
+tools/paramgen/__pycache__/

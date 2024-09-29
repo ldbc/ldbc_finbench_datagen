@@ -22,8 +22,12 @@ THRESH_HOLD = 0
 THRESH_HOLD_6 = 0
 TRUNCATION_LIMIT = 10000
 BATCH_SIZE = 5000
-TRUNCATION_ORDER = "TIMESTAMP_ASCENDING"
 TIME_TRUNCATE = True
+
+if TIME_TRUNCATE:
+    TRUNCATION_ORDER = "TIMESTAMP_DESCENDING"
+else:
+    TRUNCATION_ORDER = "AMOUNT_DESCENDING"
 
 table_dir = '../../out/factor_table'
 out_dir = '../../out/substitute_parameters/'
@@ -137,7 +141,7 @@ def filter_neighbors(account_list, amount_bucket_df, num_list, account_id):
     for col in reversed(num_list):
         sum_num += rows_amount_bucket[col]
         if sum_num >= TRUNCATION_LIMIT:
-            header_at_limit = col
+            header_at_limit = int(col)
             break
 
     partial_apply = partial(filter_neighbors_with_truncate_threshold, amount_bucket_df=amount_bucket_df, num_list=num_list, header_at_limit=header_at_limit)
@@ -147,14 +151,13 @@ def filter_neighbors(account_list, amount_bucket_df, num_list, account_id):
 
 
 def filter_neighbors_with_truncate_threshold(item, amount_bucket_df, num_list, header_at_limit):
-
-    if header_at_limit != -1:
-        if item[1] > THRESH_HOLD_6 and item[1] >= header_at_limit:
+    
+    if item[1] > THRESH_HOLD_6:
+        if header_at_limit == -1:
             return item[0]
-    else:
-        if item[1] > THRESH_HOLD_6:
+        if (TIME_TRUNCATE and item[2] >= header_at_limit) or (not TIME_TRUNCATE and item[1] >= header_at_limit):
             return item[0]
-        
+    
     return None
 
 
@@ -170,11 +173,14 @@ def neighbors_with_truncate_threshold(transfer_in_amount, rows_account_list, row
     for col in reversed(num_list):
         sum_num += rows_amount_bucket[col]
         if sum_num >= TRUNCATION_LIMIT:
-            header_at_limit = col
+            header_at_limit = int(col)
             break
 
     if header_at_limit != -1:
-        return [t[0] for t in temp if t[1] >= header_at_limit]
+        if TIME_TRUNCATE:
+            return [t[0] for t in temp if t[2] >= header_at_limit]
+        else:
+            return [t[0] for t in temp if t[1] >= header_at_limit]
     else:
         return [t[0] for t in temp]
     
@@ -188,11 +194,14 @@ def neighbors_with_trancate(rows_account_list, rows_amount_bucket, num_list):
     for col in reversed(num_list):
         sum_num += rows_amount_bucket[col]
         if sum_num >= TRUNCATION_LIMIT:
-            header_at_limit = col
+            header_at_limit = int(col)
             break
 
     if header_at_limit != -1:
-        return [t[0] for t in rows_account_list if t[1] >= header_at_limit]
+        if TIME_TRUNCATE:
+            return [t[0] for t in rows_account_list if t[2] >= header_at_limit]
+        else:
+            return [t[0] for t in rows_account_list if t[1] >= header_at_limit]
     else:
         return [t[0] for t in rows_account_list]
 
@@ -230,6 +239,7 @@ def get_next_neighbor_list(neighbors_df, account_account_df, account_amount_df, 
     with concurrent.futures.ProcessPoolExecutor(max_workers=query_parallelism) as executor:
         futures = [executor.submit(process_get_neighbors, chunk, account_account_df, account_amount_df, amount_bucket_df, num_list, query_id) for chunk in chunks]
         results = [future.result() for future in concurrent.futures.as_completed(futures)]
+        executor.shutdown(wait=True)
     
     next_neighbors_df = pd.concat(results)
     next_neighbors_df = next_neighbors_df.sort_index()
@@ -247,23 +257,33 @@ def get_filter_neighbor_list(neighbors_df, amount_bucket_df):
         futures = [executor.submit(process_filter_neighbors, chunk, amount_bucket_df, num_list) for chunk in chunks]
         results = [future.result() for future in concurrent.futures.as_completed(futures)]
 
+        executor.shutdown(wait=True)
+
     next_neighbors_df = pd.concat(results)
     next_neighbors_df = next_neighbors_df.sort_values(by=first_column_name)
     return next_neighbors_df
 
 
+def process_batch(batch, basic_sum_df, first_column_name, second_column_name):
+    neighbors_exploded = batch.explode(second_column_name)
+    merged_df = neighbors_exploded.merge(
+        basic_sum_df, left_on=second_column_name, right_index=True, how='left'
+    ).drop(columns=[second_column_name])
+    return merged_df.groupby(first_column_name).sum()
+
 def get_next_sum_table(neighbors_df, basic_sum_df, batch_size=BATCH_SIZE):
     first_column_name = neighbors_df.columns[0]
     second_column_name = neighbors_df.columns[1]
+
+    batches = [neighbors_df.iloc[start:start + batch_size] for start in range(0, len(neighbors_df), batch_size)]
     
     result_list = []
-
-    for start in range(0, len(neighbors_df), batch_size):
-        end = start + batch_size
-        batch = neighbors_df.iloc[start:end]
-        neighbors_exploded = batch.explode(second_column_name)
-        merged_df = neighbors_exploded.merge(basic_sum_df, left_on=second_column_name, right_index=True, how='left').drop(columns=[second_column_name])
-        result_list.append(merged_df.groupby(first_column_name).sum().astype(int))
+    query_parallelism = max(1, multiprocessing.cpu_count() // 4)
+    with concurrent.futures.ProcessPoolExecutor(max_workers=query_parallelism) as executor:
+        futures = [executor.submit(process_batch, batch, basic_sum_df, first_column_name, second_column_name) for batch in batches]
+        for future in futures:
+            result_list.append(future.result())
+        executor.shutdown(wait=True)
 
     result_df = pd.concat(result_list).groupby(first_column_name).sum().astype(int)
 
@@ -362,7 +382,7 @@ def process_iter_queries(query_id):
         amount_bucket_path = os.path.join(table_dir, 'account_in_out_count')
         time_bucket_path = os.path.join(table_dir, 'account_in_out_month')
         output_path = out_dir
-        steps = 2
+        steps = 1
 
     elif query_id == 11:
         first_account_path = os.path.join(table_dir, 'person_guarantee_list')
@@ -654,9 +674,9 @@ def process_withdraw_query():
 
 def main():
     queries = [3, 1, 8, 7, 10, 11, 2, 5, 6]
-    # queries = [8]
+    # queries = [3]
 
-    multiprocessing.set_start_method('spawn')
+    multiprocessing.set_start_method('forkserver')
     processes = []
 
     for query_id in queries:
