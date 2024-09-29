@@ -1,4 +1,0 @@
-Run degree profiling.
-load_cost = 399.40(s)
-exec_cost = 893.24(s)
-total_cost = 1292.64(s)
