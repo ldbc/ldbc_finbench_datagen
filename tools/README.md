@@ -1,9 +1,14 @@
 # Tools
 
-Here lists some tools for graph data processing.
-- dataprofiler: a tool for profiling graph data, including degree distribution, etc.
-- graphgen: a simple tool/example code to generate power-law distributed graph data.
-- paramgen: a Parameter Search tool to generate parameters for queries using TuGraph.
+- paramgen:
+  - parameter_curation: a tool for generating parameters for finbench queries
+- check_*.py: python scripts used for check the data features like consistency, distribution
+- merge_cluster_output.py: a python script to merge the output in cluster mode
+- statistic.py: a python script to calculate the statistics of the data
+- legacy: some legacy tools
+  - dataprofiler: a tool for profiling graph data, including degree distribution, etc.
+  - graphgen: a simple tool/example code to generate power-law distributed graph data.
+  - factorgen: factor table generators in python version
 
 
 ## ParamsGen
