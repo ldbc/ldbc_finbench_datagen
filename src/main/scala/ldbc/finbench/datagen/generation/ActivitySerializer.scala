@@ -1,4 +1,4 @@
-package ldbc.finbench.datagen.generation.serializers
+package ldbc.finbench.datagen.generation
 
 import ldbc.finbench.datagen.entities.edges._
 import ldbc.finbench.datagen.entities.nodes._
