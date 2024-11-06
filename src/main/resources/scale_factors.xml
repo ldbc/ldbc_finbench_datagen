@@ -1,40 +1,17 @@
 <?xml version="1.0"?>
 <scale_factors>
-    <scale_factor name="0.01">
-        <property>
-            <name>generator.numPersons</name>
-            <value>800</value>
-        </property>
-        <property>
-            <name>generator.numCompanies</name>
-            <value>400</value>
-        </property>
-        <property>
-            <name>generator.numMediums</name>
-            <value>1000</value>
-        </property>
-        <property>
-            <name>transfer.minNumDegree</name>
-            <value>1</value>
-        </property>
-        <property>
-            <name>transfer.maxNumDegree</name>
-            <value>1000</value>
-        </property>
-    </scale_factor>
-
     <scale_factor name="0.1">
         <property>
             <name>generator.numPersons</name>
-            <value>8000</value>
+            <value>1000</value>
         </property>
         <property>
             <name>generator.numCompanies</name>
-            <value>4000</value>
+            <value>1000</value>
         </property>
         <property>
             <name>generator.numMediums</name>
-            <value>10000</value>
+            <value>2000</value>
         </property>
         <property>
             <name>transfer.minNumDegree</name>
@@ -49,15 +26,15 @@
     <scale_factor name="0.3">
         <property>
             <name>generator.numPersons</name>
-            <value>24000</value>
+            <value>3000</value>
         </property>
         <property>
             <name>generator.numCompanies</name>
-            <value>12000</value>
+            <value>3000</value>
         </property>
         <property>
             <name>generator.numMediums</name>
-            <value>30000</value>
+            <value>6000</value>
         </property>
         <property>
             <name>transfer.minNumDegree</name>
@@ -92,18 +69,18 @@
         </property>
     </scale_factor>
 
-    <!-- <scale_factor name="3">
+    <scale_factor name="3">
         <property>
             <name>generator.numPersons</name>
-            <value>240000</value>
+            <value>30000</value>
         </property>
         <property>
             <name>generator.numCompanies</name>
-            <value>120000</value>
+            <value>30000</value>
         </property>
         <property>
             <name>generator.numMediums</name>
-            <value>300000</value>
+            <value>60000</value>
         </property>
         <property>
             <name>transfer.minNumDegree</name>
@@ -113,7 +90,7 @@
             <name>transfer.maxNumDegree</name>
             <value>1000</value>
         </property>
-    </scale_factor> -->
+    </scale_factor>
 
     <scale_factor name="10">
         <property>
