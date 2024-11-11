@@ -21,6 +21,7 @@ import sys
 
 table_dir = sys.argv[1]
 out_dir = sys.argv[2]
+random.seed(42)
 
 THRESH_HOLD = 0
 THRESH_HOLD_6 = 0
@@ -676,19 +677,21 @@ def process_withdraw_query():
 
 
 def main():
-    queries = [3, 1, 8, 7, 10, 11, 2, 5, 6]
+    queries = [1, 2, 3, 5, 6, 7, 8, 10, 11]
     # queries = [3]
 
     multiprocessing.set_start_method('forkserver')
-    processes = []
-
-    for query_id in queries:
-        p = multiprocessing.Process(target=process_query, args=(query_id,))
-        p.start()
-        processes.append(p)
-
-    for p in processes:
-        p.join()
+    
+    batch_size = 4
+    for i in range(0, len(queries), batch_size):
+        processes = []
+        for query_id in queries[i:i + batch_size]:
+            p = multiprocessing.Process(target=process_query, args=(query_id,))
+            p.start()
+            processes.append(p)
+        
+        for p in processes:
+            p.join()
 
 
 if __name__ == "__main__":
