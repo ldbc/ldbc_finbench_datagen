@@ -677,12 +677,12 @@ def process_withdraw_query():
 
 
 def main():
-    queries = [1, 2, 3, 5, 6, 7, 8, 10, 11]
+    queries = [6, 2, 3, 5, 7, 11, 8, 10, 1]
     # queries = [3]
 
     multiprocessing.set_start_method('forkserver')
     
-    batch_size = 4
+    batch_size = 5
     for i in range(0, len(queries), batch_size):
         processes = []
         for query_id in queries[i:i + batch_size]:

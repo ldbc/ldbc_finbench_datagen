@@ -1,7 +1,7 @@
 #!/bin/bash
 
 LDBC_FINBENCH_DATAGEN_JAR=target/ldbc_finbench_datagen-0.2.0-SNAPSHOT-jar-with-dependencies.jar
-OUTPUT_DIR=out/sf3/
+OUTPUT_DIR=out/
 
 # Note: generate factor tables with --generate-factors
 

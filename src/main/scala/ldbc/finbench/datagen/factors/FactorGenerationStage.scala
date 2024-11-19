@@ -82,7 +82,12 @@ object FactorGenerationStage extends DatagenStage {
         $"fromId",
         $"toId",
         $"amount".cast("double"),
-        (unix_timestamp(to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss.SSS")) * 1000).alias("createTime")
+        (unix_timestamp(
+          coalesce(
+            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss.SSS"), 
+            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss")      
+          )
+        ) * 1000).alias("createTime")
       )
 
     val withdrawRDD = spark.read
@@ -94,7 +99,12 @@ object FactorGenerationStage extends DatagenStage {
         $"fromId",
         $"toId",
         $"amount".cast("double"),
-        (unix_timestamp(to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss.SSS")) * 1000).alias("createTime")
+        (unix_timestamp(
+          coalesce(
+            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss.SSS"), 
+            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss")      
+          )
+        ) * 1000).alias("createTime")
       )
 
     val depositRDD = spark.read
@@ -112,7 +122,12 @@ object FactorGenerationStage extends DatagenStage {
       .select(
         $"investorId",
         $"companyId",
-        (unix_timestamp(to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss.SSS")) * 1000).alias("createTime")
+        (unix_timestamp(
+          coalesce(
+            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss.SSS"), 
+            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss")      
+          )
+        ) * 1000).alias("createTime")
       )
 
     val OwnRDD = spark.read
@@ -130,7 +145,12 @@ object FactorGenerationStage extends DatagenStage {
       .select(
         $"fromId",
         $"toId",
-        (unix_timestamp(to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss.SSS")) * 1000).alias("createTime")
+        (unix_timestamp(
+          coalesce(
+            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss.SSS"), 
+            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss")      
+          )
+        ) * 1000).alias("createTime")
       )
 
     def transformItems(
