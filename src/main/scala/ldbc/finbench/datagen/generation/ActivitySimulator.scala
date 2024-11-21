@@ -3,7 +3,6 @@ package ldbc.finbench.datagen.generation
 import ldbc.finbench.datagen.config.DatagenConfiguration
 import ldbc.finbench.datagen.entities.nodes._
 import ldbc.finbench.datagen.generation.generators.{ActivityGenerator, SparkCompanyGenerator, SparkMediumGenerator, SparkPersonGenerator}
-import ldbc.finbench.datagen.generation.serializers.ActivitySerializer
 import ldbc.finbench.datagen.io.Writer
 import ldbc.finbench.datagen.io.raw.RawSink
 import ldbc.finbench.datagen.util.Logging
