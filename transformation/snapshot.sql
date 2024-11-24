@@ -4,7 +4,7 @@ COPY
 SELECT Person.id                   AS personId,
        Person.name                 AS personName,
        Person.isBlocked            AS isBlocked,
-       epoch_ms(Person.createTime) AS createTime,
+       strftime(epoch_ms(Person.createTime), '%Y-%m-%d %H:%M:%S.%g') AS createTime,
        Person.gender               AS gender,
        epoch_ms(Person.birthday)::DATE   AS birthday,
        Person.country              AS country,
@@ -20,7 +20,7 @@ COPY
 SELECT Company.id                   AS companyId,
        Company.name                 AS companyName,
        Company.isBlocked            AS isBlocked,
-       epoch_ms(Company.createTime) AS createTime,
+       strftime(epoch_ms(Company.createTime), '%Y-%m-%d %H:%M:%S.%g') AS createTime,
        Company.country              AS country,
        Company.city                 AS city,
        Company.business             AS business,
@@ -35,14 +35,14 @@ TO ':output_dir/snapshot/Company.:output_format';
 COPY
 (
 SELECT Account.id                       AS accountId,
-       epoch_ms(Account.createTime)     AS createTime,
+       strftime(epoch_ms(Account.createTime), '%Y-%m-%d %H:%M:%S.%g')     AS createTime,
        Account.isBlocked                AS isBlocked,
        Account.type                     AS accountType,
        Account.nickname                 AS nickname,
        Account.phonenum                 AS phonenum,
        Account.email                    AS email,
        Account.freqLoginType            AS freqLoginType,
-       epoch_ms(Account.lastLoginTime)  AS lastLoginTime,
+       strftime(epoch_ms(Account.lastLoginTime), '%Y-%m-%d %H:%M:%S.%g')  AS lastLoginTime,
        Account.accountLevel             AS accountLevel,
 FROM Account
 WHERE Account.createTime <= :start_date_long
@@ -56,7 +56,7 @@ COPY
 SELECT Loan.id                   AS loanId,
        Loan.loanAmount           AS loanAmount,
        Loan.balance              AS balance,
-       epoch_ms(Loan.createTime) AS createTime,
+       strftime(epoch_ms(Loan.createTime), '%Y-%m-%d %H:%M:%S.%g') AS createTime,
        Loan.usage                AS loanUsage,
        Loan.interestRate         AS interestRate
 FROM Loan
@@ -70,8 +70,8 @@ COPY
 SELECT Medium.id                   AS mediumId,
        Medium.type                 AS mediumType,
        Medium.isBlocked            AS isBlocked,
-       epoch_ms(Medium.createTime) AS createTime,
-       epoch_ms(Medium.lastLogin)  AS lastLoginTime,
+       strftime(epoch_ms(Medium.createTime), '%Y-%m-%d %H:%M:%S.%g') AS createTime,
+       strftime(epoch_ms(Medium.lastLogin), '%Y-%m-%d %H:%M:%S.%g')  AS lastLoginTime,
        Medium.riskLevel            AS riskLevel
 FROM Medium
 WHERE Medium.createTime <= :start_date_long
@@ -85,7 +85,7 @@ COPY
         Transfer.fromId AS fromId,
         Transfer.toId AS toId,
         Transfer.amount AS amount,
-        epoch_ms(Transfer.createTime) AS createTime,
+        strftime(epoch_ms(Transfer.createTime), '%Y-%m-%d %H:%M:%S.%g') AS createTime,
         Transfer.orderNum::VARCHAR AS orderNum,
         Transfer.comment AS comment,
         Transfer.payType AS payType,
@@ -99,7 +99,7 @@ COPY
         LoanTransfer.fromId AS fromId,
         LoanTransfer.toId AS toId,
         LoanTransfer.amount AS amount,
-        epoch_ms(LoanTransfer.createTime) AS createTime,
+        strftime(epoch_ms(LoanTransfer.createTime), '%Y-%m-%d %H:%M:%S.%g') AS createTime,
         LoanTransfer.orderNum::VARCHAR AS orderNum,
         LoanTransfer.comment AS comment,
         LoanTransfer.payType AS payType,
@@ -120,7 +120,7 @@ SELECT Withdraw.fromId               AS fromId,
        Withdraw.fromType             AS fromType,
        Withdraw.toType               AS toType,
        Withdraw.amount               AS amount,
-       epoch_ms(Withdraw.createTime) AS createTime,
+       strftime(epoch_ms(Withdraw.createTime), '%Y-%m-%d %H:%M:%S.%g') AS createTime,
        Withdraw.comment              AS comment
 FROM Withdraw
 WHERE Withdraw.createTime <= :start_date_long
@@ -134,7 +134,7 @@ COPY
 SELECT Repay.accountId            AS accountId,
        Repay.loanId               AS loanId,
        Repay.amount               AS amount,
-       epoch_ms(Repay.createTime) AS createTime,
+       strftime(epoch_ms(Repay.createTime), '%Y-%m-%d %H:%M:%S.%g') AS createTime,
        Repay.comment              AS comment
 FROM Repay
 WHERE Repay.createTime <= :start_date_long
@@ -148,7 +148,7 @@ COPY
 SELECT Deposit.loanId               AS loanId,
        Deposit.accountId            AS accountId,
        Deposit.amount               AS amount,
-       epoch_ms(Deposit.createTime) AS createTime,
+       strftime(epoch_ms(Deposit.createTime), '%Y-%m-%d %H:%M:%S.%g') AS createTime,
        Deposit.comment              AS comment
 FROM Deposit
 WHERE Deposit.createTime <= :start_date_long
@@ -161,7 +161,7 @@ COPY
 (
 SELECT SignIn.mediumId             AS mediumId,
        SignIn.accountId            AS accountId,
-       epoch_ms(SignIn.createTime) AS createTime,
+       strftime(epoch_ms(SignIn.createTime), '%Y-%m-%d %H:%M:%S.%g') AS createTime,
        SignIn.location             AS location,
        SignIn.comment              AS comment
 FROM SignIn
@@ -176,7 +176,7 @@ COPY
 SELECT PersonInvest.investorId           AS investorId,
        PersonInvest.companyId            AS companyId,
        PersonInvest.ratio                AS ratio,
-       epoch_ms(PersonInvest.createTime) AS createTime,
+       strftime(epoch_ms(PersonInvest.createTime), '%Y-%m-%d %H:%M:%S.%g') AS createTime,
        PersonInvest.comment              AS comment
 FROM PersonInvest
 WHERE PersonInvest.createTime <= :start_date_long
@@ -189,7 +189,7 @@ COPY
 SELECT CompanyInvest.investorId           AS investorId,
        CompanyInvest.companyId            AS companyId,
        CompanyInvest.ratio                AS ratio,
-       epoch_ms(CompanyInvest.createTime) AS createTime,
+       strftime(epoch_ms(CompanyInvest.createTime), '%Y-%m-%d %H:%M:%S.%g') AS createTime,
        CompanyInvest.comment              AS comment
 FROM CompanyInvest
 WHERE CompanyInvest.createTime <= :start_date_long
@@ -202,7 +202,7 @@ COPY
 SELECT PersonApplyLoan.personId             AS personId,
        PersonApplyLoan.loanId               AS loanId,
        PersonApplyLoan.loanAmount           AS loanAmount,
-       epoch_ms(PersonApplyLoan.createTime) AS createTime,
+       strftime(epoch_ms(PersonApplyLoan.createTime), '%Y-%m-%d %H:%M:%S.%g') AS createTime,
        PersonApplyLoan.org                  AS org,
        PersonApplyLoan.comment              AS comment
 FROM PersonApplyLoan
@@ -216,7 +216,7 @@ COPY
 SELECT CompanyApplyLoan.companyId            AS companyId,
        CompanyApplyLoan.loanId               AS loanId,
        CompanyApplyLoan.loanAmount           AS loanAmount,
-       epoch_ms(CompanyApplyLoan.createTime) AS createTime,
+       strftime(epoch_ms(CompanyApplyLoan.createTime), '%Y-%m-%d %H:%M:%S.%g') AS createTime,
        CompanyApplyLoan.org                  AS org,
        CompanyApplyLoan.comment              AS comment
 FROM CompanyApplyLoan
@@ -229,7 +229,7 @@ COPY
 (
 SELECT PersonGuarantee.fromId               AS fromId,
        PersonGuarantee.toId                 AS toId,
-       epoch_ms(PersonGuarantee.createTime) AS createTime,
+       strftime(epoch_ms(PersonGuarantee.createTime), '%Y-%m-%d %H:%M:%S.%g') AS createTime,
        PersonGuarantee.relation             AS relation,
        PersonGuarantee.comment              AS comment
 FROM PersonGuarantee
@@ -242,7 +242,7 @@ COPY
 (
 SELECT CompanyGuarantee.fromId               AS fromId,
        CompanyGuarantee.toId                 AS toId,
-       epoch_ms(CompanyGuarantee.createTime) AS createTime,
+       strftime(epoch_ms(CompanyGuarantee.createTime), '%Y-%m-%d %H:%M:%S.%g') AS createTime,
        CompanyGuarantee.relation             AS relation,
        CompanyGuarantee.comment              AS comment
 FROM CompanyGuarantee
@@ -255,7 +255,7 @@ COPY
 (
 SELECT PersonOwnAccount.personId             AS personId,
        PersonOwnAccount.accountId            AS accountId,
-       epoch_ms(PersonOwnAccount.createTime) AS createTime,
+       strftime(epoch_ms(PersonOwnAccount.createTime), '%Y-%m-%d %H:%M:%S.%g') AS createTime,
        PersonOwnAccount.comment              AS comment
 FROM PersonOwnAccount
 WHERE PersonOwnAccount.createTime <= :start_date_long
@@ -268,7 +268,7 @@ COPY
 (
 SELECT CompanyOwnAccount.companyId            AS companyId,
        CompanyOwnAccount.accountId            AS accountId,
-       epoch_ms(CompanyOwnAccount.createTime) AS createTime,
+       strftime(epoch_ms(CompanyOwnAccount.createTime), '%Y-%m-%d %H:%M:%S.%g') AS createTime,
        CompanyOwnAccount.comment              AS comment
 FROM CompanyOwnAccount
 WHERE CompanyOwnAccount.createTime <= :start_date_long
