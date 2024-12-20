@@ -1,6 +1,5 @@
 package ldbc.finbench.datagen.factors
 
-import ldbc.finbench.datagen.LdbcDatagen.log
 import ldbc.finbench.datagen.util.DatagenStage
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, SparkSession, functions => F}
@@ -64,196 +63,152 @@ object FactorGenerationStage extends DatagenStage {
     run(parsedArgs)
   }
 
-
   override def run(args: Args) = {
     factortables(args)
   }
 
+  def readCSV(path: String): DataFrame = {
+    val csvOptions = Map("header" -> "true", "delimiter" -> "|")
+    spark.read
+      .format("csv")
+      .options(csvOptions)
+      .load(path)
+  }
+
+  def transformItems(
+      df: DataFrame,
+      groupByCol: String,
+      selectCol: String
+  ): DataFrame = {
+    val itemAmountRDD = df
+      .groupBy(groupByCol, selectCol)
+      .agg(
+        max(col("amount")).alias("maxAmount"),
+        max(col("createTime")).alias("maxCreateTime")
+      )
+
+    val itemsRDD = itemAmountRDD
+      .groupBy(groupByCol)
+      .agg(
+        collect_list(
+          array(col(selectCol), col("maxAmount"), col("maxCreateTime"))
+        ).alias("items")
+      )
+
+    itemsRDD
+      .withColumn(
+        "items",
+        F.expr(
+          "transform(items, array -> concat('[', concat_ws(',', array), ']'))"
+        )
+      )
+      .withColumn(
+        "items",
+        F.concat(lit("["), F.concat_ws(",", col("items")), lit("]"))
+      )
+  }
+
+  def bucketAndCount(
+      df: DataFrame,
+      idCol: String,
+      amountCol: String,
+      groupCol: String
+  ): DataFrame = {
+
+    val buckets = Array(10000, 30000, 100000, 300000, 1000000, 2000000, 3000000,
+      4000000, 5000000, 6000000, 7000000, 8000000, 9000000, 10000000)
+
+    val bucketedRDD = df.withColumn(
+      "bucket",
+      when(col(amountCol) <= buckets(0), buckets(0))
+        .when(col(amountCol) <= buckets(1), buckets(1))
+        .when(col(amountCol) <= buckets(2), buckets(2))
+        .when(col(amountCol) <= buckets(3), buckets(3))
+        .when(col(amountCol) <= buckets(4), buckets(4))
+        .when(col(amountCol) <= buckets(5), buckets(5))
+        .when(col(amountCol) <= buckets(6), buckets(6))
+        .when(col(amountCol) <= buckets(7), buckets(7))
+        .when(col(amountCol) <= buckets(8), buckets(8))
+        .when(col(amountCol) <= buckets(9), buckets(9))
+        .when(col(amountCol) <= buckets(10), buckets(10))
+        .when(col(amountCol) <= buckets(11), buckets(11))
+        .when(col(amountCol) <= buckets(12), buckets(12))
+        .otherwise(buckets(13))
+    )
+
+    bucketedRDD
+      .groupBy(idCol)
+      .pivot("bucket", buckets.map(_.toString))
+      .count()
+      .na
+      .fill(0)
+      .withColumnRenamed(idCol, groupCol)
+  }
+
+  def processByMonth(
+      df: DataFrame,
+      idCol: String,
+      timeCol: String,
+      newIdColName: String
+  ): DataFrame = {
+    val byMonthRDD = df
+      .withColumn(
+        "year_month",
+        date_format((col(timeCol) / 1000).cast("timestamp"), "yyyy-MM")
+      )
+      .groupBy(idCol, "year_month")
+      .count()
+
+    val timestampedByMonthRDD = byMonthRDD
+      .withColumn(
+        "year_month_ts",
+        unix_timestamp(col("year_month"), "yyyy-MM") * 1000
+      )
+      .drop("year_month")
+
+    val pivotRDD = timestampedByMonthRDD
+      .groupBy(idCol)
+      .pivot("year_month_ts")
+      .agg(first("count"))
+      .na
+      .fill(0)
+      .withColumnRenamed(idCol, newIdColName)
+
+    pivotRDD
+  }
+
   def factortables(args: Args)(implicit spark: SparkSession) = {
-    import spark.implicits._
+//    import spark.implicits._
     log.info("[Main] Starting factoring stage")
 
-    val transferRDD = spark.read
-      .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .option("header", "true")
-      .option("delimiter", "|")
-      .load(s"${args.outputDir}/snapshot/AccountTransferAccount.csv")
+    val transferRDD = readCSV(s"${args.outputDir}/raw/transfer/*.csv")
       .select(
-        $"fromId",
-        $"toId",
-        $"amount".cast("double"),
-        (unix_timestamp(
-          coalesce(
-            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss.SSS"), 
-            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss")      
-          )
-        ) * 1000).alias("createTime")
+        col("fromId"),
+        col("toId"),
+        col("amount").cast("double"),
+        col("createTime")
       )
 
-    val withdrawRDD = spark.read
-      .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .option("header", "true")
-      .option("delimiter", "|")
-      .load(s"${args.outputDir}/snapshot/AccountWithdrawAccount.csv")
+    val withdrawRDD = readCSV(s"${args.outputDir}/raw/withdraw/*.csv")
       .select(
-        $"fromId",
-        $"toId",
-        $"amount".cast("double"),
-        (unix_timestamp(
-          coalesce(
-            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss.SSS"), 
-            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss")      
-          )
-        ) * 1000).alias("createTime")
+        col("fromId"),
+        col("toId"),
+        col("amount").cast("double"),
+        col("createTime")
       )
 
-    val depositRDD = spark.read
-      .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .option("header", "true")
-      .option("delimiter", "|")
-      .load(s"${args.outputDir}/snapshot/LoanDepositAccount.csv")
-      .select($"accountId", $"loanId")
+    val depositRDD = readCSV(s"${args.outputDir}/raw/deposit/*.csv")
+      .select(col("accountId"), col("loanId"))
 
-    val personInvestRDD = spark.read
-      .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .option("header", "true")
-      .option("delimiter", "|")
-      .load(s"${args.outputDir}/snapshot/PersonInvestCompany.csv")
-      .select(
-        $"investorId",
-        $"companyId",
-        (unix_timestamp(
-          coalesce(
-            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss.SSS"), 
-            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss")      
-          )
-        ) * 1000).alias("createTime")
-      )
+    val personInvestRDD = readCSV(s"${args.outputDir}/raw/personInvest/*.csv")
+      .select(col("investorId"), col("companyIdstorId"), col("createTime"))
 
-    val OwnRDD = spark.read
-      .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .option("header", "true")
-      .option("delimiter", "|")
-      .load(s"${args.outputDir}/snapshot/PersonOwnAccount.csv")
-      .select($"personId", $"accountId")
+    val ownRDD = readCSV(s"${args.outputDir}/raw/personOwnAccount/*.csv")
+      .select(col("personId"), col("accountId"))
 
-    val personGuaranteeRDD = spark.read
-      .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
-      .option("header", "true")
-      .option("delimiter", "|")
-      .load(s"${args.outputDir}/snapshot/PersonGuaranteePerson.csv")
-      .select(
-        $"fromId",
-        $"toId",
-        (unix_timestamp(
-          coalesce(
-            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss.SSS"), 
-            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss")      
-          )
-        ) * 1000).alias("createTime")
-      )
-
-    def transformItems(
-        df: DataFrame,
-        groupByCol: String,
-        selectCol: String
-    ): DataFrame = {
-      val itemAmountRDD = df
-        .groupBy(groupByCol, selectCol)
-        .agg(
-          max($"amount").alias("maxAmount"),
-          max($"createTime").alias("maxCreateTime") 
-        )
-
-      val itemsRDD = itemAmountRDD
-        .groupBy(groupByCol)
-        .agg(collect_list(array(col(selectCol), $"maxAmount", $"maxCreateTime")).alias("items")) 
-
-      val accountItemsRDD = itemsRDD
-        .withColumn(
-          "items",
-          F.expr(
-            "transform(items, array -> concat('[', concat_ws(',', array), ']'))"
-          )
-        )
-        .withColumn(
-          "items",
-          F.concat(lit("["), F.concat_ws(",", $"items"), lit("]"))
-        )
-
-      accountItemsRDD
-    }
-
-    def bucketAndCount(
-        df: DataFrame,
-        idCol: String,
-        amountCol: String,
-        groupCol: String
-    ): DataFrame = {
-
-      val buckets = Array(10000, 30000, 100000, 300000, 1000000, 2000000,
-        3000000, 4000000, 5000000, 6000000, 7000000, 8000000, 9000000, 10000000)
-
-      val bucketedRDD = df.withColumn(
-        "bucket",
-        when(col(amountCol) <= buckets(0), buckets(0))
-          .when(col(amountCol) <= buckets(1), buckets(1))
-          .when(col(amountCol) <= buckets(2), buckets(2))
-          .when(col(amountCol) <= buckets(3), buckets(3))
-          .when(col(amountCol) <= buckets(4), buckets(4))
-          .when(col(amountCol) <= buckets(5), buckets(5))
-          .when(col(amountCol) <= buckets(6), buckets(6))
-          .when(col(amountCol) <= buckets(7), buckets(7))
-          .when(col(amountCol) <= buckets(8), buckets(8))
-          .when(col(amountCol) <= buckets(9), buckets(9))
-          .when(col(amountCol) <= buckets(10), buckets(10))
-          .when(col(amountCol) <= buckets(11), buckets(11))
-          .when(col(amountCol) <= buckets(12), buckets(12))
-          .otherwise(buckets(13))
-      )
-
-      val bucketCountsRDD = bucketedRDD
-        .groupBy(idCol)
-        .pivot("bucket", buckets.map(_.toString))
-        .count()
-        .na
-        .fill(0)
-        .withColumnRenamed(idCol, groupCol)
-
-      bucketCountsRDD
-    }
-
-    def processByMonth(
-        df: DataFrame,
-        idCol: String,
-        timeCol: String,
-        newIdColName: String
-    ): DataFrame = {
-      val byMonthRDD = df
-        .withColumn(
-          "year_month",
-          date_format((col(timeCol) / 1000).cast("timestamp"), "yyyy-MM")
-        )
-        .groupBy(idCol, "year_month")
-        .count()
-
-      val timestampedByMonthRDD = byMonthRDD
-        .withColumn(
-          "year_month_ts",
-          unix_timestamp(col("year_month"), "yyyy-MM") * 1000 
-        )
-        .drop("year_month") 
-
-      val pivotRDD = timestampedByMonthRDD
-        .groupBy(idCol)
-        .pivot("year_month_ts") 
-        .agg(first("count"))
-        .na
-        .fill(0)
-        .withColumnRenamed(idCol, newIdColName)
-
-      pivotRDD
-    }
+    val personGuaranteeRDD =
+      readCSV(s"${args.outputDir}/raw/personGuarantee/*.csv")
+        .select(col("fromId"), col("toId"), col("createTime"))
 
     val PersonInvestCompanyRDD = personInvestRDD
       .groupBy("investorId")
@@ -267,7 +222,12 @@ object FactorGenerationStage extends DatagenStage {
       .save(s"${args.outputDir}/factor_table/person_invest_company")
 
     val transferItRDD =
-      transferRDD.select($"fromId", $"toId", $"amount".cast("double"), $"createTime")
+      transferRDD.select(
+        col("fromId"),
+        col("toId"),
+        col("amount").cast("double"),
+        col("createTime")
+      )
 
     val transferOutAccountItemsRDD =
       transformItems(transferItRDD, "fromId", "toId")
@@ -292,14 +252,14 @@ object FactorGenerationStage extends DatagenStage {
       .save(s"${args.outputDir}/factor_table/account_transfer_in_items")
 
     val transferOutLRDD = transferItRDD
-      .select($"fromId", $"toId")
-      .groupBy($"fromId")
-      .agg(F.collect_list($"toId").alias("transfer_out_list"))
-      .select($"fromId".alias("account_id"), $"transfer_out_list")
+      .select(col("fromId"), col("toId"))
+      .groupBy(col("fromId"))
+      .agg(F.collect_list(col("toId")).alias("transfer_out_list"))
+      .select(col("fromId").alias("account_id"), col("transfer_out_list"))
 
     val transferOutListRDD = transferOutLRDD.withColumn(
       "transfer_out_list",
-      F.concat(lit("["), F.concat_ws(",", $"transfer_out_list"), lit("]"))
+      F.concat(lit("["), F.concat_ws(",", col("transfer_out_list")), lit("]"))
     )
 
     transferOutListRDD
@@ -311,14 +271,14 @@ object FactorGenerationStage extends DatagenStage {
       .save(s"${args.outputDir}/factor_table/account_transfer_out_list")
 
     val fromAccounts = transferRDD.select(
-      $"fromId".alias("account_id"),
-      $"toId".alias("corresponding_account_id"),
-      $"createTime"
+      col("fromId").alias("account_id"),
+      col("toId").alias("corresponding_account_id"),
+      col("createTime")
     )
     val toAccounts = transferRDD.select(
-      $"toId".alias("account_id"),
-      $"fromId".alias("corresponding_account_id"),
-      $"createTime"
+      col("toId").alias("account_id"),
+      col("fromId").alias("corresponding_account_id"),
+      col("createTime")
     )
     val allAccounts = fromAccounts.union(toAccounts)
 
@@ -328,7 +288,7 @@ object FactorGenerationStage extends DatagenStage {
       .agg(collect_set("corresponding_account_id").alias("account_list"))
 
     val accountCountDF = accountListRDD
-      .select($"account_id", F.size($"account_list").alias("sum"))
+      .select(col("account_id"), F.size(col("account_list")).alias("sum"))
 
     accountCountDF.write
       .option("header", "true")
@@ -338,7 +298,7 @@ object FactorGenerationStage extends DatagenStage {
 
     val transferAccountListRDD = accountListRDD.withColumn(
       "account_list",
-      F.concat(lit("["), F.concat_ws(",", $"account_list"), lit("]"))
+      F.concat(lit("["), F.concat_ws(",", col("account_list")), lit("]"))
     )
 
     transferAccountListRDD
@@ -428,7 +388,12 @@ object FactorGenerationStage extends DatagenStage {
       .save(s"${args.outputDir}/factor_table/trans_withdraw_month")
 
     val withdrawInRDD =
-      withdrawRDD.select($"fromId", $"toId", $"amount".cast("double"), $"createTime")
+      withdrawRDD.select(
+        col("fromId"),
+        col("toId"),
+        col("amount").cast("double"),
+        col("createTime")
+      )
     val combinedRDD = transferItRDD.union(withdrawInRDD)
 
     val transformedAccountItemsRDD =
@@ -453,15 +418,15 @@ object FactorGenerationStage extends DatagenStage {
       .save(s"${args.outputDir}/factor_table/account_withdraw_in_items")
 
     val transferOutAmountRDD =
-      transferItRDD.select($"fromId", $"amount".cast("double"))
+      transferItRDD.select(col("fromId"), col("amount").cast("double"))
     val transferInAmountRDD =
-      transferItRDD.select($"toId", $"amount".cast("double"))
+      transferItRDD.select(col("toId"), col("amount").cast("double"))
 
     val transactionsAmountRDD = transferOutAmountRDD
       .union(withdrawRDD.select(col("fromId"), col("amount").cast("double")))
 
     val withdrawInBucketAmountRDD =
-      withdrawInRDD.select($"toId", $"amount".cast("double"))
+      withdrawInRDD.select(col("toId"), col("amount").cast("double"))
 
     val bucketCountsRDD =
       bucketAndCount(transactionsAmountRDD, "fromId", "amount", "account_id")
@@ -498,8 +463,8 @@ object FactorGenerationStage extends DatagenStage {
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
       .save(s"${args.outputDir}/factor_table/transfer_out_bucket")
 
-    val PersonOwnAccountRDD = OwnRDD
-      .select($"personId", $"accountId")
+    val PersonOwnAccountRDD = ownRDD
+      .select(col("personId"), col("accountId"))
       .groupBy("personId")
       .agg(coalesce(collect_set("accountId"), array()).alias("account_list"))
       .select(
@@ -515,17 +480,17 @@ object FactorGenerationStage extends DatagenStage {
       .save(s"${args.outputDir}/factor_table/person_account_list")
 
     val PersonGuaranteeListRDD = personGuaranteeRDD
-      .select($"fromId", $"toId")
+      .select(col("fromId"), col("toId"))
       .groupBy("fromId")
       .agg(coalesce(collect_set("toId"), array()).alias("guaranteee_list"))
 
     val PersonGuaranteePersonRDD = PersonGuaranteeListRDD.withColumn(
       "guaranteee_list",
-      F.concat(lit("["), F.concat_ws(",", $"guaranteee_list"), lit("]"))
+      F.concat(lit("["), F.concat_ws(",", col("guaranteee_list")), lit("]"))
     )
 
     val PersonGuaranteeCount = PersonGuaranteeListRDD
-      .select($"fromId", F.size($"guaranteee_list").alias("sum"))
+      .select(col("fromId"), F.size(col("guaranteee_list")).alias("sum"))
 
     PersonGuaranteePersonRDD.write
       .option("header", "true")

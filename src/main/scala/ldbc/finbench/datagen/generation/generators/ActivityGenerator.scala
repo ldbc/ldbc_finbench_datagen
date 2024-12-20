@@ -82,12 +82,9 @@ class ActivityGenerator()(implicit spark: SparkSession)
       personRDD: RDD[Person],
       companyRDD: RDD[Company]
   ): RDD[Company] = {
-    val persons = spark.sparkContext.broadcast(personRDD.collect().toList)
-    val companies = spark.sparkContext.broadcast(companyRDD.collect().toList)
+    val investActivitesEvent = new InvestActivitesEvent
 
-    val personInvestEvent = new PersonInvestEvent()
-    val companyInvestEvent = new CompanyInvestEvent()
-
+    val numPartitions = companyRDD.getNumPartitions
     companyRDD
       .sample(
         withReplacement = false,
@@ -95,17 +92,30 @@ class ActivityGenerator()(implicit spark: SparkSession)
         sampleRandom.nextLong()
       )
       .mapPartitionsWithIndex { (index, targets) =>
-        personInvestEvent.resetState(index)
-        personInvestEvent
-          .personInvestPartition(persons.value.asJava, targets.toList.asJava)
-          .iterator()
-          .asScala
-      }
-      .mapPartitionsWithIndex { (index, targets) =>
-        companyInvestEvent.resetState(index)
-        companyInvestEvent
-          .companyInvestPartition(
-            companies.value.asJava,
+        val persons = personRDD
+          .sample(
+            withReplacement = false,
+            1.0 / numPartitions,
+            sampleRandom.nextLong()
+          )
+          .collect()
+          .toList
+          .asJava
+        val companies = companyRDD
+          .sample(
+            withReplacement = false,
+            1.0 / numPartitions,
+            sampleRandom.nextLong()
+          )
+          .collect()
+          .toList
+          .asJava
+
+        investActivitesEvent.resetState(index)
+        investActivitesEvent
+          .investPartition(
+            persons,
+            companies,
             targets.toList.asJava
           )
           .iterator()
@@ -118,23 +128,22 @@ class ActivityGenerator()(implicit spark: SparkSession)
       mediumRDD: RDD[Medium],
       accountRDD: RDD[Account]
   ): RDD[Medium] = {
-    val accountSampleList = spark.sparkContext.broadcast(
-      accountRDD
+    val signInEvent = new SignInEvent
+    val numPartitions = mediumRDD.getNumPartitions
+    mediumRDD.mapPartitionsWithIndex((index, mediums) => {
+      val accountSampleList = accountRDD
         .sample(
           withReplacement = false,
-          DatagenParams.accountSignedInFraction,
+          DatagenParams.accountSignedInFraction / numPartitions,
           sampleRandom.nextLong()
         )
         .collect()
         .toList
-    )
-
-    val signInEvent = new SignInEvent
-    mediumRDD.mapPartitionsWithIndex((index, mediums) => {
+        .asJava
       signInEvent
         .signIn(
           mediums.toList.asJava,
-          accountSampleList.value.asJava,
+          accountSampleList,
           index
         )
         .iterator()
@@ -164,23 +173,23 @@ class ActivityGenerator()(implicit spark: SparkSession)
       loanRDD: RDD[Loan],
       accountRDD: RDD[Account]
   ): (RDD[Loan]) = {
-    val sampledAccounts = spark.sparkContext.broadcast(
-      accountRDD
+    val numPartition = loanRDD.getNumPartitions
+    loanRDD.mapPartitionsWithIndex((index, loans) => {
+      val sampledAccounts = accountRDD
         .sample(
           withReplacement = false,
-          DatagenParams.loanInvolvedAccountsFraction,
+          DatagenParams.loanInvolvedAccountsFraction / numPartition,
           sampleRandom.nextLong()
         )
         .collect()
         .toList
-    )
+        .asJava
 
-    loanRDD.mapPartitionsWithIndex((index, loans) => {
       val loanSubEvents = new LoanActivitiesEvents
       loanSubEvents
         .afterLoanApplied(
           loans.toList.asJava,
-          sampledAccounts.value.asJava,
+          sampledAccounts,
           index
         )
         .iterator()
