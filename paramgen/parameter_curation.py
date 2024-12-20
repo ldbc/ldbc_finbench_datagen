@@ -21,10 +21,11 @@ import sys
 
 table_dir = sys.argv[1]
 out_dir = sys.argv[2]
+random.seed(42)
 
 THRESH_HOLD = 0
 THRESH_HOLD_6 = 0
-TRUNCATION_LIMIT = 10000
+TRUNCATION_LIMIT = 500
 BATCH_SIZE = 5000
 TIME_TRUNCATE = True
 
@@ -345,7 +346,7 @@ def process_iter_queries(query_id):
         else:
             amount_bucket_path = os.path.join(table_dir, 'trans_withdraw_bucket')
         time_bucket_path = os.path.join(table_dir, 'trans_withdraw_month')
-        output_path = os.path.join(out_dir, 'tcr8.txt')
+        output_path = os.path.join(out_dir, 'complex_8_param.csv')
         steps = 2
 
     elif query_id == 1:
@@ -356,7 +357,7 @@ def process_iter_queries(query_id):
         else:
             amount_bucket_path = os.path.join(table_dir, 'transfer_out_bucket')
         time_bucket_path = os.path.join(table_dir, 'transfer_out_month')
-        output_path = os.path.join(out_dir, 'tcr1.txt')
+        output_path = os.path.join(out_dir, 'complex_1_param.csv')
         steps = 2
 
     elif query_id == 5:
@@ -378,7 +379,7 @@ def process_iter_queries(query_id):
         else:
             amount_bucket_path = os.path.join(table_dir, 'transfer_in_bucket')
         time_bucket_path = os.path.join(table_dir, 'transfer_in_month')
-        output_path = os.path.join(out_dir, 'tcr2.txt')
+        output_path = os.path.join(out_dir, 'complex_2_param.csv')
         steps = 3
 
     elif query_id == 3:
@@ -394,7 +395,7 @@ def process_iter_queries(query_id):
         account_account_path = os.path.join(table_dir, 'person_guarantee_list')
         amount_bucket_path = os.path.join(table_dir, 'person_guarantee_count')
         time_bucket_path = os.path.join(table_dir, 'person_guarantee_month')
-        output_path = os.path.join(out_dir, 'tcr11.txt')
+        output_path = os.path.join(out_dir, 'complex_11_param.csv')
         steps = 3
 
     first_account_df = process_csv(first_account_path)
@@ -474,14 +475,14 @@ def process_iter_queries(query_id):
 
     elif query_id == 5:
         csvWriter_5 = CSVSerializer()
-        csvWriter_5.setOutputFile(output_path + 'tcr5.txt')
+        csvWriter_5.setOutputFile(output_path + 'complex_5_param.csv')
         csvWriter_5.registerHandler(hendleIdParam, final_first_items, "id")
         csvWriter_5.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
         csvWriter_5.registerHandler(handleTruncateLimitParam, truncate_limit_list, "truncationLimit")
         csvWriter_5.registerHandler(handleTruncateOrderParam, truncate_order_list, "truncationOrder")
 
         csvWriter_12 = CSVSerializer()
-        csvWriter_12.setOutputFile(output_path + 'tcr12.txt')
+        csvWriter_12.setOutputFile(output_path + 'complex_12_param.csv')
         csvWriter_12.registerHandler(hendleIdParam, final_first_items, "id")
         csvWriter_12.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
         csvWriter_12.registerHandler(handleTruncateLimitParam, truncate_limit_list, "truncationLimit")
@@ -519,7 +520,7 @@ def process_iter_queries(query_id):
             final_second_items_4.append(final_first_items[k])
 
         csvWriter_3 = CSVSerializer()
-        csvWriter_3.setOutputFile(output_path + 'tcr3.txt')
+        csvWriter_3.setOutputFile(output_path + 'complex_3_param.csv')
         csvWriter_3.registerHandler(hendleIdParam, final_first_items, "id1")
         csvWriter_3.registerHandler(hendleIdParam, final_second_items_3, "id2")
         csvWriter_3.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
@@ -527,7 +528,7 @@ def process_iter_queries(query_id):
         csvWriter_3.registerHandler(handleTruncateOrderParam, truncate_order_list, "truncationOrder")
 
         csvWriter_4 = CSVSerializer()
-        csvWriter_4.setOutputFile(output_path + 'tcr4.txt')
+        csvWriter_4.setOutputFile(output_path + 'complex_4_param.csv')
         csvWriter_4.registerHandler(hendleIdParam, final_first_items, "id1")
         csvWriter_4.registerHandler(hendleIdParam, final_second_items_4, "id2")
         csvWriter_4.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
@@ -559,7 +560,7 @@ def process_1_hop_query(query_id):
     elif query_id == 10:
         first_count_path = os.path.join(table_dir, 'person_invest_company')
         time_bucket_path = os.path.join(table_dir, 'invest_month')
-        output_path = os.path.join(out_dir, 'tcr10.txt')
+        output_path = os.path.join(out_dir, 'complex_10_param.csv')
 
     first_count_df = process_csv(first_count_path)
     time_bucket_df = process_csv(time_bucket_path)
@@ -579,7 +580,7 @@ def process_1_hop_query(query_id):
     if query_id == 7:
 
         csvWriter_7 = CSVSerializer()
-        csvWriter_7.setOutputFile(output_path + 'tcr7.txt')
+        csvWriter_7.setOutputFile(output_path + 'complex_7_param.csv')
         csvWriter_7.registerHandler(hendleIdParam, final_first_items, "id")
         csvWriter_7.registerHandler(handleThresholdParam, thresh_list, "threshold")
         csvWriter_7.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
@@ -587,7 +588,7 @@ def process_1_hop_query(query_id):
         csvWriter_7.registerHandler(handleTruncateOrderParam, truncate_order_list, "truncationOrder")
 
         csvWriter_9 = CSVSerializer()
-        csvWriter_9.setOutputFile(output_path + 'tcr9.txt')
+        csvWriter_9.setOutputFile(output_path + 'complex_9_param.csv')
         csvWriter_9.registerHandler(hendleIdParam, final_first_items, "id")
         csvWriter_9.registerHandler(handleThresholdParam, thresh_list, "threshold")
         csvWriter_9.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
@@ -627,7 +628,7 @@ def process_withdraw_query():
     else:
         withdraw_bucket_path = os.path.join(table_dir, 'withdraw_in_bucket')
     transfer_bucket_path = os.path.join(table_dir, 'transfer_in_bucket')
-    output_path = os.path.join(out_dir, 'tcr6.txt')
+    output_path = os.path.join(out_dir, 'complex_6_param.csv')
 
     first_account_df = process_csv(first_account_path)
     time_bucket_df = process_csv(time_bucket_path)
@@ -676,19 +677,21 @@ def process_withdraw_query():
 
 
 def main():
-    queries = [3, 1, 8, 7, 10, 11, 2, 5, 6]
+    queries = [6, 2, 3, 5, 7, 11, 8, 10, 1]
     # queries = [3]
 
     multiprocessing.set_start_method('forkserver')
-    processes = []
-
-    for query_id in queries:
-        p = multiprocessing.Process(target=process_query, args=(query_id,))
-        p.start()
-        processes.append(p)
-
-    for p in processes:
-        p.join()
+    
+    batch_size = 5
+    for i in range(0, len(queries), batch_size):
+        processes = []
+        for query_id in queries[i:i + batch_size]:
+            p = multiprocessing.Process(target=process_query, args=(query_id,))
+            p.start()
+            processes.append(p)
+        
+        for p in processes:
+            p.join()
 
 
 if __name__ == "__main__":
