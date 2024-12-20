@@ -77,43 +77,81 @@ object FactorGenerationStage extends DatagenStage {
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
       .option("header", "true")
       .option("delimiter", "|")
-      .load(s"${args.outputDir}/raw/transfer/*.csv")
-      .select($"fromId", $"toId", $"amount".cast("double"), $"createTime")
+      .load(s"${args.outputDir}/snapshot/AccountTransferAccount.csv")
+      .select(
+        $"fromId",
+        $"toId",
+        $"amount".cast("double"),
+        (unix_timestamp(
+          coalesce(
+            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss.SSS"), 
+            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss")      
+          )
+        ) * 1000).alias("createTime")
+      )
 
     val withdrawRDD = spark.read
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
       .option("header", "true")
       .option("delimiter", "|")
-      .load(s"${args.outputDir}/raw/withdraw/*.csv")
-      .select($"fromId", $"toId", $"amount".cast("double"), $"createTime")
+      .load(s"${args.outputDir}/snapshot/AccountWithdrawAccount.csv")
+      .select(
+        $"fromId",
+        $"toId",
+        $"amount".cast("double"),
+        (unix_timestamp(
+          coalesce(
+            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss.SSS"), 
+            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss")      
+          )
+        ) * 1000).alias("createTime")
+      )
 
     val depositRDD = spark.read
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
       .option("header", "true")
       .option("delimiter", "|")
-      .load(s"${args.outputDir}/raw/deposit/*.csv")
+      .load(s"${args.outputDir}/snapshot/LoanDepositAccount.csv")
       .select($"accountId", $"loanId")
 
     val personInvestRDD = spark.read
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
       .option("header", "true")
       .option("delimiter", "|")
-      .load(s"${args.outputDir}/raw/personInvest/*.csv")
-      .select($"investorId", $"companyId", $"createTime")
+      .load(s"${args.outputDir}/snapshot/PersonInvestCompany.csv")
+      .select(
+        $"investorId",
+        $"companyId",
+        (unix_timestamp(
+          coalesce(
+            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss.SSS"), 
+            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss")      
+          )
+        ) * 1000).alias("createTime")
+      )
 
     val OwnRDD = spark.read
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
       .option("header", "true")
       .option("delimiter", "|")
-      .load(s"${args.outputDir}/raw/personOwnAccount/*.csv")
+      .load(s"${args.outputDir}/snapshot/PersonOwnAccount.csv")
       .select($"personId", $"accountId")
 
     val personGuaranteeRDD = spark.read
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
       .option("header", "true")
       .option("delimiter", "|")
-      .load(s"${args.outputDir}/raw/personGuarantee/*.csv")
-      .select($"fromId", $"toId", $"createTime")
+      .load(s"${args.outputDir}/snapshot/PersonGuaranteePerson.csv")
+      .select(
+        $"fromId",
+        $"toId",
+        (unix_timestamp(
+          coalesce(
+            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss.SSS"), 
+            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss")      
+          )
+        ) * 1000).alias("createTime")
+      )
 
     def transformItems(
         df: DataFrame,
