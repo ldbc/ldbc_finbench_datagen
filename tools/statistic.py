@@ -4,10 +4,18 @@ import glob
 import collections
 
 
-def print_counts(counts):
+labels = ["person","personOwnAccount","personApplyLoan","personGuarantee","personInvest","blank","company","companyOwnAccount","companyApplyLoan","companyGuarantee","companyInvest","blank","account","transfer","withdraw","blank","loan","loantransfer","deposit","repay","blank","medium","signIn"]
+
+def print_original_counts(counts):
     for key, value in collections.OrderedDict(sorted(counts.items())).items():
         print("{}:{}".format(key, value))
 
+def print_formatted_counts(counts):
+    for label in labels:
+        if label == "blank":
+            print("================================")
+        else:
+            print("{}:{}".format(label, counts[label]))
 
 def count_entites(path):
     counts = {}
@@ -18,7 +26,9 @@ def count_entites(path):
             for file in glob.glob(os.path.join(subdir_path, "*.csv")):
                 num_entites += sum(1 for _ in open(file)) - 1
             counts[subdir] = num_entites
-    print_counts(counts)
+    print_original_counts(counts)
+    print("\n========== Formatted Output ============\n")
+    print_formatted_counts(counts)
 
 
 if __name__ == "__main__":

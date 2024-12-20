@@ -17,10 +17,15 @@ from datetime import date
 from glob import glob
 import concurrent.futures
 from functools import partial
+import sys
+
+table_dir = sys.argv[1]
+out_dir = sys.argv[2]
+random.seed(42)
 
 THRESH_HOLD = 0
 THRESH_HOLD_6 = 0
-TRUNCATION_LIMIT = 10000
+TRUNCATION_LIMIT = 500
 BATCH_SIZE = 5000
 TIME_TRUNCATE = True
 
@@ -29,20 +34,16 @@ if TIME_TRUNCATE:
 else:
     TRUNCATION_ORDER = "AMOUNT_DESCENDING"
 
-table_dir = '../../out/factor_table'
-out_dir = '../../out/substitute_parameters/'
 
 def process_csv(file_path):
     all_files = glob(file_path + '/*.csv')
-    
     df_list = []
-    
+
     for filename in all_files:
         df = pd.read_csv(filename, delimiter='|')
         df_list.append(df)
-    
+
     combined_df = pd.concat(df_list, ignore_index=True)
-    
     return combined_df
 
 
@@ -52,7 +53,7 @@ class CSVSerializer:
         self.inputs = []
 
     def setOutputFile(self, outputFile):
-        self.outputFile=outputFile
+        self.outputFile = outputFile
 
     def registerHandler(self, handler, inputParams, header):
         handler.header = header
@@ -63,7 +64,7 @@ class CSVSerializer:
         dir_path = os.path.dirname(self.outputFile)
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
-        output = codecs.open( self.outputFile, "w",encoding="utf-8")
+        output = codecs.open(self.outputFile, "w", encoding="utf-8")
 
         if len(self.inputs) == 0:
             return
@@ -105,7 +106,8 @@ def find_neighbors(account_list, account_account_df, account_amount_df, amount_b
                 transfer_in_amount = account_amount_df.loc[item]['amount']
             except KeyError:
                 transfer_in_amount = 0
-            result.update(neighbors_with_truncate_threshold(transfer_in_amount, rows_account_list, rows_amount_bucket, num_list))
+            result.update(
+                neighbors_with_truncate_threshold(transfer_in_amount, rows_account_list, rows_amount_bucket, num_list))
 
     elif query_id in [1, 2, 5]:
         for item in account_list:
@@ -131,7 +133,6 @@ def find_neighbors(account_list, account_account_df, account_amount_df, amount_b
 
 
 def filter_neighbors(account_list, amount_bucket_df, num_list, account_id):
-
     # print(f'account_list: {account_list}')
 
     rows_amount_bucket = amount_bucket_df.loc[account_id]
@@ -144,20 +145,20 @@ def filter_neighbors(account_list, amount_bucket_df, num_list, account_id):
             header_at_limit = int(col)
             break
 
-    partial_apply = partial(filter_neighbors_with_truncate_threshold, amount_bucket_df=amount_bucket_df, num_list=num_list, header_at_limit=header_at_limit)
+    partial_apply = partial(filter_neighbors_with_truncate_threshold, amount_bucket_df=amount_bucket_df,
+                            num_list=num_list, header_at_limit=header_at_limit)
     account_mapped = map(partial_apply, account_list)
     result = [x for x in account_mapped if x is not None]
     return result
 
 
 def filter_neighbors_with_truncate_threshold(item, amount_bucket_df, num_list, header_at_limit):
-    
     if item[1] > THRESH_HOLD_6:
         if header_at_limit == -1:
             return item[0]
         if (TIME_TRUNCATE and item[2] >= header_at_limit) or (not TIME_TRUNCATE and item[1] >= header_at_limit):
             return item[0]
-    
+
     return None
 
 
@@ -183,7 +184,7 @@ def neighbors_with_truncate_threshold(transfer_in_amount, rows_account_list, row
             return [t[0] for t in temp if t[1] >= header_at_limit]
     else:
         return [t[0] for t in temp]
-    
+
 
 def neighbors_with_trancate(rows_account_list, rows_amount_bucket, num_list):
     if rows_amount_bucket is None:
@@ -215,7 +216,6 @@ def process_get_neighbors(chunk, account_account_df, account_amount_df, amount_b
 
 
 def process_filter_neighbors(chunk, amount_bucket_df, num_list):
-
     first_column_name = chunk.columns[0]
     second_column_name = chunk.columns[1]
 
@@ -227,7 +227,6 @@ def process_filter_neighbors(chunk, amount_bucket_df, num_list):
 
 
 def get_next_neighbor_list(neighbors_df, account_account_df, account_amount_df, amount_bucket_df, query_id):
-
     num_list = []
     if query_id != 3 and query_id != 11:
         num_list = [x for x in amount_bucket_df.columns.tolist()]
@@ -237,10 +236,12 @@ def get_next_neighbor_list(neighbors_df, account_account_df, account_amount_df, 
     chunks = np.array_split(neighbors_df, query_parallelism)
 
     with concurrent.futures.ProcessPoolExecutor(max_workers=query_parallelism) as executor:
-        futures = [executor.submit(process_get_neighbors, chunk, account_account_df, account_amount_df, amount_bucket_df, num_list, query_id) for chunk in chunks]
+        futures = [
+            executor.submit(process_get_neighbors, chunk, account_account_df, account_amount_df, amount_bucket_df,
+                            num_list, query_id) for chunk in chunks]
         results = [future.result() for future in concurrent.futures.as_completed(futures)]
         executor.shutdown(wait=True)
-    
+
     next_neighbors_df = pd.concat(results)
     next_neighbors_df = next_neighbors_df.sort_index()
     return next_neighbors_df
@@ -271,16 +272,18 @@ def process_batch(batch, basic_sum_df, first_column_name, second_column_name):
     ).drop(columns=[second_column_name])
     return merged_df.groupby(first_column_name).sum()
 
+
 def get_next_sum_table(neighbors_df, basic_sum_df, batch_size=BATCH_SIZE):
     first_column_name = neighbors_df.columns[0]
     second_column_name = neighbors_df.columns[1]
 
     batches = [neighbors_df.iloc[start:start + batch_size] for start in range(0, len(neighbors_df), batch_size)]
-    
+
     result_list = []
     query_parallelism = max(1, multiprocessing.cpu_count() // 4)
     with concurrent.futures.ProcessPoolExecutor(max_workers=query_parallelism) as executor:
-        futures = [executor.submit(process_batch, batch, basic_sum_df, first_column_name, second_column_name) for batch in batches]
+        futures = [executor.submit(process_batch, batch, basic_sum_df, first_column_name, second_column_name) for batch
+                   in batches]
         for future in futures:
             result_list.append(future.result())
         executor.shutdown(wait=True)
@@ -293,28 +296,32 @@ def get_next_sum_table(neighbors_df, basic_sum_df, batch_size=BATCH_SIZE):
 def handleThresholdParam(threshold):
     return str(threshold)
 
+
 def handleThreshold2Param(threshold2):
     return str(threshold2)
+
 
 def hendleIdParam(id):
     return str(id)
 
+
 def handleTruncateLimitParam(truncateLimit):
     return str(truncateLimit)
+
 
 def handleTruncateOrderParam(truncateOrder):
     return truncateOrder
 
 
 def handleTimeDurationParam(timeParam):
-    start = timegm(date(year=int(timeParam.year), month=int(timeParam.month), day=int(timeParam.day)).timetuple())*1000
+    start = timegm(
+        date(year=int(timeParam.year), month=int(timeParam.month), day=int(timeParam.day)).timetuple()) * 1000
     end = start + timeParam.duration * 3600 * 24 * 1000
     res = str(start) + "|" + str(end)
     return res
 
 
 def process_query(query_id):
-
     if query_id in [7, 10]:
         process_1_hop_query(query_id)
     elif query_id in [1, 2, 3, 5, 8, 11]:
@@ -324,7 +331,6 @@ def process_query(query_id):
 
 
 def process_iter_queries(query_id):
-
     upstream_amount_df = None
     upstream_amount_path = None
     amount_bucket_path = None
@@ -340,7 +346,7 @@ def process_iter_queries(query_id):
         else:
             amount_bucket_path = os.path.join(table_dir, 'trans_withdraw_bucket')
         time_bucket_path = os.path.join(table_dir, 'trans_withdraw_month')
-        output_path = os.path.join(out_dir, 'tcr8.txt')
+        output_path = os.path.join(out_dir, 'complex_8_param.csv')
         steps = 2
 
     elif query_id == 1:
@@ -351,7 +357,7 @@ def process_iter_queries(query_id):
         else:
             amount_bucket_path = os.path.join(table_dir, 'transfer_out_bucket')
         time_bucket_path = os.path.join(table_dir, 'transfer_out_month')
-        output_path = os.path.join(out_dir, 'tcr1.txt')
+        output_path = os.path.join(out_dir, 'complex_1_param.csv')
         steps = 2
 
     elif query_id == 5:
@@ -373,7 +379,7 @@ def process_iter_queries(query_id):
         else:
             amount_bucket_path = os.path.join(table_dir, 'transfer_in_bucket')
         time_bucket_path = os.path.join(table_dir, 'transfer_in_month')
-        output_path = os.path.join(out_dir, 'tcr2.txt')
+        output_path = os.path.join(out_dir, 'complex_2_param.csv')
         steps = 3
 
     elif query_id == 3:
@@ -389,9 +395,8 @@ def process_iter_queries(query_id):
         account_account_path = os.path.join(table_dir, 'person_guarantee_list')
         amount_bucket_path = os.path.join(table_dir, 'person_guarantee_count')
         time_bucket_path = os.path.join(table_dir, 'person_guarantee_month')
-        output_path = os.path.join(out_dir, 'tcr11.txt')
+        output_path = os.path.join(out_dir, 'complex_11_param.csv')
         steps = 3
-
 
     first_account_df = process_csv(first_account_path)
     account_account_df = process_csv(account_account_path)
@@ -407,7 +412,7 @@ def process_iter_queries(query_id):
     first_account_name = account_account_df.columns[0]
     second_account_name = account_account_df.columns[1]
     first_amount_name = amount_bucket_df.columns[0]
-    first_time_name = time_bucket_df.columns[0]  
+    first_time_name = time_bucket_df.columns[0]
 
     account_account_df[second_account_name] = account_account_df[second_account_name].apply(literal_eval)
     first_account_df[second_column_name] = first_account_df[second_column_name].apply(literal_eval)
@@ -434,7 +439,8 @@ def process_iter_queries(query_id):
         if current_step == steps - 1:
             next_time_bucket = get_next_sum_table(first_neighbors_df, time_bucket_df)
         else:
-            first_neighbors_df = get_next_neighbor_list(first_neighbors_df, account_account_df, upstream_amount_df, amount_bucket_df, query_id)
+            first_neighbors_df = get_next_neighbor_list(first_neighbors_df, account_account_df, upstream_amount_df,
+                                                        amount_bucket_df, query_id)
 
         current_step += 1
 
@@ -469,14 +475,14 @@ def process_iter_queries(query_id):
 
     elif query_id == 5:
         csvWriter_5 = CSVSerializer()
-        csvWriter_5.setOutputFile(output_path + 'tcr5.txt')
+        csvWriter_5.setOutputFile(output_path + 'complex_5_param.csv')
         csvWriter_5.registerHandler(hendleIdParam, final_first_items, "id")
         csvWriter_5.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
         csvWriter_5.registerHandler(handleTruncateLimitParam, truncate_limit_list, "truncationLimit")
         csvWriter_5.registerHandler(handleTruncateOrderParam, truncate_order_list, "truncationOrder")
 
         csvWriter_12 = CSVSerializer()
-        csvWriter_12.setOutputFile(output_path + 'tcr12.txt')
+        csvWriter_12.setOutputFile(output_path + 'complex_12_param.csv')
         csvWriter_12.registerHandler(hendleIdParam, final_first_items, "id")
         csvWriter_12.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
         csvWriter_12.registerHandler(handleTruncateLimitParam, truncate_limit_list, "truncationLimit")
@@ -506,23 +512,23 @@ def process_iter_queries(query_id):
             j = 0
             k = 0
             while True:
-                j = random.randint(0, len(final_first_items)-1)
-                k = random.randint(0, len(final_first_items)-1)
+                j = random.randint(0, len(final_first_items) - 1)
+                k = random.randint(0, len(final_first_items) - 1)
                 if final_first_items[j] != account_id and final_first_items[k] != account_id:
                     break
             final_second_items_3.append(final_first_items[j])
             final_second_items_4.append(final_first_items[k])
-        
+
         csvWriter_3 = CSVSerializer()
-        csvWriter_3.setOutputFile(output_path + 'tcr3.txt')
+        csvWriter_3.setOutputFile(output_path + 'complex_3_param.csv')
         csvWriter_3.registerHandler(hendleIdParam, final_first_items, "id1")
         csvWriter_3.registerHandler(hendleIdParam, final_second_items_3, "id2")
         csvWriter_3.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
         csvWriter_3.registerHandler(handleTruncateLimitParam, truncate_limit_list, "truncationLimit")
         csvWriter_3.registerHandler(handleTruncateOrderParam, truncate_order_list, "truncationOrder")
-        
+
         csvWriter_4 = CSVSerializer()
-        csvWriter_4.setOutputFile(output_path + 'tcr4.txt')
+        csvWriter_4.setOutputFile(output_path + 'complex_4_param.csv')
         csvWriter_4.registerHandler(hendleIdParam, final_first_items, "id1")
         csvWriter_4.registerHandler(hendleIdParam, final_second_items_4, "id2")
         csvWriter_4.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
@@ -547,7 +553,6 @@ def process_iter_queries(query_id):
 
 
 def process_1_hop_query(query_id):
-
     if query_id == 7:
         first_count_path = os.path.join(table_dir, 'account_in_out_count')
         time_bucket_path = os.path.join(table_dir, 'account_in_out_month')
@@ -555,7 +560,7 @@ def process_1_hop_query(query_id):
     elif query_id == 10:
         first_count_path = os.path.join(table_dir, 'person_invest_company')
         time_bucket_path = os.path.join(table_dir, 'invest_month')
-        output_path = os.path.join(out_dir, 'tcr10.txt')
+        output_path = os.path.join(out_dir, 'complex_10_param.csv')
 
     first_count_df = process_csv(first_count_path)
     time_bucket_df = process_csv(time_bucket_path)
@@ -575,7 +580,7 @@ def process_1_hop_query(query_id):
     if query_id == 7:
 
         csvWriter_7 = CSVSerializer()
-        csvWriter_7.setOutputFile(output_path + 'tcr7.txt')
+        csvWriter_7.setOutputFile(output_path + 'complex_7_param.csv')
         csvWriter_7.registerHandler(hendleIdParam, final_first_items, "id")
         csvWriter_7.registerHandler(handleThresholdParam, thresh_list, "threshold")
         csvWriter_7.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
@@ -583,7 +588,7 @@ def process_1_hop_query(query_id):
         csvWriter_7.registerHandler(handleTruncateOrderParam, truncate_order_list, "truncationOrder")
 
         csvWriter_9 = CSVSerializer()
-        csvWriter_9.setOutputFile(output_path + 'tcr9.txt')
+        csvWriter_9.setOutputFile(output_path + 'complex_9_param.csv')
         csvWriter_9.registerHandler(hendleIdParam, final_first_items, "id")
         csvWriter_9.registerHandler(handleThresholdParam, thresh_list, "threshold")
         csvWriter_9.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
@@ -594,13 +599,13 @@ def process_1_hop_query(query_id):
         csvWriter_9.writeCSV()
 
         print(f'query_id 7 and 9 finished')
-    
+
     elif query_id == 10:
         final_second_items = []
         for person in final_first_items:
             j = 0
             while True:
-                j = random.randint(0, len(final_first_items)-1)
+                j = random.randint(0, len(final_first_items) - 1)
                 if final_first_items[j] != person:
                     break
             final_second_items.append(final_first_items[j])
@@ -616,7 +621,6 @@ def process_1_hop_query(query_id):
 
 
 def process_withdraw_query():
-
     first_account_path = os.path.join(table_dir, 'account_withdraw_in_items')
     time_bucket_path = os.path.join(table_dir, 'transfer_in_month')
     if TIME_TRUNCATE:
@@ -624,7 +628,7 @@ def process_withdraw_query():
     else:
         withdraw_bucket_path = os.path.join(table_dir, 'withdraw_in_bucket')
     transfer_bucket_path = os.path.join(table_dir, 'transfer_in_bucket')
-    output_path = os.path.join(out_dir, 'tcr6.txt')
+    output_path = os.path.join(out_dir, 'complex_6_param.csv')
 
     first_account_df = process_csv(first_account_path)
     time_bucket_df = process_csv(time_bucket_path)
@@ -640,7 +644,7 @@ def process_withdraw_query():
     withdraw_bucket_df.set_index(withdraw_first_name, inplace=True)
     transfer_bucket_df.set_index(transfer_first_name, inplace=True)
     time_bucket_df.set_index(time_first_name, inplace=True)
-    
+
     first_account_df[second_column_name] = first_account_df[second_column_name].apply(literal_eval)
     first_neighbors_df = first_account_df.sort_values(by=first_column_name)
 
@@ -673,19 +677,21 @@ def process_withdraw_query():
 
 
 def main():
-    queries = [3, 1, 8, 7, 10, 11, 2, 5, 6]
+    queries = [6, 2, 3, 5, 7, 11, 8, 10, 1]
     # queries = [3]
 
     multiprocessing.set_start_method('forkserver')
-    processes = []
-
-    for query_id in queries:
-        p = multiprocessing.Process(target=process_query, args=(query_id,))
-        p.start()
-        processes.append(p)
-
-    for p in processes:
-        p.join()
+    
+    batch_size = 5
+    for i in range(0, len(queries), batch_size):
+        processes = []
+        for query_id in queries[i:i + batch_size]:
+            p = multiprocessing.Process(target=process_query, args=(query_id,))
+            p.start()
+            processes.append(p)
+        
+        for p in processes:
+            p.join()
 
 
 if __name__ == "__main__":
