@@ -72,6 +72,40 @@
                 </dependencies>
             </plugin>
 
+            <plugin>
+                <groupId>com.mycila</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>4.6</version>
+                <configuration>
+                    <properties>
+                        <owner>Linked Data Benchmark Council</owner>
+                        <email>info@ldbcouncil.org</email>
+                        <year>2022</year>
+                    </properties>
+                    <licenseSets>
+                        <licenseSet>
+                            <header>com/mycila/maven/plugin/license/templates/APACHE-2.txt</header>
+                            <includes>
+                                <include>*.java</include>
+                                <include>*.scala</include>
+                                <include>*.py</include>
+                                <include>*.sql</include>
+                                <include>src/</include>
+                                <include>transformation/</include>
+                                <include>paramgen/</include>
+                            </includes>
+                            <excludes>
+                                <exclude>**/README</exclude>
+                                <exclude>src/test/resources/**</exclude>
+                                <exclude>src/main/resources/**</exclude>
+                                <exclude>LICENSE.txt</exclude>
+                                <exclude>NOTICE.txt</exclude>
+                            </excludes>
+                        </licenseSet>
+                    </licenseSets>
+                </configuration>
+            </plugin>
+
             <!-- run test when compile the project -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
