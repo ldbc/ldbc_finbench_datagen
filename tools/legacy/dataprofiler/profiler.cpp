@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 AntGroup. All Rights Reserved. */
+
 #include <string.h>
 
 #include <iostream>

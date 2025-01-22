@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 AntGroup. All Rights Reserved. */
+
 #pragma once
 
 #include <unordered_set>
