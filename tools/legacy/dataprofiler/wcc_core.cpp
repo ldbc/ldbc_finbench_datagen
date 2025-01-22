@@ -1,5 +1,6 @@
 /* Copyright (c) 2022 AntGroup. All Rights Reserved. */
 
+#include "lgraph/olap_base.h"
 #include "./algo.h"
 
 using namespace lgraph_api;
