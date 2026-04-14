@@ -26,6 +26,7 @@ import ldbc.finbench.datagen.util.Logging
 import org.apache.spark.TaskContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.storage.StorageLevel
 
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -52,24 +53,46 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
     val companyWithAccGuaLoan = activityGenerator.companyActivitiesEvent(companyRdd)
     val companyRddAfterInvest = activityGenerator.investEvent(personRdd, companyRdd)
 
+    Await.result(
+      Future.sequence(activitySerializer.writePersonWithActivities(personWithAccGuaLoan)),
+      Duration.Inf
+    )
+    Await.result(
+      Future.sequence(activitySerializer.writeCompanyWithActivities(companyWithAccGuaLoan)),
+      Duration.Inf
+    )
+    Await.result(
+      Future.sequence(activitySerializer.writeInvestCompanies(companyRddAfterInvest)),
+      Duration.Inf
+    )
+
     val accountRdd = mergeAccountsAndShuffleDegrees(personWithAccGuaLoan, companyWithAccGuaLoan)
+
     val mediumWithSignInRdd = activityGenerator.mediumActivitesEvent(mediumRdd, accountRdd)
-    val accountWithTransferWithdraw = activityGenerator.accountActivitiesEvent(accountRdd)
+    Await.result(
+      Future.sequence(activitySerializer.writeMediumWithActivities(mediumWithSignInRdd)),
+      Duration.Inf
+    )
+
+    val accountWithTransferWithdraw =
+      activityGenerator.accountActivitiesEvent(accountRdd).persist(StorageLevel.DISK_ONLY)
+
+    Await.result(
+      Future.sequence(activitySerializer.writeAccountWithActivities(accountWithTransferWithdraw)),
+      Duration.Inf
+    )
+    accountWithTransferWithdraw.unpersist(blocking = true)
+
 
     val loanRdd = mergeLoans(personWithAccGuaLoan, companyWithAccGuaLoan)
-    val loanWithActivitiesRdd = activityGenerator.afterLoanSubEvents(loanRdd, accountRdd)
+    val loanWithActivitiesRdd = 
+      activityGenerator.afterLoanSubEvents(loanRdd, accountRdd).persist(StorageLevel.DISK_ONLY)
 
-    // Serialize
-    val allFutures = Seq(
-      activitySerializer.writePersonWithActivities(personWithAccGuaLoan),
-      activitySerializer.writeCompanyWithActivities(companyWithAccGuaLoan),
-      activitySerializer.writeMediumWithActivities(mediumWithSignInRdd),
-      activitySerializer.writeAccountWithActivities(accountWithTransferWithdraw),
-      activitySerializer.writeInvestCompanies(companyRddAfterInvest),
-      activitySerializer.writeLoanActivities(loanWithActivitiesRdd)
-      ).flatten
-
-    Await.result(Future.sequence(allFutures), Duration.Inf)
+    Await.result(
+      Future.sequence(activitySerializer.writeLoanActivities(loanWithActivitiesRdd)),
+      Duration.Inf
+    )
+    loanWithActivitiesRdd.unpersist(blocking = true)
   }
 
   private def mergeAccountsAndShuffleDegrees(
@@ -82,17 +105,36 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
       companies.flatMap(_.getAccount.asScala)
     personAccounts
       .union(companyAccounts)
-      .mapPartitions(iter => shuffleDegrees(iter.toList).iterator)
+      .mapPartitions { iter =>
+        val accounts = iter.toArray
+        shuffleDegrees(accounts)
+        accounts.iterator
+      }
   }
 
-  private def shuffleDegrees(accounts: List[Account]): List[Account] = {
-    val indegrees = accounts.map(_.getMaxInDegree)
-    val shuffled =
-      new scala.util.Random(TaskContext.getPartitionId()).shuffle(indegrees)
-    accounts.zip(shuffled).foreach { case (account, shuffled) =>
-      account.setMaxOutDegree(shuffled)
+  private def shuffleDegrees(accounts: Array[Account]): Unit = {
+    val shuffledInDegrees = new Array[Long](accounts.length)
+    var index = 0
+    while (index < accounts.length) {
+      shuffledInDegrees(index) = accounts(index).getMaxInDegree
+      index += 1
     }
-    accounts
+
+    val random = new scala.util.Random(TaskContext.getPartitionId())
+    var i = shuffledInDegrees.length - 1
+    while (i > 0) {
+      val j = random.nextInt(i + 1)
+      val tmp = shuffledInDegrees(i)
+      shuffledInDegrees(i) = shuffledInDegrees(j)
+      shuffledInDegrees(j) = tmp
+      i -= 1
+    }
+
+    index = 0
+    while (index < accounts.length) {
+      accounts(index).setMaxOutDegree(shuffledInDegrees(index))
+      index += 1
+    }
   }
 
   private def mergeLoans(

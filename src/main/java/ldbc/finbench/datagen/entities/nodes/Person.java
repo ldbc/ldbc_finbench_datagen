@@ -46,13 +46,13 @@ public class Person implements Serializable {
     private final List<Loan> loans;
 
     public Person() {
-        ownAccounts = new LinkedList<>();
+        ownAccounts = new ArrayList<>();
         personInvestCompanies = new LinkedList<>();
         guaranteeSrc = new LinkedHashSet<>();
         guaranteeDst = new LinkedHashSet<>();
-        applyLoans = new LinkedList<>();
+        applyLoans = new ArrayList<>();
         accounts = new ArrayList<>();
-        loans = new LinkedList<>();
+        loans = new ArrayList<>();
     }
 
     @Override

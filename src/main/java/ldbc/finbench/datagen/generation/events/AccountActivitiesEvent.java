@@ -17,7 +17,7 @@
 package ldbc.finbench.datagen.generation.events;
 
 import java.io.Serializable;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -34,7 +34,7 @@ public class AccountActivitiesEvent implements Serializable {
     private final RandomGeneratorFarm randomFarm;
     private final DegreeDistribution multiplicityDist;
     private final Random randIndex;
-    private final Map<String, AtomicLong> multiplicityMap;
+    private final Map<AccountPair, AtomicLong> multiplicityMap;
     private final float skippedRatio = 0.5f;
     private int maxSkippedCount = 10;
 
@@ -52,8 +52,8 @@ public class AccountActivitiesEvent implements Serializable {
         randIndex.setSeed(seed);
     }
 
-    private LinkedList<Integer> getIndexList(int size) {
-        LinkedList<Integer> indexList = new LinkedList<>();
+    private List<Integer> getIndexList(int size) {
+        List<Integer> indexList = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
             indexList.add(i);
         }
@@ -68,7 +68,7 @@ public class AccountActivitiesEvent implements Serializable {
         Random pickAccountForWithdrawal = randomFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_WHETHER_WITHDRAW);
 
         int accountSize = accounts.length;
-        LinkedList<Integer> availableToAccountIds = getIndexList(accountSize);
+        List<Integer> availableToAccountIds = getIndexList(accountSize);
         maxSkippedCount = Math.min(maxSkippedCount, (int) (skippedRatio * accountSize));
 
         int cardsize = cards.length;
@@ -127,7 +127,7 @@ public class AccountActivitiesEvent implements Serializable {
             }
 
             // WITHDRAW: account withdraw to cards
-            if (pickAccountForWithdrawal.nextDouble() < DatagenParams.accountWithdrawFraction) {
+            if (cardsize > 0 && pickAccountForWithdrawal.nextDouble() < DatagenParams.accountWithdrawFraction) {
                 for (int count = 0; count < DatagenParams.maxWithdrawals; count++) {
                     Account to = cards[randIndex.nextInt(cardsize)];
                     if (!cannotWithdraw(from, to)) {
@@ -154,8 +154,37 @@ public class AccountActivitiesEvent implements Serializable {
     }
 
     private long getMultiplicityIdAndInc(Account from, Account to) {
-        String key = from.getAccountId() + "-" + to.getAccountId();
+        AccountPair key = new AccountPair(from.getAccountId(), to.getAccountId());
         AtomicLong atomicInt = multiplicityMap.computeIfAbsent(key, k -> new AtomicLong());
         return atomicInt.getAndIncrement();
+    }
+
+    private static final class AccountPair {
+        private final long fromAccountId;
+        private final long toAccountId;
+
+        private AccountPair(long fromAccountId, long toAccountId) {
+            this.fromAccountId = fromAccountId;
+            this.toAccountId = toAccountId;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (!(obj instanceof AccountPair)) {
+                return false;
+            }
+            AccountPair other = (AccountPair) obj;
+            return fromAccountId == other.fromAccountId && toAccountId == other.toAccountId;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = Long.hashCode(fromAccountId);
+            result = 31 * result + Long.hashCode(toAccountId);
+            return result;
+        }
     }
 }
