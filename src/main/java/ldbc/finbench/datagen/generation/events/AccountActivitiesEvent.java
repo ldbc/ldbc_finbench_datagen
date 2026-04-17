@@ -17,7 +17,7 @@
 package ldbc.finbench.datagen.generation.events;
 
 import java.io.Serializable;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -31,10 +31,47 @@ import ldbc.finbench.datagen.generation.distribution.DegreeDistribution;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
 public class AccountActivitiesEvent implements Serializable {
+    public static final class WithdrawCard implements Serializable {
+        private final long accountId;
+        private final String type;
+        private final long creationDate;
+        private final long deletionDate;
+        private final boolean explicitlyDeleted;
+
+        public WithdrawCard(long accountId, String type, long creationDate, long deletionDate,
+                            boolean explicitlyDeleted) {
+            this.accountId = accountId;
+            this.type = type;
+            this.creationDate = creationDate;
+            this.deletionDate = deletionDate;
+            this.explicitlyDeleted = explicitlyDeleted;
+        }
+
+        public long getAccountId() {
+            return accountId;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public long getCreationDate() {
+            return creationDate;
+        }
+
+        public long getDeletionDate() {
+            return deletionDate;
+        }
+
+        public boolean isExplicitlyDeleted() {
+            return explicitlyDeleted;
+        }
+    }
+
     private final RandomGeneratorFarm randomFarm;
     private final DegreeDistribution multiplicityDist;
     private final Random randIndex;
-    private final Map<String, AtomicLong> multiplicityMap;
+    private final Map<AccountPair, AtomicLong> multiplicityMap;
     private final float skippedRatio = 0.5f;
     private int maxSkippedCount = 10;
 
@@ -52,8 +89,8 @@ public class AccountActivitiesEvent implements Serializable {
         randIndex.setSeed(seed);
     }
 
-    private LinkedList<Integer> getIndexList(int size) {
-        LinkedList<Integer> indexList = new LinkedList<>();
+    private List<Integer> getIndexList(int size) {
+        List<Integer> indexList = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
             indexList.add(i);
         }
@@ -63,12 +100,12 @@ public class AccountActivitiesEvent implements Serializable {
     // Generation to parts will mess up the average degree(make it bigger than expected) caused by ceiling operations.
     // Also, it will mess up the long tail range of powerlaw distribution of degrees caused by 1 rounded to 2.
     // See the plot drawn by check_transfer.py for more details.
-    public List<Account> accountActivities(Account[] accounts, Account[] cards, int blockId) {
+    public List<Account> accountActivities(Account[] accounts, WithdrawCard[] cards, int blockId) {
         resetState(blockId);
         Random pickAccountForWithdrawal = randomFarm.get(RandomGeneratorFarm.Aspect.ACCOUNT_WHETHER_WITHDRAW);
 
         int accountSize = accounts.length;
-        LinkedList<Integer> availableToAccountIds = getIndexList(accountSize);
+        List<Integer> availableToAccountIds = getIndexList(accountSize);
         maxSkippedCount = Math.min(maxSkippedCount, (int) (skippedRatio * accountSize));
 
         int cardsize = cards.length;
@@ -127,11 +164,18 @@ public class AccountActivitiesEvent implements Serializable {
             }
 
             // WITHDRAW: account withdraw to cards
-            if (pickAccountForWithdrawal.nextDouble() < DatagenParams.accountWithdrawFraction) {
+            if (cardsize > 0 && pickAccountForWithdrawal.nextDouble() < DatagenParams.accountWithdrawFraction) {
                 for (int count = 0; count < DatagenParams.maxWithdrawals; count++) {
-                    Account to = cards[randIndex.nextInt(cardsize)];
+                    WithdrawCard to = cards[randIndex.nextInt(cardsize)];
                     if (!cannotWithdraw(from, to)) {
-                        Withdraw.createWithdraw(randomFarm, from, to, getMultiplicityIdAndInc(from, to));
+                        Withdraw.createWithdraw(randomFarm,
+                                                from,
+                                                to.getAccountId(),
+                                                to.getType(),
+                                                to.getCreationDate(),
+                                                to.getDeletionDate(),
+                                                to.isExplicitlyDeleted(),
+                                                getMultiplicityIdAndInc(from, to.getAccountId()));
                     }
                 }
             }
@@ -146,16 +190,45 @@ public class AccountActivitiesEvent implements Serializable {
             || from.equals(to) || from.getAvailableOutDegree() == 0 || to.getAvailableInDegree() == 0;
     }
 
-    private boolean cannotWithdraw(Account from, Account to) {
+    private boolean cannotWithdraw(Account from, WithdrawCard to) {
         return from.getType().equals("debit card")
             || from.getDeletionDate() < to.getCreationDate() + DatagenParams.activityDelta
             || from.getCreationDate() + DatagenParams.activityDelta > to.getDeletionDate()
-            || from.equals(to);
+            || from.getAccountId() == to.getAccountId();
     }
 
-    private long getMultiplicityIdAndInc(Account from, Account to) {
-        String key = from.getAccountId() + "-" + to.getAccountId();
+    private long getMultiplicityIdAndInc(Account from, long toAccountId) {
+        AccountPair key = new AccountPair(from.getAccountId(), toAccountId);
         AtomicLong atomicInt = multiplicityMap.computeIfAbsent(key, k -> new AtomicLong());
         return atomicInt.getAndIncrement();
+    }
+
+    private static final class AccountPair {
+        private final long fromAccountId;
+        private final long toAccountId;
+
+        private AccountPair(long fromAccountId, long toAccountId) {
+            this.fromAccountId = fromAccountId;
+            this.toAccountId = toAccountId;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (!(obj instanceof AccountPair)) {
+                return false;
+            }
+            AccountPair other = (AccountPair) obj;
+            return fromAccountId == other.fromAccountId && toAccountId == other.toAccountId;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = Long.hashCode(fromAccountId);
+            result = 31 * result + Long.hashCode(toAccountId);
+            return result;
+        }
     }
 }

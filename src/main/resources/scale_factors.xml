@@ -183,4 +183,27 @@
             <value>100000</value>
         </property>
     </scale_factor>
+
+    <scale_factor name="1000">
+        <property>
+            <name>generator.numPersons</name>
+            <value>10000000</value>
+        </property>
+        <property>
+            <name>generator.numCompanies</name>
+            <value>10000000</value>
+        </property>
+        <property>
+            <name>generator.numMediums</name>
+            <value>20000000</value>
+        </property>
+        <property>
+            <name>transfer.minNumDegree</name>
+            <value>1</value>
+        </property>
+        <property>
+            <name>transfer.maxNumDegree</name>
+            <value>1000000</value>
+        </property>
+    </scale_factor>
 </scale_factors>
