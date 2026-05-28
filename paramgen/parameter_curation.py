@@ -7,707 +7,1143 @@
 # You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
 
 import warnings
-
-# Suppress FutureWarnings
 warnings.filterwarnings("ignore", category=FutureWarning)
+
+import codecs
+import multiprocessing
+import os
+import random
+import sys
 from ast import literal_eval
 from calendar import timegm
-import multiprocessing
-import random
-import pandas as pd
-import numpy as np
-import search_params
-import time_select
-import os
-import codecs
-from datetime import date
+from collections import defaultdict
+from datetime import date, datetime
+from functools import partial
 from glob import glob
 import concurrent.futures
-from functools import partial
-import sys
 
-table_dir = sys.argv[1]
-out_dir = sys.argv[2]
+import numpy as np
+import pandas as pd
+import search_params
+import time_select
+
+# ---------------------------------------------------------------------------
+# Config
+# ---------------------------------------------------------------------------
+
+TABLE_DIR = sys.argv[1]
+OUT_DIR   = sys.argv[2]
 random.seed(42)
 
-THRESH_HOLD = 0
-THRESH_HOLD_6 = 0
 TRUNCATION_LIMIT = 500
-BATCH_SIZE = 5000
-TIME_TRUNCATE = True
-
-if TIME_TRUNCATE:
-    TRUNCATION_ORDER = "TIMESTAMP_DESCENDING"
-else:
-    TRUNCATION_ORDER = "AMOUNT_DESCENDING"
+THRESH_HOLD      = 0
+THRESH_HOLD_6    = 0
+TIME_TRUNCATE    = True
+TRUNCATION_ORDER = "TIMESTAMP_DESCENDING" if TIME_TRUNCATE else "AMOUNT_DESCENDING"
+BATCH_SIZE       = 5000
 
 
-def process_csv(file_path):
-    all_files = glob(file_path + '/*.csv')
-    df_list = []
+# ---------------------------------------------------------------------------
+# Path helpers
+# ---------------------------------------------------------------------------
 
-    for filename in all_files:
-        df = pd.read_csv(filename, delimiter='|')
-        df_list.append(df)
+def factor_path(*parts):
+    """Path inside TABLE_DIR."""
+    return os.path.join(TABLE_DIR, *parts)
 
-    combined_df = pd.concat(df_list, ignore_index=True)
-    return combined_df
-
-
-class CSVSerializer:
-    def __init__(self):
-        self.handlers = []
-        self.inputs = []
-
-    def setOutputFile(self, outputFile):
-        self.outputFile = outputFile
-
-    def registerHandler(self, handler, inputParams, header):
-        handler.header = header
-        self.handlers.append(handler)
-        self.inputs.append(inputParams)
-
-    def writeCSV(self):
-        dir_path = os.path.dirname(self.outputFile)
-        if not os.path.exists(dir_path):
-            os.makedirs(dir_path)
-        output = codecs.open(self.outputFile, "w", encoding="utf-8")
-
-        if len(self.inputs) == 0:
-            return
-
-        headers = [self.handlers[j].header for j in range(len(self.handlers))]
-        output.write("|".join(headers))
-        output.write("\n")
-
-        for i in range(len(self.inputs[0])):
-            # compile a single CSV line from multiple handlers
-            csvLine = []
-            for j in range(len(self.handlers)):
-                handler = self.handlers[j]
-                data = self.inputs[j][i]
-                csvLine.append(handler(data))
-            output.write('|'.join([s for s in csvLine]))
-            output.write("\n")
-        output.close()
+def output_path(filename):
+    """Path inside OUT_DIR."""
+    return os.path.join(OUT_DIR, filename)
 
 
-def find_neighbors(account_list, account_account_df, account_amount_df, amount_bucket_df, num_list, query_id):
+# ---------------------------------------------------------------------------
+# Data loading
+# ---------------------------------------------------------------------------
+
+def read_csv(file_path):
+    """Read one CSV or merge all *.csv files in a directory."""
+    if os.path.isfile(file_path):
+        return pd.read_csv(file_path, delimiter='|')
+
+    all_files = sorted(glob(os.path.join(file_path, '*.csv')))
+    if not all_files:
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(
+                f"Factor table path does not exist: {file_path}. "
+                "Please regenerate factor_table outputs before running paramgen."
+            )
+        available = sorted(os.listdir(file_path))
+        raise FileNotFoundError(
+            f"No CSV files found under factor table path: {file_path}. "
+            f"Available entries: {available}. "
+            "Please check the factor generation output format and rerun if needed."
+        )
+
+    return pd.concat([pd.read_csv(f, delimiter='|') for f in all_files], ignore_index=True)
+
+
+def load_indexed_list_df(file_path):
+    """Load a two-column CSV; parse the second column as a Python list; index on first column."""
+    df = read_csv(file_path)
+    key_col, val_col = df.columns[0], df.columns[1]
+    df[val_col] = df[val_col].apply(literal_eval)
+    df.set_index(key_col, inplace=True)
+    return df
+
+
+def load_person_account_df(file_path):
+    """Load person→account_list CSV with the list already parsed."""
+    df = read_csv(file_path)
+    list_col = df.columns[1]
+    df[list_col] = df[list_col].apply(literal_eval)
+    return df
+
+
+def load_loan_month_account_map(file_path):
+    """Return {loan_id: {month_start: [account_id, ...]}}."""
+    df = read_csv(file_path)
+    if len(df.columns) < 3:
+        return {}
+
+    loan_col, month_col, account_col = df.columns[0], df.columns[1], df.columns[2]
+    df[account_col] = df[account_col].apply(literal_eval)
+
+    result = defaultdict(dict)
+    for loan_id, month_start, account_list in df[[loan_col, month_col, account_col]].itertuples(index=False, name=None):
+        accounts = [int(a) for a in account_list]
+        if accounts:
+            result[int(loan_id)][int(month_start)] = accounts
+    return dict(result)
+
+
+# ---------------------------------------------------------------------------
+# Graph traversal helpers
+# ---------------------------------------------------------------------------
+
+def neighbor_id(item):
+    return int(item[0]) if isinstance(item, (list, tuple)) else int(item)
+
+def neighbor_time(item):
+    return int(item[2]) if isinstance(item, (list, tuple)) and len(item) >= 3 else None
+
+def month_start_ms(timestamp_ms):
+    dt = datetime.utcfromtimestamp(int(timestamp_ms) / 1000)
+    return timegm(date(dt.year, dt.month, 1).timetuple()) * 1000
+
+def get_neighbors(indexed_df, key):
+    try:
+        row = indexed_df.loc[key]
+    except KeyError:
+        return []
+    col = indexed_df.columns[0]
+    if isinstance(row, pd.DataFrame):
+        values = row[col].tolist()
+        flat = []
+        for v in values:
+            flat.extend(v) if isinstance(v, list) else flat.append(v)
+        return flat
+    values = row[col]
+    if isinstance(values, list):
+        return values
+    if isinstance(values, pd.Series):
+        return values.tolist()
+    return []
+
+
+def collect_path_stats(indexed_df, current_id, prev_ts, visited, depth,
+                       max_depth=3, path_limit=64, target_month=None):
+    reachable, count = set(), 0
+    if depth >= max_depth:
+        return reachable, count
+    for item in get_neighbors(indexed_df, current_id):
+        dst = neighbor_id(item)
+        ts  = neighbor_time(item)
+        if ts is None or dst in visited or ts <= prev_ts:
+            continue
+        if target_month is not None and month_start_ms(ts) != target_month:
+            continue
+        reachable.add(dst)
+        count += 1
+        if count >= path_limit:
+            return reachable, count
+        sub_r, sub_c = collect_path_stats(
+            indexed_df, dst, ts, visited | {dst}, depth + 1,
+            max_depth=max_depth, path_limit=path_limit - count,
+            target_month=target_month,
+        )
+        reachable.update(sub_r)
+        count += sub_c
+        if count >= path_limit:
+            return reachable, count
+    return reachable, count
+
+
+def collect_month_matches_increasing(indexed_df, current_id, prev_ts, visited, depth,
+                                     qualifying_df, match_ids, hit_counts, traversed_counts,
+                                     target_month=None, max_depth=3, path_limit=64):
+    traversed = 0
+    if depth >= max_depth:
+        return traversed
+    for item in get_neighbors(indexed_df, current_id):
+        dst = neighbor_id(item)
+        ts  = neighbor_time(item)
+        if ts is None or dst in visited or ts <= prev_ts:
+            continue
+        month = month_start_ms(ts)
+        if target_month is not None and month != target_month:
+            continue
+        traversed += 1
+        traversed_counts[month] += 1
+        if _has_month_activity(qualifying_df, dst, month):
+            match_ids[month].add(dst)
+            hit_counts[month] += 1
+        if traversed >= path_limit:
+            return traversed
+        sub = collect_month_matches_increasing(
+            indexed_df, dst, ts, visited | {dst}, depth + 1,
+            qualifying_df, match_ids, hit_counts, traversed_counts,
+            target_month=month, max_depth=max_depth,
+            path_limit=path_limit - traversed,
+        )
+        traversed += sub
+        if traversed >= path_limit:
+            return traversed
+    return traversed
+
+
+def collect_month_matches_decreasing(indexed_df, current_id, prev_ts, visited, depth,
+                                     qualifying_df, match_ids, hit_counts,
+                                     max_depth=3, path_limit=64):
+    traversed = 0
+    if depth >= max_depth:
+        return traversed
+    for item in get_neighbors(indexed_df, current_id):
+        src = neighbor_id(item)
+        ts  = neighbor_time(item)
+        if ts is None or src in visited or ts >= prev_ts:
+            continue
+        traversed += 1
+        month = month_start_ms(ts)
+        if _has_month_activity(qualifying_df, src, month):
+            match_ids[month].add(src)
+            hit_counts[month] += 1
+        if traversed >= path_limit:
+            return traversed
+        sub = collect_month_matches_decreasing(
+            indexed_df, src, ts, visited | {src}, depth + 1,
+            qualifying_df, match_ids, hit_counts,
+            max_depth=max_depth, path_limit=path_limit - traversed,
+        )
+        traversed += sub
+        if traversed >= path_limit:
+            return traversed
+    return traversed
+
+
+def _has_month_activity(month_df, item_id, month_start):
+    try:
+        row = month_df.loc[item_id]
+    except KeyError:
+        return False
+    return _get_month_count(row, month_start) > 0
+
+
+def _get_month_count(row, month_start):
+    key = str(int(month_start))
+    if isinstance(row, pd.DataFrame):
+        row = row.iloc[0]
+    for k in (key, int(month_start)):
+        if k in row.index:
+            try:
+                return float(row[k])
+            except (TypeError, ValueError):
+                return 0
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# Candidate selection
+# ---------------------------------------------------------------------------
+
+def select_candidates(first_array, portion=0.01, min_size=1):
+    if len(first_array) == 0:
+        return []
+    if len(first_array) == 1:
+        return [first_array[0][0]]
+    sample_size = min(max(min_size, int(len(first_array) * portion)), len(first_array))
+    if sample_size == len(first_array):
+        return [row[0] for row in first_array]
+    return search_params.generate(first_array, sample_size / len(first_array))
+
+
+def build_time_params(selected_candidates):
+    """Convert [(id, month_start), ...] into (ids, time_list)."""
+    ids = [int(i) for i, _ in selected_candidates]
+    normalized = [(int(i), int(m)) for i, m in selected_candidates]
+    return ids, time_select.findTimeParamsForSelectedMonths(normalized)
+
+
+def random_distinct(current_id, pool):
+    candidates = [c for c in pool if c != current_id]
+    return random.choice(candidates) if candidates else current_id
+
+
+# ---------------------------------------------------------------------------
+# Unified CSV writer
+# ---------------------------------------------------------------------------
+
+def write_params(path, ids, time_list, *, threshold=None, threshold2=None,
+                 id_col="id", id2_list=None, id2_col="id2",
+                 truncate_limit=True, truncate_order=True):
+    """
+    Write a parameter CSV.  All optional columns default to the global config.
+    Pass threshold=False to omit the threshold column entirely.
+    """
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+
+    rows = []
+    for i, (item_id, tp) in enumerate(zip(ids, time_list)):
+        row = [str(item_id)]
+        if id2_list is not None:
+            row.append(str(id2_list[i]))
+        if threshold is not False:
+            row.append(str(THRESH_HOLD if threshold is None else threshold))
+        if threshold2 is not False and threshold2 is not None:
+            row.append(str(threshold2))
+        row.append(_format_time(tp))
+        if truncate_limit:
+            row.append(str(TRUNCATION_LIMIT))
+        if truncate_order:
+            row.append(TRUNCATION_ORDER)
+        rows.append(row)
+
+    # build header
+    header = [id_col]
+    if id2_list is not None:
+        header.append(id2_col)
+    if threshold is not False:
+        header.append("threshold" if threshold2 is None else "threshold1")
+    if threshold2 is not None and threshold2 is not False:
+        header.append("threshold2")
+    header.append("startTime|endTime")
+    if truncate_limit:
+        header.append("truncationLimit")
+    if truncate_order:
+        header.append("truncationOrder")
+
+    with codecs.open(path, "w", encoding="utf-8") as f:
+        f.write("|".join(header) + "\n")
+        for row in rows:
+            f.write("|".join(row) + "\n")
+
+
+def _format_time(tp):
+    if hasattr(tp, 'start_ms') and hasattr(tp, 'end_ms'):
+        return f"{int(tp.start_ms)}|{int(tp.end_ms)}"
+    start = timegm(date(int(tp.year), int(tp.month), int(tp.day)).timetuple()) * 1000
+    return f"{start}|{start + tp.duration * 3600 * 24 * 1000}"
+
+
+# ---------------------------------------------------------------------------
+# Per-query candidate builders  (pure logic, no I/O)
+# ---------------------------------------------------------------------------
+
+def _candidates_query1(transfer_out_df, blocked_signin_month_df):
+    candidate_rows = []
+    for src_id in transfer_out_df.index.unique():
+        src_id = int(src_id)
+        match_ids, hit_counts, traversed_counts = defaultdict(set), defaultdict(int), defaultdict(int)
+        collect_month_matches_increasing(
+            transfer_out_df, src_id, -1, {src_id}, 0,
+            blocked_signin_month_df, match_ids, hit_counts, traversed_counts,
+        )
+        for month, ids in match_ids.items():
+            candidate_rows.append([(src_id, int(month)), len(ids),
+                                    hit_counts[month], traversed_counts[month]])
+    if not candidate_rows:
+        return [], []
+    first_array = np.array(candidate_rows, dtype=object)
+    first_array = _filter_first_array_for_sr6(
+        first_array, lambda r: r[0][0], lambda r: r[0][1])
+    selected = select_candidates(first_array, 0.01)
+    return build_time_params(selected)
+
+
+def _candidates_query2(person_account_df, transfer_in_df, loan_deposit_month_df):
+    person_col, account_col = person_account_df.columns[0], person_account_df.columns[1]
+    stats = {}
+    for _, row in person_account_df.iterrows():
+        person_id = int(row[person_col])
+        for account_id in row[account_col]:
+            account_id = int(account_id)
+            match_ids, hit_counts = defaultdict(set), defaultdict(int)
+            traversed = collect_month_matches_decreasing(
+                transfer_in_df, account_id, sys.maxsize, {account_id}, 0,
+                loan_deposit_month_df, match_ids, hit_counts,
+            )
+            for month, ids in match_ids.items():
+                key = (person_id, int(month))
+                if key not in stats:
+                    stats[key] = dict(other_ids=set(), hit_count=0,
+                                      account_hits=set(), traversed=0)
+                stats[key]['other_ids'].update(int(i) for i in ids)
+                stats[key]['hit_count']    += hit_counts[month]
+                stats[key]['account_hits'].add(account_id)
+                stats[key]['traversed']    += traversed
+    if not stats:
+        return [], []
+    candidate_rows = [
+        [(pid, month), len(s['other_ids']), s['hit_count'],
+         len(s['account_hits']), s['traversed']]
+        for (pid, month), s in stats.items()
+    ]
+    first_array = np.array(candidate_rows, dtype=object)
+    selected = select_candidates(first_array, 0.01)
+    return build_time_params(selected)
+
+
+def _candidates_query4_from_factors(transfer_out_df, transfer_in_df):
+    out_by_src_month  = defaultdict(set)
+    in_by_dst_month   = defaultdict(set)
+    pair_month_count  = defaultdict(int)
+
+    for src_id in transfer_out_df.index.unique():
+        src_id = int(src_id)
+        for item in get_neighbors(transfer_out_df, src_id):
+            dst = neighbor_id(item); ts = neighbor_time(item)
+            if ts is None or dst == src_id: continue
+            month = month_start_ms(ts)
+            out_by_src_month[(src_id, month)].add(dst)
+            pair_month_count[(src_id, dst, month)] += 1
+
+    for dst_id in transfer_in_df.index.unique():
+        dst_id = int(dst_id)
+        for item in get_neighbors(transfer_in_df, dst_id):
+            src = neighbor_id(item); ts = neighbor_time(item)
+            if ts is None or src == dst_id: continue
+            month = month_start_ms(ts)
+            in_by_dst_month[(dst_id, month)].add(src)
+
+    candidate_rows = []
+    for (src_id, month), direct_dsts in out_by_src_month.items():
+        incoming = in_by_dst_month.get((src_id, month), set())
+        if not incoming: continue
+        for dst_id in direct_dsts:
+            outgoing_from_dst = out_by_src_month.get((dst_id, month), set())
+            cycles = outgoing_from_dst & incoming - {src_id, dst_id}
+            if not cycles: continue
+            e1 = pair_month_count.get((src_id, dst_id, month), 0)
+            e2 = sum(pair_month_count.get((o, src_id, month), 0) for o in cycles)
+            e3 = sum(pair_month_count.get((dst_id, o, month), 0) for o in cycles)
+            candidate_rows.append([(src_id, dst_id, month), len(cycles), e1+e2+e3, e1])
+
+    if not candidate_rows:
+        return [], [], []
+
+    first_array = np.array(candidate_rows, dtype=object)
+    # injectAccountSimples is called once per id in CR4 (id1 and id2), so both
+    # accounts must be SR6-friendly in the cycle month — apply the filter
+    # twice. The helper falls back to the prior array if the second pass would
+    # empty it out, so candidate pool can't go to zero.
+    first_array = _filter_first_array_for_sr6(
+        first_array, lambda r: r[0][0], lambda r: r[0][2])
+    first_array = _filter_first_array_for_sr6(
+        first_array, lambda r: r[0][1], lambda r: r[0][2])
+    selected = select_candidates(first_array, 0.01)
+    src_ids   = [int(s) for s, _, _ in selected]
+    dst_ids   = [int(d) for _, d, _ in selected]
+    month_starts = [int(m) for _, _, m in selected]
+    time_list = time_select.findTimeParamsForMonthStarts(month_starts)
+    return src_ids, dst_ids, time_list
+
+
+def _candidates_query5(person_account_df, transfer_out_df):
+    person_col, account_col = person_account_df.columns[0], person_account_df.columns[1]
+    stats = {}
+    for _, row in person_account_df.iterrows():
+        person_id = int(row[person_col])
+        for account_id in row[account_col]:
+            account_id = int(account_id)
+            for item in get_neighbors(transfer_out_df, account_id):
+                dst = neighbor_id(item); ts = neighbor_time(item)
+                if ts is None or dst == account_id: continue
+                month = month_start_ms(ts)
+                key = (person_id, month)
+                if key not in stats:
+                    stats[key] = dict(dst_ids=set(), path_count=0, account_hits=set())
+                stats[key]['dst_ids'].add(dst)
+                stats[key]['path_count'] += 1
+                stats[key]['account_hits'].add(account_id)
+                sub_r, sub_c = collect_path_stats(transfer_out_df, dst, ts, {account_id, dst}, 1)
+                stats[key]['dst_ids'].update(sub_r)
+                stats[key]['path_count'] += sub_c
+    if not stats:
+        return [], []
+    candidate_rows = [
+        [(pid, month), len(s['dst_ids']), s['path_count'], len(s['account_hits'])]
+        for (pid, month), s in stats.items()
+    ]
+    first_array = np.array(candidate_rows, dtype=object)
+    selected = select_candidates(first_array, 0.01)
+    return build_time_params(selected)
+
+
+def _candidates_query6(withdraw_in_df, transfer_in_month_df):
+    card_account_ids = _load_card_account_ids()
+    if not card_account_ids:
+        return [], []
+    candidate_rows = []
+    for card_id in card_account_ids:
+        month_stats = defaultdict(lambda: dict(mid_ids=set(), transfer_count=0,
+                                               withdraw_count=0, withdraw_amount=0.0))
+        for item in get_neighbors(withdraw_in_df, card_id):
+            mid = neighbor_id(item); ts = neighbor_time(item)
+            if ts is None: continue
+            try:
+                month_row = transfer_in_month_df.loc[mid]
+            except KeyError:
+                continue
+            month = month_start_ms(ts)
+            if _get_month_count(month_row, month) <= 3:
+                continue
+            s = month_stats[month]
+            s['mid_ids'].add(mid)
+            s['transfer_count'] += int(_get_month_count(month_row, month))
+            s['withdraw_count'] += 1
+            if isinstance(item, (list, tuple)) and len(item) >= 2:
+                s['withdraw_amount'] += float(item[1])
+        for month, s in month_stats.items():
+            if s['mid_ids']:
+                candidate_rows.append([(card_id, month), len(s['mid_ids']),
+                                        s['transfer_count'], s['withdraw_count'],
+                                        s['withdraw_amount']])
+    if not candidate_rows:
+        return [], []
+    first_array = np.array(candidate_rows, dtype=object)
+    first_array = _filter_first_array_for_sr6(
+        first_array, lambda r: r[0][0], lambda r: r[0][1])
+    selected = select_candidates(first_array, 0.01)
+    return build_time_params(selected)
+
+
+def _candidates_query8(loan_month_account_map, trans_withdraw_df):
+    stats = {}
+    for loan_id, month_accounts in loan_month_account_map.items():
+        for month_start, account_ids in month_accounts.items():
+            for account_id in account_ids:
+                account_id = int(account_id)
+                for item in get_neighbors(trans_withdraw_df, account_id):
+                    dst = neighbor_id(item); ts = neighbor_time(item)
+                    if ts is None or dst == account_id: continue
+                    if month_start_ms(ts) != int(month_start): continue
+                    key = (loan_id, month_start)
+                    if key not in stats:
+                        stats[key] = dict(dst_ids=set(), path_count=0, account_hits=set())
+                    stats[key]['dst_ids'].add(dst)
+                    stats[key]['path_count'] += 1
+                    stats[key]['account_hits'].add(account_id)
+                    sub_r, sub_c = collect_path_stats(
+                        trans_withdraw_df, dst, ts, {account_id, dst}, 1,
+                        target_month=int(month_start),
+                    )
+                    stats[key]['dst_ids'].update(sub_r)
+                    stats[key]['path_count'] += sub_c
+    if not stats:
+        return [], []
+    candidate_rows = [
+        [(lid, month), len(s['dst_ids']), s['path_count'], len(s['account_hits'])]
+        for (lid, month), s in stats.items()
+    ]
+    first_array = np.array(candidate_rows, dtype=object)
+    selected = select_candidates(first_array, 0.01)
+    return build_time_params(selected)
+
+
+def _candidates_query12(person_account_df, transfer_out_df):
+    company_ids = _load_company_account_ids()
+    if not company_ids:
+        return [], []
+    person_col, account_col = person_account_df.columns[0], person_account_df.columns[1]
+    factor_rows, time_counts = [], defaultdict(lambda: defaultdict(int))
+
+    for _, row in person_account_df.iterrows():
+        person_id = row[person_col]
+        company_hits, edge_count = set(), 0
+        for account_id in row[account_col]:
+            for item in get_neighbors(transfer_out_df, account_id):
+                dst = neighbor_id(item)
+                if dst not in company_ids: continue
+                edge_count += 1
+                company_hits.add(dst)
+                ts = neighbor_time(item)
+                if ts is not None:
+                    time_counts[person_id][month_start_ms(ts)] += 1
+        if edge_count > 0:
+            factor_rows.append([person_id, edge_count, len(company_hits)])
+
+    if not factor_rows or not time_counts:
+        return [], []
+
+    first_array = np.array(factor_rows, dtype=object)
+    ids = select_candidates(first_array, 0.01)
+    time_bucket_df = _build_time_bucket_df(time_counts)
+    time_list = time_select.findTimeParams(ids, time_bucket_df)
+    return ids, time_list
+
+
+# ---------------------------------------------------------------------------
+# Helpers for iter-based queries (3/5/7/10/11)
+# ---------------------------------------------------------------------------
+
+def _iter_query_setup(query_id):
+    """Return (first_path, account_path, amount_bucket_path, time_bucket_path, steps)."""
+    if query_id == 5:
+        return (
+            factor_path('person_account_list'),
+            factor_path('account_transfer_out_items'),
+            factor_path('transfer_out_month' if TIME_TRUNCATE else 'transfer_out_bucket'),
+            factor_path('transfer_out_month'),
+            3,
+        )
+    if query_id == 3:
+        return (
+            factor_path('account_in_out_list'),
+            factor_path('account_in_out_list'),
+            factor_path('account_in_out_count'),
+            factor_path('account_in_out_month'),
+            1,
+        )
+    if query_id == 11:
+        return (
+            factor_path('person_guarantee_list'),
+            factor_path('person_guarantee_list'),
+            factor_path('person_guarantee_count'),
+            factor_path('person_guarantee_month'),
+            3,
+        )
+    raise ValueError(f"No iter setup for query_id={query_id}")
+
+
+def _run_iter_pipeline(query_id):
+    """Run the multi-hop neighbor aggregation and return (ids, time_list, account_df)."""
+    first_path, acct_path, amount_path, time_path, steps = _iter_query_setup(query_id)
+
+    first_df   = load_person_account_df(first_path)
+    account_df = read_csv(acct_path)
+    amount_df  = read_csv(amount_path)
+    time_df    = read_csv(time_path)
+
+    acct_col1, acct_col2 = account_df.columns[0], account_df.columns[1]
+    first_col,  list_col = first_df.columns[0],   first_df.columns[1]
+    amt_col  = amount_df.columns[0]
+    time_col = time_df.columns[0]
+
+    account_df[acct_col2] = account_df[acct_col2].apply(literal_eval)
+    account_df.set_index(acct_col1, inplace=True)
+    amount_df.set_index(amt_col, inplace=True)
+    time_df.set_index(time_col, inplace=True)
+
+    neighbors_df = first_df.sort_values(by=first_col)
+    first_array  = neighbors_df[first_col].to_numpy()
+    next_time_bucket = None
+
+    for step in range(steps):
+        next_amount = _get_next_sum_table(neighbors_df, amount_df)
+        col = next_amount.to_numpy() if query_id in (3, 11) else next_amount.to_numpy().sum(axis=1)
+        first_array = np.column_stack((first_array, col))
+        if step == steps - 1:
+            next_time_bucket = _get_next_sum_table(neighbors_df, time_df)
+        else:
+            neighbors_df = _get_next_neighbor_list(neighbors_df, account_df, None, amount_df, query_id)
+
+    if query_id == 3:
+        first_array = _filter_first_array_for_sr6(first_array, lambda r: r[0])
+        next_time_bucket = _mask_time_bucket_to_sr6_months(next_time_bucket)
+    ids = select_candidates(first_array, 0.01)
+    time_list = time_select.findTimeParams(ids, next_time_bucket)
+    return ids, time_list, first_df, account_df
+
+
+# ---------------------------------------------------------------------------
+# Per-query generate functions  (each one: load → build candidates → write)
+# ---------------------------------------------------------------------------
+
+def generate_query1():
+    try:
+        transfer_out_df       = load_indexed_list_df(factor_path('account_transfer_out_items'))
+        blocked_signin_df     = read_csv(factor_path('blocked_signin_month'))
+        blocked_signin_df.set_index(blocked_signin_df.columns[0], inplace=True)
+        ids, time_list = _candidates_query1(transfer_out_df, blocked_signin_df)
+        if ids:
+            write_params(output_path('complex_1_param.csv'), ids, time_list,
+                         threshold=False)
+    except (FileNotFoundError, ValueError, KeyError, IndexError):
+        pass
+
+
+def generate_query2():
+    try:
+        person_account_df  = load_person_account_df(factor_path('person_account_list'))
+        transfer_in_df     = load_indexed_list_df(factor_path('account_transfer_in_items'))
+        loan_deposit_df    = read_csv(factor_path('account_loan_deposit_month'))
+        loan_deposit_df.set_index(loan_deposit_df.columns[0], inplace=True)
+        ids, time_list = _candidates_query2(person_account_df, transfer_in_df, loan_deposit_df)
+        if ids:
+            write_params(output_path('complex_2_param.csv'), ids, time_list,
+                         threshold=False)
+    except (FileNotFoundError, ValueError, KeyError, IndexError):
+        pass
+
+
+def generate_query3_and_4():
+    ids, time_list, first_df, account_df = _run_iter_pipeline(3)
+    account_in_out_df = load_indexed_list_df(factor_path('account_in_out_list'))
+    id2_list = _build_query3_pairs(ids, account_in_out_df)
+    write_params(output_path('complex_3_param.csv'), ids, time_list,
+                 threshold=False, id2_list=id2_list, id_col="id1", id2_col="id2")
+
+    # query 4 shares the same pipeline run
+    try:
+        transfer_out_df  = load_indexed_list_df(factor_path('account_transfer_out_items'))
+        transfer_in_df   = load_indexed_list_df(factor_path('account_transfer_in_items'))
+        ids4, dst_ids4, time_list4 = _candidates_query4_from_factors(transfer_out_df, transfer_in_df)
+    except (FileNotFoundError, ValueError, KeyError, IndexError):
+        ids4, dst_ids4, time_list4 = list(ids), _build_query4_pairs(ids), time_list
+
+    write_params(output_path('complex_4_param.csv'), ids4, time_list4,
+                 threshold=False, id2_list=dst_ids4, id_col="id1", id2_col="id2")
+
+
+def generate_query5_and_12():
+    ids, time_list, first_df, account_df = _run_iter_pipeline(5)
+    # account_df is already the transfer_out_items indexed df from the pipeline
+    ids5, time_list5 = _candidates_query5(first_df, account_df)
+    write_params(output_path('complex_5_param.csv'), ids5, time_list5,
+                 threshold=False)
+
+    ids12, time_list12 = _candidates_query12(first_df, account_df)
+    write_params(output_path('complex_12_param.csv'), ids12, time_list12,
+                 threshold=False)
+
+
+def generate_query6():
+    withdraw_in_df       = load_indexed_list_df(factor_path('account_withdraw_in_items'))
+    transfer_in_month_df = read_csv(factor_path('transfer_in_month'))
+    transfer_in_month_df.set_index(transfer_in_month_df.columns[0], inplace=True)
+    ids, time_list = _candidates_query6(withdraw_in_df, transfer_in_month_df)
+    write_params(output_path('complex_6_param.csv'), ids, time_list,
+                 threshold=THRESH_HOLD_6, threshold2=THRESH_HOLD_6)
+
+
+def generate_query7_and_9():
+    ids, time_list = _run_1hop_pipeline('account_in_out_count', 'account_in_out_month',
+                                        sr6_filter=True)
+    for qid in (7, 9):
+        write_params(output_path(f'complex_{qid}_param.csv'), ids, time_list)
+
+
+def generate_query8():
+    loan_map        = load_loan_month_account_map(factor_path('loan_deposit_account_month_list'))
+    trans_withdraw  = load_indexed_list_df(factor_path('trans_withdraw_items'))
+    ids, time_list  = _candidates_query8(loan_map, trans_withdraw)
+    write_params(output_path('complex_8_param.csv'), ids, time_list)
+
+
+def generate_query10():
+    ids, time_list = _run_1hop_pipeline('person_invest_company', 'invest_month')
+    id2_list = [_random_pair(ids, i) for i in range(len(ids))]
+    write_params(output_path('complex_10_param.csv'), ids, time_list,
+                 threshold=False, truncate_limit=False, truncate_order=False,
+                 id2_list=id2_list, id_col="pid1", id2_col="pid2")
+
+
+def generate_query11():
+    ids, time_list, *_ = _run_iter_pipeline(11)
+    write_params(output_path('complex_11_param.csv'), ids, time_list,
+                 threshold=False)
+
+
+# ---------------------------------------------------------------------------
+# Supporting helpers
+# ---------------------------------------------------------------------------
+
+def _run_1hop_pipeline(count_table, month_table, sr6_filter=False):
+    count_df = read_csv(factor_path(count_table))
+    time_df  = read_csv(factor_path(month_table))
+    time_df.set_index(time_df.columns[0], inplace=True)
+    first_array = count_df.to_numpy()
+    if sr6_filter:
+        first_array = _filter_first_array_for_sr6(first_array, lambda r: r[0])
+        time_df = _mask_time_bucket_to_sr6_months(time_df)
+    ids = select_candidates(first_array, 0.01)
+    time_list = time_select.findTimeParams(ids, time_df)
+    return ids, time_list
+
+
+def _random_pair(id_list, i):
+    while True:
+        j = random.randint(0, len(id_list) - 1)
+        if id_list[j] != id_list[i]:
+            return id_list[j]
+
+
+def _build_query3_pairs(ids, account_in_out_df):
+    # CR3 injects SR6 with both id1 and id2, so prefer an id2 that is itself
+    # SR6-friendly. Fall back to any neighbor (and then to the id pool) so
+    # CR3 itself still produces valid shortest-path pairs.
+    friendly = set(_get_sr6_friendly_months().keys()) if _get_sr6_friendly_months() else set()
+    pool = list(ids)
+    friendly_pool = [p for p in pool if int(p) in friendly] if friendly else []
+    pairs = []
+    for account_id in ids:
+        neighbor_ids = [
+            neighbor_id(item) for item in get_neighbors(account_in_out_df, account_id)
+            if neighbor_id(item) != account_id
+        ]
+        if friendly:
+            friendly_neighbors = [n for n in neighbor_ids if int(n) in friendly]
+            if friendly_neighbors:
+                pairs.append(random.choice(friendly_neighbors))
+                continue
+        if neighbor_ids:
+            pairs.append(random.choice(neighbor_ids))
+            continue
+        if friendly_pool:
+            pairs.append(random_distinct(account_id, friendly_pool))
+        else:
+            pairs.append(random_distinct(account_id, pool))
+    return pairs
+
+
+def _build_query4_pairs(ids):
+    transfer_out_df = load_indexed_list_df(factor_path('account_transfer_out_items'))
+    transfer_in_df  = load_indexed_list_df(factor_path('account_transfer_in_items'))
+    pool = list(ids)
+    pairs = []
+    for src_id in ids:
+        incoming = {neighbor_id(i) for i in get_neighbors(transfer_in_df, src_id)}
+        out_items = get_neighbors(transfer_out_df, src_id)
+        scored = []
+        for item in out_items:
+            dst = neighbor_id(item)
+            if dst == src_id: continue
+            shared = incoming & {neighbor_id(i) for i in get_neighbors(transfer_out_df, dst)}
+            if shared:
+                scored.append((len(shared), dst))
+        if scored:
+            scored.sort(key=lambda x: (-x[0], x[1]))
+            pairs.append(scored[0][1])
+            continue
+        out_ids = [neighbor_id(i) for i in out_items if neighbor_id(i) != src_id]
+        pairs.append(random.choice(out_ids) if out_ids else random_distinct(src_id, pool))
+    return pairs
+
+
+def _load_card_account_ids():
+    try:
+        df = read_csv(factor_path('card_account_ids'))
+    except (FileNotFoundError, ValueError):
+        return set()
+    if len(df) > 0:
+        return set(df[df.columns[0]].dropna().astype(np.int64).tolist())
+    return set()
+
+
+# ---------------------------------------------------------------------------
+# SR6 affordance filter
+# ---------------------------------------------------------------------------
+# SR6 is injected by the validation filter using parameters of CR1/3/4/6/7/9
+# (see LdbcFinBenchTransactionDbValidationParametersFilter). It runs:
+#   (src) <-[e1:transfer]- (mid) -[e2:transfer]-> (dst:isBlocked)
+# with both edges in [startTime, endTime]. Without an affordance check the
+# injected accountId is anything CR* happens to select, so SR6 is empty in
+# the majority of validation rows. We pre-compute, from factor tables only,
+# which (accountId, month) pairs have at least one such (mid, blocked dst,
+# month) witness, and filter CR1/3/4/6/7/9 candidates down to those.
+
+_SR6_FRIENDLY_MONTHS = None
+
+
+def _load_sr6_friendly_account_months():
+    """Return dict: account_id -> set(month_start_ms) of SR6-friendly months.
+
+    An (src, month) pair is friendly if there exists some mid such that, within
+    that month, mid transferred to src AND mid transferred to a blocked dst.
+    Uses only account_transfer_in_items, account_transfer_out_items, and
+    blocked_signin_month (which query1 already depends on).
+    """
+    try:
+        transfer_in_df  = load_indexed_list_df(factor_path('account_transfer_in_items'))
+        transfer_out_df = load_indexed_list_df(factor_path('account_transfer_out_items'))
+        blocked_df      = read_csv(factor_path('blocked_signin_month'))
+    except (FileNotFoundError, ValueError, KeyError):
+        return {}
+
+    blocked_ids = set(int(x) for x in blocked_df[blocked_df.columns[0]].dropna().tolist())
+    if not blocked_ids:
+        return {}
+
+    mid_blocked_months = defaultdict(set)
+    for mid in transfer_out_df.index.unique():
+        mid_int = int(mid)
+        for item in get_neighbors(transfer_out_df, mid):
+            dst = neighbor_id(item)
+            ts  = neighbor_time(item)
+            if ts is None or dst == mid_int or dst not in blocked_ids:
+                continue
+            mid_blocked_months[mid_int].add(month_start_ms(ts))
+    if not mid_blocked_months:
+        return {}
+
+    friendly = defaultdict(set)
+    for src in transfer_in_df.index.unique():
+        src_int = int(src)
+        for item in get_neighbors(transfer_in_df, src):
+            mid = neighbor_id(item)
+            ts  = neighbor_time(item)
+            if ts is None or mid == src_int:
+                continue
+            months = mid_blocked_months.get(mid)
+            if not months:
+                continue
+            m = month_start_ms(ts)
+            if m in months:
+                friendly[src_int].add(m)
+    return dict(friendly)
+
+
+def _get_sr6_friendly_months():
+    global _SR6_FRIENDLY_MONTHS
+    if _SR6_FRIENDLY_MONTHS is None:
+        _SR6_FRIENDLY_MONTHS = _load_sr6_friendly_account_months()
+    return _SR6_FRIENDLY_MONTHS
+
+
+def _filter_first_array_for_sr6(first_array, account_getter, month_getter=None):
+    """Keep candidate rows whose account ID (and month, if supplied) is SR6-friendly.
+
+    Falls back to the original array if the affordance map is empty (factor
+    tables unavailable) or if filtering would leave zero rows — never silently
+    drop all candidates for an existing CR.
+    """
+    friendly = _get_sr6_friendly_months()
+    if not friendly:
+        return first_array
+    kept = []
+    for row in first_array:
+        acc = int(account_getter(row))
+        months = friendly.get(acc)
+        if not months:
+            continue
+        if month_getter is not None and int(month_getter(row)) not in months:
+            continue
+        kept.append(row)
+    if not kept:
+        return first_array
+    return np.array(kept, dtype=object)
+
+
+def _mask_time_bucket_to_sr6_months(time_bucket_df):
+    """For each row (account), zero out month columns that are not SR6-friendly
+    for that account. `time_select.findTimeParams` picks the median-count month
+    as window center, so masking non-friendly months steers the window into a
+    month where SR6 actually has a witness. Rows with no friendly month at all
+    are left untouched (those accounts should already be filtered upstream).
+    """
+    friendly = _get_sr6_friendly_months()
+    if not friendly or time_bucket_df is None or len(time_bucket_df) == 0:
+        return time_bucket_df
+    month_cols = {}
+    for col in time_bucket_df.columns:
+        try:
+            ts = int(str(col))
+        except (TypeError, ValueError):
+            continue
+        if ts > 10**11:
+            month_cols[col] = ts
+    if not month_cols:
+        return time_bucket_df
+    df = time_bucket_df.copy()
+    for idx in df.index:
+        try:
+            acc_int = int(idx)
+        except (TypeError, ValueError):
+            continue
+        acc_friendly = friendly.get(acc_int)
+        if not acc_friendly:
+            continue
+        for col, ms in month_cols.items():
+            if ms not in acc_friendly:
+                df.at[idx, col] = 0
+    return df
+
+
+def _load_company_account_ids():
+    try:
+        df = read_csv(factor_path('company_account_list'))
+    except (FileNotFoundError, ValueError):
+        return set()
+    if len(df) >= 2:
+        acct_col = df.columns[1]
+        df[acct_col] = df[acct_col].apply(literal_eval)
+        ids = set()
+        for lst in df[acct_col]:
+            ids.update(int(i) for i in lst)
+        return ids
+    return set()
+
+
+def _build_time_bucket_df(time_counts_by_id):
+    if not time_counts_by_id:
+        return pd.DataFrame()
+    normalized = {iid: {str(m): c for m, c in counts.items()}
+                  for iid, counts in time_counts_by_id.items()}
+    all_months = sorted({m for counts in normalized.values() for m in counts}, key=int)
+    rows = {iid: {'__padding__': 0, **{m: counts.get(m, 0) for m in all_months}}
+            for iid, counts in normalized.items()}
+    return pd.DataFrame.from_dict(rows, orient='index').fillna(0).astype(int)
+
+
+# ---------------------------------------------------------------------------
+# Neighbor expansion (parallelized, unchanged logic)
+# ---------------------------------------------------------------------------
+
+def _find_neighbors(account_list, account_df, account_amount_df, amount_bucket_df, num_list, query_id):
     result = set()
-    item_name = account_account_df.columns[0]
-
+    item_name = account_df.columns[0]
     if query_id == 8:
-        # transfer_in_amounts = account_amount_df.loc[account_list]['amount']
         for item in account_list:
-            try:
-                rows_account_list = account_account_df.loc[item][item_name]
-            except KeyError:
-                rows_account_list = []
-
-            try:
-                rows_amount_bucket = amount_bucket_df.loc[item]
-            except KeyError:
-                rows_amount_bucket = None
-
-            try:
-                transfer_in_amount = account_amount_df.loc[item]['amount']
-            except KeyError:
-                transfer_in_amount = 0
-            result.update(
-                neighbors_with_truncate_threshold(transfer_in_amount, rows_account_list, rows_amount_bucket, num_list))
-
-    elif query_id in [1, 2, 5]:
+            rows_list   = _safe_loc(account_df, item, item_name, [])
+            rows_bucket = _safe_loc_row(amount_bucket_df, item)
+            amount      = _safe_loc_scalar(account_amount_df, item, 'amount', 0)
+            result.update(_neighbors_threshold(amount, rows_list, rows_bucket, num_list))
+    elif query_id in (1, 2, 5):
         for item in account_list:
-            try:
-                rows_account_list = account_account_df.loc[item][item_name]
-            except KeyError:
-                rows_account_list = []
-            try:
-                rows_amount_bucket = amount_bucket_df.loc[item]
-            except KeyError:
-                rows_amount_bucket = None
-            result.update(neighbors_with_trancate(rows_account_list, rows_amount_bucket, num_list))
-
-    elif query_id in [3, 11]:
+            rows_list   = _safe_loc(account_df, item, item_name, [])
+            rows_bucket = _safe_loc_row(amount_bucket_df, item)
+            result.update(_neighbors_truncate(rows_list, rows_bucket, num_list))
+    elif query_id in (3, 11):
         for item in account_list:
-            try:
-                rows_account_list = account_account_df.loc[item][item_name]
-            except KeyError:
-                rows_account_list = []
-            result.update(rows_account_list)
-
+            result.update(_safe_loc(account_df, item, item_name, []))
     return list(result)
 
 
-def filter_neighbors(account_list, amount_bucket_df, num_list, account_id):
-    # print(f'account_list: {account_list}')
+def _safe_loc(df, key, col, default):
+    try:
+        row = df.loc[key]
+        return row[col] if not isinstance(row, pd.DataFrame) else row[col].tolist()
+    except KeyError:
+        return default
 
-    rows_amount_bucket = amount_bucket_df.loc[account_id]
+def _safe_loc_row(df, key):
+    try:
+        return df.loc[key]
+    except KeyError:
+        return None
 
-    sum_num = 0
-    header_at_limit = -1
-    for col in reversed(num_list):
-        sum_num += rows_amount_bucket[col]
-        if sum_num >= TRUNCATION_LIMIT:
-            header_at_limit = int(col)
-            break
-
-    partial_apply = partial(filter_neighbors_with_truncate_threshold, amount_bucket_df=amount_bucket_df,
-                            num_list=num_list, header_at_limit=header_at_limit)
-    account_mapped = map(partial_apply, account_list)
-    result = [x for x in account_mapped if x is not None]
-    return result
-
-
-def filter_neighbors_with_truncate_threshold(item, amount_bucket_df, num_list, header_at_limit):
-    if item[1] > THRESH_HOLD_6:
-        if header_at_limit == -1:
-            return item[0]
-        if (TIME_TRUNCATE and item[2] >= header_at_limit) or (not TIME_TRUNCATE and item[1] >= header_at_limit):
-            return item[0]
-
-    return None
+def _safe_loc_scalar(df, key, col, default):
+    try:
+        return df.loc[key][col]
+    except KeyError:
+        return default
 
 
-def neighbors_with_truncate_threshold(transfer_in_amount, rows_account_list, rows_amount_bucket, num_list):
-    if rows_amount_bucket is None:
+def _neighbors_threshold(transfer_in_amount, rows_list, rows_bucket, num_list):
+    if rows_bucket is None:
         return []
-    threshold_value = transfer_in_amount * THRESH_HOLD
-    temp = [ata for ata in rows_account_list if ata[1] > threshold_value]
+    threshold = transfer_in_amount * THRESH_HOLD
+    temp = [r for r in rows_list if r[1] > threshold]
+    return _apply_truncation(temp, rows_bucket, num_list)
 
-    # truncate at truncationLimit
-    sum_num = 0
-    header_at_limit = -1
-    for col in reversed(num_list):
-        sum_num += rows_amount_bucket[col]
-        if sum_num >= TRUNCATION_LIMIT:
-            header_at_limit = int(col)
-            break
-
-    if header_at_limit != -1:
-        if TIME_TRUNCATE:
-            return [t[0] for t in temp if t[2] >= header_at_limit]
-        else:
-            return [t[0] for t in temp if t[1] >= header_at_limit]
-    else:
-        return [t[0] for t in temp]
-
-
-def neighbors_with_trancate(rows_account_list, rows_amount_bucket, num_list):
-    if rows_amount_bucket is None:
+def _neighbors_truncate(rows_list, rows_bucket, num_list):
+    if rows_bucket is None:
         return []
-    # truncate at truncationLimit
-    sum_num = 0
-    header_at_limit = -1
+    return _apply_truncation(rows_list, rows_bucket, num_list)
+
+def _apply_truncation(items, bucket_row, num_list):
+    total, header = 0, -1
     for col in reversed(num_list):
-        sum_num += rows_amount_bucket[col]
-        if sum_num >= TRUNCATION_LIMIT:
-            header_at_limit = int(col)
+        total += bucket_row[col]
+        if total >= TRUNCATION_LIMIT:
+            header = int(col)
             break
-
-    if header_at_limit != -1:
-        if TIME_TRUNCATE:
-            return [t[0] for t in rows_account_list if t[2] >= header_at_limit]
-        else:
-            return [t[0] for t in rows_account_list if t[1] >= header_at_limit]
-    else:
-        return [t[0] for t in rows_account_list]
-
-
-def process_get_neighbors(chunk, account_account_df, account_amount_df, amount_bucket_df, num_list, query_id):
-    second_column_name = chunk.columns[1]
-    chunk[second_column_name] = chunk[second_column_name].apply(
-        lambda x: find_neighbors(x, account_account_df, account_amount_df, amount_bucket_df, num_list, query_id)
-    )
-    return chunk
-
-
-def process_filter_neighbors(chunk, amount_bucket_df, num_list):
-    first_column_name = chunk.columns[0]
-    second_column_name = chunk.columns[1]
-
-    chunk[second_column_name] = chunk.apply(
-        lambda row: filter_neighbors(row[second_column_name], amount_bucket_df, num_list, row[first_column_name]),
-        axis=1
-    )
-    return chunk
-
-
-def get_next_neighbor_list(neighbors_df, account_account_df, account_amount_df, amount_bucket_df, query_id):
-    num_list = []
-    if query_id != 3 and query_id != 11:
-        num_list = [x for x in amount_bucket_df.columns.tolist()]
-
-    query_parallelism = max(1, multiprocessing.cpu_count() // 4)
-    # print(f'query_id {query_id} query_parallelism {query_parallelism}')
-    chunks = np.array_split(neighbors_df, query_parallelism)
-
-    with concurrent.futures.ProcessPoolExecutor(max_workers=query_parallelism) as executor:
-        futures = [
-            executor.submit(process_get_neighbors, chunk, account_account_df, account_amount_df, amount_bucket_df,
-                            num_list, query_id) for chunk in chunks]
-        results = [future.result() for future in concurrent.futures.as_completed(futures)]
-        executor.shutdown(wait=True)
-
-    next_neighbors_df = pd.concat(results)
-    next_neighbors_df = next_neighbors_df.sort_index()
-    return next_neighbors_df
-
-
-def get_filter_neighbor_list(neighbors_df, amount_bucket_df):
-    first_column_name = neighbors_df.columns[0]
-    num_list = [x for x in amount_bucket_df.columns.tolist()]
-
-    query_parallelism = max(1, multiprocessing.cpu_count() // 4)
-    chunks = np.array_split(neighbors_df, query_parallelism)
-
-    with concurrent.futures.ProcessPoolExecutor(max_workers=query_parallelism) as executor:
-        futures = [executor.submit(process_filter_neighbors, chunk, amount_bucket_df, num_list) for chunk in chunks]
-        results = [future.result() for future in concurrent.futures.as_completed(futures)]
-
-        executor.shutdown(wait=True)
-
-    next_neighbors_df = pd.concat(results)
-    next_neighbors_df = next_neighbors_df.sort_values(by=first_column_name)
-    return next_neighbors_df
-
-
-def process_batch(batch, basic_sum_df, first_column_name, second_column_name):
-    neighbors_exploded = batch.explode(second_column_name)
-    merged_df = neighbors_exploded.merge(
-        basic_sum_df, left_on=second_column_name, right_index=True, how='left'
-    ).drop(columns=[second_column_name])
-    return merged_df.groupby(first_column_name).sum()
-
-
-def get_next_sum_table(neighbors_df, basic_sum_df, batch_size=BATCH_SIZE):
-    first_column_name = neighbors_df.columns[0]
-    second_column_name = neighbors_df.columns[1]
-
-    batches = [neighbors_df.iloc[start:start + batch_size] for start in range(0, len(neighbors_df), batch_size)]
-
-    result_list = []
-    query_parallelism = max(1, multiprocessing.cpu_count() // 4)
-    with concurrent.futures.ProcessPoolExecutor(max_workers=query_parallelism) as executor:
-        futures = [executor.submit(process_batch, batch, basic_sum_df, first_column_name, second_column_name) for batch
-                   in batches]
-        for future in futures:
-            result_list.append(future.result())
-        executor.shutdown(wait=True)
-
-    result_df = pd.concat(result_list).groupby(first_column_name).sum().astype(int)
-
-    return result_df
-
-
-def handleThresholdParam(threshold):
-    return str(threshold)
-
-
-def handleThreshold2Param(threshold2):
-    return str(threshold2)
-
-
-def hendleIdParam(id):
-    return str(id)
-
-
-def handleTruncateLimitParam(truncateLimit):
-    return str(truncateLimit)
-
-
-def handleTruncateOrderParam(truncateOrder):
-    return truncateOrder
-
-
-def handleTimeDurationParam(timeParam):
-    start = timegm(
-        date(year=int(timeParam.year), month=int(timeParam.month), day=int(timeParam.day)).timetuple()) * 1000
-    end = start + timeParam.duration * 3600 * 24 * 1000
-    res = str(start) + "|" + str(end)
-    return res
-
-
-def process_query(query_id):
-    if query_id in [7, 10]:
-        process_1_hop_query(query_id)
-    elif query_id in [1, 2, 3, 5, 8, 11]:
-        process_iter_queries(query_id)
-    elif query_id == 6:
-        process_withdraw_query()
-
-
-def process_iter_queries(query_id):
-    upstream_amount_df = None
-    upstream_amount_path = None
-    amount_bucket_path = None
-    amount_bucket_df = None
-    steps = None
-
-    if query_id == 8:
-        first_account_path = os.path.join(table_dir, 'loan_account_list')
-        account_account_path = os.path.join(table_dir, 'trans_withdraw_items')
-        upstream_amount_path = os.path.join(table_dir, 'upstream_amount')
-        if TIME_TRUNCATE:
-            amount_bucket_path = os.path.join(table_dir, 'trans_withdraw_month')
-        else:
-            amount_bucket_path = os.path.join(table_dir, 'trans_withdraw_bucket')
-        time_bucket_path = os.path.join(table_dir, 'trans_withdraw_month')
-        output_path = os.path.join(out_dir, 'complex_8_param.csv')
-        steps = 2
-
-    elif query_id == 1:
-        first_account_path = os.path.join(table_dir, 'account_transfer_out_list')
-        account_account_path = os.path.join(table_dir, 'account_transfer_out_items')
-        if TIME_TRUNCATE:
-            amount_bucket_path = os.path.join(table_dir, 'transfer_out_month')
-        else:
-            amount_bucket_path = os.path.join(table_dir, 'transfer_out_bucket')
-        time_bucket_path = os.path.join(table_dir, 'transfer_out_month')
-        output_path = os.path.join(out_dir, 'complex_1_param.csv')
-        steps = 2
-
-    elif query_id == 5:
-        first_account_path = os.path.join(table_dir, 'person_account_list')
-        account_account_path = os.path.join(table_dir, 'account_transfer_out_items')
-        if TIME_TRUNCATE:
-            amount_bucket_path = os.path.join(table_dir, 'transfer_out_month')
-        else:
-            amount_bucket_path = os.path.join(table_dir, 'transfer_out_bucket')
-        time_bucket_path = os.path.join(table_dir, 'transfer_out_month')
-        output_path = out_dir
-        steps = 3
-
-    elif query_id == 2:
-        first_account_path = os.path.join(table_dir, 'person_account_list')
-        account_account_path = os.path.join(table_dir, 'account_transfer_in_items')
-        if TIME_TRUNCATE:
-            amount_bucket_path = os.path.join(table_dir, 'transfer_in_month')
-        else:
-            amount_bucket_path = os.path.join(table_dir, 'transfer_in_bucket')
-        time_bucket_path = os.path.join(table_dir, 'transfer_in_month')
-        output_path = os.path.join(out_dir, 'complex_2_param.csv')
-        steps = 3
-
-    elif query_id == 3:
-        first_account_path = os.path.join(table_dir, 'account_in_out_list')
-        account_account_path = os.path.join(table_dir, 'account_in_out_list')
-        amount_bucket_path = os.path.join(table_dir, 'account_in_out_count')
-        time_bucket_path = os.path.join(table_dir, 'account_in_out_month')
-        output_path = out_dir
-        steps = 1
-
-    elif query_id == 11:
-        first_account_path = os.path.join(table_dir, 'person_guarantee_list')
-        account_account_path = os.path.join(table_dir, 'person_guarantee_list')
-        amount_bucket_path = os.path.join(table_dir, 'person_guarantee_count')
-        time_bucket_path = os.path.join(table_dir, 'person_guarantee_month')
-        output_path = os.path.join(out_dir, 'complex_11_param.csv')
-        steps = 3
-
-    first_account_df = process_csv(first_account_path)
-    account_account_df = process_csv(account_account_path)
-    if query_id == 8:
-        upstream_amount_df = process_csv(upstream_amount_path)
-        first_upstream_name = upstream_amount_df.columns[0]
-        upstream_amount_df.set_index(first_upstream_name, inplace=True)
-
-    amount_bucket_df = process_csv(amount_bucket_path)
-    time_bucket_df = process_csv(time_bucket_path)
-    first_column_name = first_account_df.columns[0]
-    second_column_name = first_account_df.columns[1]
-    first_account_name = account_account_df.columns[0]
-    second_account_name = account_account_df.columns[1]
-    first_amount_name = amount_bucket_df.columns[0]
-    first_time_name = time_bucket_df.columns[0]
-
-    account_account_df[second_account_name] = account_account_df[second_account_name].apply(literal_eval)
-    first_account_df[second_column_name] = first_account_df[second_column_name].apply(literal_eval)
-
-    account_account_df.set_index(first_account_name, inplace=True)
-    amount_bucket_df.set_index(first_amount_name, inplace=True)
-    time_bucket_df.set_index(first_time_name, inplace=True)
-
-    current_step = 0
-
-    first_neighbors_df = first_account_df.sort_values(by=first_column_name)
-    first_array = first_neighbors_df[first_column_name].to_numpy()
-
-    next_time_bucket = None
-
-    while current_step < steps:
-        next_first_amount_bucket = get_next_sum_table(first_neighbors_df, amount_bucket_df)
-        if query_id in [3, 11]:
-            temp_first_array = next_first_amount_bucket.to_numpy()
-        else:
-            temp_first_array = next_first_amount_bucket.to_numpy().sum(axis=1)
-        first_array = np.column_stack((first_array, temp_first_array))
-
-        if current_step == steps - 1:
-            next_time_bucket = get_next_sum_table(first_neighbors_df, time_bucket_df)
-        else:
-            first_neighbors_df = get_next_neighbor_list(first_neighbors_df, account_account_df, upstream_amount_df,
-                                                        amount_bucket_df, query_id)
-
-        current_step += 1
-
-    final_first_items = search_params.generate(first_array, 0.01)
-    time_list = time_select.findTimeParams(final_first_items, next_time_bucket)
-    truncate_limit_list = [TRUNCATION_LIMIT] * len(final_first_items)
-    truncate_order_list = [TRUNCATION_ORDER] * len(final_first_items)
-    thresh_list = [THRESH_HOLD] * len(final_first_items)
-
-    if query_id == 8:
-        csvWriter = CSVSerializer()
-        csvWriter.setOutputFile(output_path)
-        csvWriter.registerHandler(hendleIdParam, final_first_items, "id")
-        csvWriter.registerHandler(handleThresholdParam, thresh_list, "threshold")
-        csvWriter.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
-        csvWriter.registerHandler(handleTruncateLimitParam, truncate_limit_list, "truncationLimit")
-        csvWriter.registerHandler(handleTruncateOrderParam, truncate_order_list, "truncationOrder")
-        csvWriter.writeCSV()
-
-        print(f'query_id {query_id} finished')
-
-    elif query_id == 1:
-        csvWriter = CSVSerializer()
-        csvWriter.setOutputFile(output_path)
-        csvWriter.registerHandler(hendleIdParam, final_first_items, "id")
-        csvWriter.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
-        csvWriter.registerHandler(handleTruncateLimitParam, truncate_limit_list, "truncationLimit")
-        csvWriter.registerHandler(handleTruncateOrderParam, truncate_order_list, "truncationOrder")
-        csvWriter.writeCSV()
-
-        print(f'query_id {query_id} finished')
-
-    elif query_id == 5:
-        csvWriter_5 = CSVSerializer()
-        csvWriter_5.setOutputFile(output_path + 'complex_5_param.csv')
-        csvWriter_5.registerHandler(hendleIdParam, final_first_items, "id")
-        csvWriter_5.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
-        csvWriter_5.registerHandler(handleTruncateLimitParam, truncate_limit_list, "truncationLimit")
-        csvWriter_5.registerHandler(handleTruncateOrderParam, truncate_order_list, "truncationOrder")
-
-        csvWriter_12 = CSVSerializer()
-        csvWriter_12.setOutputFile(output_path + 'complex_12_param.csv')
-        csvWriter_12.registerHandler(hendleIdParam, final_first_items, "id")
-        csvWriter_12.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
-        csvWriter_12.registerHandler(handleTruncateLimitParam, truncate_limit_list, "truncationLimit")
-        csvWriter_12.registerHandler(handleTruncateOrderParam, truncate_order_list, "truncationOrder")
-
-        csvWriter_5.writeCSV()
-        csvWriter_12.writeCSV()
-
-        print(f'query_id 5 and 12 finished')
-
-    elif query_id == 2:
-        csvWriter = CSVSerializer()
-        csvWriter.setOutputFile(output_path)
-        csvWriter.registerHandler(hendleIdParam, final_first_items, "id")
-        csvWriter.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
-        csvWriter.registerHandler(handleTruncateLimitParam, truncate_limit_list, "truncationLimit")
-        csvWriter.registerHandler(handleTruncateOrderParam, truncate_order_list, "truncationOrder")
-        csvWriter.writeCSV()
-
-        print(f'query_id {query_id} finished')
-
-    elif query_id == 3:
-        final_second_items_3 = []
-        final_second_items_4 = []
-
-        for account_id in final_first_items:
-            j = 0
-            k = 0
-            while True:
-                j = random.randint(0, len(final_first_items) - 1)
-                k = random.randint(0, len(final_first_items) - 1)
-                if final_first_items[j] != account_id and final_first_items[k] != account_id:
-                    break
-            final_second_items_3.append(final_first_items[j])
-            final_second_items_4.append(final_first_items[k])
-
-        csvWriter_3 = CSVSerializer()
-        csvWriter_3.setOutputFile(output_path + 'complex_3_param.csv')
-        csvWriter_3.registerHandler(hendleIdParam, final_first_items, "id1")
-        csvWriter_3.registerHandler(hendleIdParam, final_second_items_3, "id2")
-        csvWriter_3.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
-        csvWriter_3.registerHandler(handleTruncateLimitParam, truncate_limit_list, "truncationLimit")
-        csvWriter_3.registerHandler(handleTruncateOrderParam, truncate_order_list, "truncationOrder")
-
-        csvWriter_4 = CSVSerializer()
-        csvWriter_4.setOutputFile(output_path + 'complex_4_param.csv')
-        csvWriter_4.registerHandler(hendleIdParam, final_first_items, "id1")
-        csvWriter_4.registerHandler(hendleIdParam, final_second_items_4, "id2")
-        csvWriter_4.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
-        csvWriter_4.registerHandler(handleTruncateLimitParam, truncate_limit_list, "truncationLimit")
-        csvWriter_4.registerHandler(handleTruncateOrderParam, truncate_order_list, "truncationOrder")
-
-        csvWriter_3.writeCSV()
-        csvWriter_4.writeCSV()
-
-        print(f'query_id 3 and 4 finished')
-
-    elif query_id == 11:
-        csvWriter = CSVSerializer()
-        csvWriter.setOutputFile(output_path)
-        csvWriter.registerHandler(hendleIdParam, final_first_items, "id")
-        csvWriter.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
-        csvWriter.registerHandler(handleTruncateLimitParam, truncate_limit_list, "truncationLimit")
-        csvWriter.registerHandler(handleTruncateOrderParam, truncate_order_list, "truncationOrder")
-        csvWriter.writeCSV()
-
-        print(f'query_id {query_id} finished')
-
-
-def process_1_hop_query(query_id):
-    if query_id == 7:
-        first_count_path = os.path.join(table_dir, 'account_in_out_count')
-        time_bucket_path = os.path.join(table_dir, 'account_in_out_month')
-        output_path = out_dir
-    elif query_id == 10:
-        first_count_path = os.path.join(table_dir, 'person_invest_company')
-        time_bucket_path = os.path.join(table_dir, 'invest_month')
-        output_path = os.path.join(out_dir, 'complex_10_param.csv')
-
-    first_count_df = process_csv(first_count_path)
-    time_bucket_df = process_csv(time_bucket_path)
-
-    first_time_name = time_bucket_df.columns[0]
-
-    time_bucket_df.set_index(first_time_name, inplace=True)
-
-    first_array = first_count_df.to_numpy()
-    final_first_items = search_params.generate(first_array, 0.01)
-    time_list = time_select.findTimeParams(final_first_items, time_bucket_df)
-
-    truncate_limit_list = [TRUNCATION_LIMIT] * len(final_first_items)
-    truncate_order_list = [TRUNCATION_ORDER] * len(final_first_items)
-    thresh_list = [THRESH_HOLD] * len(final_first_items)
-
-    if query_id == 7:
-
-        csvWriter_7 = CSVSerializer()
-        csvWriter_7.setOutputFile(output_path + 'complex_7_param.csv')
-        csvWriter_7.registerHandler(hendleIdParam, final_first_items, "id")
-        csvWriter_7.registerHandler(handleThresholdParam, thresh_list, "threshold")
-        csvWriter_7.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
-        csvWriter_7.registerHandler(handleTruncateLimitParam, truncate_limit_list, "truncationLimit")
-        csvWriter_7.registerHandler(handleTruncateOrderParam, truncate_order_list, "truncationOrder")
-
-        csvWriter_9 = CSVSerializer()
-        csvWriter_9.setOutputFile(output_path + 'complex_9_param.csv')
-        csvWriter_9.registerHandler(hendleIdParam, final_first_items, "id")
-        csvWriter_9.registerHandler(handleThresholdParam, thresh_list, "threshold")
-        csvWriter_9.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
-        csvWriter_9.registerHandler(handleTruncateLimitParam, truncate_limit_list, "truncationLimit")
-        csvWriter_9.registerHandler(handleTruncateOrderParam, truncate_order_list, "truncationOrder")
-
-        csvWriter_7.writeCSV()
-        csvWriter_9.writeCSV()
-
-        print(f'query_id 7 and 9 finished')
-
-    elif query_id == 10:
-        final_second_items = []
-        for person in final_first_items:
-            j = 0
-            while True:
-                j = random.randint(0, len(final_first_items) - 1)
-                if final_first_items[j] != person:
-                    break
-            final_second_items.append(final_first_items[j])
-
-        csvWriter = CSVSerializer()
-        csvWriter.setOutputFile(output_path)
-        csvWriter.registerHandler(hendleIdParam, final_first_items, "pid1")
-        csvWriter.registerHandler(hendleIdParam, final_second_items, "pid2")
-        csvWriter.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
-        csvWriter.writeCSV()
-
-        print(f'query_id {query_id} finished')
-
-
-def process_withdraw_query():
-    first_account_path = os.path.join(table_dir, 'account_withdraw_in_items')
-    time_bucket_path = os.path.join(table_dir, 'transfer_in_month')
+    if header == -1:
+        return [t[0] for t in items]
     if TIME_TRUNCATE:
-        withdraw_bucket_path = os.path.join(table_dir, 'withdraw_in_month')
-    else:
-        withdraw_bucket_path = os.path.join(table_dir, 'withdraw_in_bucket')
-    transfer_bucket_path = os.path.join(table_dir, 'transfer_in_bucket')
-    output_path = os.path.join(out_dir, 'complex_6_param.csv')
+        return [t[0] for t in items if t[2] >= header]
+    return [t[0] for t in items if t[1] >= header]
 
-    first_account_df = process_csv(first_account_path)
-    time_bucket_df = process_csv(time_bucket_path)
-    transfer_bucket_df = process_csv(transfer_bucket_path)
-    withdraw_bucket_df = process_csv(withdraw_bucket_path)
 
-    first_column_name = first_account_df.columns[0]
-    second_column_name = first_account_df.columns[1]
-    withdraw_first_name = withdraw_bucket_df.columns[0]
-    transfer_first_name = transfer_bucket_df.columns[0]
-    time_first_name = time_bucket_df.columns[0]
+def _process_get_neighbors(chunk, account_df, account_amount_df, amount_bucket_df, num_list, query_id):
+    col = chunk.columns[1]
+    chunk[col] = chunk[col].apply(
+        lambda x: _find_neighbors(x, account_df, account_amount_df, amount_bucket_df, num_list, query_id)
+    )
+    return chunk
 
-    withdraw_bucket_df.set_index(withdraw_first_name, inplace=True)
-    transfer_bucket_df.set_index(transfer_first_name, inplace=True)
-    time_bucket_df.set_index(time_first_name, inplace=True)
 
-    first_account_df[second_column_name] = first_account_df[second_column_name].apply(literal_eval)
-    first_neighbors_df = first_account_df.sort_values(by=first_column_name)
+def _get_next_neighbor_list(neighbors_df, account_df, account_amount_df, amount_bucket_df, query_id):
+    num_list = [] if query_id in (3, 11) else list(amount_bucket_df.columns)
+    parallelism = max(1, multiprocessing.cpu_count() // 4)
+    chunks = np.array_split(neighbors_df, parallelism)
+    with concurrent.futures.ProcessPoolExecutor(max_workers=parallelism) as ex:
+        futures = [ex.submit(_process_get_neighbors, c, account_df, account_amount_df,
+                              amount_bucket_df, num_list, query_id) for c in chunks]
+        results = [f.result() for f in concurrent.futures.as_completed(futures)]
+    return pd.concat(results).sort_index()
 
-    first_neighbors_df = get_filter_neighbor_list(first_neighbors_df, withdraw_bucket_df)
 
-    first_array = first_neighbors_df[first_column_name].to_numpy()
-    next_first_amount_bucket = get_next_sum_table(first_neighbors_df, transfer_bucket_df)
-    temp_first_array = next_first_amount_bucket.to_numpy().sum(axis=1)
-    first_array = np.column_stack((first_array, temp_first_array))
-    next_time_bucket = get_next_sum_table(first_neighbors_df, time_bucket_df)
+def _process_batch(batch, basic_sum_df, first_col, second_col):
+    exploded = batch.explode(second_col)
+    merged = exploded.merge(basic_sum_df, left_on=second_col, right_index=True, how='left'
+                            ).drop(columns=[second_col])
+    return merged.groupby(first_col).sum()
 
-    final_first_items = search_params.generate(first_array, 0.01)
-    time_list = time_select.findTimeParams(final_first_items, next_time_bucket)
 
-    truncate_limit_list = [TRUNCATION_LIMIT] * len(final_first_items)
-    truncate_order_list = [TRUNCATION_ORDER] * len(final_first_items)
-    thresh_list = [THRESH_HOLD_6] * len(final_first_items)
+def _get_next_sum_table(neighbors_df, basic_sum_df):
+    first_col  = neighbors_df.columns[0]
+    second_col = neighbors_df.columns[1]
+    batches    = [neighbors_df.iloc[i:i+BATCH_SIZE] for i in range(0, len(neighbors_df), BATCH_SIZE)]
+    parallelism = max(1, multiprocessing.cpu_count() // 4)
+    with concurrent.futures.ProcessPoolExecutor(max_workers=parallelism) as ex:
+        results = list(ex.map(partial(_process_batch, basic_sum_df=basic_sum_df,
+                                       first_col=first_col, second_col=second_col), batches))
+    return pd.concat(results).groupby(first_col).sum().astype(int)
 
-    csvWriter = CSVSerializer()
-    csvWriter.setOutputFile(output_path)
-    csvWriter.registerHandler(hendleIdParam, final_first_items, "id")
-    csvWriter.registerHandler(handleThresholdParam, thresh_list, "threshold1")
-    csvWriter.registerHandler(handleThreshold2Param, thresh_list, "threshold2")
-    csvWriter.registerHandler(handleTimeDurationParam, time_list, "startTime|endTime")
-    csvWriter.registerHandler(handleTruncateLimitParam, truncate_limit_list, "truncationLimit")
-    csvWriter.registerHandler(handleTruncateOrderParam, truncate_order_list, "truncationOrder")
-    csvWriter.writeCSV()
 
-    print(f'query_id 6 finished')
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
+
+# Map each logical task to its generator function.
+# Tasks in the same inner list run in the same process batch.
+QUERY_TASKS = [
+    generate_query6,
+    generate_query2,
+    generate_query3_and_4,
+    generate_query5_and_12,
+    generate_query7_and_9,
+    generate_query11,
+    generate_query8,
+    generate_query10,
+    generate_query1,
+]
 
 
 def main():
-    queries = [6, 2, 3, 5, 7, 11, 8, 10, 1]
-    # queries = [3]
-
     multiprocessing.set_start_method('forkserver')
-    
     batch_size = 5
-    for i in range(0, len(queries), batch_size):
-        processes = []
-        for query_id in queries[i:i + batch_size]:
-            p = multiprocessing.Process(target=process_query, args=(query_id,))
+    for i in range(0, len(QUERY_TASKS), batch_size):
+        procs = []
+        for task in QUERY_TASKS[i:i+batch_size]:
+            p = multiprocessing.Process(target=task)
             p.start()
-            processes.append(p)
-        
-        for p in processes:
+            procs.append((p, task.__name__))
+        for p, name in procs:
             p.join()
+            print(f"{name} finished")
 
 
 if __name__ == "__main__":

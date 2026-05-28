@@ -14,8 +14,14 @@
 # limitations under the License.
 #
 
+import math
+from calendar import timegm
+from datetime import date, datetime
+
+
 LAST_MONTHS = 3
 START_YEAR = 2020
+DAY_MS = 24 * 60 * 60 * 1000
 
 
 class MonthYearCount:
@@ -26,11 +32,85 @@ class MonthYearCount:
 
 
 class TimeParameter:
-    def __init__(self, year, month, day, duration):
-        self.month = month
-        self.year = year
-        self.day = day
-        self.duration = duration
+    def __init__(self, start_ms, end_ms):
+        self.start_ms = int(start_ms)
+        self.end_ms = int(max(end_ms, start_ms))
+
+        start_dt = datetime.utcfromtimestamp(self.start_ms / 1000.0)
+        self.year = start_dt.year
+        self.month = start_dt.month
+        self.day = start_dt.day
+
+        duration_ms = max(self.end_ms - self.start_ms, 0)
+        self.duration = int(math.ceil(duration_ms / float(DAY_MS))) if duration_ms > 0 else 0
+
+
+def _month_start_ms(year, month):
+    return timegm(date(year, month, 1).timetuple()) * 1000
+
+
+def _add_months(year, month, delta):
+    month_index = (year * 12 + (month - 1)) + delta
+    target_year = month_index // 12
+    target_month = month_index % 12 + 1
+    return target_year, target_month
+
+
+def _build_month_window(year, month, span_months=1):
+    span_months = max(1, int(span_months))
+    start_ms = _month_start_ms(year, month)
+    end_year, end_month = _add_months(year, month, span_months)
+    end_ms = _month_start_ms(end_year, end_month)
+    return TimeParameter(start_ms, end_ms)
+
+
+def _duration_days_to_month_span(duration_days):
+    return max(1, int(math.ceil(max(duration_days, 1) / 28.0)))
+
+
+def _parse_month_column(column_name):
+    column_str = str(column_name)
+    if column_str == "__padding__":
+        return None
+
+    # Factor tables produced by Spark store month buckets as month-start
+    # timestamps in milliseconds.
+    try:
+        timestamp_ms = int(column_str)
+        if timestamp_ms > 10**11:
+            total_months = (
+                timestamp_ms // 1000 // 60 // 60 // 24 // 28
+            )  # fast reject for obvious non-date values
+            if total_months >= 0:
+                dt = datetime.utcfromtimestamp(timestamp_ms / 1000.0)
+                return dt.year, dt.month
+    except ValueError:
+        pass
+
+    if len(column_str) == 7 and column_str[4] == "-":
+        try:
+            return int(column_str[:4]), int(column_str[5:7])
+        except ValueError:
+            return None
+
+    if len(column_str) == 6 and column_str.isdigit():
+        try:
+            return int(column_str[:4]), int(column_str[4:6])
+        except ValueError:
+            return None
+
+    return None
+
+
+def _extract_month_columns(time_bucket_df):
+    month_columns = []
+    for column_name in time_bucket_df.columns.tolist():
+        parsed = _parse_month_column(column_name)
+        if parsed is None:
+            continue
+        year, month = parsed
+        month_columns.append((column_name, year, month))
+    return month_columns
 
 
 def getMedian(data, sort_key, getEntireTuple=False):
@@ -42,7 +122,7 @@ def getMedian(data, sort_key, getEntireTuple=False):
     if len(data) == 1:
         if getEntireTuple:
             return data[0]
-        return data[0].count
+        return sort_key(data[0])
 
     srtd = sorted(data, key=sort_key)
     mid = int(len(data) / 2)
@@ -85,17 +165,22 @@ def getTimeParamsWithMedian(factors, medianFirstMonth, medianLastMonth, median):
     # strategy: find the median of the given distribution, then increase the time interval until it matches the given parameter
     res = []
     for values in factors:
-        input = sorted(values, key=lambda myc: (myc.year, myc.month))
         currentMedian = getMedian(values, lambda myc: myc.count, True)
         if int(median) == 0 or int(currentMedian.count) == 0 or int(currentMedian.year) == 0:
-            res.append(TimeParameter(START_YEAR, 1, 1, 0))
+            empty_start = _month_start_ms(START_YEAR, 1)
+            res.append(TimeParameter(empty_start, empty_start))
             continue
         if currentMedian.count > median:
             duration = int(28 * currentMedian.count / median)
-            res.append(TimeParameter(currentMedian.year, currentMedian.month, 1, duration))
         else:
             duration = int(28 * median / currentMedian.count)
-            res.append(TimeParameter(currentMedian.year, currentMedian.month, 1, duration))
+        res.append(
+            _build_month_window(
+                currentMedian.year,
+                currentMedian.month,
+                _duration_days_to_month_span(duration)
+            )
+        )
     return res
 
 
@@ -107,17 +192,34 @@ def findTimeParameters(factors):
 
 
 def findTimeParams(input_loan_list, time_bucket_df):
-    time_list = [x for x in time_bucket_df.iloc[0].index.tolist()[1:]]
+    month_columns = _extract_month_columns(time_bucket_df)
     factors = []
     for loan in input_loan_list:
         temp_factors = []
         loan_month_list = time_bucket_df.loc[loan]
-        for month, month_str in enumerate(time_list):
-            count = loan_month_list[month_str]
+        for month_key, year, month in month_columns:
+            count = loan_month_list[month_key]
             if count == 0:
                 continue
-            year = START_YEAR + month / 12
-            temp_factors.append(MonthYearCount(month % 12 + 1, int(year), count))
+            temp_factors.append(MonthYearCount(month, year, count))
         factors.append(temp_factors)
 
     return findTimeParameters(factors)
+
+
+def findTimeParamsForMonthStarts(month_starts):
+    params = []
+    for month_start in month_starts:
+        timestamp_ms = int(month_start)
+        dt = datetime.utcfromtimestamp(timestamp_ms / 1000.0)
+        params.append(_build_month_window(dt.year, dt.month))
+    return params
+
+
+def findTimeParamsForSelectedMonths(selected_candidates):
+    month_starts = []
+    for candidate in selected_candidates:
+        if not isinstance(candidate, (list, tuple)) or len(candidate) == 0:
+            continue
+        month_starts.append(int(candidate[-1]))
+    return findTimeParamsForMonthStarts(month_starts)
