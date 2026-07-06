@@ -43,6 +43,7 @@ THRESH_HOLD_6    = 0
 TIME_TRUNCATE    = True
 TRUNCATION_ORDER = "TIMESTAMP_DESCENDING" if TIME_TRUNCATE else "AMOUNT_DESCENDING"
 BATCH_SIZE       = 5000
+CR8_COST_FLOOR   = 100
 
 
 # ---------------------------------------------------------------------------
@@ -152,41 +153,60 @@ def get_neighbors(indexed_df, key):
     return []
 
 
+def truncate_neighbors(neighbors, limit=TRUNCATION_LIMIT):
+    if len(neighbors) <= limit:
+        return neighbors
+    if TIME_TRUNCATE:
+        neighbors = sorted(neighbors,
+                           key=lambda item: neighbor_time(item) or 0,
+                           reverse=True)
+    else:
+        neighbors = sorted(neighbors,
+                           key=lambda item: (item[1] if isinstance(item, (list, tuple))
+                                                        and len(item) >= 2 else 0),
+                           reverse=True)
+    return neighbors[:limit]
+
+
 def collect_path_stats(indexed_df, current_id, prev_ts, visited, depth,
-                       max_depth=3, path_limit=64, target_month=None):
+                       max_depth=3, truncation_limit=TRUNCATION_LIMIT,
+                       target_month=None, months_out=None):
     reachable, count = set(), 0
     if depth >= max_depth:
         return reachable, count
-    for item in get_neighbors(indexed_df, current_id):
+    neighbors = truncate_neighbors(get_neighbors(indexed_df, current_id),
+                                   truncation_limit)
+    for item in neighbors:
         dst = neighbor_id(item)
         ts  = neighbor_time(item)
         if ts is None or dst in visited or ts <= prev_ts:
             continue
         if target_month is not None and month_start_ms(ts) != target_month:
             continue
+        if months_out is not None:
+            months_out.add(month_start_ms(ts))
         reachable.add(dst)
         count += 1
-        if count >= path_limit:
-            return reachable, count
         sub_r, sub_c = collect_path_stats(
             indexed_df, dst, ts, visited | {dst}, depth + 1,
-            max_depth=max_depth, path_limit=path_limit - count,
-            target_month=target_month,
-        )
+            max_depth=max_depth, truncation_limit=truncation_limit,
+            target_month=target_month, months_out=months_out,
+                                 )
         reachable.update(sub_r)
         count += sub_c
-        if count >= path_limit:
-            return reachable, count
     return reachable, count
 
 
 def collect_month_matches_increasing(indexed_df, current_id, prev_ts, visited, depth,
                                      qualifying_df, match_ids, hit_counts, traversed_counts,
-                                     target_month=None, max_depth=3, path_limit=64):
+                                     target_month=None, max_depth=3,
+                                     truncation_limit=TRUNCATION_LIMIT):
     traversed = 0
     if depth >= max_depth:
         return traversed
-    for item in get_neighbors(indexed_df, current_id):
+    neighbors = truncate_neighbors(get_neighbors(indexed_df, current_id),
+                                   truncation_limit)
+    for item in neighbors:
         dst = neighbor_id(item)
         ts  = neighbor_time(item)
         if ts is None or dst in visited or ts <= prev_ts:
@@ -199,46 +219,46 @@ def collect_month_matches_increasing(indexed_df, current_id, prev_ts, visited, d
         if _has_month_activity(qualifying_df, dst, month):
             match_ids[month].add(dst)
             hit_counts[month] += 1
-        if traversed >= path_limit:
-            return traversed
         sub = collect_month_matches_increasing(
             indexed_df, dst, ts, visited | {dst}, depth + 1,
             qualifying_df, match_ids, hit_counts, traversed_counts,
-            target_month=month, max_depth=max_depth,
-            path_limit=path_limit - traversed,
-        )
+            target_month=target_month, max_depth=max_depth,
+            truncation_limit=truncation_limit,
+                                 )
         traversed += sub
-        if traversed >= path_limit:
-            return traversed
     return traversed
 
 
 def collect_month_matches_decreasing(indexed_df, current_id, prev_ts, visited, depth,
                                      qualifying_df, match_ids, hit_counts,
-                                     max_depth=3, path_limit=64):
+                                     match_months=None, traversed_counts=None,
+                                     max_depth=3, truncation_limit=TRUNCATION_LIMIT):
     traversed = 0
     if depth >= max_depth:
         return traversed
-    for item in get_neighbors(indexed_df, current_id):
+    neighbors = truncate_neighbors(get_neighbors(indexed_df, current_id),
+                                   truncation_limit)
+    for item in neighbors:
         src = neighbor_id(item)
         ts  = neighbor_time(item)
         if ts is None or src in visited or ts >= prev_ts:
             continue
         traversed += 1
         month = month_start_ms(ts)
+        if traversed_counts is not None:
+            traversed_counts[month] += 1
         if _has_month_activity(qualifying_df, src, month):
             match_ids[month].add(src)
             hit_counts[month] += 1
-        if traversed >= path_limit:
-            return traversed
+            if match_months is not None:
+                match_months[month].add(month)
         sub = collect_month_matches_decreasing(
             indexed_df, src, ts, visited | {src}, depth + 1,
             qualifying_df, match_ids, hit_counts,
-            max_depth=max_depth, path_limit=path_limit - traversed,
-        )
+            match_months=match_months, traversed_counts=traversed_counts,
+            max_depth=max_depth, truncation_limit=truncation_limit,
+                                 )
         traversed += sub
-        if traversed >= path_limit:
-            return traversed
     return traversed
 
 
@@ -276,13 +296,6 @@ def select_candidates(first_array, portion=0.01, min_size=1):
     if sample_size == len(first_array):
         return [row[0] for row in first_array]
     return search_params.generate(first_array, sample_size / len(first_array))
-
-
-def build_time_params(selected_candidates):
-    """Convert [(id, month_start), ...] into (ids, time_list)."""
-    ids = [int(i) for i, _ in selected_candidates]
-    normalized = [(int(i), int(m)) for i, m in selected_candidates]
-    return ids, time_select.findTimeParamsForSelectedMonths(normalized)
 
 
 def random_distinct(current_id, pool):
@@ -354,21 +367,65 @@ def _candidates_query1(transfer_out_df, blocked_signin_month_df):
     candidate_rows = []
     for src_id in transfer_out_df.index.unique():
         src_id = int(src_id)
-        match_ids, hit_counts, traversed_counts = defaultdict(set), defaultdict(int), defaultdict(int)
-        collect_month_matches_increasing(
+        match_ids = defaultdict(set)
+        match_ranges = {}
+        hit_counts = defaultdict(int)
+        traversed_counts = defaultdict(int)
+        _collect_q1_with_range(
             transfer_out_df, src_id, -1, {src_id}, 0,
             blocked_signin_month_df, match_ids, hit_counts, traversed_counts,
+            match_ranges, first_month=None, path_min=None, path_max=None,
         )
         for month, ids in match_ids.items():
-            candidate_rows.append([(src_id, int(month)), len(ids),
-                                    hit_counts[month], traversed_counts[month]])
+            mn, mx = match_ranges.get(month, (month, month))
+            candidate_rows.append([(src_id, int(month), int(mn), int(mx)),
+                                   traversed_counts[month], hit_counts[month], len(ids)])
     if not candidate_rows:
         return [], []
     first_array = np.array(candidate_rows, dtype=object)
     first_array = _filter_first_array_for_sr6(
         first_array, lambda r: r[0][0], lambda r: r[0][1])
-    selected = select_candidates(first_array, 0.01)
-    return build_time_params(selected)
+    selected = select_candidates(first_array, 0.05)
+    ids = [int(s[0]) for s in selected]
+    time_list = time_select.findTimeParamsForMonthRanges(
+        [(int(s[2]), int(s[3])) for s in selected])
+    return ids, time_list
+
+
+def _collect_q1_with_range(indexed_df, current_id, prev_ts, visited, depth,
+                           qualifying_df, match_ids, hit_counts, traversed_counts,
+                           match_ranges, first_month, path_min, path_max,
+                           max_depth=3, truncation_limit=TRUNCATION_LIMIT):
+    if depth >= max_depth:
+        return
+    neighbors = truncate_neighbors(get_neighbors(indexed_df, current_id),
+                                   truncation_limit)
+    for item in neighbors:
+        dst = neighbor_id(item)
+        ts  = neighbor_time(item)
+        if ts is None or dst in visited or ts <= prev_ts:
+            continue
+        month = month_start_ms(ts)
+        fm = month if first_month is None else first_month
+        pmin = month if path_min is None else min(path_min, month)
+        pmax = month if path_max is None else max(path_max, month)
+
+        traversed_counts[fm] += 1
+        if _has_month_activity(qualifying_df, dst, month):
+            match_ids[fm].add(dst)
+            hit_counts[fm] += 1
+            old = match_ranges.get(fm)
+            if old is None:
+                match_ranges[fm] = (pmin, pmax)
+            else:
+                match_ranges[fm] = (min(old[0], pmin), max(old[1], pmax))
+
+        _collect_q1_with_range(
+            indexed_df, dst, ts, visited | {dst}, depth + 1,
+            qualifying_df, match_ids, hit_counts, traversed_counts,
+            match_ranges, first_month=fm, path_min=pmin, path_max=pmax,
+            max_depth=max_depth, truncation_limit=truncation_limit,
+                                 )
 
 
 def _candidates_query2(person_account_df, transfer_in_df, loan_deposit_month_df):
@@ -379,83 +436,93 @@ def _candidates_query2(person_account_df, transfer_in_df, loan_deposit_month_df)
         for account_id in row[account_col]:
             account_id = int(account_id)
             match_ids, hit_counts = defaultdict(set), defaultdict(int)
+            match_months = defaultdict(set)
             traversed = collect_month_matches_decreasing(
                 transfer_in_df, account_id, sys.maxsize, {account_id}, 0,
                 loan_deposit_month_df, match_ids, hit_counts,
+                match_months=match_months,
             )
             for month, ids in match_ids.items():
                 key = (person_id, int(month))
                 if key not in stats:
                     stats[key] = dict(other_ids=set(), hit_count=0,
-                                      account_hits=set(), traversed=0)
+                                      account_hits=set(), traversed=0,
+                                      months=set())
                 stats[key]['other_ids'].update(int(i) for i in ids)
                 stats[key]['hit_count']    += hit_counts[month]
                 stats[key]['account_hits'].add(account_id)
                 stats[key]['traversed']    += traversed
+                stats[key]['months'].update(match_months.get(month, {month}))
     if not stats:
         return [], []
-    candidate_rows = [
-        [(pid, month), len(s['other_ids']), s['hit_count'],
-         len(s['account_hits']), s['traversed']]
-        for (pid, month), s in stats.items()
-    ]
+    candidate_rows = []
+    for (pid, month), s in stats.items():
+        months = s['months'] or {month}
+        candidate_rows.append([(pid, min(months), max(months)),
+                               s['traversed'], len(s['other_ids']),
+                               s['hit_count'], len(s['account_hits'])])
     first_array = np.array(candidate_rows, dtype=object)
     selected = select_candidates(first_array, 0.01)
-    return build_time_params(selected)
+    ids = [int(s[0]) for s in selected]
+    time_list = time_select.findTimeParamsForMonthRanges(
+        [(int(s[1]), int(s[2])) for s in selected])
+    return ids, time_list
 
 
 def _candidates_query4_from_factors(transfer_out_df, transfer_in_df):
-    out_by_src_month  = defaultdict(set)
-    in_by_dst_month   = defaultdict(set)
-    pair_month_count  = defaultdict(int)
+    out_by_src      = defaultdict(set)
+    in_by_dst       = defaultdict(set)
+    pair_count      = defaultdict(int)
+    pair_months     = defaultdict(list)
 
     for src_id in transfer_out_df.index.unique():
         src_id = int(src_id)
         for item in get_neighbors(transfer_out_df, src_id):
             dst = neighbor_id(item); ts = neighbor_time(item)
             if ts is None or dst == src_id: continue
-            month = month_start_ms(ts)
-            out_by_src_month[(src_id, month)].add(dst)
-            pair_month_count[(src_id, dst, month)] += 1
+            out_by_src[src_id].add(dst)
+            pair_count[(src_id, dst)] += 1
+            pair_months[(src_id, dst)].append(month_start_ms(ts))
 
     for dst_id in transfer_in_df.index.unique():
         dst_id = int(dst_id)
         for item in get_neighbors(transfer_in_df, dst_id):
             src = neighbor_id(item); ts = neighbor_time(item)
             if ts is None or src == dst_id: continue
-            month = month_start_ms(ts)
-            in_by_dst_month[(dst_id, month)].add(src)
+            in_by_dst[dst_id].add(src)
 
     candidate_rows = []
-    for (src_id, month), direct_dsts in out_by_src_month.items():
-        incoming = in_by_dst_month.get((src_id, month), set())
+    for src_id, direct_dsts in out_by_src.items():
+        incoming = in_by_dst.get(src_id, set())
         if not incoming: continue
         for dst_id in direct_dsts:
-            outgoing_from_dst = out_by_src_month.get((dst_id, month), set())
+            outgoing_from_dst = out_by_src.get(dst_id, set())
             cycles = outgoing_from_dst & incoming - {src_id, dst_id}
             if not cycles: continue
-            e1 = pair_month_count.get((src_id, dst_id, month), 0)
-            e2 = sum(pair_month_count.get((o, src_id, month), 0) for o in cycles)
-            e3 = sum(pair_month_count.get((dst_id, o, month), 0) for o in cycles)
-            candidate_rows.append([(src_id, dst_id, month), len(cycles), e1+e2+e3, e1])
+            e1 = pair_count.get((src_id, dst_id), 0)
+            e2 = sum(pair_count.get((o, src_id), 0) for o in cycles)
+            e3 = sum(pair_count.get((dst_id, o), 0) for o in cycles)
+
+            all_months = list(pair_months.get((src_id, dst_id), []))
+            for o in cycles:
+                all_months.extend(pair_months.get((o, src_id), []))
+                all_months.extend(pair_months.get((dst_id, o), []))
+            if not all_months:
+                continue
+            min_month = min(all_months)
+            max_month = max(all_months)
+            candidate_rows.append([(src_id, dst_id, min_month, max_month),
+                                   len(cycles), e1+e2+e3, e1])
 
     if not candidate_rows:
         return [], [], []
 
     first_array = np.array(candidate_rows, dtype=object)
-    # injectAccountSimples is called once per id in CR4 (id1 and id2), so both
-    # accounts must be SR6-friendly in the cycle month — apply the filter
-    # twice. The helper falls back to the prior array if the second pass would
-    # empty it out, so candidate pool can't go to zero.
-    first_array = _filter_first_array_for_sr6(
-        first_array, lambda r: r[0][0], lambda r: r[0][2])
-    first_array = _filter_first_array_for_sr6(
-        first_array, lambda r: r[0][1], lambda r: r[0][2])
-    selected = select_candidates(first_array, 0.01)
-    src_ids   = [int(s) for s, _, _ in selected]
-    dst_ids   = [int(d) for _, d, _ in selected]
-    month_starts = [int(m) for _, _, m in selected]
-    time_list = time_select.findTimeParamsForMonthStarts(month_starts)
+    selected = select_candidates(first_array, 0.30)
+    src_ids   = [int(s) for s, _, _, _ in selected]
+    dst_ids   = [int(d) for _, d, _, _ in selected]
+    time_list = time_select.findTimeParamsForMonthRanges(
+        [(int(mn), int(mx)) for _, _, mn, mx in selected])
     return src_ids, dst_ids, time_list
 
 
@@ -472,22 +539,33 @@ def _candidates_query5(person_account_df, transfer_out_df):
                 month = month_start_ms(ts)
                 key = (person_id, month)
                 if key not in stats:
-                    stats[key] = dict(dst_ids=set(), path_count=0, account_hits=set())
+                    stats[key] = dict(dst_ids=set(), path_count=0,
+                                      account_hits=set(), months=set())
                 stats[key]['dst_ids'].add(dst)
                 stats[key]['path_count'] += 1
                 stats[key]['account_hits'].add(account_id)
-                sub_r, sub_c = collect_path_stats(transfer_out_df, dst, ts, {account_id, dst}, 1)
+                stats[key]['months'].add(month)
+                sub_months = set()
+                sub_r, sub_c = collect_path_stats(
+                    transfer_out_df, dst, ts, {account_id, dst}, 1,
+                    months_out=sub_months)
                 stats[key]['dst_ids'].update(sub_r)
                 stats[key]['path_count'] += sub_c
+                stats[key]['months'].update(sub_months)
     if not stats:
         return [], []
-    candidate_rows = [
-        [(pid, month), len(s['dst_ids']), s['path_count'], len(s['account_hits'])]
-        for (pid, month), s in stats.items()
-    ]
+    candidate_rows = []
+    for (pid, month), s in stats.items():
+        months = s['months'] or {month}
+        candidate_rows.append([(pid, min(months), max(months)),
+                               s['path_count'], len(s['dst_ids']),
+                               len(s['account_hits'])])
     first_array = np.array(candidate_rows, dtype=object)
     selected = select_candidates(first_array, 0.01)
-    return build_time_params(selected)
+    ids = [int(s[0]) for s in selected]
+    time_list = time_select.findTimeParamsForMonthRanges(
+        [(int(s[1]), int(s[2])) for s in selected])
+    return ids, time_list
 
 
 def _candidates_query6(withdraw_in_df, transfer_in_month_df):
@@ -495,9 +573,19 @@ def _candidates_query6(withdraw_in_df, transfer_in_month_df):
     if not card_account_ids:
         return [], []
     candidate_rows = []
+
+    mid_total_transfers = {}
+    for mid_id in transfer_in_month_df.index:
+        row = transfer_in_month_df.loc[mid_id]
+        if isinstance(row, pd.DataFrame):
+            row = row.iloc[0]
+        total = sum(float(v) for v in row.values if isinstance(v, (int, float, np.integer, np.floating)))
+        mid_total_transfers[int(mid_id)] = total
+
     for card_id in card_account_ids:
         month_stats = defaultdict(lambda: dict(mid_ids=set(), transfer_count=0,
-                                               withdraw_count=0, withdraw_amount=0.0))
+                                               withdraw_count=0, withdraw_amount=0.0,
+                                               months=set()))
         for item in get_neighbors(withdraw_in_df, card_id):
             mid = neighbor_id(item); ts = neighbor_time(item)
             if ts is None: continue
@@ -505,60 +593,103 @@ def _candidates_query6(withdraw_in_df, transfer_in_month_df):
                 month_row = transfer_in_month_df.loc[mid]
             except KeyError:
                 continue
-            month = month_start_ms(ts)
-            if _get_month_count(month_row, month) <= 3:
+            if mid_total_transfers.get(mid, 0) <= 3:
                 continue
+            month = month_start_ms(ts)
             s = month_stats[month]
             s['mid_ids'].add(mid)
-            s['transfer_count'] += int(_get_month_count(month_row, month))
+            s['transfer_count'] += int(mid_total_transfers.get(mid, 0))
             s['withdraw_count'] += 1
+            s['months'].add(month)
             if isinstance(item, (list, tuple)) and len(item) >= 2:
                 s['withdraw_amount'] += float(item[1])
         for month, s in month_stats.items():
             if s['mid_ids']:
-                candidate_rows.append([(card_id, month), len(s['mid_ids']),
-                                        s['transfer_count'], s['withdraw_count'],
-                                        s['withdraw_amount']])
+                months = s['months'] or {month}
+                candidate_rows.append([(card_id, min(months), max(months)),
+                                       len(s['mid_ids']), s['transfer_count'],
+                                       s['withdraw_count'], s['withdraw_amount']])
     if not candidate_rows:
         return [], []
     first_array = np.array(candidate_rows, dtype=object)
     first_array = _filter_first_array_for_sr6(
-        first_array, lambda r: r[0][0], lambda r: r[0][1])
+        first_array, lambda r: r[0][0])
     selected = select_candidates(first_array, 0.01)
-    return build_time_params(selected)
+    ids = [int(s[0]) for s in selected]
+    time_list = time_select.findTimeParamsForMonthRanges(
+        [(int(s[1]), int(s[2])) for s in selected])
+    return ids, time_list
+
+
+def _bfs_window_cost(adj, seeds, start_ms, end_ms, max_depth=3,
+                     per_node_scan=2 * TRUNCATION_LIMIT, cap=100000):
+    frontier = set(seeds)
+    inwin = 0
+    scanned = 0
+    for _ in range(max_depth):
+        nxt = set()
+        for v in frontier:
+            edges = adj.get(v)
+            if not edges:
+                continue
+            scanned += min(len(edges), per_node_scan)
+            for dst, ts in edges[:per_node_scan]:
+                if start_ms < ts < end_ms:
+                    inwin += 1
+                    nxt.add(dst)
+        if scanned >= cap:
+            return max(inwin, cap)
+        frontier = nxt
+    return inwin
 
 
 def _candidates_query8(loan_month_account_map, trans_withdraw_df):
-    stats = {}
+    adj = defaultdict(list)
+    items_col = trans_withdraw_df.columns[0]
+    for key, items in trans_withdraw_df[items_col].items():
+        if isinstance(items, list):
+            adj[int(key)].extend((int(i[0]), int(i[2])) for i in items
+                                 if isinstance(i, (list, tuple)) and len(i) >= 3)
+
+    keys = []
     for loan_id, month_accounts in loan_month_account_map.items():
         for month_start, account_ids in month_accounts.items():
+            months = set()
             for account_id in account_ids:
                 account_id = int(account_id)
                 for item in get_neighbors(trans_withdraw_df, account_id):
                     dst = neighbor_id(item); ts = neighbor_time(item)
                     if ts is None or dst == account_id: continue
-                    if month_start_ms(ts) != int(month_start): continue
-                    key = (loan_id, month_start)
-                    if key not in stats:
-                        stats[key] = dict(dst_ids=set(), path_count=0, account_hits=set())
-                    stats[key]['dst_ids'].add(dst)
-                    stats[key]['path_count'] += 1
-                    stats[key]['account_hits'].add(account_id)
-                    sub_r, sub_c = collect_path_stats(
+                    months.add(month_start_ms(ts))
+                    collect_path_stats(
                         trans_withdraw_df, dst, ts, {account_id, dst}, 1,
-                        target_month=int(month_start),
+                        months_out=months,
                     )
-                    stats[key]['dst_ids'].update(sub_r)
-                    stats[key]['path_count'] += sub_c
-    if not stats:
+            win_min = int(month_start)
+            win_max = max(max(months), win_min) if months else win_min
+            keys.append((int(loan_id), win_min, win_max))
+    if not keys:
         return [], []
-    candidate_rows = [
-        [(lid, month), len(s['dst_ids']), s['path_count'], len(s['account_hits'])]
-        for (lid, month), s in stats.items()
-    ]
-    first_array = np.array(candidate_rows, dtype=object)
-    selected = select_candidates(first_array, 0.01)
-    return build_time_params(selected)
+
+    time_params = time_select.findTimeParamsForMonthRanges(
+        [(win_min, win_max) for _, win_min, win_max in keys])
+    candidate_rows = []
+    for (loan_id, win_min, win_max), tp in zip(keys, time_params):
+        seeds = {int(a) for m, accs in loan_month_account_map[loan_id].items()
+                 if tp.start_ms <= int(m) < tp.end_ms for a in accs}
+        cost = _bfs_window_cost(adj, seeds, tp.start_ms, tp.end_ms)
+        candidate_rows.append([(loan_id, win_min, win_max), cost])
+
+    target = max(1, int(len(candidate_rows) * 0.01))
+    filtered = [r for r in candidate_rows if r[1] >= CR8_COST_FLOOR]
+    if len(filtered) < target:
+        filtered = sorted(candidate_rows, key=lambda r: -r[1])[:2 * target]
+    first_array = np.array(filtered, dtype=object)
+    selected = select_candidates(first_array, target / len(filtered))
+    ids = [int(s[0]) for s in selected]
+    time_list = time_select.findTimeParamsForMonthRanges(
+        [(int(s[1]), int(s[2])) for s in selected])
+    return ids, time_list
 
 
 def _candidates_query12(person_account_df, transfer_out_df):
@@ -717,13 +848,14 @@ def generate_query3_and_4():
 
 
 def generate_query5_and_12():
-    ids, time_list, first_df, account_df = _run_iter_pipeline(5)
-    # account_df is already the transfer_out_items indexed df from the pipeline
-    ids5, time_list5 = _candidates_query5(first_df, account_df)
+    person_account_df = load_person_account_df(factor_path('person_account_list'))
+    transfer_out_df   = load_indexed_list_df(factor_path('account_transfer_out_items'))
+
+    ids5, time_list5 = _candidates_query5(person_account_df, transfer_out_df)
     write_params(output_path('complex_5_param.csv'), ids5, time_list5,
                  threshold=False)
 
-    ids12, time_list12 = _candidates_query12(first_df, account_df)
+    ids12, time_list12 = _candidates_query12(person_account_df, transfer_out_df)
     write_params(output_path('complex_12_param.csv'), ids12, time_list12,
                  threshold=False)
 
@@ -1090,7 +1222,7 @@ def _get_next_neighbor_list(neighbors_df, account_df, account_amount_df, amount_
     chunks = np.array_split(neighbors_df, parallelism)
     with concurrent.futures.ProcessPoolExecutor(max_workers=parallelism) as ex:
         futures = [ex.submit(_process_get_neighbors, c, account_df, account_amount_df,
-                              amount_bucket_df, num_list, query_id) for c in chunks]
+                             amount_bucket_df, num_list, query_id) for c in chunks]
         results = [f.result() for f in concurrent.futures.as_completed(futures)]
     return pd.concat(results).sort_index()
 
@@ -1109,7 +1241,7 @@ def _get_next_sum_table(neighbors_df, basic_sum_df):
     parallelism = max(1, multiprocessing.cpu_count() // 4)
     with concurrent.futures.ProcessPoolExecutor(max_workers=parallelism) as ex:
         results = list(ex.map(partial(_process_batch, basic_sum_df=basic_sum_df,
-                                       first_col=first_col, second_col=second_col), batches))
+                                      first_col=first_col, second_col=second_col), batches))
     return pd.concat(results).groupby(first_col).sum().astype(int)
 
 

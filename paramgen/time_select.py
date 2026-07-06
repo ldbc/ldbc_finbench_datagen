@@ -79,7 +79,7 @@ def _parse_month_column(column_name):
         timestamp_ms = int(column_str)
         if timestamp_ms > 10**11:
             total_months = (
-                timestamp_ms // 1000 // 60 // 60 // 24 // 28
+                    timestamp_ms // 1000 // 60 // 60 // 24 // 28
             )  # fast reject for obvious non-date values
             if total_months >= 0:
                 dt = datetime.utcfromtimestamp(timestamp_ms / 1000.0)
@@ -207,19 +207,12 @@ def findTimeParams(input_loan_list, time_bucket_df):
     return findTimeParameters(factors)
 
 
-def findTimeParamsForMonthStarts(month_starts):
+def findTimeParamsForMonthRanges(month_ranges):
+    """month_ranges: [(min_month_ms, max_month_ms), ...] → [TimeParameter, ...]"""
     params = []
-    for month_start in month_starts:
-        timestamp_ms = int(month_start)
-        dt = datetime.utcfromtimestamp(timestamp_ms / 1000.0)
-        params.append(_build_month_window(dt.year, dt.month))
+    for mn, mx in month_ranges:
+        dt_min = datetime.utcfromtimestamp(int(mn) / 1000.0)
+        dt_max = datetime.utcfromtimestamp(int(mx) / 1000.0)
+        span = (dt_max.year - dt_min.year) * 12 + (dt_max.month - dt_min.month) + 1
+        params.append(_build_month_window(dt_min.year, dt_min.month, span))
     return params
-
-
-def findTimeParamsForSelectedMonths(selected_candidates):
-    month_starts = []
-    for candidate in selected_candidates:
-        if not isinstance(candidate, (list, tuple)) or len(candidate) == 0:
-            continue
-        month_starts.append(int(candidate[-1]))
-    return findTimeParamsForMonthStarts(month_starts)
