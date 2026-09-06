@@ -43,7 +43,6 @@ THRESH_HOLD_6    = 0
 TIME_TRUNCATE    = True
 TRUNCATION_ORDER = "TIMESTAMP_DESCENDING" if TIME_TRUNCATE else "AMOUNT_DESCENDING"
 BATCH_SIZE       = 5000
-CR8_COST_FLOOR   = 100
 
 
 # ---------------------------------------------------------------------------
@@ -51,11 +50,9 @@ CR8_COST_FLOOR   = 100
 # ---------------------------------------------------------------------------
 
 def factor_path(*parts):
-    """Path inside TABLE_DIR."""
     return os.path.join(TABLE_DIR, *parts)
 
 def output_path(filename):
-    """Path inside OUT_DIR."""
     return os.path.join(OUT_DIR, filename)
 
 
@@ -64,7 +61,6 @@ def output_path(filename):
 # ---------------------------------------------------------------------------
 
 def read_csv(file_path):
-    """Read one CSV or merge all *.csv files in a directory."""
     if os.path.isfile(file_path):
         return pd.read_csv(file_path, delimiter='|')
 
@@ -86,7 +82,6 @@ def read_csv(file_path):
 
 
 def load_indexed_list_df(file_path):
-    """Load a two-column CSV; parse the second column as a Python list; index on first column."""
     df = read_csv(file_path)
     key_col, val_col = df.columns[0], df.columns[1]
     df[val_col] = df[val_col].apply(literal_eval)
@@ -95,7 +90,6 @@ def load_indexed_list_df(file_path):
 
 
 def load_person_account_df(file_path):
-    """Load person→account_list CSV with the list already parsed."""
     df = read_csv(file_path)
     list_col = df.columns[1]
     df[list_col] = df[list_col].apply(literal_eval)
@@ -103,7 +97,6 @@ def load_person_account_df(file_path):
 
 
 def load_loan_month_account_map(file_path):
-    """Return {loan_id: {month_start: [account_id, ...]}}."""
     df = read_csv(file_path)
     if len(df.columns) < 3:
         return {}
@@ -310,10 +303,6 @@ def random_distinct(current_id, pool):
 def write_params(path, ids, time_list, *, threshold=None, threshold2=None,
                  id_col="id", id2_list=None, id2_col="id2",
                  truncate_limit=True, truncate_order=True):
-    """
-    Write a parameter CSV.  All optional columns default to the global config.
-    Pass threshold=False to omit the threshold column entirely.
-    """
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
 
     rows = []
@@ -332,7 +321,6 @@ def write_params(path, ids, time_list, *, threshold=None, threshold2=None,
             row.append(TRUNCATION_ORDER)
         rows.append(row)
 
-    # build header
     header = [id_col]
     if id2_list is not None:
         header.append(id2_col)
@@ -469,7 +457,67 @@ def _candidates_query2(person_account_df, transfer_in_df, loan_deposit_month_df)
     return ids, time_list
 
 
-def _candidates_query4_from_factors(transfer_out_df, transfer_in_df):
+def _candidates_query3(transfer_out_df, pool_ids, pool_times,
+                       friendly_accounts, scan_cap=10_000):
+    transfer_col = transfer_out_df.columns[0]
+    adjacency = {
+        int(src): [(neighbor_id(item), neighbor_time(item)) for item in items
+                   if isinstance(item, (list, tuple)) and len(item) >= 3]
+        for src, items in transfer_out_df[transfer_col].items()
+    }
+    time_by_id = {int(account_id): tp
+                  for account_id, tp in zip(pool_ids, pool_times)}
+    candidate_rows = []
+
+    for src_id in map(int, pool_ids):
+        tp = time_by_id[src_id]
+        frontier = [src_id]
+        visited = {src_id}
+        layers = defaultdict(list)
+        scanned = 0
+
+        for depth in range(1, 4):
+            next_frontier = []
+            for account_id in frontier:
+                for dst_id, ts in adjacency.get(account_id, []):
+                    scanned += 1
+                    if scanned > scan_cap:
+                        break
+                    if ts is None or not (tp.start_ms < ts < tp.end_ms):
+                        continue
+                    if dst_id not in visited:
+                        visited.add(dst_id)
+                        next_frontier.append(dst_id)
+                        layers[depth].append((dst_id, scanned))
+                if scanned > scan_cap:
+                    break
+            if scanned > scan_cap:
+                break
+            frontier = next_frontier
+
+        if scanned > scan_cap:
+            continue
+
+        reachable = layers[2] + layers[3]
+        candidates = ([item for item in reachable
+                       if item[0] in friendly_accounts] or reachable)
+        if not candidates:
+            continue
+        dst_id, cost = candidates[0]
+        candidate_rows.append([(src_id, dst_id), cost])
+
+    if len(candidate_rows) < 4:
+        selected = [row[0] for row in candidate_rows]
+    else:
+        selected = search_params.generate(
+            np.array(candidate_rows, dtype=object), 0.10)
+    ids = [int(src_id) for src_id, _ in selected]
+    id2_list = [int(dst_id) for _, dst_id in selected]
+    time_list = [time_by_id[src_id] for src_id in ids]
+    return ids, id2_list, time_list
+
+
+def _candidates_query4(transfer_out_df, transfer_in_df):
     out_by_src      = defaultdict(set)
     in_by_dst       = defaultdict(set)
     pair_count      = defaultdict(int)
@@ -681,7 +729,7 @@ def _candidates_query8(loan_month_account_map, trans_withdraw_df):
         candidate_rows.append([(loan_id, win_min, win_max), cost])
 
     target = max(1, int(len(candidate_rows) * 0.01))
-    filtered = [r for r in candidate_rows if r[1] >= CR8_COST_FLOOR]
+    filtered = [r for r in candidate_rows if r[1] >= 100]
     if len(filtered) < target:
         filtered = sorted(candidate_rows, key=lambda r: -r[1])[:2 * target]
     first_array = np.array(filtered, dtype=object)
@@ -729,7 +777,6 @@ def _candidates_query12(person_account_df, transfer_out_df):
 # ---------------------------------------------------------------------------
 
 def _iter_query_setup(query_id):
-    """Return (first_path, account_path, amount_bucket_path, time_bucket_path, steps)."""
     if query_id == 5:
         return (
             factor_path('person_account_list'),
@@ -757,8 +804,7 @@ def _iter_query_setup(query_id):
     raise ValueError(f"No iter setup for query_id={query_id}")
 
 
-def _run_iter_pipeline(query_id):
-    """Run the multi-hop neighbor aggregation and return (ids, time_list, account_df)."""
+def _run_iter_pipeline(query_id, portion=0.01):
     first_path, acct_path, amount_path, time_path, steps = _iter_query_setup(query_id)
 
     first_df   = load_person_account_df(first_path)
@@ -792,7 +838,7 @@ def _run_iter_pipeline(query_id):
     if query_id == 3:
         first_array = _filter_first_array_for_sr6(first_array, lambda r: r[0])
         next_time_bucket = _mask_time_bucket_to_sr6_months(next_time_bucket)
-    ids = select_candidates(first_array, 0.01)
+    ids = select_candidates(first_array, portion)
     time_list = time_select.findTimeParams(ids, next_time_bucket)
     return ids, time_list, first_df, account_df
 
@@ -828,23 +874,29 @@ def generate_query2():
         pass
 
 
-def generate_query3_and_4():
-    ids, time_list, first_df, account_df = _run_iter_pipeline(3)
-    account_in_out_df = load_indexed_list_df(factor_path('account_in_out_list'))
-    id2_list = _build_query3_pairs(ids, account_in_out_df)
-    write_params(output_path('complex_3_param.csv'), ids, time_list,
-                 threshold=False, id2_list=id2_list, id_col="id1", id2_col="id2")
+def generate_query3():
+    ids, times, *_ = _run_iter_pipeline(3, portion=0.20)
+    transfer_out_df = load_indexed_list_df(factor_path('account_transfer_out_items'))
+    friendly_accounts = set(_get_sr6_friendly_months())
+    ids, id2_list, time_list = _candidates_query3(
+        transfer_out_df, ids, times, friendly_accounts)
+    if ids:
+        write_params(output_path('complex_3_param.csv'), ids, time_list,
+                     threshold=False, id2_list=id2_list, id_col="id1", id2_col="id2",
+                     truncate_limit=False, truncate_order=False)
 
-    # query 4 shares the same pipeline run
+
+def generate_query4():
     try:
         transfer_out_df  = load_indexed_list_df(factor_path('account_transfer_out_items'))
         transfer_in_df   = load_indexed_list_df(factor_path('account_transfer_in_items'))
-        ids4, dst_ids4, time_list4 = _candidates_query4_from_factors(transfer_out_df, transfer_in_df)
+        ids, dst_ids, time_list = _candidates_query4(transfer_out_df, transfer_in_df)
     except (FileNotFoundError, ValueError, KeyError, IndexError):
-        ids4, dst_ids4, time_list4 = list(ids), _build_query4_pairs(ids), time_list
+        ids, time_list, *_ = _run_iter_pipeline(3)
+        dst_ids = _build_query4_pairs(ids)
 
-    write_params(output_path('complex_4_param.csv'), ids4, time_list4,
-                 threshold=False, id2_list=dst_ids4, id_col="id1", id2_col="id2")
+    write_params(output_path('complex_4_param.csv'), ids, time_list,
+                 threshold=False, id2_list=dst_ids, id_col="id1", id2_col="id2")
 
 
 def generate_query5_and_12():
@@ -921,34 +973,6 @@ def _random_pair(id_list, i):
             return id_list[j]
 
 
-def _build_query3_pairs(ids, account_in_out_df):
-    # CR3 injects SR6 with both id1 and id2, so prefer an id2 that is itself
-    # SR6-friendly. Fall back to any neighbor (and then to the id pool) so
-    # CR3 itself still produces valid shortest-path pairs.
-    friendly = set(_get_sr6_friendly_months().keys()) if _get_sr6_friendly_months() else set()
-    pool = list(ids)
-    friendly_pool = [p for p in pool if int(p) in friendly] if friendly else []
-    pairs = []
-    for account_id in ids:
-        neighbor_ids = [
-            neighbor_id(item) for item in get_neighbors(account_in_out_df, account_id)
-            if neighbor_id(item) != account_id
-        ]
-        if friendly:
-            friendly_neighbors = [n for n in neighbor_ids if int(n) in friendly]
-            if friendly_neighbors:
-                pairs.append(random.choice(friendly_neighbors))
-                continue
-        if neighbor_ids:
-            pairs.append(random.choice(neighbor_ids))
-            continue
-        if friendly_pool:
-            pairs.append(random_distinct(account_id, friendly_pool))
-        else:
-            pairs.append(random_distinct(account_id, pool))
-    return pairs
-
-
 def _build_query4_pairs(ids):
     transfer_out_df = load_indexed_list_df(factor_path('account_transfer_out_items'))
     transfer_in_df  = load_indexed_list_df(factor_path('account_transfer_in_items'))
@@ -986,26 +1010,11 @@ def _load_card_account_ids():
 # ---------------------------------------------------------------------------
 # SR6 affordance filter
 # ---------------------------------------------------------------------------
-# SR6 is injected by the validation filter using parameters of CR1/3/4/6/7/9
-# (see LdbcFinBenchTransactionDbValidationParametersFilter). It runs:
-#   (src) <-[e1:transfer]- (mid) -[e2:transfer]-> (dst:isBlocked)
-# with both edges in [startTime, endTime]. Without an affordance check the
-# injected accountId is anything CR* happens to select, so SR6 is empty in
-# the majority of validation rows. We pre-compute, from factor tables only,
-# which (accountId, month) pairs have at least one such (mid, blocked dst,
-# month) witness, and filter CR1/3/4/6/7/9 candidates down to those.
 
 _SR6_FRIENDLY_MONTHS = None
 
 
 def _load_sr6_friendly_account_months():
-    """Return dict: account_id -> set(month_start_ms) of SR6-friendly months.
-
-    An (src, month) pair is friendly if there exists some mid such that, within
-    that month, mid transferred to src AND mid transferred to a blocked dst.
-    Uses only account_transfer_in_items, account_transfer_out_items, and
-    blocked_signin_month (which query1 already depends on).
-    """
     try:
         transfer_in_df  = load_indexed_list_df(factor_path('account_transfer_in_items'))
         transfer_out_df = load_indexed_list_df(factor_path('account_transfer_out_items'))
@@ -1054,12 +1063,6 @@ def _get_sr6_friendly_months():
 
 
 def _filter_first_array_for_sr6(first_array, account_getter, month_getter=None):
-    """Keep candidate rows whose account ID (and month, if supplied) is SR6-friendly.
-
-    Falls back to the original array if the affordance map is empty (factor
-    tables unavailable) or if filtering would leave zero rows — never silently
-    drop all candidates for an existing CR.
-    """
     friendly = _get_sr6_friendly_months()
     if not friendly:
         return first_array
@@ -1078,12 +1081,6 @@ def _filter_first_array_for_sr6(first_array, account_getter, month_getter=None):
 
 
 def _mask_time_bucket_to_sr6_months(time_bucket_df):
-    """For each row (account), zero out month columns that are not SR6-friendly
-    for that account. `time_select.findTimeParams` picks the median-count month
-    as window center, so masking non-friendly months steers the window into a
-    month where SR6 actually has a witness. Rows with no friendly month at all
-    are left untouched (those accounts should already be filtered upstream).
-    """
     friendly = _get_sr6_friendly_months()
     if not friendly or time_bucket_df is None or len(time_bucket_df) == 0:
         return time_bucket_df
@@ -1254,7 +1251,8 @@ def _get_next_sum_table(neighbors_df, basic_sum_df):
 QUERY_TASKS = [
     generate_query6,
     generate_query2,
-    generate_query3_and_4,
+    generate_query3,
+    generate_query4,
     generate_query5_and_12,
     generate_query7_and_9,
     generate_query11,
