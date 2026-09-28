@@ -65,7 +65,8 @@ COPY
 SELECT TransferReadWrite1.*,
        (SELECT min(createTime) FROM TransferReadWrite1) AS startTime,
        (SELECT max(createTime) FROM TransferReadWrite1) AS endTime
-FROM TransferReadWrite1 )
+FROM TransferReadWrite1
+ORDER BY TransferReadWrite1.createTime )
 TO ':output_dir/incremental/AddAccountTransferAccountReadWrite1.csv' (DELIMITER '|', HEADER);
 
 -- Read Write 2 output
@@ -115,7 +116,8 @@ SELECT PGPReadWrite3.*,
        (SELECT max(createTime) FROM PGPReadWrite3) AS endTime,
        :truncation_limit                           AS truncation_limit,
        ':truncation_order'                         AS truncation_order,
-       :rw3_amount_threshold                       AS amount_threshold,
-FROM PGPReadWrite3 )
+       :rw3_amount_threshold                       AS amount_threshold
+FROM PGPReadWrite3
+ORDER BY PGPReadWrite3.createTime )
 TO ':output_dir/incremental/AddPersonGuaranteePersonReadWrite3.csv' (DELIMITER '|', HEADER);
 
