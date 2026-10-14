@@ -23,24 +23,25 @@ import ldbc.finbench.datagen.generation.serializers.ActivitySerializer
 import ldbc.finbench.datagen.io.Writer
 import ldbc.finbench.datagen.io.raw.RawSink
 import ldbc.finbench.datagen.util.Logging
+import org.apache.spark.HashPartitioner
 import org.apache.spark.TaskContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.storage.StorageLevel
 
 import scala.collection.JavaConverters._
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
 
 class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
     extends Writer[RawSink]
     with Serializable
     with Logging {
   private val blockSize: Int = DatagenParams.blockSize
-  private val activityGenerator = new ActivityGenerator()
   private val activitySerializer = new ActivitySerializer(sink)
 
   def simulate(config: DatagenConfiguration): Unit = {
+    val activityGenerator = new ActivityGenerator(config)
+    implicit val activityConfig: DatagenConfiguration = config
+
     val personRdd =
       SparkPersonGenerator(DatagenParams.numPersons, config, blockSize)
     val companyRdd =
@@ -49,27 +50,41 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
       SparkMediumGenerator(DatagenParams.numMediums, config, blockSize)
 
     val personWithAccGuaLoan = activityGenerator.personActivitiesEvent(personRdd)
+      .persist(StorageLevel.DISK_ONLY)
     val companyWithAccGuaLoan = activityGenerator.companyActivitiesEvent(companyRdd)
+      .persist(StorageLevel.DISK_ONLY)
     val companyRddAfterInvest = activityGenerator.investEvent(personRdd, companyRdd)
 
-    val accountRdd = mergeAccountsAndShuffleDegrees(personWithAccGuaLoan, companyWithAccGuaLoan)
+    activitySerializer.writePersonWithActivities(personWithAccGuaLoan)
+    activitySerializer.writeCompanyWithActivities(companyWithAccGuaLoan)
+    activitySerializer.writeInvestCompanies(companyRddAfterInvest)
+
+    val accountRdd =
+      mergeAccountsAndShuffleDegrees(personWithAccGuaLoan, companyWithAccGuaLoan)
+        .persist(StorageLevel.DISK_ONLY)
+
     val mediumWithSignInRdd = activityGenerator.mediumActivitesEvent(mediumRdd, accountRdd)
-    val accountWithTransferWithdraw = activityGenerator.accountActivitiesEvent(accountRdd)
+      .persist(StorageLevel.DISK_ONLY)
+    activitySerializer.writeMediumWithActivities(mediumWithSignInRdd)
+    mediumWithSignInRdd.unpersist(blocking = true)
+
+    activitySerializer.writeAccounts(accountRdd)
+    activitySerializer.writeAccountTransfers(activityGenerator.accountActivitiesEvent(accountRdd))
+    activitySerializer.writeWithdraws(activityGenerator.withdrawActivitiesEvent(accountRdd))
 
     val loanRdd = mergeLoans(personWithAccGuaLoan, companyWithAccGuaLoan)
-    val loanWithActivitiesRdd = activityGenerator.afterLoanSubEvents(loanRdd, accountRdd)
 
-    // Serialize
-    val allFutures = Seq(
-      activitySerializer.writePersonWithActivities(personWithAccGuaLoan),
-      activitySerializer.writeCompanyWithActivities(companyWithAccGuaLoan),
-      activitySerializer.writeMediumWithActivities(mediumWithSignInRdd),
-      activitySerializer.writeAccountWithActivities(accountWithTransferWithdraw),
-      activitySerializer.writeInvestCompanies(companyRddAfterInvest),
-      activitySerializer.writeLoanActivities(loanWithActivitiesRdd)
-      ).flatten
+    // Release person/company RDDs — no longer needed after mergeLoans.
+    personWithAccGuaLoan.unpersist(blocking = true)
+    companyWithAccGuaLoan.unpersist(blocking = true)
 
-    Await.result(Future.sequence(allFutures), Duration.Inf)
+    // Persist a lightweight bundle instead of full Loan objects with account arrays.
+    val loanActivityBundles =
+      activityGenerator.loanActivitiesEvent(loanRdd, accountRdd).persist(StorageLevel.DISK_ONLY)
+
+    activitySerializer.writeLoanActivityBundles(loanActivityBundles)
+    loanActivityBundles.unpersist(false)
+    accountRdd.unpersist(false)
   }
 
   private def mergeAccountsAndShuffleDegrees(
@@ -80,19 +95,42 @@ class ActivitySimulator(sink: RawSink)(implicit spark: SparkSession)
       persons.flatMap(_.getAccount.asScala)
     val companyAccounts =
       companies.flatMap(_.getAccount.asScala)
-    personAccounts
-      .union(companyAccounts)
-      .mapPartitions(iter => shuffleDegrees(iter.toList).iterator)
+    val merged = personAccounts.union(companyAccounts)
+
+    merged
+      .keyBy(a => a.getAccountId)
+      .repartitionAndSortWithinPartitions(new HashPartitioner(merged.getNumPartitions))
+      .values
+      .mapPartitions { iter =>
+        val accounts = iter.toArray
+        shuffleDegrees(accounts)
+        accounts.iterator
+      }
   }
 
-  private def shuffleDegrees(accounts: List[Account]): List[Account] = {
-    val indegrees = accounts.map(_.getMaxInDegree)
-    val shuffled =
-      new scala.util.Random(TaskContext.getPartitionId()).shuffle(indegrees)
-    accounts.zip(shuffled).foreach { case (account, shuffled) =>
-      account.setMaxOutDegree(shuffled)
+  private def shuffleDegrees(accounts: Array[Account]): Unit = {
+    val shuffledInDegrees = new Array[Long](accounts.length)
+    var index = 0
+    while (index < accounts.length) {
+      shuffledInDegrees(index) = accounts(index).getMaxInDegree
+      index += 1
     }
-    accounts
+
+    val random = new scala.util.Random(TaskContext.getPartitionId())
+    var i = shuffledInDegrees.length - 1
+    while (i > 0) {
+      val j = random.nextInt(i + 1)
+      val tmp = shuffledInDegrees(i)
+      shuffledInDegrees(i) = shuffledInDegrees(j)
+      shuffledInDegrees(j) = tmp
+      i -= 1
+    }
+
+    index = 0
+    while (index < accounts.length) {
+      accounts(index).setMaxOutDegree(shuffledInDegrees(index))
+      index += 1
+    }
   }
 
   private def mergeLoans(

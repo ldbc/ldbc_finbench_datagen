@@ -40,20 +40,16 @@ public class LoanGenerator implements Serializable {
 
     private long composeLoanId(long id, long date, String personOrCompany, int blockId) {
         // the bits are composed as follows from left to right:
-        // 1 bit for sign, 1 bit for type, 14 bits for bucket ranging from 0 to 365 * numYears, 10 bits for blockId,
-        // 38 bits for id
-        long idMask = ~(0xFFFFFFFFFFFFFFFFL << 38);
+        // 1 bit for sign, 1 bit for type, 14 bits for bucket ranging from 0 to 365 * numYears, 20 bits for blockId,
+        // 28 bits for the id within a block. 20 block bits cover SF30k, including gaps from zipWithUniqueId.
         // each bucket is 1 day, range from 0 to 365 * numYears
         long bucket = (long) (365 * DatagenParams.numYears * (date - Dictionaries.dates.getSimulationStart())
             / (double) (Dictionaries.dates.getSimulationEnd() - Dictionaries.dates.getSimulationStart()));
-        if (personOrCompany.equals("company")) {
-            return (bucket << 48) | (long) blockId << 38 | ((id & idMask));
-        } else {
-            return 0x1L << 62 | (bucket << 48) | (long) blockId << 38 | ((id & idMask));
-        }
+        return ActivityIdGenerator.compose(id, bucket, personOrCompany, blockId);
     }
 
     public void resetState(long seed) {
+        nextId = 0;
         degreeDistribution.reset(seed);
         randomFarm.resetRandomGenerators(seed);
     }

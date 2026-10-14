@@ -20,6 +20,7 @@ import java.io.Serializable;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 import ldbc.finbench.datagen.entities.nodes.Account;
 import ldbc.finbench.datagen.entities.nodes.Loan;
+import ldbc.finbench.datagen.entities.nodes.LoanTargetAccount;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
@@ -34,8 +35,14 @@ public class Repay implements DynamicActivity, Serializable {
 
     public Repay(Account account, Loan loan, double amount, long creationDate, long deletionDate,
                  boolean isExplicitlyDeleted, String comment) {
-        this.accountId = account.getAccountId();
-        this.loanId = loan.getLoanId();
+        this(account.getAccountId(), loan.getLoanId(), amount, creationDate, deletionDate,
+             isExplicitlyDeleted, comment);
+    }
+
+    private Repay(long accountId, long loanId, double amount, long creationDate, long deletionDate,
+                  boolean isExplicitlyDeleted, String comment) {
+        this.accountId = accountId;
+        this.loanId = loanId;
         this.amount = amount;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
@@ -54,6 +61,20 @@ public class Repay implements DynamicActivity, Serializable {
                                 account.isExplicitlyDeleted(), comment);
         loan.addRepay(repay);
         //account.getRepays().add(repay);
+    }
+
+    // Lightweight overload using LoanTargetAccount instead of full Account
+    public static void createRepay(RandomGeneratorFarm farm, LoanTargetAccount account, Loan loan, double amount) {
+        long creationDate =
+            Dictionaries.dates.randomAccountToLoanDate(farm.get(RandomGeneratorFarm.Aspect.LOAN_SUBEVENTS_DATE),
+                                                       account.getCreationDate(), loan.getCreationDate(),
+                                                       account.getDeletionDate());
+        String comment =
+            Dictionaries.randomTexts.getUniformDistRandomTextForComments(
+                farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
+        Repay repay = new Repay(account.getAccountId(), loan.getLoanId(), amount, creationDate,
+                                account.getDeletionDate(), account.isExplicitlyDeleted(), comment);
+        loan.addRepay(repay);
     }
 
     public double getAmount() {

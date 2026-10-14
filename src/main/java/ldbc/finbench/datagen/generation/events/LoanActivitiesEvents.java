@@ -29,6 +29,7 @@ import ldbc.finbench.datagen.entities.edges.Repay;
 import ldbc.finbench.datagen.entities.edges.Transfer;
 import ldbc.finbench.datagen.entities.nodes.Account;
 import ldbc.finbench.datagen.entities.nodes.Loan;
+import ldbc.finbench.datagen.entities.nodes.LoanTargetAccount;
 import ldbc.finbench.datagen.entities.nodes.PersonOrCompany;
 import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
@@ -40,6 +41,7 @@ public class LoanActivitiesEvents implements Serializable {
     private final Random amountRandom;
     private final List<Consumer<Loan>> consumers;
     private Account[] targetAccounts;
+    private LoanTargetAccount[] targetLoanAccounts;
     private int targetAccountsSize;
 
     // Note: Don't make it static. It will be accessed by different Spark workers, which makes multiplicity wrong.
@@ -67,7 +69,25 @@ public class LoanActivitiesEvents implements Serializable {
     public List<Loan> afterLoanApplied(List<Loan> loans, Account[] targets, int blockId) {
         resetState(blockId);
         targetAccounts = targets;
+        targetLoanAccounts = null;
         targetAccountsSize = targetAccounts.length;
+        for (Loan loan : loans) {
+            int count = 0;
+            while (count++ < DatagenParams.numLoanActions) {
+                Consumer<Loan> consumer = consumers.get(actionRandom.nextInt(consumers.size()));
+                consumer.accept(loan);
+            }
+        }
+        return loans;
+    }
+
+    // Lightweight overload using LoanTargetAccount[] instead of Account[]
+    // This avoids broadcasting full Account objects (with nested edge lists) to all executors.
+    public List<Loan> afterLoanApplied(List<Loan> loans, LoanTargetAccount[] targets, int blockId) {
+        resetState(blockId);
+        targetLoanAccounts = targets;
+        targetAccounts = null;
+        targetAccountsSize = targetLoanAccounts.length;
         for (Loan loan : loans) {
             int count = 0;
             while (count++ < DatagenParams.numLoanActions) {
@@ -100,26 +120,68 @@ public class LoanActivitiesEvents implements Serializable {
         return atomicInt.getAndIncrement();
     }
 
+    // Lightweight multiplicity for LoanTargetAccount pairs
+    public long getMultiplicityIdAndInc(Account from, LoanTargetAccount to) {
+        String key = from.getAccountId() + "-" + to.getAccountId();
+        AtomicLong atomicInt = multiplicityMap.computeIfAbsent(key, k -> new AtomicLong());
+        return atomicInt.getAndIncrement();
+    }
+
+    public long getMultiplicityIdAndInc(LoanTargetAccount from, Account to) {
+        String key = from.getAccountId() + "-" + to.getAccountId();
+        AtomicLong atomicInt = multiplicityMap.computeIfAbsent(key, k -> new AtomicLong());
+        return atomicInt.getAndIncrement();
+    }
 
     private void transferSubEvent(Loan loan) {
         Account account = getAccount(loan);
-        Account target = targetAccounts[indexRandom.nextInt(targetAccountsSize)];
-        if (actionRandom.nextDouble() < 0.5) {
-            if (!cannotTransfer(account, target)) {
-                Transfer.createLoanTransfer(randomFarm, account, target, loan,
-                                            getMultiplicityIdAndInc(account, target),
-                                            amountRandom.nextDouble() * DatagenParams.transferMaxAmount);
+        if (targetAccounts != null) {
+            // Original path using full Account objects
+            Account target = targetAccounts[indexRandom.nextInt(targetAccountsSize)];
+            if (actionRandom.nextDouble() < 0.5) {
+                if (!cannotTransfer(account, target)) {
+                    Transfer.createLoanTransfer(randomFarm, account, target, loan,
+                                                getMultiplicityIdAndInc(account, target),
+                                                amountRandom.nextDouble() * DatagenParams.transferMaxAmount);
+                }
+            } else {
+                if (!cannotTransfer(target, account)) {
+                    Transfer.createLoanTransfer(randomFarm, target, account, loan,
+                                                getMultiplicityIdAndInc(target, account),
+                                                amountRandom.nextDouble() * DatagenParams.transferMaxAmount);
+                }
             }
         } else {
-            if (!cannotTransfer(target, account)) {
-                Transfer.createLoanTransfer(randomFarm, target, account, loan,
-                                            getMultiplicityIdAndInc(target, account),
-                                            amountRandom.nextDouble() * DatagenParams.transferMaxAmount);
+            // Lightweight path using LoanTargetAccount objects
+            LoanTargetAccount target = targetLoanAccounts[indexRandom.nextInt(targetAccountsSize)];
+            if (actionRandom.nextDouble() < 0.5) {
+                if (!cannotTransfer(account, target)) {
+                    Transfer.createLoanTransfer(randomFarm, account, target, loan,
+                                                getMultiplicityIdAndInc(account, target),
+                                                amountRandom.nextDouble() * DatagenParams.transferMaxAmount);
+                }
+            } else {
+                if (!cannotTransfer(target, account)) {
+                    Transfer.createLoanTransfer(randomFarm, target, account, loan,
+                                                getMultiplicityIdAndInc(target, account),
+                                                amountRandom.nextDouble() * DatagenParams.transferMaxAmount);
+                }
             }
         }
     }
 
     public boolean cannotTransfer(Account from, Account to) {
+        return from.getDeletionDate() < to.getCreationDate() + DatagenParams.activityDelta
+            || from.getCreationDate() + DatagenParams.activityDelta > to.getDeletionDate();
+    }
+
+    // Lightweight overloads using LoanTargetAccount
+    public boolean cannotTransfer(Account from, LoanTargetAccount to) {
+        return from.getDeletionDate() < to.getCreationDate() + DatagenParams.activityDelta
+            || from.getCreationDate() + DatagenParams.activityDelta > to.getDeletionDate();
+    }
+
+    public boolean cannotTransfer(LoanTargetAccount from, Account to) {
         return from.getDeletionDate() < to.getCreationDate() + DatagenParams.activityDelta
             || from.getCreationDate() + DatagenParams.activityDelta > to.getDeletionDate();
     }

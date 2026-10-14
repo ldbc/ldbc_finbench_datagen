@@ -17,7 +17,7 @@
 package ldbc.finbench.datagen.util
 
 import ldbc.finbench.datagen.entities.edges._
-import ldbc.finbench.datagen.entities.nodes._
+import ldbc.finbench.datagen.entities.nodes.{Account, Company, InvestorInfo, Loan, LoanTargetAccount, Medium, Person, SignInTargetInfo}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 
@@ -64,9 +64,12 @@ trait SparkApp {
       Array(
         classOf[Account],
         classOf[Company],
+        classOf[InvestorInfo],
         classOf[Loan],
+        classOf[LoanTargetAccount],
         classOf[Medium],
-        classOf[Person]
+        classOf[Person],
+        classOf[SignInTargetInfo]
       )
     )
     // register kryo classes for edges

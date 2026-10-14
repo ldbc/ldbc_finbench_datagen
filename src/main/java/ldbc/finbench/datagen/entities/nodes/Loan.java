@@ -49,9 +49,9 @@ public class Loan implements Serializable, Comparable<Loan> {
         this.maxDegree = maxDegree;
         this.usage = usage;
         this.interestRate = interestRate;
-        deposits = new LinkedList<>();
-        repays = new LinkedList<>();
-        loanTransfers = new LinkedList<>();
+        deposits = new ArrayList<>();
+        repays = new ArrayList<>();
+        loanTransfers = new ArrayList<>();
     }
 
     @Override

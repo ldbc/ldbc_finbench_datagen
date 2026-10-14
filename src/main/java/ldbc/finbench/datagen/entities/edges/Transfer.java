@@ -21,6 +21,7 @@ import java.util.Comparator;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 import ldbc.finbench.datagen.entities.nodes.Account;
 import ldbc.finbench.datagen.entities.nodes.Loan;
+import ldbc.finbench.datagen.entities.nodes.LoanTargetAccount;
 import ldbc.finbench.datagen.generation.DatagenParams;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
@@ -42,6 +43,17 @@ public class Transfer implements DynamicActivity, Serializable {
                     long multiplicityId, boolean isExplicitlyDeleted) {
         this.fromAccountId = fromAccount.getAccountId();
         this.toAccountId = toAccount.getAccountId();
+        this.amount = amount;
+        this.creationDate = creationDate;
+        this.deletionDate = deletionDate;
+        this.multiplicityId = multiplicityId;
+        this.isExplicitlyDeleted = isExplicitlyDeleted;
+    }
+
+    public Transfer(long fromAccountId, long toAccountId, double amount, long creationDate, long deletionDate,
+                    long multiplicityId, boolean isExplicitlyDeleted) {
+        this.fromAccountId = fromAccountId;
+        this.toAccountId = toAccountId;
         this.amount = amount;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
@@ -120,6 +132,117 @@ public class Transfer implements DynamicActivity, Serializable {
 
         //from.getTransferOuts().add(transfer);
         //to.getTransferIns().add(transfer);
+        loan.addLoanTransfer(transfer);
+    }
+
+    // Lightweight overload using LoanTargetAccount instead of full Account objects
+    public static void createLoanTransfer(RandomGeneratorFarm farm, Account from, LoanTargetAccount to,
+                                              Loan loan, long multiplicityId,
+                                              double amount) {
+        long deleteDate = Math.min(from.getDeletionDate(), to.getDeletionDate());
+        long creationDate =
+            Dictionaries.dates.randomAccountToAccountDate(farm.get(RandomGeneratorFarm.Aspect.LOAN_SUBEVENTS_DATE),
+                                                          from.getCreationDate(), to.getCreationDate(),
+                                                          deleteDate);
+        boolean willDelete = from.isExplicitlyDeleted() && to.isExplicitlyDeleted();
+        Transfer transfer = new Transfer(from.getAccountId(), to.getAccountId(), amount, creationDate, deleteDate,
+                                         multiplicityId, willDelete);
+
+        // Set ordernum
+        String ordernum = Dictionaries.numbers.generateOrdernum(farm.get(RandomGeneratorFarm.Aspect.TRANSFER_ORDERNUM));
+        transfer.setOrdernum(ordernum);
+
+        // Set comment
+        String comment =
+            Dictionaries.randomTexts.getUniformDistRandomTextForComments(
+                farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
+        transfer.setComment(comment);
+
+        // Set payType
+        String paytype =
+            Dictionaries.transferTypes.getUniformDistRandomText(farm.get(RandomGeneratorFarm.Aspect.TRANSFER_PAYTYPE));
+        transfer.setPayType(paytype);
+
+        // Set goodsType
+        String goodsType =
+            Dictionaries.transferTypes.getUniformDistRandomText(
+                farm.get(RandomGeneratorFarm.Aspect.TRANSFER_GOODSTYPE));
+        transfer.setGoodsType(goodsType);
+
+        loan.addLoanTransfer(transfer);
+    }
+
+    // Lightweight overload for reverse direction: LoanTargetAccount from, Account to
+    public static void createLoanTransfer(RandomGeneratorFarm farm, LoanTargetAccount from, Account to,
+                                              Loan loan, long multiplicityId,
+                                              double amount) {
+        long deleteDate = Math.min(from.getDeletionDate(), to.getDeletionDate());
+        long creationDate =
+            Dictionaries.dates.randomAccountToAccountDate(farm.get(RandomGeneratorFarm.Aspect.LOAN_SUBEVENTS_DATE),
+                                                          from.getCreationDate(), to.getCreationDate(),
+                                                          deleteDate);
+        boolean willDelete = from.isExplicitlyDeleted() && to.isExplicitlyDeleted();
+        Transfer transfer = new Transfer(from.getAccountId(), to.getAccountId(), amount, creationDate, deleteDate,
+                                         multiplicityId, willDelete);
+
+        // Set ordernum
+        String ordernum = Dictionaries.numbers.generateOrdernum(farm.get(RandomGeneratorFarm.Aspect.TRANSFER_ORDERNUM));
+        transfer.setOrdernum(ordernum);
+
+        // Set comment
+        String comment =
+            Dictionaries.randomTexts.getUniformDistRandomTextForComments(
+                farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
+        transfer.setComment(comment);
+
+        // Set payType
+        String paytype =
+            Dictionaries.transferTypes.getUniformDistRandomText(farm.get(RandomGeneratorFarm.Aspect.TRANSFER_PAYTYPE));
+        transfer.setPayType(paytype);
+
+        // Set goodsType
+        String goodsType =
+            Dictionaries.transferTypes.getUniformDistRandomText(
+                farm.get(RandomGeneratorFarm.Aspect.TRANSFER_GOODSTYPE));
+        transfer.setGoodsType(goodsType);
+
+        loan.addLoanTransfer(transfer);
+    }
+
+    // Lightweight overload using LoanTargetAccount for both accounts
+    public static void createLoanTransfer(RandomGeneratorFarm farm, LoanTargetAccount from, LoanTargetAccount to,
+                                              Loan loan, long multiplicityId,
+                                              double amount) {
+        long deleteDate = Math.min(from.getDeletionDate(), to.getDeletionDate());
+        long creationDate =
+            Dictionaries.dates.randomAccountToAccountDate(farm.get(RandomGeneratorFarm.Aspect.LOAN_SUBEVENTS_DATE),
+                                                          from.getCreationDate(), to.getCreationDate(),
+                                                          deleteDate);
+        boolean willDelete = from.isExplicitlyDeleted() && to.isExplicitlyDeleted();
+        Transfer transfer = new Transfer(from.getAccountId(), to.getAccountId(), amount, creationDate, deleteDate,
+                                         multiplicityId, willDelete);
+
+        // Set ordernum
+        String ordernum = Dictionaries.numbers.generateOrdernum(farm.get(RandomGeneratorFarm.Aspect.TRANSFER_ORDERNUM));
+        transfer.setOrdernum(ordernum);
+
+        // Set comment
+        String comment =
+            Dictionaries.randomTexts.getUniformDistRandomTextForComments(
+                farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
+        transfer.setComment(comment);
+
+        // Set payType
+        String paytype =
+            Dictionaries.transferTypes.getUniformDistRandomText(farm.get(RandomGeneratorFarm.Aspect.TRANSFER_PAYTYPE));
+        transfer.setPayType(paytype);
+
+        // Set goodsType
+        String goodsType =
+            Dictionaries.transferTypes.getUniformDistRandomText(
+                farm.get(RandomGeneratorFarm.Aspect.TRANSFER_GOODSTYPE));
+        transfer.setGoodsType(goodsType);
+
         loan.addLoanTransfer(transfer);
     }
 

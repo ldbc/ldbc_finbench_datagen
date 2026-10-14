@@ -51,14 +51,14 @@ public class Company implements Serializable {
     private final List<Loan> loans;
 
     public Company() {
-        ownAccounts = new LinkedList<>();
+        ownAccounts = new ArrayList<>();
         personInvestCompanies = new LinkedList<>();
         companyInvestCompanies = new LinkedList<>();
         guaranteeSrc = new LinkedHashSet<>();
         guaranteeDst = new LinkedHashSet<>();
-        applyLoans = new LinkedList<>();
+        applyLoans = new ArrayList<>();
         accounts = new ArrayList<>();
-        loans = new LinkedList<>();
+        loans = new ArrayList<>();
     }
 
     @Override
@@ -145,6 +145,25 @@ public class Company implements Serializable {
     public boolean hasInvestedBy(Person person) {
         for (PersonInvestCompany pic : personInvestCompanies) {
             if (pic.getPersonId() == person.getPersonId()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Lightweight checks by id (for use with InvestorInfo)
+    public boolean hasInvestedByCompanyId(long companyId) {
+        for (CompanyInvestCompany cic : companyInvestCompanies) {
+            if (cic.getFromCompanyId() == companyId) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean hasInvestedByPersonId(long personId) {
+        for (PersonInvestCompany pic : personInvestCompanies) {
+            if (pic.getPersonId() == personId) {
                 return true;
             }
         }
