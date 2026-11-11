@@ -151,6 +151,12 @@ public class DateGenerator {
         // return randDate + randHour * ONE_HOUR + randMinute * ONE_MINUTE + randSecond * ONE_SECOND;
     }
 
+    public long randomAccountToAccountDate(Random random, long fromCreationDate, long toCreationDate,
+                                           long deletionDate) {
+        long fromDate = Math.max(fromCreationDate, toCreationDate) + DatagenParams.activityDelta;
+        return randomDate(random, fromDate, Math.min(deletionDate, simulationEnd));
+    }
+
     public long randomLoanToAccountDate(Random random, Loan loan, Account account, long deletionDate) {
         long fromDate = Math.max(loan.getCreationDate(), account.getCreationDate()) + DatagenParams.activityDelta;
         return randomDate(random, fromDate, Math.min(deletionDate, simulationEnd));
