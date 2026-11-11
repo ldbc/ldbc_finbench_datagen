@@ -19,7 +19,7 @@ package ldbc.finbench.datagen.factors
 import ldbc.finbench.datagen.LdbcDatagen.log
 import ldbc.finbench.datagen.util.DatagenStage
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.{DataFrame, SparkSession, functions => F}
+import org.apache.spark.sql.{Column, DataFrame, SparkSession, functions => F}
 import org.slf4j.{Logger, LoggerFactory}
 import scopt.OptionParser
 import shapeless.lens
@@ -88,6 +88,25 @@ object FactorGenerationStage extends DatagenStage {
   def factortables(args: Args)(implicit spark: SparkSession) = {
     import spark.implicits._
     log.info("[Main] Starting factoring stage")
+    spark.conf.set("spark.sql.session.timeZone", "UTC")
+
+    def parseTimeMillis(column: Column): Column = {
+      val trimmed = trim(column.cast("string"))
+      val numericMillis = when(trimmed.rlike("^[0-9]{12,}$"), trimmed.cast("long"))
+        .when(trimmed.rlike("^[0-9]{10}$"), trimmed.cast("long") * lit(1000L))
+
+      coalesce(
+        numericMillis,
+        unix_timestamp(
+          coalesce(
+            to_timestamp(trimmed, "yyyy-MM-dd HH:mm:ss.SSS"),
+            to_timestamp(trimmed, "yyyy-MM-dd HH:mm:ss"),
+            to_timestamp(trimmed, "yyyy/MM/dd HH:mm:ss.SSS"),
+            to_timestamp(trimmed, "yyyy/MM/dd HH:mm:ss")
+          )
+        ) * lit(1000L)
+      )
+    }
 
     val transferRDD = spark.read
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
@@ -98,12 +117,7 @@ object FactorGenerationStage extends DatagenStage {
         $"fromId",
         $"toId",
         $"amount".cast("double"),
-        (unix_timestamp(
-          coalesce(
-            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss.SSS"), 
-            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss")      
-          )
-        ) * 1000).alias("createTime")
+        parseTimeMillis($"createTime").alias("createTime")
       )
 
     val withdrawRDD = spark.read
@@ -115,12 +129,7 @@ object FactorGenerationStage extends DatagenStage {
         $"fromId",
         $"toId",
         $"amount".cast("double"),
-        (unix_timestamp(
-          coalesce(
-            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss.SSS"), 
-            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss")      
-          )
-        ) * 1000).alias("createTime")
+        parseTimeMillis($"createTime").alias("createTime")
       )
 
     val depositRDD = spark.read
@@ -128,7 +137,11 @@ object FactorGenerationStage extends DatagenStage {
       .option("header", "true")
       .option("delimiter", "|")
       .load(s"${args.outputDir}/snapshot/LoanDepositAccount.csv")
-      .select($"accountId", $"loanId")
+      .select(
+        $"accountId",
+        $"loanId",
+        parseTimeMillis($"createTime").alias("createTime")
+      )
 
     val personInvestRDD = spark.read
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
@@ -138,12 +151,7 @@ object FactorGenerationStage extends DatagenStage {
       .select(
         $"investorId",
         $"companyId",
-        (unix_timestamp(
-          coalesce(
-            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss.SSS"), 
-            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss")      
-          )
-        ) * 1000).alias("createTime")
+        parseTimeMillis($"createTime").alias("createTime")
       )
 
     val OwnRDD = spark.read
@@ -153,6 +161,59 @@ object FactorGenerationStage extends DatagenStage {
       .load(s"${args.outputDir}/snapshot/PersonOwnAccount.csv")
       .select($"personId", $"accountId")
 
+    val companyOwnRDD = spark.read
+      .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
+      .option("header", "true")
+      .option("delimiter", "|")
+      .load(s"${args.outputDir}/snapshot/CompanyOwnAccount.csv")
+      .select($"companyId", $"accountId")
+
+    val accountRDD = spark.read
+      .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
+      .option("header", "true")
+      .option("delimiter", "|")
+      .load(s"${args.outputDir}/snapshot/Account.csv")
+      .select($"accountId", $"accountType")
+
+    val blockedAccountRDD = spark.read
+      .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
+      .option("header", "true")
+      .option("delimiter", "|")
+      .load(s"${args.outputDir}/snapshot/Account.csv")
+      .select(
+        $"accountId",
+        lower(coalesce($"isBlocked".cast("string"), lit(""))).alias("isBlocked")
+      )
+      .filter($"isBlocked".isin("true", "1", "t", "yes", "y"))
+      .select($"accountId".alias("account_id"))
+
+    blockedAccountRDD.write
+      .option("header", "true")
+      .option("delimiter", "|")
+      .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
+      .save(s"${args.outputDir}/factor_table/blocked_account_ids")
+
+    val mediumRDD = spark.read
+      .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
+      .option("header", "true")
+      .option("delimiter", "|")
+      .load(s"${args.outputDir}/snapshot/Medium.csv")
+      .select(
+        $"mediumId",
+        lower(coalesce($"isBlocked".cast("string"), lit(""))).alias("isBlocked")
+      )
+
+    val signInRDD = spark.read
+      .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
+      .option("header", "true")
+      .option("delimiter", "|")
+      .load(s"${args.outputDir}/snapshot/MediumSignInAccount.csv")
+      .select(
+        $"mediumId",
+        $"accountId",
+        parseTimeMillis($"createTime").alias("createTime")
+      )
+
     val personGuaranteeRDD = spark.read
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
       .option("header", "true")
@@ -161,12 +222,7 @@ object FactorGenerationStage extends DatagenStage {
       .select(
         $"fromId",
         $"toId",
-        (unix_timestamp(
-          coalesce(
-            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss.SSS"), 
-            to_timestamp($"createTime", "yyyy-MM-dd HH:mm:ss")      
-          )
-        ) * 1000).alias("createTime")
+        parseTimeMillis($"createTime").alias("createTime")
       )
 
     def transformItems(
@@ -367,6 +423,7 @@ object FactorGenerationStage extends DatagenStage {
 
     val transferInTimeRDD = transferRDD.select(col("toId"), col("createTime"))
     val withdrawInTimeRDD = withdrawRDD.select(col("toId"), col("createTime"))
+    val loanDepositTimeRDD = depositRDD.select(col("loanId"), col("createTime"))
     val personGuaranteeTimeRDD =
       personGuaranteeRDD.select(col("fromId"), col("createTime"))
     val InvestInTimeRDD =
@@ -402,6 +459,64 @@ object FactorGenerationStage extends DatagenStage {
       .option("delimiter", "|")
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
       .save(s"${args.outputDir}/factor_table/withdraw_in_month")
+
+    val accountLoanDepositPivotRDD =
+      processByMonth(depositRDD, "accountId", "createTime", "account_id")
+
+    accountLoanDepositPivotRDD.write
+      .option("header", "true")
+      .option("delimiter", "|")
+      .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
+      .save(s"${args.outputDir}/factor_table/account_loan_deposit_month")
+
+    val loanDepositPivotRDD =
+      processByMonth(loanDepositTimeRDD, "loanId", "createTime", "loan_id")
+
+    loanDepositPivotRDD.write
+      .option("header", "true")
+      .option("delimiter", "|")
+      .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
+      .save(s"${args.outputDir}/factor_table/loan_deposit_month")
+
+    val loanDepositAccountMonthRDD = depositRDD
+      .withColumn(
+        "month_start",
+        unix_timestamp(
+          date_format((col("createTime") / 1000).cast("timestamp"), "yyyy-MM"),
+          "yyyy-MM"
+        ) * 1000
+      )
+      .groupBy("loanId", "month_start")
+      .agg(coalesce(collect_set("accountId"), array()).alias("account_list"))
+      .select(
+        col("loanId").alias("loan_id"),
+        col("month_start"),
+        concat(lit("["), array_join(col("account_list"), ","), lit("]"))
+          .alias("account_list")
+      )
+
+    loanDepositAccountMonthRDD.write
+      .option("header", "true")
+      .option("delimiter", "|")
+      .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
+      .save(s"${args.outputDir}/factor_table/loan_deposit_account_month_list")
+
+    val blockedMediumRDD = mediumRDD.filter(
+      $"isBlocked".isin("true", "1", "t", "yes", "y")
+    )
+
+    val blockedSignInTimeRDD = signInRDD
+      .join(blockedMediumRDD.select($"mediumId"), Seq("mediumId"), "inner")
+      .select($"accountId", $"createTime")
+
+    val blockedSignInPivotRDD =
+      processByMonth(blockedSignInTimeRDD, "accountId", "createTime", "account_id")
+
+    blockedSignInPivotRDD.write
+      .option("header", "true")
+      .option("delimiter", "|")
+      .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
+      .save(s"${args.outputDir}/factor_table/blocked_signin_month")
 
     val personGuaranteePivotRDD = processByMonth(
       personGuaranteeTimeRDD,
@@ -530,6 +645,21 @@ object FactorGenerationStage extends DatagenStage {
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
       .save(s"${args.outputDir}/factor_table/person_account_list")
 
+    val CompanyOwnAccountRDD = companyOwnRDD
+      .groupBy("companyId")
+      .agg(coalesce(collect_set("accountId"), array()).alias("account_list"))
+      .select(
+        col("companyId").alias("company_id"),
+        concat(lit("["), array_join(col("account_list"), ","), lit("]"))
+          .alias("account_list")
+      )
+
+    CompanyOwnAccountRDD.write
+      .option("header", "true")
+      .option("delimiter", "|")
+      .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
+      .save(s"${args.outputDir}/factor_table/company_account_list")
+
     val PersonGuaranteeListRDD = personGuaranteeRDD
       .select($"fromId", $"toId")
       .groupBy("fromId")
@@ -569,6 +699,16 @@ object FactorGenerationStage extends DatagenStage {
       .option("delimiter", "|")
       .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
       .save(s"${args.outputDir}/factor_table/loan_account_list")
+
+    val cardAccountRDD = accountRDD
+      .filter(lower(coalesce($"accountType", lit(""))).endsWith("card"))
+      .select(col("accountId").alias("account_id"))
+
+    cardAccountRDD.write
+      .option("header", "true")
+      .option("delimiter", "|")
+      .format("org.apache.spark.sql.execution.datasources.csv.CSVFileFormat")
+      .save(s"${args.outputDir}/factor_table/card_account_ids")
 
     val transactionsSumRDD = transferInAmountRDD
       .union(withdrawRDD.select(col("toId"), col("amount").cast("double")))

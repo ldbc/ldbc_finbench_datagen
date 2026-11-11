@@ -63,7 +63,7 @@ def findWindows(factors, param, amount, bounds):
     allWindows = []
     start = 0
 
-    initWindow = Window(param, start, amount - 1)
+    initWindow = Window(param, bounds[0] + start, bounds[0] + amount - 1)
     initWindow.avg = getAverageCost(data[start:amount], itemgetter(param))
     initWindow.stddev = getCostStdDev(data[start:amount], initWindow.avg, itemgetter(param))
 
