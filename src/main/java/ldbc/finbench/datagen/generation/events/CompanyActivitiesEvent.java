@@ -47,6 +47,9 @@ public class CompanyActivitiesEvent implements Serializable {
 
     public List<Company> companyActivities(List<Company> companies, AccountGenerator accountGenerator,
                                          LoanGenerator loanGenerator, int blockId) {
+        if (companies.isEmpty()) {
+            return companies;
+        }
         resetState(blockId);
         accountGenerator.resetState(blockId);
 

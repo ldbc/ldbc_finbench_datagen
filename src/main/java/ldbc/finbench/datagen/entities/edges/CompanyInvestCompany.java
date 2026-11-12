@@ -20,6 +20,7 @@ import java.io.Serializable;
 import java.util.Random;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 import ldbc.finbench.datagen.entities.nodes.Company;
+import ldbc.finbench.datagen.entities.nodes.InvestorInfo;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
@@ -44,17 +45,31 @@ public class CompanyInvestCompany implements DynamicActivity, Serializable {
         this.comment = comment;
     }
 
+    // Lightweight overload accepting InvestorInfo instead of full Company objects
     public static void createCompanyInvestCompany(RandomGeneratorFarm farm,
-                                                  Company investor, Company target) {
+                                                  InvestorInfo investor, Company target) {
         Random dateRandom = farm.get(RandomGeneratorFarm.Aspect.COMPANY_INVEST_DATE);
-        long creationDate = Dictionaries.dates.randomCompanyToCompanyDate(dateRandom, investor, target);
+        long creationDate = Dictionaries.dates.randomCompanyToCompanyDate(dateRandom, investor, 
+            new InvestorInfo(target.getCompanyId(), target.getCreationDate()));
         double ratio = farm.get(RandomGeneratorFarm.Aspect.INVEST_RATIO).nextDouble();
         String comment =
             Dictionaries.randomTexts.getUniformDistRandomTextForComments(
                 farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
         CompanyInvestCompany companyInvestCompany =
-            new CompanyInvestCompany(investor, target, creationDate, 0, ratio, false, comment);
+            new CompanyInvestCompany(investor.getId(), target.getCompanyId(), creationDate, 0, ratio, false, comment);
         target.getCompanyInvestCompanies().add(companyInvestCompany);
+    }
+
+    // Constructor accepting primitive ids (used by lightweight overload)
+    private CompanyInvestCompany(long fromCompanyId, long toCompanyId, long creationDate, long deletionDate,
+                                 double ratio, boolean isExplicitlyDeleted, String comment) {
+        this.fromCompanyId = fromCompanyId;
+        this.toCompanyId = toCompanyId;
+        this.creationDate = creationDate;
+        this.deletionDate = deletionDate;
+        this.ratio = ratio;
+        this.isExplicitlyDeleted = isExplicitlyDeleted;
+        this.comment = comment;
     }
 
     public void scaleRatio(double sum) {

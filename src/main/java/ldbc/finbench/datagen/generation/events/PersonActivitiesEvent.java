@@ -48,6 +48,9 @@ public class PersonActivitiesEvent implements Serializable {
     // Generate accounts, guarantees, and loans for persons
     public List<Person> personActivities(List<Person> persons, AccountGenerator accountGenerator,
                                          LoanGenerator loanGenerator, int blockId) {
+        if (persons.isEmpty()) {
+            return persons;
+        }
         resetState(blockId);
         accountGenerator.resetState(blockId);
 

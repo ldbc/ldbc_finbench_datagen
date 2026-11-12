@@ -206,4 +206,74 @@
             <value>1000000</value>
         </property>
     </scale_factor>
+
+    <scale_factor name="3000">
+        <property>
+            <name>generator.numPersons</name>
+            <value>30000000</value>
+        </property>
+        <property>
+            <name>generator.numCompanies</name>
+            <value>30000000</value>
+        </property>
+        <property>
+            <name>generator.numMediums</name>
+            <value>60000000</value>
+        </property>
+        <property>
+            <name>transfer.minNumDegree</name>
+            <value>1</value>
+        </property>
+        <property>
+            <name>transfer.maxNumDegree</name>
+            <value>1000000</value>
+        </property>
+    </scale_factor>
+
+    <scale_factor name="10k">
+        <property>
+            <name>generator.numPersons</name>
+            <value>100000000</value>
+        </property>
+        <property>
+            <name>generator.numCompanies</name>
+            <value>100000000</value>
+        </property>
+        <property>
+            <name>generator.numMediums</name>
+            <value>200000000</value>
+        </property>
+        <property>
+            <name>transfer.minNumDegree</name>
+            <value>1</value>
+        </property>
+        <property>
+            <name>transfer.maxNumDegree</name>
+            <value>10000000</value>
+        </property>
+    </scale_factor>
+
+    <scale_factor name="30k">
+        <property>
+            <name>generator.numPersons</name>
+            <value>300000000</value>
+        </property>
+        <property>
+            <name>generator.numCompanies</name>
+            <value>300000000</value>
+        </property>
+        <property>
+            <name>generator.numMediums</name>
+            <value>600000000</value>
+        </property>
+        <property>
+            <name>transfer.minNumDegree</name>
+            <value>1</value>
+        </property>
+        <property>
+            <name>transfer.maxNumDegree</name>
+            <value>10000000</value>
+        </property>
+    </scale_factor>
+
 </scale_factors>

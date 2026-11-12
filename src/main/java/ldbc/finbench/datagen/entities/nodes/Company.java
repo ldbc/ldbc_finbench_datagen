@@ -151,6 +151,25 @@ public class Company implements Serializable {
         return false;
     }
 
+    // Lightweight checks by id (for use with InvestorInfo)
+    public boolean hasInvestedByCompanyId(long companyId) {
+        for (CompanyInvestCompany cic : companyInvestCompanies) {
+            if (cic.getFromCompanyId() == companyId) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean hasInvestedByPersonId(long personId) {
+        for (PersonInvestCompany pic : personInvestCompanies) {
+            if (pic.getPersonId() == personId) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public HashSet<CompanyGuaranteeCompany> getGuaranteeSrc() {
         return guaranteeSrc;
     }

@@ -20,6 +20,7 @@ import java.io.Serializable;
 import ldbc.finbench.datagen.entities.DynamicActivity;
 import ldbc.finbench.datagen.entities.nodes.Account;
 import ldbc.finbench.datagen.entities.nodes.Loan;
+import ldbc.finbench.datagen.entities.nodes.LoanTargetAccount;
 import ldbc.finbench.datagen.generation.dictionary.Dictionaries;
 import ldbc.finbench.datagen.util.RandomGeneratorFarm;
 
@@ -34,8 +35,14 @@ public class Deposit implements DynamicActivity, Serializable {
 
     public Deposit(Loan loan, Account account, double amount, long creationDate, long deletionDate,
                    boolean isExplicitlyDeleted, String comment) {
-        this.loanId = loan.getLoanId();
-        this.accountId = account.getAccountId();
+        this(loan.getLoanId(), account.getAccountId(), amount, creationDate,
+             deletionDate, isExplicitlyDeleted, comment);
+    }
+
+    public Deposit(long loanId, long accountId, double amount, long creationDate, long deletionDate,
+                   boolean isExplicitlyDeleted, String comment) {
+        this.loanId = loanId;
+        this.accountId = accountId;
         this.amount = amount;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
@@ -55,6 +62,20 @@ public class Deposit implements DynamicActivity, Serializable {
                         comment);
         loan.addDeposit(deposit);
         //account.getDeposits().add(deposit);
+    }
+
+    // Lightweight overload using LoanTargetAccount instead of full Account
+    public static void createDeposit(RandomGeneratorFarm farm, Loan loan, LoanTargetAccount account, double amount) {
+        long creationDate =
+            Dictionaries.dates.randomLoanToAccountDate(farm.get(RandomGeneratorFarm.Aspect.LOAN_SUBEVENTS_DATE), loan,
+                                                       account.getCreationDate(), account.getDeletionDate());
+        String comment =
+            Dictionaries.randomTexts.getUniformDistRandomTextForComments(
+                farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
+        Deposit deposit =
+            new Deposit(loan.getLoanId(), account.getAccountId(), amount, creationDate, account.getDeletionDate(),
+                        account.isExplicitlyDeleted(), comment);
+        loan.addDeposit(deposit);
     }
 
     public double getAmount() {
