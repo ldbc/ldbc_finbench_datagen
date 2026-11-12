@@ -36,12 +36,12 @@ public class Withdraw implements DynamicActivity, Serializable {
     private final boolean isExplicitlyDeleted;
     private final String comment;
 
-    public Withdraw(Account fromAccount, Account toAccount, double amount, long creationDate, long deletionDate,
-                    long multiplicityId, boolean isExplicitlyDeleted, String comment) {
+    public Withdraw(Account fromAccount, long toAccountId, String toAccountType, double amount, long creationDate,
+                    long deletionDate, long multiplicityId, boolean isExplicitlyDeleted, String comment) {
         this.fromAccountId = fromAccount.getAccountId();
-        this.toAccountId = toAccount.getAccountId();
+        this.toAccountId = toAccountId;
         this.fromAccountType = fromAccount.getType();
-        this.toAccountType = toAccount.getType();
+        this.toAccountType = toAccountType;
         this.amount = amount;
         this.creationDate = creationDate;
         this.deletionDate = deletionDate;
@@ -50,18 +50,22 @@ public class Withdraw implements DynamicActivity, Serializable {
         this.comment = comment;
     }
 
-    public static void createWithdraw(RandomGeneratorFarm farm, Account from, Account to, long multiplicityId) {
+    public static void createWithdraw(RandomGeneratorFarm farm, Account from, long toAccountId, String toAccountType,
+                                      long toCreationDate, long toDeletionDate, boolean toExplicitlyDeleted,
+                                      long multiplicityId) {
         Random dateRand = farm.get(RandomGeneratorFarm.Aspect.WITHDRAW_DATE);
-        long deleteDate = Math.min(from.getDeletionDate(), to.getDeletionDate());
-        long creationDate = Dictionaries.dates.randomAccountToAccountDate(dateRand, from, to, deleteDate);
-        boolean willDelete = from.isExplicitlyDeleted() && to.isExplicitlyDeleted();
+        long deleteDate = Math.min(from.getDeletionDate(), toDeletionDate);
+        long creationDate =
+            Dictionaries.dates.randomAccountToAccountDate(dateRand, from.getCreationDate(), toCreationDate, deleteDate);
+        boolean willDelete = from.isExplicitlyDeleted() && toExplicitlyDeleted;
         double amount =
             farm.get(RandomGeneratorFarm.Aspect.WITHDRAW_AMOUNT).nextDouble() * DatagenParams.withdrawMaxAmount;
         String comment =
             Dictionaries.randomTexts.getUniformDistRandomTextForComments(
                 farm.get(RandomGeneratorFarm.Aspect.COMMON_COMMENT));
         Withdraw withdraw =
-            new Withdraw(from, to, amount, creationDate, deleteDate, multiplicityId, willDelete, comment);
+            new Withdraw(from, toAccountId, toAccountType, amount, creationDate, deleteDate, multiplicityId,
+                         willDelete, comment);
         from.getWithdraws().add(withdraw);
     }
 

@@ -19,6 +19,7 @@ package ldbc.finbench.datagen.generation.generators
 import ldbc.finbench.datagen.entities.nodes._
 import ldbc.finbench.datagen.generation.DatagenParams
 import ldbc.finbench.datagen.generation.events._
+import ldbc.finbench.datagen.generation.events.AccountActivitiesEvent.WithdrawCard
 import ldbc.finbench.datagen.util.Logging
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
@@ -160,7 +161,10 @@ class ActivityGenerator()(implicit spark: SparkSession)
   def accountActivitiesEvent(accountRDD: RDD[Account]): RDD[Account] = {
     val accountActivitiesEvent = new AccountActivitiesEvent
     val cards = spark.sparkContext.broadcast(
-      accountRDD.filter(_.getType == "debit card").collect()
+      accountRDD
+        .filter(_.getType == "debit card")
+        .map(a => new WithdrawCard(a.getAccountId, a.getType, a.getCreationDate, a.getDeletionDate, a.isExplicitlyDeleted))
+        .collect()
     )
 
     accountRDD.mapPartitionsWithIndex((index, accounts) => {
